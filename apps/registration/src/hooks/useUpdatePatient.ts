@@ -17,8 +17,7 @@ import type { RelationshipData } from '../components/forms/patientRelationships/
 import { convertTimeToISODateTime } from '../components/forms/profile/dateAgeUtils';
 import {
   BasicInfoData,
-  ContactData,
-  AdditionalData,
+  PersonAttributesData,
   AdditionalIdentifiersData,
 } from '../models/patient';
 import { parseDateStringToDate } from '../utils/ageUtils';
@@ -32,8 +31,8 @@ interface UpdatePatientFormData {
     image?: string;
   };
   address: PatientAddress;
-  contact: ContactData;
-  additional: AdditionalData;
+  contact: PersonAttributesData;
+  additional: PersonAttributesData;
   additionalIdentifiers: AdditionalIdentifiersData;
   additionalIdentifiersInitialData?: AdditionalIdentifiersData;
   relationships?: RelationshipData[];
@@ -119,25 +118,24 @@ function transformFormDataToPayload(
     attributeMap.set(attr.name, attr.uuid);
   });
 
+  const allAttributes = { ...contact, ...additional };
+
   const attributes: PatientAttribute[] = [];
 
-  // Dynamically add all contact attributes
-  Object.entries(contact).forEach(([key, value]) => {
+  Object.entries(allAttributes).forEach(([key, value]) => {
     if (attributeMap.has(key)) {
-      attributes.push({
-        attributeType: { uuid: attributeMap.get(key)! },
-        value: String(value ?? ''),
-      });
-    }
-  });
-
-  // Dynamically add all additional attributes
-  Object.entries(additional).forEach(([key, value]) => {
-    if (attributeMap.has(key)) {
-      attributes.push({
-        attributeType: { uuid: attributeMap.get(key)! },
-        value: String(value ?? ''),
-      });
+      const stringValue = String(value ?? '').trim();
+      if (stringValue !== '') {
+        attributes.push({
+          attributeType: { uuid: attributeMap.get(key)! },
+          value: stringValue,
+        });
+      } else {
+        attributes.push({
+          attributeType: { uuid: attributeMap.get(key)! },
+          voided: true,
+        });
+      }
     }
   });
 

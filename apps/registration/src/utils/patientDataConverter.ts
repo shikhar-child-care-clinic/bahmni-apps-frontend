@@ -3,11 +3,7 @@ import { calculateAge } from '@bahmni/services';
 import { format, isValid, parseISO } from 'date-fns';
 import type { RelationshipData } from '../components/forms/patientRelationships/PatientRelationships';
 import { AddressData } from '../hooks/useAddressFields';
-import type {
-  BasicInfoData,
-  ContactData,
-  AdditionalData,
-} from '../models/patient';
+import type { BasicInfoData, PersonAttributesData } from '../models/patient';
 
 export const convertToBasicInfoData = (
   patientData: PatientProfileResponse | undefined,
@@ -54,23 +50,25 @@ export const convertToBasicInfoData = (
   };
 };
 
-export const convertToContactData = (
+export const convertToPersonAttributesData = (
   patientData: PatientProfileResponse | undefined,
-): ContactData | undefined => {
-  if (!patientData?.patient.person.attributes) return undefined;
+): PersonAttributesData | undefined => {
+  if (
+    !patientData?.patient.person.attributes ||
+    patientData.patient.person.attributes.length === 0
+  ) {
+    return undefined;
+  }
 
-  const phoneAttribute = patientData.patient.person.attributes.find((attr) =>
-    attr.attributeType?.display?.toLowerCase().includes('phone'),
-  );
+  const data: PersonAttributesData = {};
 
-  const altPhoneAttribute = patientData.patient.person.attributes.find((attr) =>
-    attr.attributeType?.display?.toLowerCase().includes('alternate'),
-  );
+  patientData.patient.person.attributes.forEach((attr) => {
+    const fieldName = attr.attributeType?.display;
+    if (!fieldName) return;
+    data[fieldName] = attr.value?.toString() ?? '';
+  });
 
-  return {
-    phoneNumber: phoneAttribute?.value?.toString() ?? '',
-    altPhoneNumber: altPhoneAttribute?.value?.toString() ?? '',
-  };
+  return data;
 };
 
 export const convertToAddressData = (
@@ -95,27 +93,6 @@ export const convertToAddressData = (
   });
 
   return addressData;
-};
-
-export const convertToAdditionalData = (
-  patientData: PatientProfileResponse | undefined,
-): AdditionalData | undefined => {
-  if (
-    !patientData?.patient.person.attributes ||
-    patientData.patient.person.attributes.length === 0
-  ) {
-    return undefined;
-  }
-
-  const additionalData: AdditionalData = {};
-
-  patientData.patient.person.attributes.forEach((attr) => {
-    const fieldName = attr.attributeType?.display;
-    if (!fieldName) return;
-    additionalData[fieldName] = attr.value?.toString() ?? '';
-  });
-
-  return additionalData;
 };
 
 export const convertToAdditionalIdentifiersData = (
