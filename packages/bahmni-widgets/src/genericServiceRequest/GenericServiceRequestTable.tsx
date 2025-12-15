@@ -62,9 +62,7 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
   const categoryName = (config?.orderType as string) || '';
 
   const emptyEncounterFilter =
-    episodeOfCareUuids && episodeOfCareUuids.length === 0
-      ? false
-      : encounterUuids && encounterUuids.length === 0;
+    episodeOfCareUuids?.length === 0 ? false : encounterUuids?.length === 0;
 
   const {
     data: orderTypesData,
