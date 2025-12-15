@@ -516,7 +516,9 @@ describe('GenericServiceRequestTable', () => {
 
     it('handles orderType name with different casing', async () => {
       render(
-        <GenericServiceRequestTable config={{ orderType: 'RADIOLOGY ORDER' }} />,
+        <GenericServiceRequestTable
+          config={{ orderType: 'RADIOLOGY ORDER' }}
+        />,
         {
           wrapper: createWrapper(),
         },
