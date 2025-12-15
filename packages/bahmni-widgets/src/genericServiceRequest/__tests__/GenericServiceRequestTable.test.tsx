@@ -1003,4 +1003,258 @@ describe('GenericServiceRequestTable', () => {
       });
     });
   });
+
+  describe('emptyEncounterFilter logic', () => {
+    beforeEach(() => {
+      mockCreateServiceRequestViewModels.mockReturnValue(mockServiceRequests);
+      mockGroupByDate.mockReturnValue([
+        {
+          date: '2023-12-01',
+          items: [mockServiceRequests[0]],
+        },
+      ]);
+    });
+
+    describe('when episodeOfCareUuids is empty array', () => {
+      it('should show data table regardless of encounterUuids (emptyEncounterFilter = false)', async () => {
+        render(
+          <GenericServiceRequestTable
+            config={{ orderType: 'Lab Order' }}
+            episodeOfCareUuids={[]}
+            encounterUuids={undefined}
+          />,
+          {
+            wrapper: createWrapper(),
+          },
+        );
+
+        await waitFor(() => {
+          expect(screen.getAllByTestId('accordian-table-title')).toHaveLength(
+            1,
+          );
+        });
+      });
+
+      it('should show data table when both arrays are empty (emptyEncounterFilter = false)', async () => {
+        render(
+          <GenericServiceRequestTable
+            config={{ orderType: 'Lab Order' }}
+            episodeOfCareUuids={[]}
+            encounterUuids={[]}
+          />,
+          {
+            wrapper: createWrapper(),
+          },
+        );
+
+        await waitFor(() => {
+          expect(screen.getAllByTestId('accordian-table-title')).toHaveLength(
+            1,
+          );
+        });
+      });
+
+      it('should show data table when episodeOfCareUuids empty and encounterUuids has items', async () => {
+        render(
+          <GenericServiceRequestTable
+            config={{ orderType: 'Lab Order' }}
+            episodeOfCareUuids={[]}
+            encounterUuids={['encounter-1']}
+          />,
+          {
+            wrapper: createWrapper(),
+          },
+        );
+
+        await waitFor(() => {
+          expect(screen.getAllByTestId('accordian-table-title')).toHaveLength(
+            1,
+          );
+        });
+      });
+    });
+
+    describe('when episodeOfCareUuids is undefined or null', () => {
+      it('should show empty state when encounterUuids is empty array (emptyEncounterFilter = true)', async () => {
+        render(
+          <GenericServiceRequestTable
+            config={{ orderType: 'Lab Order' }}
+            episodeOfCareUuids={undefined}
+            encounterUuids={[]}
+          />,
+          {
+            wrapper: createWrapper(),
+          },
+        );
+
+        await waitFor(() => {
+          expect(
+            screen.getByText('No service requests recorded'),
+          ).toBeInTheDocument();
+          expect(
+            screen.queryByTestId('accordian-table-title'),
+          ).not.toBeInTheDocument();
+        });
+      });
+
+      it('should show data table when encounterUuids is undefined (emptyEncounterFilter = false)', async () => {
+        render(
+          <GenericServiceRequestTable
+            config={{ orderType: 'Lab Order' }}
+            episodeOfCareUuids={undefined}
+            encounterUuids={undefined}
+          />,
+          {
+            wrapper: createWrapper(),
+          },
+        );
+
+        await waitFor(() => {
+          expect(screen.getAllByTestId('accordian-table-title')).toHaveLength(
+            1,
+          );
+        });
+      });
+
+      it('should show data table when encounterUuids has items (emptyEncounterFilter = false)', async () => {
+        render(
+          <GenericServiceRequestTable
+            config={{ orderType: 'Lab Order' }}
+            episodeOfCareUuids={undefined}
+            encounterUuids={['encounter-1']}
+          />,
+          {
+            wrapper: createWrapper(),
+          },
+        );
+
+        await waitFor(() => {
+          expect(screen.getAllByTestId('accordian-table-title')).toHaveLength(
+            1,
+          );
+        });
+      });
+    });
+
+    describe('when episodeOfCareUuids has items', () => {
+      it('should show empty state when encounterUuids is empty array (emptyEncounterFilter = true)', async () => {
+        render(
+          <GenericServiceRequestTable
+            config={{ orderType: 'Lab Order' }}
+            episodeOfCareUuids={['episode-1']}
+            encounterUuids={[]}
+          />,
+          {
+            wrapper: createWrapper(),
+          },
+        );
+
+        await waitFor(() => {
+          expect(
+            screen.getByText('No service requests recorded'),
+          ).toBeInTheDocument();
+          expect(
+            screen.queryByTestId('accordian-table-title'),
+          ).not.toBeInTheDocument();
+        });
+      });
+
+      it('should show data table when encounterUuids is undefined (emptyEncounterFilter = false)', async () => {
+        render(
+          <GenericServiceRequestTable
+            config={{ orderType: 'Lab Order' }}
+            episodeOfCareUuids={['episode-1']}
+            encounterUuids={undefined}
+          />,
+          {
+            wrapper: createWrapper(),
+          },
+        );
+
+        await waitFor(() => {
+          expect(screen.getAllByTestId('accordian-table-title')).toHaveLength(
+            1,
+          );
+        });
+      });
+
+      it('should show data table when encounterUuids has items (emptyEncounterFilter = false)', async () => {
+        render(
+          <GenericServiceRequestTable
+            config={{ orderType: 'Lab Order' }}
+            episodeOfCareUuids={['episode-1']}
+            encounterUuids={['encounter-1']}
+          />,
+          {
+            wrapper: createWrapper(),
+          },
+        );
+
+        await waitFor(() => {
+          expect(screen.getAllByTestId('accordian-table-title')).toHaveLength(
+            1,
+          );
+        });
+      });
+    });
+
+    describe('edge cases for emptyEncounterFilter', () => {
+      it('should handle null episodeOfCareUuids with empty encounterUuids (emptyEncounterFilter = true)', async () => {
+        render(
+          <GenericServiceRequestTable
+            config={{ orderType: 'Lab Order' }}
+            episodeOfCareUuids={null}
+            encounterUuids={[]}
+          />,
+          {
+            wrapper: createWrapper(),
+          },
+        );
+
+        await waitFor(() => {
+          expect(
+            screen.getByText('No service requests recorded'),
+          ).toBeInTheDocument();
+        });
+      });
+
+      it('should handle null values for both props (emptyEncounterFilter = false)', async () => {
+        render(
+          <GenericServiceRequestTable
+            config={{ orderType: 'Lab Order' }}
+            episodeOfCareUuids={null}
+            encounterUuids={null}
+          />,
+          {
+            wrapper: createWrapper(),
+          },
+        );
+
+        await waitFor(() => {
+          expect(screen.getAllByTestId('accordian-table-title')).toHaveLength(
+            1,
+          );
+        });
+      });
+
+      it('should handle mixed null and undefined values (emptyEncounterFilter = false)', async () => {
+        render(
+          <GenericServiceRequestTable
+            config={{ orderType: 'Lab Order' }}
+            episodeOfCareUuids={null}
+            encounterUuids={undefined}
+          />,
+          {
+            wrapper: createWrapper(),
+          },
+        );
+
+        await waitFor(() => {
+          expect(screen.getAllByTestId('accordian-table-title')).toHaveLength(
+            1,
+          );
+        });
+      });
+    });
+  });
 });
