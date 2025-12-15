@@ -212,7 +212,6 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
     [t],
   );
 
-  console.log('validEncounters---', validEncounters);
   return (
     <div data-testid="generic-service-request-table">
       {isLoading ||

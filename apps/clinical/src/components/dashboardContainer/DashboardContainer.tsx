@@ -54,7 +54,6 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
     ]),
   );
 
-  console.log({ allEpisodeOfCareIds, allEncounterIds, allVisitIds });
   // Dispatch dashboard view event when component mounts
   useEffect(() => {
     if (patientUuid) {
