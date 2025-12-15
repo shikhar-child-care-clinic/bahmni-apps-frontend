@@ -61,7 +61,8 @@ export interface ObservationDataInFormControls {
   groupMembers?: ObservationDataInFormControls[];
   comment?: string;
   interpretation?: string; // Interpretation code: A=ABNORMAL, N=NORMAL, H=HIGH, L=LOW, etc.
-  formFieldPath?: string; // Track which form field this came from
+  formNamespace?: string; // Form namespace (always "Bahmni" for form builder observations)
+  formFieldPath?: string; // Track which form field this came from (format: "FormName.Version/FieldId-Instance")
 }
 
 // Concept value for coded answers

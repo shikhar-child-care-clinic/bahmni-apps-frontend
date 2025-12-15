@@ -2,6 +2,7 @@ import {
   FormData,
   FormControlData,
   ObservationDataInFormControls,
+  FormMetadata,
   transformFormDataToObservations,
   validateFormData,
   hasFormData,
@@ -10,6 +11,7 @@ import { useCallback, useState } from 'react';
 
 interface UseObservationFormDataProps {
   initialFormData?: FormData | null;
+  formMetadata: FormMetadata;
 }
 
 interface UseObservationFormDataReturn {
@@ -154,8 +156,8 @@ export function useObservationFormData(
   const validationErrors = validation.errors;
 
   const observations =
-    formData && isValid && hasData
-      ? transformFormDataToObservations(formData)
+    formData && isValid && hasData && props?.formMetadata
+      ? transformFormDataToObservations(formData, props.formMetadata)
       : [];
 
   return {

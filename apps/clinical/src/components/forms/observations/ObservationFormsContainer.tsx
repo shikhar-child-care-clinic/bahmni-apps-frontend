@@ -84,7 +84,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
     validationErrors,
     handleFormDataChange,
     clearFormData,
-  } = useObservationFormData();
+  } = useObservationFormData(formMetadata ? { formMetadata } : undefined);
 
   const { handleDiscardForm, handleSaveForm, handleBackToForms } =
     useObservationFormActions({
@@ -117,7 +117,11 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
           <div>{error.message}</div>
         ) : formMetadata && patientUUID ? (
           <Container
-            metadata={formMetadata.schema as Form2FormMetadata}
+            metadata={{
+              ...(formMetadata.schema as Form2FormMetadata),
+              name: viewingForm?.name,
+              version: formMetadata.version || '1',
+            }}
             observations={existingObservations ?? []}
             patient={{ uuid: patientUUID }}
             translations={{}}

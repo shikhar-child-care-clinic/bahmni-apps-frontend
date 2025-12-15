@@ -17,7 +17,6 @@ const INTERPRETATION_TO_CODE: Record<
  * @param subjectReference - Reference to the patient
  * @param encounterReference - Reference to the encounter
  * @param performerReference - Reference to the practitioner
- * @param formNamespacePath - Optional form namespace path for extension
  * @returns FHIR R4 Observation resource
  */
 export const createObservationResource = (
@@ -25,7 +24,6 @@ export const createObservationResource = (
   subjectReference: Reference,
   encounterReference: Reference,
   performerReference: Reference,
-  formNamespacePath?: string,
 ): Observation => {
   const observation: Observation = {
     resourceType: 'Observation',
@@ -99,12 +97,12 @@ export const createObservationResource = (
     ];
   }
 
-  // Add form namespace path extension if provided
-  if (formNamespacePath) {
+  // Add form namespace path extension if both formNamespace and formFieldPath are provided
+  if (observationPayload.formNamespace && observationPayload.formFieldPath) {
     observation.extension = [
       {
         url: 'http://fhir.bahmni.org/ext/observation/form-namespace-path',
-        valueString: formNamespacePath,
+        valueString: `${observationPayload.formNamespace}^${observationPayload.formFieldPath}`,
       },
     ];
   }

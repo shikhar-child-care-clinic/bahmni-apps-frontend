@@ -69,7 +69,8 @@ function transformGroupMembers(
       concept: { uuid: member.conceptUuid },
       value: transformControlValue(member),
       obsDatetime: new Date().toISOString(),
-      formFieldPath: member.id,
+      formNamespace: 'Bahmni',
+      formFieldPath: member.id, // Use member.id directly
       interpretation: member.interpretation,
       // Recursively handle nested groups
       groupMembers: member.groupMembers
@@ -82,12 +83,12 @@ function transformGroupMembers(
  * Transform form2-controls data to OpenMRS observation format
  *
  * @param formData - Data from form2-controls Container.onValueUpdated
- * @param metadata - Form metadata (optional, for validation context)
+ * @param metadata - Form metadata (required for formNamespace and formFieldPath)
  * @returns Array of observation data ready for consultation bundle
  */
 export function transformFormDataToObservations(
   formData: FormData,
-  metadata?: FormMetadata,
+  metadata: FormMetadata,
 ): ObservationDataInFormControls[] {
   if (!formData.controls || formData.controls.length === 0) {
     return [];
@@ -108,10 +109,13 @@ export function transformFormDataToObservations(
     }
 
     try {
+      // control.id from form2-controls already contains the full formFieldPath
+      // Use it directly as the formFieldPath
       const observation: ObservationDataInFormControls = {
         concept: { uuid: control.conceptUuid },
         value: transformControlValue(control),
         obsDatetime: timestamp,
+        formNamespace: 'Bahmni',
         formFieldPath: control.id,
       };
 
