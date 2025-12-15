@@ -36,6 +36,10 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
   }>({});
 
   const { episodeOfCare, visit, encounter } = useClinicalAppData();
+
+  const allEpisodeOfCareIds = Array.from(
+    new Set(episodeOfCare.map((eoc) => eoc.uuid)),
+  );
   const allEncounterIds = Array.from(
     new Set([
       ...episodeOfCare.flatMap((eoc) => eoc.encounterUuids),
@@ -49,6 +53,8 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
       ...visit.map((v) => v.uuid),
     ]),
   );
+
+  console.log({ allEpisodeOfCareIds, allEncounterIds, allVisitIds });
   // Dispatch dashboard view event when component mounts
   useEffect(() => {
     if (patientUuid) {
@@ -102,6 +108,7 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
           <DashboardSection
             section={section}
             ref={sectionRefs.current[section.id]}
+            episodeOfCareUuids={allEpisodeOfCareIds}
             encounterUuids={allEncounterIds}
             visitUuids={allVisitIds}
           />

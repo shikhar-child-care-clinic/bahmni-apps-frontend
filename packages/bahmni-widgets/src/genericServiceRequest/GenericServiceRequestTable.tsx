@@ -52,6 +52,7 @@ const fetchServiceRequests = async (
  */
 const GenericServiceRequestTable: React.FC<WidgetProps> = ({
   config,
+  episodeOfCareUuids,
   encounterUuids,
   visitUuids,
 }) => {
@@ -59,6 +60,11 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
   const patientUUID = usePatientUUID();
   const { addNotification } = useNotification();
   const categoryName = (config?.orderType as string) || '';
+
+  const emptyEncounterFilter =
+    episodeOfCareUuids && episodeOfCareUuids.length === 0
+      ? false
+      : encounterUuids && encounterUuids.length === 0;
 
   const {
     data: orderTypesData,
@@ -206,9 +212,13 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
     [t],
   );
 
+  console.log('validEncounters---', validEncounters);
   return (
     <div data-testid="generic-service-request-table">
-      {isLoading || !!isError || processedServiceRequests.length === 0 ? (
+      {isLoading ||
+      !!isError ||
+      processedServiceRequests.length === 0 ||
+      emptyEncounterFilter ? (
         <SortableDataTable
           headers={headers}
           ariaLabel={t('SERVICE_REQUEST_HEADING')}
