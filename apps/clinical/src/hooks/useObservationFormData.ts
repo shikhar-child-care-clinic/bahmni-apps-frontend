@@ -3,6 +3,7 @@ import {
   FormControlData,
   ObservationDataInFormControls,
   FormMetadata,
+  ConceptValue,
   transformFormDataToObservations,
   validateFormData,
   hasFormData,
@@ -82,25 +83,27 @@ export function useObservationFormData(
               record.formFieldPath ?? record.control.id ?? 'unknown';
 
             if (conceptUuid) {
+              const rawValue = record.value.value;
+              const isArray = Array.isArray(rawValue);
+
               const control: FormControlData = {
                 id: fieldId,
                 conceptUuid,
-                type: 'obsControl' as const,
-                value: record.value.value as
+                type: isArray ? 'multiselect' : ('obsControl' as const),
+                value: rawValue as
                   | string
                   | number
                   | boolean
                   | Date
+                  | ConceptValue
+                  | ConceptValue[]
                   | null,
               };
 
-              // Add interpretation if present - extract the code string
-              // Check record level first, then inside value object
               const interpretationData =
                 record.interpretation ?? record.value?.interpretation;
 
               if (interpretationData) {
-                // If it's already a string (code like "A", "N", etc.), use it directly
                 if (typeof interpretationData === 'string') {
                   control.interpretation = interpretationData;
                 }

@@ -241,7 +241,6 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       practitionerUUID: practitionerUUID,
     });
 
-    // Convert observation forms data to FHIR Observation resources
     const observationEntries = createObservationBundleEntries({
       observationFormsData: getObservationFormsData(),
       encounterSubject: encounterResource.subject!,

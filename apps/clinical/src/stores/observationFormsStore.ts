@@ -1,4 +1,7 @@
-import { ObservationForm, ObservationDataInFormControls } from '@bahmni/services';
+import {
+  ObservationForm,
+  ObservationDataInFormControls,
+} from '@bahmni/services';
 import { create } from 'zustand';
 
 export interface ObservationFormData {
@@ -18,10 +21,15 @@ export interface ObservationFormsState {
     formUuid: string,
     observations: ObservationDataInFormControls[],
   ) => void;
-  getFormData: (formUuid: string) => ObservationDataInFormControls[] | undefined;
+  getFormData: (
+    formUuid: string,
+  ) => ObservationDataInFormControls[] | undefined;
   setViewingForm: (form: ObservationForm | null) => void;
   getAllObservations: () => ObservationDataInFormControls[];
-  getObservationFormsData: () => Record<string, ObservationDataInFormControls[]>;
+  getObservationFormsData: () => Record<
+    string,
+    ObservationDataInFormControls[]
+  >;
   validate: () => boolean;
   reset: () => void;
   getState: () => ObservationFormsState;
@@ -84,7 +92,10 @@ export const useObservationFormsStore = create<ObservationFormsState>(
       });
     },
 
-    updateFormData: (formUuid: string, observations: ObservationDataInFormControls[]) => {
+    updateFormData: (
+      formUuid: string,
+      observations: ObservationDataInFormControls[],
+    ) => {
       if (!validateFormUuid(formUuid)) {
         return;
       }

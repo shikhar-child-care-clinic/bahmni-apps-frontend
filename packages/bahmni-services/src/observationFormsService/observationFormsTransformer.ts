@@ -18,10 +18,17 @@ export interface FormControlData {
     | 'multiselect'
     | 'section'
     | 'obsControl';
-  value: string | number | boolean | Date | ConceptValue | null;
+  value:
+    | string
+    | number
+    | boolean
+    | Date
+    | ConceptValue
+    | ConceptValue[]
+    | null;
   label?: string;
   units?: string;
-  interpretation?: string; // Interpretation code: A=ABNORMAL, N=NORMAL, etc.
+  interpretation?: string;
   groupMembers?: FormControlData[];
 }
 
@@ -30,9 +37,6 @@ export interface FormData {
   metadata?: Record<string, unknown>;
 }
 
-/**
- * Transform form control value based on its type
- */
 function transformControlValue(
   control: FormControlData,
 ): string | number | boolean | ConceptValue {
@@ -40,26 +44,27 @@ function transformControlValue(
     throw new Error(`Control ${control.id} has no value`);
   }
 
-  // Handle date/datetime - convert to ISO string
   if (control.value instanceof Date) {
     return control.value.toISOString();
   }
 
-  // Handle coded values (select/multiselect)
   if (
-    (control.type === 'select' || control.type === 'multiselect') &&
-    typeof control.value === 'object'
+    control.type === 'select' &&
+    typeof control.value === 'object' &&
+    !Array.isArray(control.value)
   ) {
     return control.value as ConceptValue;
   }
 
-  // Handle primitive types
+  if (control.type === 'multiselect' && Array.isArray(control.value)) {
+    throw new Error(
+      'Multiselect values should be handled by creating multiple observations',
+    );
+  }
+
   return control.value as string | number | boolean;
 }
 
-/**
- * Transform group members (nested controls)
- */
 function transformGroupMembers(
   groupMembers: FormControlData[],
 ): ObservationDataInFormControls[] {
@@ -70,22 +75,14 @@ function transformGroupMembers(
       value: transformControlValue(member),
       obsDatetime: new Date().toISOString(),
       formNamespace: 'Bahmni',
-      formFieldPath: member.id, // Use member.id directly
+      formFieldPath: member.id,
       interpretation: member.interpretation,
-      // Recursively handle nested groups
       groupMembers: member.groupMembers
         ? transformGroupMembers(member.groupMembers)
         : undefined,
     }));
 }
 
-/**
- * Transform form2-controls data to OpenMRS observation format
- *
- * @param formData - Data from form2-controls Container.onValueUpdated
- * @param metadata - Form metadata (required for formNamespace and formFieldPath)
- * @returns Array of observation data ready for consultation bundle
- */
 export function transformFormDataToObservations(
   formData: FormData,
   metadata: FormMetadata,
@@ -98,19 +95,34 @@ export function transformFormDataToObservations(
   const timestamp = new Date().toISOString();
 
   formData.controls.forEach((control) => {
-    // Skip controls without values
     if (control.value === null || control.value === undefined) {
       return;
     }
 
-    // Skip section headers (they don't have concepts)
     if (control.type === 'section' && !control.conceptUuid) {
       return;
     }
 
     try {
-      // control.id from form2-controls already contains the full formFieldPath
-      // Use it directly as the formFieldPath
+      if (control.type === 'multiselect' && Array.isArray(control.value)) {
+        control.value.forEach((selectedValue) => {
+          const observation: ObservationDataInFormControls = {
+            concept: { uuid: control.conceptUuid },
+            value: selectedValue,
+            obsDatetime: timestamp,
+            formNamespace: 'Bahmni',
+            formFieldPath: control.id,
+          };
+
+          if (control.interpretation) {
+            observation.interpretation = control.interpretation;
+          }
+
+          observations.push(observation);
+        });
+        return;
+      }
+
       const observation: ObservationDataInFormControls = {
         concept: { uuid: control.conceptUuid },
         value: transformControlValue(control),
@@ -119,12 +131,10 @@ export function transformFormDataToObservations(
         formFieldPath: control.id,
       };
 
-      // Add interpretation if present
       if (control.interpretation) {
         observation.interpretation = control.interpretation;
       }
 
-      // Handle group members (complex controls)
       if (control.groupMembers && control.groupMembers.length > 0) {
         observation.groupMembers = transformGroupMembers(control.groupMembers);
       }
@@ -142,8 +152,63 @@ export function transformObservationsToFormData(
   observations: ObservationDataInFormControls[],
   formMetadata: FormMetadata,
 ): FormData {
+  if (!observations || observations.length === 0) {
+    return {
+      controls: [],
+      metadata: {},
+    };
+  }
+
+  const controlsMap = new Map<string, FormControlData>();
+
+  observations.forEach((obs) => {
+    const fieldPath = obs.formFieldPath ?? obs.concept.uuid;
+
+    if (controlsMap.has(fieldPath)) {
+      const existingControl = controlsMap.get(fieldPath)!;
+
+      if (!Array.isArray(existingControl.value)) {
+        existingControl.value = [existingControl.value as ConceptValue];
+      }
+
+      if (typeof obs.value === 'object' && !Array.isArray(obs.value)) {
+        (existingControl.value as ConceptValue[]).push(
+          obs.value as ConceptValue,
+        );
+      }
+
+      existingControl.type = 'multiselect';
+    } else {
+      let controlValue: string | number | boolean | Date | ConceptValue | null =
+        obs.value as string | number | boolean | Date | ConceptValue | null;
+
+      if (
+        typeof obs.value === 'string' &&
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(obs.value)
+      ) {
+        const parsedDate = new Date(obs.value);
+        if (!isNaN(parsedDate.getTime())) {
+          controlValue = parsedDate;
+        }
+      }
+
+      const control: FormControlData = {
+        id: fieldPath,
+        conceptUuid: obs.concept.uuid,
+        type: 'obsControl',
+        value: controlValue,
+      };
+
+      if (obs.interpretation) {
+        control.interpretation = obs.interpretation;
+      }
+
+      controlsMap.set(fieldPath, control);
+    }
+  });
+
   return {
-    controls: [],
-    metadata: {},
+    controls: Array.from(controlsMap.values()),
+    metadata: { formMetadata },
   };
 }
