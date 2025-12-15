@@ -262,7 +262,7 @@ describe('Widget Registry', () => {
         'pacsOrders',
         'treatment',
         'flowSheet',
-        'genericServiceRequest',
+        'ordersControl',
       ];
 
       expect(types).toHaveLength(expectedTypes.length);

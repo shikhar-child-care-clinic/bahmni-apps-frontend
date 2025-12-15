@@ -49,7 +49,6 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
       ...visit.map((v) => v.uuid),
     ]),
   );
-  console.log(allVisitIds, allEncounterIds);
   // Dispatch dashboard view event when component mounts
   useEffect(() => {
     if (patientUuid) {
