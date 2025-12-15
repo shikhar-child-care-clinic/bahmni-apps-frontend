@@ -177,6 +177,7 @@ const mockServiceRequests: ServiceRequestViewModel[] = [
     priority: 'stat',
     orderedBy: 'Dr. Smith',
     orderedDate: '2023-12-01T10:30:00.000Z',
+    status: 'active',
   },
   {
     id: 'service-2',
@@ -184,6 +185,7 @@ const mockServiceRequests: ServiceRequestViewModel[] = [
     priority: 'routine',
     orderedBy: 'Dr. Johnson',
     orderedDate: '2023-12-01T14:15:00.000Z',
+    status: 'active',
   },
   {
     id: 'service-3',
@@ -191,6 +193,7 @@ const mockServiceRequests: ServiceRequestViewModel[] = [
     priority: 'stat',
     orderedBy: 'Dr. Brown',
     orderedDate: '2023-11-30T09:00:00.000Z',
+    status: 'active',
   },
 ];
 
@@ -205,10 +208,14 @@ describe('GenericServiceRequestTable', () => {
         const translations: Record<string, string> = {
           SERVICE_REQUEST_TEST_NAME: 'Test Name',
           SERVICE_REQUEST_ORDERED_BY: 'Ordered By',
+          SERVICE_REQUEST_ORDERED_STATUS: 'Status',
           SERVICE_REQUEST_HEADING: 'Service Requests',
           NO_SERVICE_REQUESTS: 'No service requests recorded',
           SERVICE_REQUEST_PRIORITY_URGENT: 'Urgent',
           ERROR_DEFAULT_TITLE: 'Error',
+          IN_PROGRESS_STATUS: 'In Progress',
+          COMPLETED_STATUS: 'Completed',
+          REVOKED_STATUS: 'Revoked',
         };
         return translations[key] || key;
       },
@@ -246,7 +253,7 @@ describe('GenericServiceRequestTable', () => {
       );
 
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -261,7 +268,7 @@ describe('GenericServiceRequestTable', () => {
       );
 
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -280,7 +287,7 @@ describe('GenericServiceRequestTable', () => {
       mockGetOrderTypes.mockRejectedValue(new Error('Order types error'));
 
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -301,7 +308,7 @@ describe('GenericServiceRequestTable', () => {
       );
 
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -320,7 +327,7 @@ describe('GenericServiceRequestTable', () => {
       mockGetOrderTypes.mockRejectedValue(new Error('Network error'));
 
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -337,7 +344,7 @@ describe('GenericServiceRequestTable', () => {
       mockCreateServiceRequestViewModels.mockReturnValue([]);
 
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -350,10 +357,10 @@ describe('GenericServiceRequestTable', () => {
       });
     });
 
-    it('renders empty state when category not found in order types', async () => {
+    it('renders empty state when orderType not found in order types', async () => {
       render(
         <GenericServiceRequestTable
-          config={{ category: 'Unknown Category' }}
+          config={{ orderType: 'Unknown OrderType' }}
         />,
         {
           wrapper: createWrapper(),
@@ -406,7 +413,7 @@ describe('GenericServiceRequestTable', () => {
 
     it('processes data through transformation pipeline', async () => {
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -429,7 +436,7 @@ describe('GenericServiceRequestTable', () => {
 
     it('groups service requests by date', async () => {
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -459,7 +466,7 @@ describe('GenericServiceRequestTable', () => {
       ]);
 
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -473,7 +480,7 @@ describe('GenericServiceRequestTable', () => {
 
     it('formats dates for accordion titles', async () => {
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -489,10 +496,10 @@ describe('GenericServiceRequestTable', () => {
     });
   });
 
-  describe('Category UUID resolution', () => {
-    it('finds category UUID by case-insensitive name matching', async () => {
+  describe('OrderType UUID resolution', () => {
+    it('finds orderType UUID by case-insensitive name matching', async () => {
       render(
-        <GenericServiceRequestTable config={{ category: 'lab order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'lab order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -507,9 +514,9 @@ describe('GenericServiceRequestTable', () => {
       });
     });
 
-    it('handles category name with different casing', async () => {
+    it('handles orderType name with different casing', async () => {
       render(
-        <GenericServiceRequestTable config={{ category: 'RADIOLOGY ORDER' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'RADIOLOGY ORDER' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -538,7 +545,7 @@ describe('GenericServiceRequestTable', () => {
 
     it('renders accordion with grouped data', async () => {
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -552,7 +559,7 @@ describe('GenericServiceRequestTable', () => {
 
     it('opens first accordion item by default', async () => {
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -572,6 +579,7 @@ describe('GenericServiceRequestTable', () => {
       priority: 'stat',
       orderedBy: 'Dr. Test',
       orderedDate: '2023-12-01T10:30:00.000Z',
+      status: 'active',
     };
 
     beforeEach(() => {
@@ -582,7 +590,7 @@ describe('GenericServiceRequestTable', () => {
 
     it('renders testName cell with service request name', async () => {
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -595,7 +603,7 @@ describe('GenericServiceRequestTable', () => {
 
     it('renders testName cell with urgent tag for stat priority', async () => {
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -617,7 +625,7 @@ describe('GenericServiceRequestTable', () => {
       ]);
 
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -640,7 +648,7 @@ describe('GenericServiceRequestTable', () => {
       ]);
 
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -653,7 +661,7 @@ describe('GenericServiceRequestTable', () => {
 
     it('renders orderedBy cell with practitioner name', async () => {
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -675,7 +683,7 @@ describe('GenericServiceRequestTable', () => {
       ]);
 
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -698,7 +706,7 @@ describe('GenericServiceRequestTable', () => {
       ]);
 
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -718,6 +726,7 @@ describe('GenericServiceRequestTable', () => {
           priority: 'routine',
           orderedBy: 'Dr. Replace',
           orderedDate: '2023-12-01T10:30:00.000Z',
+          status: 'active',
           replaces: ['service-1'],
         },
       ];
@@ -730,7 +739,7 @@ describe('GenericServiceRequestTable', () => {
       );
 
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -751,6 +760,7 @@ describe('GenericServiceRequestTable', () => {
           priority: 'stat',
           orderedBy: 'Dr. Stat',
           orderedDate: '2023-12-01T10:30:00.000Z',
+          status: 'active',
         },
         {
           id: 'service-2',
@@ -758,6 +768,7 @@ describe('GenericServiceRequestTable', () => {
           priority: 'routine',
           orderedBy: 'Dr. Routine',
           orderedDate: '2023-12-01T10:30:00.000Z',
+          status: 'active',
         },
         {
           id: 'service-3',
@@ -765,6 +776,7 @@ describe('GenericServiceRequestTable', () => {
           priority: '',
           orderedBy: 'Dr. Empty',
           orderedDate: '2023-12-01T10:30:00.000Z',
+          status: 'active',
         },
       ];
 
@@ -776,7 +788,7 @@ describe('GenericServiceRequestTable', () => {
       ]);
 
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -806,7 +818,7 @@ describe('GenericServiceRequestTable', () => {
       mockUsePatientUUID.mockReturnValue(null);
 
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -830,7 +842,7 @@ describe('GenericServiceRequestTable', () => {
       ]);
 
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -858,7 +870,7 @@ describe('GenericServiceRequestTable', () => {
 
     it('has no accessibility violations with data', async () => {
       const { container } = render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -876,7 +888,7 @@ describe('GenericServiceRequestTable', () => {
       mockGroupByDate.mockReturnValue([]);
 
       const { container } = render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -893,7 +905,7 @@ describe('GenericServiceRequestTable', () => {
 
     it('has proper ARIA labels', async () => {
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -910,7 +922,7 @@ describe('GenericServiceRequestTable', () => {
     it('passes encounterUuids to service call', async () => {
       render(
         <GenericServiceRequestTable
-          config={{ category: 'Lab Order' }}
+          config={{ orderType: 'Lab Order' }}
           encounterUuids={['encounter-1', 'encounter-2']}
         />,
         {
@@ -930,7 +942,7 @@ describe('GenericServiceRequestTable', () => {
     it('handles empty encounter arrays', async () => {
       render(
         <GenericServiceRequestTable
-          config={{ category: 'Lab Order' }}
+          config={{ orderType: 'Lab Order' }}
           encounterUuids={[]}
         />,
         {
@@ -949,7 +961,7 @@ describe('GenericServiceRequestTable', () => {
 
     it('works without encounter UUIDs', async () => {
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },
@@ -977,7 +989,7 @@ describe('GenericServiceRequestTable', () => {
 
     it('displays correct table headers', async () => {
       render(
-        <GenericServiceRequestTable config={{ category: 'Lab Order' }} />,
+        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
           wrapper: createWrapper(),
         },

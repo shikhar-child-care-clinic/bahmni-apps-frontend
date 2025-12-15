@@ -60,8 +60,6 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
   const { addNotification } = useNotification();
   const categoryName = (config?.orderType as string) || '';
 
-  console.log(categoryName, 'categoryName in GenericServiceRequestTable.tsx:');
-
   const {
     data: orderTypesData,
     isLoading: isLoadingOrderTypes,
@@ -96,9 +94,6 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
       fetchServiceRequests(categoryUuid, patientUUID!, encounterUuids),
   });
 
-  console.log(data, 'data in GenericServiceRequestTable.tsx:');
-
-  console.log('hi');
   useEffect(() => {
     if (isOrderTypesError) {
       const { message } = getFormattedError(orderTypesError);
