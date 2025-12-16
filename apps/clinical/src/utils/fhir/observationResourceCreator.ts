@@ -40,7 +40,11 @@ export const createObservationResource = (
 
   const value = observationPayload.value;
 
-  if (value instanceof Date) {
+  // For obsGroupControl (group parent observations), value is null
+  // and only groupMembers are present - skip adding a value field
+  if (value === null || value === undefined) {
+    // No value field for group parent observations
+  } else if (value instanceof Date) {
     // Date object - use valueDateTime
     observation.valueDateTime = value.toISOString();
   } else if (typeof value === 'number') {
@@ -107,20 +111,6 @@ export const createObservationResource = (
     ];
   }
 
-  // Handle group members (nested observations)
-  if (
-    observationPayload.groupMembers &&
-    observationPayload.groupMembers.length > 0
-  ) {
-    observation.hasMember = observationPayload.groupMembers.map(() => {
-      // Create placeholder references for group members
-      // These will be resolved by the FHIR server
-      return {
-        reference: `urn:uuid:${crypto.randomUUID()}`,
-      };
-    });
-  }
-
   // Handle comments
   if (observationPayload.comment) {
     observation.note = [
@@ -135,41 +125,90 @@ export const createObservationResource = (
 
 /**
  * Recursively creates FHIR Observation resources from ObservationDataInFormControls array
- * Handles nested group members
+ * Creates hierarchical structure with hasMember references for group observations
+ * Children are ordered before parents to ensure proper reference resolution
  * @param observations - Array of observation data from form2-controls
  * @param subjectReference - Reference to the patient
  * @param encounterReference - Reference to the encounter
  * @param performerReference - Reference to the practitioner
- * @returns Array of FHIR R4 Observation resources
+ * @returns Array of objects containing the observation resource and its generated fullUrl
  */
 export const createObservationResources = (
   observations: ObservationDataInFormControls[],
   subjectReference: Reference,
   encounterReference: Reference,
   performerReference: Reference,
-): Observation[] => {
-  const resources: Observation[] = [];
+): Array<{ resource: Observation; fullUrl: string }> => {
+  const results: Array<{ resource: Observation; fullUrl: string }> = [];
 
   for (const obs of observations) {
-    const observation = createObservationResource(
-      obs,
-      subjectReference,
-      encounterReference,
-      performerReference,
-    );
-    resources.push(observation);
-
-    // Recursively process group members
+    // Process group members if present - create hierarchical structure with hasMember
     if (obs.groupMembers && obs.groupMembers.length > 0) {
-      const memberResources = createObservationResources(
+      // Recursively create observations for group members (children first)
+      const memberResults = createObservationResources(
         obs.groupMembers,
         subjectReference,
         encounterReference,
         performerReference,
       );
-      resources.push(...memberResources);
+
+      // Add child observations to results first
+      results.push(...memberResults);
+
+      // Create parent observation
+      const parentObservation = createObservationResource(
+        obs,
+        subjectReference,
+        encounterReference,
+        performerReference,
+      );
+
+      // Add hasMember references to child observations with type
+      parentObservation.hasMember = memberResults.map((member) => ({
+        reference: member.fullUrl,
+        type: 'Observation',
+      }));
+
+      // Add dataAbsentReason for parent observations without values
+      // This indicates the observation is a grouping/panel and has no value itself
+
+      // Generate a unique UUID for parent observation
+      const parentUuid = crypto.randomUUID();
+      const parentFullUrl = `urn:uuid:${parentUuid}`;
+
+      // Set the id field to match the UUID (required by Bahmni backend)
+      const parentObservationWithId: Observation = {
+        ...parentObservation,
+        id: parentUuid,
+      };
+
+      // Add parent observation to results (after children)
+      results.push({
+        resource: parentObservationWithId,
+        fullUrl: parentFullUrl,
+      });
+    } else {
+      // Create observation for leaf observations (no children)
+      const observation = createObservationResource(
+        obs,
+        subjectReference,
+        encounterReference,
+        performerReference,
+      );
+
+      // Generate a unique UUID for this observation
+      const uuid = crypto.randomUUID();
+      const fullUrl = `urn:uuid:${uuid}`;
+
+      // Set the id field to match the UUID (required by Bahmni backend)
+      const observationWithId: Observation = {
+        ...observation,
+        id: uuid,
+      };
+
+      results.push({ resource: observationWithId, fullUrl });
     }
   }
 
-  return resources;
+  return results;
 };

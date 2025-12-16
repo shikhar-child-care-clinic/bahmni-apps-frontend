@@ -40,105 +40,139 @@ export function useObservationFormData(
       return;
     }
 
+    // Handle Immutable.js ControlRecord by converting to plain JS
+    let plainData: unknown = data;
     if (
       typeof data === 'object' &&
       'toJS' in data &&
       typeof (data as { toJS: unknown }).toJS === 'function'
     ) {
-      const plainData = (data as { toJS: () => unknown }).toJS();
+      plainData = (data as { toJS: () => unknown }).toJS() as unknown;
+    }
 
-      if (
-        plainData &&
-        typeof plainData === 'object' &&
-        !Array.isArray(plainData)
-      ) {
-        const formRecord = plainData as {
-          children?: unknown[];
-          control?: { id?: string; concept?: { uuid?: string } };
-          value?: {
-            value?: unknown;
-            interpretation?: { uuid?: string; display?: string };
-          };
-          interpretation?: { uuid?: string; display?: string };
-          formFieldPath?: string;
-          voided?: boolean;
-        };
+    // Now handle the plain JS ControlRecord structure
+    if (
+      typeof plainData === 'object' &&
+      plainData !== null &&
+      'formFieldPath' in plainData &&
+      'children' in plainData
+    ) {
+      const controlRecordTree = plainData as {
+        formFieldPath: string;
+        children?: unknown[];
+      };
 
-        const extractControls = (
-          record: typeof formRecord,
-          controls: FormControlData[],
-        ): void => {
-          if (record.voided) {
-            return;
-          }
-
-          if (
-            record.control &&
-            record.value?.value !== null &&
-            record.value?.value !== undefined &&
-            record.value?.value !== ''
-          ) {
-            const conceptUuid = record.control.concept?.uuid;
-            const fieldId =
-              record.formFieldPath ?? record.control.id ?? 'unknown';
-
-            if (conceptUuid) {
-              const rawValue = record.value.value;
-              const isArray = Array.isArray(rawValue);
-
-              const control: FormControlData = {
-                id: fieldId,
-                conceptUuid,
-                type: isArray ? 'multiselect' : ('obsControl' as const),
-                value: rawValue as
-                  | string
-                  | number
-                  | boolean
-                  | Date
-                  | ConceptValue
-                  | ConceptValue[]
-                  | null,
+      const extractControls = (
+        record: typeof controlRecordTree,
+        controls: FormControlData[],
+      ): void => {
+        // Process children if they exist
+        if (record.children && Array.isArray(record.children)) {
+          record.children.forEach((child) => {
+            if (child && typeof child === 'object') {
+              const childRecord = child as {
+                control?: {
+                  concept?: { name?: string; uuid?: string };
+                  type?: string;
+                };
+                formFieldPath?: string;
+                value?: {
+                  value?: unknown;
+                  interpretation?: string;
+                };
+                children?: unknown[];
+                voided?: boolean;
               };
 
-              const interpretationData =
-                record.interpretation ?? record.value?.interpretation;
+              // Skip voided records
+              if (childRecord.voided) {
+                return;
+              }
 
-              if (interpretationData) {
-                if (typeof interpretationData === 'string') {
-                  control.interpretation = interpretationData;
+              const conceptUuid = childRecord.control?.concept?.uuid;
+              const fieldPath = childRecord.formFieldPath;
+              const isObsGroupControl =
+                childRecord.control?.type === 'obsGroupControl';
+
+              // Handle obsGroupControl: create a parent control with groupMembers
+              if (isObsGroupControl && conceptUuid && fieldPath) {
+                if (
+                  childRecord.children &&
+                  Array.isArray(childRecord.children) &&
+                  childRecord.children.length > 0
+                ) {
+                  const groupMembers: FormControlData[] = [];
+                  extractControls(
+                    { formFieldPath: '', children: childRecord.children },
+                    groupMembers,
+                  );
+
+                  // Only create the group if it has members
+                  if (groupMembers.length > 0) {
+                    const control: FormControlData = {
+                      id: fieldPath,
+                      conceptUuid,
+                      type: 'obsControl',
+                      value: null,
+                      groupMembers,
+                    };
+                    controls.push(control);
+                  }
                 }
               }
+              // Handle regular obsControl: only add if value exists
+              else if (
+                childRecord.value?.value !== null &&
+                childRecord.value?.value !== undefined &&
+                childRecord.value?.value !== ''
+              ) {
+                if (conceptUuid && fieldPath) {
+                  const rawValue = childRecord.value.value;
+                  const isArray = Array.isArray(rawValue);
 
-              controls.push(control);
-            }
-          }
+                  const control: FormControlData = {
+                    id: fieldPath,
+                    conceptUuid,
+                    type: isArray ? 'multiselect' : ('obsControl' as const),
+                    value: rawValue as
+                      | string
+                      | number
+                      | boolean
+                      | Date
+                      | ConceptValue
+                      | ConceptValue[]
+                      | null,
+                  };
 
-          if (record.children && Array.isArray(record.children)) {
-            record.children.forEach((child) => {
-              if (child && typeof child === 'object') {
-                extractControls(child as typeof formRecord, controls);
+                  if (childRecord.value?.interpretation) {
+                    control.interpretation = childRecord.value.interpretation;
+                  }
+
+                  controls.push(control);
+                }
               }
-            });
-          }
-        };
+            }
+          });
+        }
+      };
 
-        const controls: FormControlData[] = [];
-        extractControls(formRecord, controls);
+      const controls: FormControlData[] = [];
+      extractControls(controlRecordTree, controls);
 
-        normalizedData = {
-          controls,
-          metadata: {},
-        };
-      }
-    } else if (
-      typeof data === 'object' &&
-      'controls' in data &&
-      Array.isArray((data as FormData).controls)
-    ) {
-      normalizedData = data as FormData;
-    } else if (Array.isArray(data)) {
       normalizedData = {
-        controls: data,
+        controls,
+        metadata: {},
+      };
+    } else if (
+      typeof plainData === 'object' &&
+      plainData !== null &&
+      'controls' in plainData &&
+      Array.isArray((plainData as FormData).controls)
+    ) {
+      normalizedData = plainData as FormData;
+    } else if (Array.isArray(plainData)) {
+      normalizedData = {
+        controls: plainData,
         metadata: {},
       };
     }

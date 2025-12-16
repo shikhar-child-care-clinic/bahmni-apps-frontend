@@ -408,7 +408,8 @@ export function createObservationBundleEntries({
     }
 
     // Create FHIR Observation resources from the observation payloads
-    const observationResources = createObservationResources(
+    // Returns array of { resource, fullUrl } objects
+    const observationResults = createObservationResources(
       observations,
       encounterSubject,
       createEncounterReferenceFromString(encounterReference),
@@ -416,11 +417,11 @@ export function createObservationBundleEntries({
     );
 
     // Create bundle entries for each observation resource
-    for (const observationResource of observationResources) {
-      const observationResourceURL = `urn:uuid:${crypto.randomUUID()}`;
+    // Use the pre-generated fullUrl so hasMember references work correctly
+    for (const result of observationResults) {
       const observationBundleEntry = createBundleEntry(
-        observationResourceURL,
-        observationResource,
+        result.fullUrl,
+        result.resource,
         'POST',
       );
       observationEntries.push(observationBundleEntry);

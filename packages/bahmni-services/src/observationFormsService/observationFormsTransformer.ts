@@ -83,6 +83,16 @@ function transformGroupMembers(
     }));
 }
 
+/**
+ * Transforms FormData to ObservationDataInFormControls[] for the backend API
+ *
+ * This is the final step in the data flow:
+ * forms2-controls format → FormControlData[] → ObservationDataInFormControls[]
+ *
+ * The forms2-controls format has { concept: {name}, formFieldPath, value, groupMembers }
+ * This gets normalized to FormControlData[] by useObservationFormData hook
+ * And finally transformed here to the backend API format
+ */
 export function transformFormDataToObservations(
   formData: FormData,
   metadata: FormMetadata,
@@ -95,11 +105,29 @@ export function transformFormDataToObservations(
   const timestamp = new Date().toISOString();
 
   formData.controls.forEach((control) => {
-    if (control.value === null || control.value === undefined) {
+    // Skip sections without concept UUIDs
+    if (control.type === 'section' && !control.conceptUuid) {
       return;
     }
 
-    if (control.type === 'section' && !control.conceptUuid) {
+    // Handle controls with group members (obsGroupControl)
+    // These have value: null but contain children
+    if (control.groupMembers && control.groupMembers.length > 0) {
+      const observation: ObservationDataInFormControls = {
+        concept: { uuid: control.conceptUuid },
+        value: null,
+        obsDatetime: timestamp,
+        formNamespace: 'Bahmni',
+        formFieldPath: control.id,
+        groupMembers: transformGroupMembers(control.groupMembers),
+      };
+
+      observations.push(observation);
+      return;
+    }
+
+    // Skip controls without values (and without group members)
+    if (control.value === null || control.value === undefined) {
       return;
     }
 
@@ -133,10 +161,6 @@ export function transformFormDataToObservations(
 
       if (control.interpretation) {
         observation.interpretation = control.interpretation;
-      }
-
-      if (control.groupMembers && control.groupMembers.length > 0) {
-        observation.groupMembers = transformGroupMembers(control.groupMembers);
       }
 
       observations.push(observation);
