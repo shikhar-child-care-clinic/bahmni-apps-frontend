@@ -1,6 +1,6 @@
+import type { Bundle, ServiceRequest } from 'fhir/r4';
 import { get } from '../api';
 import { SERVICE_REQUESTS_URL } from './constants';
-import type { ServiceRequestBundle } from './models';
 
 /**
  * Fetches service requests from the FHIR R4 endpoint
@@ -14,14 +14,14 @@ export async function getServiceRequests(
   category: string,
   patientUuid: string,
   encounterUuids?: string[],
-): Promise<ServiceRequestBundle> {
+): Promise<Bundle<ServiceRequest>> {
   let encounterUuidsString: string | undefined;
 
   if (encounterUuids && encounterUuids.length > 0) {
     encounterUuidsString = encounterUuids.join(',');
   }
 
-  return await get<ServiceRequestBundle>(
+  return await get<Bundle<ServiceRequest>>(
     SERVICE_REQUESTS_URL(category, patientUuid, encounterUuidsString),
   );
 }

@@ -18,11 +18,7 @@ import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
 import { ServiceRequestViewModel } from './models';
 import styles from './styles/GenericServiceRequestTable.module.scss';
-import {
-  createServiceRequestViewModels,
-  filterServiceRequestReplacementEntries,
-  sortServiceRequestsByPriority,
-} from './utils';
+import { mapServiceRequest, sortServiceRequestsByPriority } from './utils';
 
 export const orderTypesQueryKeys = () => ['orderTypes'] as const;
 
@@ -43,7 +39,7 @@ const fetchServiceRequests = async (
     patientUUID,
     encounterUuids,
   );
-  return createServiceRequestViewModels(response);
+  return mapServiceRequest(response);
 };
 
 /**
@@ -148,11 +144,12 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
   );
 
   const processedServiceRequests = useMemo(() => {
-    const filteredRequests =
-      filterServiceRequestReplacementEntries(serviceRequests);
+    //TODO : Need to check this filteration;
+    // const filteredRequests =
+    //   filterServiceRequestReplacementEntries(serviceRequests);
 
     const grouped = groupByDate(
-      filteredRequests,
+      serviceRequests,
       (request: ServiceRequestViewModel) => {
         const result = formatDate(request.orderedDate, t, ISO_DATE_FORMAT);
         return result.formattedResult;
@@ -199,6 +196,9 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
               )}
               {request.status === 'revoked' && (
                 <Tag type="outline">{t('REVOKED_STATUS')}</Tag>
+              )}
+              {request.status === 'unknown' && (
+                <Tag type="outline">{t('UNKNOWN_STATUS')}</Tag>
               )}
             </>
           );

@@ -3,8 +3,6 @@ import type { Bundle, BundleEntry, ServiceRequest } from 'fhir/r4';
 
 import { ServiceRequestViewModel } from './models';
 
-type ServiceRequestBundle = Bundle<ServiceRequest>;
-
 /**
  * Priority order for service request priorities (case insensitive)
  * Index 0 = highest priority, higher index = lower priority
@@ -61,8 +59,8 @@ export const filterServiceRequestReplacementEntries = (
  * @param bundle - The FHIR bundle to format
  * @returns An array of formatted service request view model objects
  */
-export function createServiceRequestViewModels(
-  bundle: ServiceRequestBundle,
+export function mapServiceRequest(
+  bundle: Bundle<ServiceRequest>,
 ): ServiceRequestViewModel[] {
   const orders =
     bundle.entry?.map(

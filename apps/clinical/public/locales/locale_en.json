@@ -94,7 +94,6 @@
   "DIAGNOSIS_RECORDED_DATE": "Recorded Date",
   "DIAGNOSIS_TABLE_NOT_AVAILABLE": "Not available",
   "DROPDOWN_VALUE_REQUIRED": "Please select a value",
-  "DASHBOARD_TITLE_SERVICE_REQUEST_KEY": "Examination",
   "DURATION_UNIT_DAYS": "Days",
   "DURATION_UNIT_HOURS": "Hours",
   "DURATION_UNIT_MINUTES": "Minutes",
@@ -239,6 +238,7 @@
   "SEVERITY_SEVERE": "Severe",
   "SIDE_NAVIGATION": "Side navigation",
   "UNEXPECTED_ERROR": "An unexpected error occurred",
+  "UNKNOWN_STATUS": "Canceled",
   "VISIT_TYPE": "Visit Type",
   "VITAL_FLOW_SHEET_TABLE": "Vital Flow Sheet Table",
   "VITAL_SIGN": "Vital Sign",
@@ -256,5 +256,5 @@
   "SERVICE_REQUEST_ORDERED_BY": "Ordered By",
   "SERVICE_REQUEST_HEADING": "Service Requests",
   "SERVICE_REQUEST_PRIORITY_URGENT": "Urgent",
-  "SERVICE_REQUEST_ORDERED_STATUS": "status"
+  "SERVICE_REQUEST_ORDERED_STATUS": "Status"
 }

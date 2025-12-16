@@ -17,11 +17,7 @@ import { usePatientUUID } from '../../hooks/usePatientUUID';
 import { useNotification } from '../../notification';
 import GenericServiceRequestTable from '../GenericServiceRequestTable';
 import { ServiceRequestViewModel } from '../models';
-import {
-  createServiceRequestViewModels,
-  filterServiceRequestReplacementEntries,
-  sortServiceRequestsByPriority,
-} from '../utils';
+import { mapServiceRequest, sortServiceRequestsByPriority } from '../utils';
 
 expect.extend(toHaveNoViolations);
 
@@ -36,8 +32,7 @@ jest.mock('@bahmni/services', () => ({
 }));
 
 jest.mock('../utils', () => ({
-  createServiceRequestViewModels: jest.fn(),
-  filterServiceRequestReplacementEntries: jest.fn(),
+  mapServiceRequest: jest.fn(),
   sortServiceRequestsByPriority: jest.fn(),
 }));
 
@@ -63,14 +58,9 @@ const mockGetOrderTypes = getOrderTypes as jest.MockedFunction<
 const mockGetServiceRequests = getServiceRequests as jest.MockedFunction<
   typeof getServiceRequests
 >;
-const mockCreateServiceRequestViewModels =
-  createServiceRequestViewModels as jest.MockedFunction<
-    typeof createServiceRequestViewModels
-  >;
-const mockFilterServiceRequestReplacementEntries =
-  filterServiceRequestReplacementEntries as jest.MockedFunction<
-    typeof filterServiceRequestReplacementEntries
-  >;
+const mockMapServiceRequest = mapServiceRequest as jest.MockedFunction<
+  typeof mapServiceRequest
+>;
 const mockSortServiceRequestsByPriority =
   sortServiceRequestsByPriority as jest.MockedFunction<
     typeof sortServiceRequestsByPriority
@@ -236,14 +226,11 @@ describe('GenericServiceRequestTable', () => {
       message: 'Network error',
       title: '',
     });
-    mockFilterServiceRequestReplacementEntries.mockImplementation(
-      (data) => data,
-    );
     mockSortServiceRequestsByPriority.mockImplementation((data) => data);
     mockGroupByDate.mockReturnValue([]);
     mockGetOrderTypes.mockResolvedValue(mockOrderTypes);
     mockGetServiceRequests.mockResolvedValue(mockServiceRequestBundle);
-    mockCreateServiceRequestViewModels.mockReturnValue(mockServiceRequests);
+    mockMapServiceRequest.mockReturnValue(mockServiceRequests);
   });
 
   describe('Loading state', () => {
@@ -341,7 +328,7 @@ describe('GenericServiceRequestTable', () => {
 
   describe('Empty state', () => {
     it('renders empty state when no service requests', async () => {
-      mockCreateServiceRequestViewModels.mockReturnValue([]);
+      mockMapServiceRequest.mockReturnValue([]);
 
       render(
         <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
@@ -420,11 +407,8 @@ describe('GenericServiceRequestTable', () => {
       );
 
       await waitFor(() => {
-        expect(mockCreateServiceRequestViewModels).toHaveBeenCalledWith(
+        expect(mockMapServiceRequest).toHaveBeenCalledWith(
           mockServiceRequestBundle,
-        );
-        expect(mockFilterServiceRequestReplacementEntries).toHaveBeenCalledWith(
-          mockServiceRequests,
         );
         expect(mockGroupByDate).toHaveBeenCalledWith(
           mockServiceRequests,
@@ -700,9 +684,7 @@ describe('GenericServiceRequestTable', () => {
   describe('Edge cases', () => {
     it('handles single date group', async () => {
       const singleDateServiceRequests = [mockServiceRequests[0]];
-      mockCreateServiceRequestViewModels.mockReturnValue(
-        singleDateServiceRequests,
-      );
+      mockMapServiceRequest.mockReturnValue(singleDateServiceRequests);
       mockGroupByDate.mockReturnValue([
         { date: '2023-12-01', items: singleDateServiceRequests },
       ]);
@@ -716,41 +698,6 @@ describe('GenericServiceRequestTable', () => {
 
       await waitFor(() => {
         expect(screen.getAllByTestId('accordian-table-title')).toHaveLength(1);
-      });
-    });
-
-    it('handles replacement filtering', async () => {
-      const serviceRequestsWithReplacements = [
-        ...mockServiceRequests,
-        {
-          id: 'replacement',
-          testName: 'Replacement Test',
-          priority: 'routine',
-          orderedBy: 'Dr. Replace',
-          orderedDate: '2023-12-01T10:30:00.000Z',
-          status: 'active',
-          replaces: ['service-1'],
-        },
-      ];
-
-      mockCreateServiceRequestViewModels.mockReturnValue(
-        serviceRequestsWithReplacements,
-      );
-      mockFilterServiceRequestReplacementEntries.mockReturnValue(
-        mockServiceRequests,
-      );
-
-      render(
-        <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
-        {
-          wrapper: createWrapper(),
-        },
-      );
-
-      await waitFor(() => {
-        expect(mockFilterServiceRequestReplacementEntries).toHaveBeenCalledWith(
-          serviceRequestsWithReplacements,
-        );
       });
     });
 
@@ -782,9 +729,7 @@ describe('GenericServiceRequestTable', () => {
         },
       ];
 
-      mockCreateServiceRequestViewModels.mockReturnValue(
-        mixedPriorityServiceRequests,
-      );
+      mockMapServiceRequest.mockReturnValue(mixedPriorityServiceRequests);
       mockGroupByDate.mockReturnValue([
         { date: '2023-12-01', items: mixedPriorityServiceRequests },
       ]);
@@ -886,7 +831,7 @@ describe('GenericServiceRequestTable', () => {
     });
 
     it('has no accessibility violations in empty state', async () => {
-      mockCreateServiceRequestViewModels.mockReturnValue([]);
+      mockMapServiceRequest.mockReturnValue([]);
       mockGroupByDate.mockReturnValue([]);
 
       const { container } = render(
@@ -1006,7 +951,7 @@ describe('GenericServiceRequestTable', () => {
 
   describe('emptyEncounterFilter logic', () => {
     beforeEach(() => {
-      mockCreateServiceRequestViewModels.mockReturnValue(mockServiceRequests);
+      mockMapServiceRequest.mockReturnValue(mockServiceRequests);
       mockGroupByDate.mockReturnValue([
         {
           date: '2023-12-01',

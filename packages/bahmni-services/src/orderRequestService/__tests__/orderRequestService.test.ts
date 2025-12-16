@@ -1,12 +1,12 @@
+import type { Bundle, ServiceRequest } from 'fhir/r4';
 import { get } from '../../api';
 import { SERVICE_REQUESTS_URL } from '../constants';
-import type { ServiceRequestBundle } from '../models';
 import { getServiceRequests } from '../orderRequestService';
 
 jest.mock('../../api');
 const mockedGet = get as jest.MockedFunction<typeof get>;
 
-const mockServiceRequestBundle: ServiceRequestBundle = {
+const mockServiceRequestBundle: Bundle<ServiceRequest> = {
   resourceType: 'Bundle',
   id: '42235c1c-9f6a-4122-977c-ff7e1c3072b9',
   type: 'searchset',
