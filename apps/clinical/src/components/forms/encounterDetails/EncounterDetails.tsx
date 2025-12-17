@@ -61,7 +61,7 @@ const EncounterDetails: React.FC = () => {
     selectedVisitType,
     encounterParticipants,
     consultationDate,
-    hasError,
+    isError,
     setSelectedLocation,
     setSelectedEncounterType,
     setSelectedVisitType,
@@ -180,7 +180,7 @@ const EncounterDetails: React.FC = () => {
     );
 
     // Check no errors exist
-    const hasNoErrors = !hasError;
+    const hasNoErrors = !isError;
 
     // Check all required fields are populated
     const hasAllRequiredFields =
@@ -198,7 +198,7 @@ const EncounterDetails: React.FC = () => {
     setEncounterDetailsFormReady(isFormReady);
   }, [
     allLoadingStates,
-    hasError,
+    isError,
     selectedLocation,
     selectedEncounterType,
     selectedVisitType,

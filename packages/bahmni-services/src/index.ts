@@ -144,9 +144,9 @@ export {
   type RadiologyInvestigation,
 } from './radiologyInvestigationService';
 export {
-  getPatientLabTestsBundle,
   getPatientLabInvestigations,
   groupLabTestsByDate,
+  formatLabTests,
   type FormattedLabTest,
   LabTestPriority,
   type LabTestsByDate,

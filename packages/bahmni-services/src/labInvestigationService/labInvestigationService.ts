@@ -2,7 +2,7 @@ import { Bundle, ServiceRequest } from 'fhir/r4';
 import { get } from '../api';
 import { formatDate } from '../date';
 import {
-  PATIENT_LAB_INVESTIGATION_RESOURCE_URL,
+  LAB_INVESTIGATION_URL,
   FHIR_LAB_ORDER_CONCEPT_TYPE_EXTENSION_URL,
 } from './constants';
 import { FormattedLabTest, LabTestPriority, LabTestsByDate } from './models';
@@ -44,15 +44,25 @@ function filterLabTestEntries(labTestBundle: Bundle<ServiceRequest>) {
 }
 
 /**
- * Fetches lab tests for a given patient UUID from the FHIR R4 endpoint
- * @param patientUUID - The UUID of the patient
- * @returns Promise resolving to a FhirLabTestBundle
+ * Fetches lab investigations from the FHIR R4 endpoint
+ * @param category - The category UUID to filter by (order type)
+ * @param patientUuid - Patient UUID to filter by
+ * @param encounterUuids - Optional encounter UUIDs to filter by
+ * @returns Promise resolving to ServiceRequest Bundle
  */
-export async function getPatientLabTestsBundle(
-  patientUUID: string,
+export async function getLabInvestigations(
+  patientUuid: string,
+  category: string = '',
+  encounterUuids?: string[],
 ): Promise<Bundle<ServiceRequest>> {
+  let encounterUuidsString: string | undefined;
+
+  if (encounterUuids && encounterUuids.length > 0) {
+    encounterUuidsString = encounterUuids.join(',');
+  }
+
   const fhirLabTestBundle = await get<Bundle<ServiceRequest>>(
-    `${PATIENT_LAB_INVESTIGATION_RESOURCE_URL(patientUUID)}`,
+    LAB_INVESTIGATION_URL(category, patientUuid, encounterUuidsString),
   );
 
   const filteredEntries = filterLabTestEntries(fhirLabTestBundle);
@@ -65,13 +75,23 @@ export async function getPatientLabTestsBundle(
 
 /**
  * Fetches lab tests for a given patient UUID
+ * @param category
  * @param patientUUID - The UUID of the patient
+ * @param encounterUuids
  * @returns Promise resolving to an array of FhirLabTest
  */
+
+//TODO : Not using anywhere can be remove this from this file
 export async function getLabTests(
   patientUUID: string,
+  category: string = '',
+  encounterUuids?: string[],
 ): Promise<ServiceRequest[]> {
-  const fhirLabTestBundle = await getPatientLabTestsBundle(patientUUID);
+  const fhirLabTestBundle = await getLabInvestigations(
+    category,
+    patientUUID,
+    encounterUuids,
+  );
   return (
     fhirLabTestBundle.entry
       ?.map((entry) => entry.resource)
@@ -186,13 +206,22 @@ export async function getPatientLabTestsByDate(
 /**
  * Fetches and formats lab investigations for a given patient UUID
  * @param patientUUID - The UUID of the patient
+ * @param category - The category UUID to filter by (order type)
+ * @param encounterUuids - Optional encounter UUIDs to filter by
+ * @param t - Translation function
  * @returns Promise resolving to an array of lab investigations
  */
 export async function getPatientLabInvestigations(
   patientUUID: string,
+  category: string,
+  encounterUuids?: string[],
   t: (key: string) => string,
 ): Promise<FormattedLabTest[]> {
-  const bundle = await getPatientLabTestsBundle(patientUUID);
+  const bundle = await getLabInvestigations(
+    patientUUID,
+    category,
+    encounterUuids,
+  );
   const labTests =
     bundle.entry
       ?.map((entry) => entry.resource)

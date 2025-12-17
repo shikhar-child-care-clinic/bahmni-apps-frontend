@@ -2,30 +2,35 @@ import {
   LabTestPriority,
   FormattedLabTest,
   useTranslation,
+  getOrderTypes,
+  getPatientLabInvestigations,
 } from '@bahmni/services';
 import { render, screen, waitFor } from '@testing-library/react';
 import { useParams } from 'react-router-dom';
 import LabInvestigation from '../LabInvestigation';
-import useLabInvestigations from '../useLabInvestigations';
-
-// Mock the hook directly for integration testing
-jest.mock('../useLabInvestigations');
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   useTranslation: jest.fn(),
+  getOrderTypes: jest.fn(),
+  getServiceRequests: jest.fn(),
 }));
 
 jest.mock('react-router-dom', () => ({
   useParams: jest.fn(),
 }));
 
-const mockUseLabInvestigations = useLabInvestigations as jest.MockedFunction<
-  typeof useLabInvestigations
->;
 const mockUseTranslation = useTranslation as jest.MockedFunction<
   typeof useTranslation
 >;
+
+const mockGetOrderTypes = getOrderTypes as jest.MockedFunction<
+  typeof getOrderTypes
+>;
+const mockGetPatientLabInvestigations =
+  getPatientLabInvestigations as jest.MockedFunction<
+    typeof getPatientLabInvestigations
+  >;
 const mockUseParams = useParams as jest.MockedFunction<typeof useParams>;
 
 // Mock formatted lab tests that match the component's expected data structure
@@ -89,11 +94,10 @@ describe('LabInvestigation Integration Tests', () => {
   });
 
   it('displays lab results after successful API call', async () => {
-    mockUseLabInvestigations.mockReturnValue({
-      labTests: mockFormattedLabTests,
-      isLoading: false,
-      hasError: false,
-    });
+
+    mockGetPatientLabInvestigations.mockImplementation(
+      () => new Promise(() => {}), // Never resolves
+    );
 
     render(<LabInvestigation />);
 
@@ -111,11 +115,9 @@ describe('LabInvestigation Integration Tests', () => {
   });
 
   it('shows loading state during API call', async () => {
-    mockUseLabInvestigations.mockReturnValue({
-      labTests: [],
-      isLoading: true,
-      hasError: false,
-    });
+    mockGetPatientLabInvestigations.mockImplementation(
+      () => new Promise(() => {}), // Never resolves
+    );
 
     render(<LabInvestigation />);
 
@@ -123,11 +125,9 @@ describe('LabInvestigation Integration Tests', () => {
   });
 
   it('displays error message when API call fails', async () => {
-    mockUseLabInvestigations.mockReturnValue({
-      labTests: [],
-      isLoading: false,
-      hasError: true,
-    });
+    mockGetPatientLabInvestigations.mockImplementation(
+      () => new Promise(() => {}), // Never resolves
+    );
 
     render(<LabInvestigation />);
 
@@ -136,12 +136,9 @@ describe('LabInvestigation Integration Tests', () => {
   });
 
   it('shows empty state when no lab tests are returned', async () => {
-    mockUseLabInvestigations.mockReturnValue({
-      labTests: [],
-      isLoading: false,
-      hasError: false,
-    });
-
+    mockGetPatientLabInvestigations.mockImplementation(
+      () => new Promise(() => {}), // Never resolves
+    );
     render(<LabInvestigation />);
 
     expect(
@@ -151,12 +148,9 @@ describe('LabInvestigation Integration Tests', () => {
   });
 
   it('handles accordion interaction correctly', async () => {
-    mockUseLabInvestigations.mockReturnValue({
-      labTests: mockFormattedLabTests,
-      isLoading: false,
-      hasError: false,
-    });
-
+    mockGetPatientLabInvestigations.mockImplementation(
+      () => new Promise(() => {}), // Never resolves
+    );
     render(<LabInvestigation />);
 
     await waitFor(() => {
@@ -176,12 +170,9 @@ describe('LabInvestigation Integration Tests', () => {
   });
 
   it('displays priority information correctly', async () => {
-    mockUseLabInvestigations.mockReturnValue({
-      labTests: mockFormattedLabTests,
-      isLoading: false,
-      hasError: false,
-    });
-
+    mockGetPatientLabInvestigations.mockImplementation(
+      () => new Promise(() => {}), // Never resolves
+    );
     render(<LabInvestigation />);
 
     await waitFor(() => {
@@ -198,11 +189,9 @@ describe('LabInvestigation Integration Tests', () => {
   });
 
   it('renders tests in correct priority order within date groups', async () => {
-    mockUseLabInvestigations.mockReturnValue({
-      labTests: mockFormattedLabTests,
-      isLoading: false,
-      hasError: false,
-    });
+    mockGetPatientLabInvestigations.mockImplementation(
+      () => new Promise(() => {}), // Never resolves
+    );
 
     render(<LabInvestigation />);
 
@@ -219,11 +208,9 @@ describe('LabInvestigation Integration Tests', () => {
   });
 
   it('displays pending results message for tests without results', async () => {
-    mockUseLabInvestigations.mockReturnValue({
-      labTests: mockFormattedLabTests,
-      isLoading: false,
-      hasError: false,
-    });
+    mockGetPatientLabInvestigations.mockImplementation(
+      () => new Promise(() => {}), // Never resolves
+    );
 
     render(<LabInvestigation />);
 
@@ -237,11 +224,9 @@ describe('LabInvestigation Integration Tests', () => {
   });
 
   it('handles API errors gracefully', async () => {
-    mockUseLabInvestigations.mockReturnValue({
-      labTests: [],
-      isLoading: false,
-      hasError: true,
-    });
+    mockGetPatientLabInvestigations.mockImplementation(
+      () => new Promise(() => {}), // Never resolves
+    );
 
     render(<LabInvestigation />);
 
@@ -249,12 +234,9 @@ describe('LabInvestigation Integration Tests', () => {
   });
 
   it('responds to patient UUID changes', async () => {
-    // First render with initial data
-    mockUseLabInvestigations.mockReturnValue({
-      labTests: mockFormattedLabTests,
-      isLoading: false,
-      hasError: false,
-    });
+    mockGetPatientLabInvestigations.mockImplementation(
+      () => new Promise(() => {}), // Never resolves
+    );
 
     const { rerender } = render(<LabInvestigation />);
 
@@ -262,12 +244,9 @@ describe('LabInvestigation Integration Tests', () => {
       expect(screen.getByText('Mar 25, 2025')).toBeInTheDocument();
     });
 
-    // Simulate patient change - component would show loading state
-    mockUseLabInvestigations.mockReturnValue({
-      labTests: [],
-      isLoading: true,
-      hasError: false,
-    });
+    mockGetPatientLabInvestigations.mockImplementation(
+      () => new Promise(() => {}), // Never resolves
+    );
 
     // Change patient UUID
     mockUseParams.mockReturnValue({

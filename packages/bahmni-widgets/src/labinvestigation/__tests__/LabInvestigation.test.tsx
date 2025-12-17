@@ -7,7 +7,6 @@ import {
 } from '@bahmni/services';
 import { render, screen } from '@testing-library/react';
 import LabInvestigation from '../LabInvestigation';
-import useLabInvestigations from '../useLabInvestigations';
 
 jest.mock('../useLabInvestigations');
 jest.mock('@bahmni/services', () => ({

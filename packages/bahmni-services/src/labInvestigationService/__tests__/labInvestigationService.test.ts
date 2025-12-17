@@ -3,11 +3,11 @@ import { get } from '../../api';
 import { formatDate } from '../../date';
 import { useTranslation } from '../../i18n';
 import {
+  getLabInvestigations,
   getLabTests,
   formatLabTests,
   groupLabTestsByDate,
   getPatientLabTestsByDate,
-  getPatientLabTestsBundle,
   mapLabTestPriority,
   determineTestType,
 } from '../labInvestigationService';
@@ -161,7 +161,7 @@ describe('labInvestigationService', () => {
 
       (get as jest.Mock).mockResolvedValue(mockBundle);
 
-      const result = await getPatientLabTestsBundle(patientUUID);
+      const result = await getLabInvestigations(patientUUID);
 
       expect(get).toHaveBeenCalledWith(expect.stringContaining(patientUUID));
       expect(result.entry).toHaveLength(1);
@@ -172,7 +172,7 @@ describe('labInvestigationService', () => {
       const emptyBundle = createMockBundle([]);
       (get as jest.Mock).mockResolvedValue(emptyBundle);
 
-      const result = await getPatientLabTestsBundle(patientUUID);
+      const result = await getLabInvestigations(patientUUID);
 
       expect(result.entry).toEqual([]);
     });
@@ -181,7 +181,7 @@ describe('labInvestigationService', () => {
       const bundleNoEntry = { ...createMockBundle([]), entry: undefined };
       (get as jest.Mock).mockResolvedValue(bundleNoEntry);
 
-      const result = await getPatientLabTestsBundle(patientUUID);
+      const result = await getLabInvestigations(patientUUID);
 
       expect(result.entry).toEqual([]);
     });
@@ -189,7 +189,7 @@ describe('labInvestigationService', () => {
     it('should throw error when API call fails', async () => {
       (get as jest.Mock).mockRejectedValue(new Error('API Error'));
 
-      await expect(getPatientLabTestsBundle(patientUUID)).rejects.toThrow(
+      await expect(getLabInvestigations(patientUUID)).rejects.toThrow(
         'API Error',
       );
     });
@@ -364,6 +364,97 @@ describe('labInvestigationService', () => {
     it('should handle empty array', () => {
       const result = groupLabTestsByDate([]);
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('getLabInvestigations', () => {
+    const category = 'lab-order-category-uuid';
+
+    it('should fetch lab investigations with category and patient UUID', async () => {
+      const mockBundle = createMockBundle([
+        createMockServiceRequest({ id: 'test-1' }),
+        createMockServiceRequest({
+          id: 'test-2',
+          replaces: [{ reference: 'ServiceRequest/test-1' }],
+        }),
+        createMockServiceRequest({ id: 'test-3' }),
+      ]);
+
+      (get as jest.Mock).mockResolvedValue(mockBundle);
+
+      const result = await getLabInvestigations(category, patientUUID);
+
+      expect(get).toHaveBeenCalledWith(expect.stringContaining(category));
+      expect(get).toHaveBeenCalledWith(expect.stringContaining(patientUUID));
+      expect(result.entry).toHaveLength(1);
+      expect(result.entry?.[0].resource?.id).toBe('test-3');
+    });
+
+    it('should fetch lab investigations with encounters', async () => {
+      const encounterUuids = ['encounter-1', 'encounter-2'];
+      const mockBundle = createMockBundle([
+        createMockServiceRequest({ id: 'test-1' }),
+      ]);
+
+      (get as jest.Mock).mockResolvedValue(mockBundle);
+
+      const result = await getLabInvestigations(
+        category,
+        patientUUID,
+        encounterUuids,
+      );
+
+      expect(get).toHaveBeenCalledWith(
+        expect.stringContaining('encounter=encounter-1,encounter-2'),
+      );
+      expect(result.entry).toHaveLength(1);
+    });
+
+    it('should handle empty encounters array', async () => {
+      const encounterUuids: string[] = [];
+      const mockBundle = createMockBundle([
+        createMockServiceRequest({ id: 'test-1' }),
+      ]);
+
+      (get as jest.Mock).mockResolvedValue(mockBundle);
+
+      const result = await getLabInvestigations(
+        category,
+        patientUUID,
+        encounterUuids,
+      );
+
+      expect(get).toHaveBeenCalledWith(
+        expect.not.stringContaining('encounter='),
+      );
+      expect(result.entry).toHaveLength(1);
+    });
+
+    it('should handle undefined encounters', async () => {
+      const mockBundle = createMockBundle([
+        createMockServiceRequest({ id: 'test-1' }),
+      ]);
+
+      (get as jest.Mock).mockResolvedValue(mockBundle);
+
+      const result = await getLabInvestigations(
+        category,
+        patientUUID,
+        undefined,
+      );
+
+      expect(get).toHaveBeenCalledWith(
+        expect.not.stringContaining('encounter='),
+      );
+      expect(result.entry).toHaveLength(1);
+    });
+
+    it('should throw error when API call fails', async () => {
+      (get as jest.Mock).mockRejectedValue(new Error('API Error'));
+
+      await expect(getLabInvestigations(category, patientUUID)).rejects.toThrow(
+        'API Error',
+      );
     });
   });
 
