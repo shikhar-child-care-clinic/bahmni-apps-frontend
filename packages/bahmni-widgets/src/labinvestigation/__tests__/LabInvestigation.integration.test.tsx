@@ -94,7 +94,6 @@ describe('LabInvestigation Integration Tests', () => {
   });
 
   it('displays lab results after successful API call', async () => {
-
     mockGetPatientLabInvestigations.mockImplementation(
       () => new Promise(() => {}), // Never resolves
     );

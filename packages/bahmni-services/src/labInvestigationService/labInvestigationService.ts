@@ -48,12 +48,14 @@ function filterLabTestEntries(labTestBundle: Bundle<ServiceRequest>) {
  * @param category - The category UUID to filter by (order type)
  * @param patientUuid - Patient UUID to filter by
  * @param encounterUuids - Optional encounter UUIDs to filter by
+ * @param numberOfVisits - Optional number of visits to filter by
  * @returns Promise resolving to ServiceRequest Bundle
  */
 export async function getLabInvestigations(
+  category: string,
   patientUuid: string,
-  category: string = '',
   encounterUuids?: string[],
+  numberOfVisits?: number,
 ): Promise<Bundle<ServiceRequest>> {
   let encounterUuidsString: string | undefined;
 
@@ -61,9 +63,18 @@ export async function getLabInvestigations(
     encounterUuidsString = encounterUuids.join(',');
   }
 
-  const fhirLabTestBundle = await get<Bundle<ServiceRequest>>(
-    LAB_INVESTIGATION_URL(category, patientUuid, encounterUuidsString),
+  const url = LAB_INVESTIGATION_URL(
+    category,
+    patientUuid,
+    encounterUuidsString,
+    numberOfVisits,
   );
+
+  // Debug logging
+  console.log('Generated Lab Investigation URL:', url);
+  console.log('Parameters - category:', category, 'patientUuid:', patientUuid, 'encounterUuidsString:', encounterUuidsString, 'numberOfVisits:', numberOfVisits);
+
+  const fhirLabTestBundle = await get<Bundle<ServiceRequest>>(url);
 
   const filteredEntries = filterLabTestEntries(fhirLabTestBundle);
 
@@ -75,22 +86,25 @@ export async function getLabInvestigations(
 
 /**
  * Fetches lab tests for a given patient UUID
- * @param category
  * @param patientUUID - The UUID of the patient
+ * @param category
+ * @param t
  * @param encounterUuids
+ * @param numberOfVisits
  * @returns Promise resolving to an array of FhirLabTest
  */
-
-//TODO : Not using anywhere can be remove this from this file
 export async function getLabTests(
   patientUUID: string,
-  category: string = '',
+  category: string,
+  t: (key: string) => string,
   encounterUuids?: string[],
+  numberOfVisits?: number,
 ): Promise<ServiceRequest[]> {
   const fhirLabTestBundle = await getLabInvestigations(
     category,
     patientUUID,
     encounterUuids,
+    numberOfVisits,
   );
   return (
     fhirLabTestBundle.entry
@@ -196,9 +210,18 @@ export function groupLabTestsByDate(
  */
 export async function getPatientLabTestsByDate(
   patientUUID: string,
+  category: string,
   t: (key: string) => string,
+  encounterUuids?: string[],
+  numberOfVisits?: number,
 ): Promise<LabTestsByDate[]> {
-  const labTests = await getLabTests(patientUUID);
+  const labTests = await getLabTests(
+    category,
+    patientUUID,
+    t,
+    encounterUuids,
+    numberOfVisits,
+  );
   const formattedLabTests = formatLabTests(labTests, t);
   return groupLabTestsByDate(formattedLabTests);
 }
@@ -208,19 +231,22 @@ export async function getPatientLabTestsByDate(
  * @param patientUUID - The UUID of the patient
  * @param category - The category UUID to filter by (order type)
  * @param encounterUuids - Optional encounter UUIDs to filter by
+ * @param numberOfVisits - Optional number of visits to filter by
  * @param t - Translation function
  * @returns Promise resolving to an array of lab investigations
  */
 export async function getPatientLabInvestigations(
   patientUUID: string,
   category: string,
-  encounterUuids?: string[],
   t: (key: string) => string,
+  encounterUuids?: string[],
+  numberOfVisits?: number,
 ): Promise<FormattedLabTest[]> {
   const bundle = await getLabInvestigations(
-    patientUUID,
     category,
+    patientUUID,
     encounterUuids,
+    numberOfVisits,
   );
   const labTests =
     bundle.entry
