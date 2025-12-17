@@ -262,6 +262,8 @@ describe('Widget Registry', () => {
         'pacsOrders',
         'treatment',
         'flowSheet',
+        'ordersControl',
+        'programs',
       ];
 
       expect(types).toHaveLength(expectedTypes.length);
@@ -391,7 +393,7 @@ describe('Widget Registry', () => {
       resetWidgetRegistry();
       const countAfterReset = getAllWidgetTypes().length;
 
-      expect(countAfterReset).toBe(7); // Only built-in widgets
+      expect(countAfterReset).toBe(9); // Only built-in widgets
       expect(countWithCustom).toBeGreaterThan(countAfterReset);
     });
   });
