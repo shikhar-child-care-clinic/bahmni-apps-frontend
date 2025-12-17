@@ -169,8 +169,10 @@ export const createObservationResources = (
         type: 'Observation',
       }));
 
-      // Add dataAbsentReason for parent observations without values
-      // This indicates the observation is a grouping/panel and has no value itself
+      // Concatenate child observation values for parent valueString
+      // Extract values from the original observation data (not the FHIR resource)
+
+      parentObservation.valueString = 'TODO';
 
       // Generate a unique UUID for parent observation
       const parentUuid = crypto.randomUUID();
