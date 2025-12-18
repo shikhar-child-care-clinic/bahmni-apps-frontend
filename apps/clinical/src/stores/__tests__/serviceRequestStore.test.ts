@@ -271,6 +271,251 @@ describe('useServiceRequestStore', () => {
     });
   });
 
+  // UPDATE NOTE TESTS
+  describe('updateNote', () => {
+    test('should update note of a service request', () => {
+      const { result } = renderHook(() => useServiceRequestStore());
+      const category = 'lab';
+      const conceptUUID = 'test-uuid-1';
+      const note = 'Patient has low hemoglobin levels';
+
+      act(() => {
+        result.current.addServiceRequest(category, conceptUUID, 'Test Display');
+      });
+
+      act(() => {
+        result.current.updateNote(category, conceptUUID, note);
+      });
+
+      const categoryRequests =
+        result.current.selectedServiceRequests.get(category);
+      expect(categoryRequests![0].note).toBe(note);
+    });
+
+    test('should update note of only the specified service request', () => {
+      const { result } = renderHook(() => useServiceRequestStore());
+      const category = 'lab';
+      const conceptUUID1 = 'test-uuid-1';
+      const conceptUUID2 = 'test-uuid-2';
+      const note = 'Special instructions for test 1';
+
+      act(() => {
+        result.current.addServiceRequest(category, conceptUUID1, 'Test 1');
+        result.current.addServiceRequest(category, conceptUUID2, 'Test 2');
+      });
+
+      act(() => {
+        result.current.updateNote(category, conceptUUID1, note);
+      });
+
+      const categoryRequests =
+        result.current.selectedServiceRequests.get(category);
+      const request1 = categoryRequests!.find((req) => req.id === conceptUUID1);
+      const request2 = categoryRequests!.find((req) => req.id === conceptUUID2);
+
+      expect(request1!.note).toBe(note);
+      expect(request2!.note).toBeUndefined();
+    });
+
+    test('should handle updating note for non-existent category gracefully', () => {
+      const { result } = renderHook(() => useServiceRequestStore());
+      const category = 'non-existent';
+      const conceptUUID = 'test-uuid-1';
+      const note = 'Test note';
+
+      expect(() => {
+        act(() => {
+          result.current.updateNote(category, conceptUUID, note);
+        });
+      }).not.toThrow();
+
+      expect(
+        result.current.selectedServiceRequests.get(category),
+      ).toBeUndefined();
+      expect(result.current.selectedServiceRequests.has(category)).toBe(false);
+    });
+
+    test('should handle updating note for non-existent service request gracefully', () => {
+      const { result } = renderHook(() => useServiceRequestStore());
+      const category = 'lab';
+      const conceptUUID1 = 'test-uuid-1';
+      const conceptUUID2 = 'test-uuid-2';
+      const note = 'Test note';
+
+      act(() => {
+        result.current.addServiceRequest(
+          category,
+          conceptUUID1,
+          'Test Display',
+        );
+      });
+
+      act(() => {
+        result.current.updateNote(category, conceptUUID2, note);
+      });
+
+      const categoryRequests =
+        result.current.selectedServiceRequests.get(category);
+      expect(categoryRequests).toHaveLength(1);
+      expect(categoryRequests![0].note).toBeUndefined();
+    });
+
+    test('should preserve other properties when updating note', () => {
+      const { result } = renderHook(() => useServiceRequestStore());
+      const category = 'lab';
+      const conceptUUID = 'test-uuid-1';
+      const note = 'Test note';
+
+      act(() => {
+        result.current.addServiceRequest(category, conceptUUID, 'Test Display');
+        result.current.updatePriority(category, conceptUUID, 'stat');
+      });
+
+      const originalRequest =
+        result.current.selectedServiceRequests.get(category)![0];
+
+      act(() => {
+        result.current.updateNote(category, conceptUUID, note);
+      });
+
+      const updatedRequest =
+        result.current.selectedServiceRequests.get(category)![0];
+      expect(updatedRequest.id).toBe(originalRequest.id);
+      expect(updatedRequest.display).toBe(originalRequest.display);
+      expect(updatedRequest.selectedPriority).toBe(
+        originalRequest.selectedPriority,
+      );
+      expect(updatedRequest.note).toBe(note);
+    });
+
+    test('should handle empty note string', () => {
+      const { result } = renderHook(() => useServiceRequestStore());
+      const category = 'lab';
+      const conceptUUID = 'test-uuid-1';
+
+      act(() => {
+        result.current.addServiceRequest(category, conceptUUID, 'Test Display');
+        result.current.updateNote(category, conceptUUID, 'Initial note');
+      });
+
+      act(() => {
+        result.current.updateNote(category, conceptUUID, '');
+      });
+
+      const categoryRequests =
+        result.current.selectedServiceRequests.get(category);
+      expect(categoryRequests![0].note).toBe('');
+    });
+
+    test('should handle very long note text', () => {
+      const { result } = renderHook(() => useServiceRequestStore());
+      const category = 'lab';
+      const conceptUUID = 'test-uuid-1';
+      const longNote = 'A'.repeat(1000);
+
+      act(() => {
+        result.current.addServiceRequest(category, conceptUUID, 'Test Display');
+      });
+
+      act(() => {
+        result.current.updateNote(category, conceptUUID, longNote);
+      });
+
+      const categoryRequests =
+        result.current.selectedServiceRequests.get(category);
+      expect(categoryRequests![0].note).toBe(longNote);
+      expect(categoryRequests![0].note).toHaveLength(1000);
+    });
+
+    test('should handle newlines in note', () => {
+      const { result } = renderHook(() => useServiceRequestStore());
+      const category = 'lab';
+      const conceptUUID = 'test-uuid-1';
+      const multilineNote = 'Line 1\nLine 2\nLine 3';
+
+      act(() => {
+        result.current.addServiceRequest(category, conceptUUID, 'Test Display');
+      });
+
+      act(() => {
+        result.current.updateNote(category, conceptUUID, multilineNote);
+      });
+
+      const categoryRequests =
+        result.current.selectedServiceRequests.get(category);
+      expect(categoryRequests![0].note).toBe(multilineNote);
+    });
+
+    test('should allow updating note multiple times', () => {
+      const { result } = renderHook(() => useServiceRequestStore());
+      const category = 'lab';
+      const conceptUUID = 'test-uuid-1';
+      const note1 = 'First note';
+      const note2 = 'Second note';
+      const note3 = 'Third note';
+
+      act(() => {
+        result.current.addServiceRequest(category, conceptUUID, 'Test Display');
+      });
+
+      act(() => {
+        result.current.updateNote(category, conceptUUID, note1);
+      });
+
+      expect(
+        result.current.selectedServiceRequests.get(category)![0].note,
+      ).toBe(note1);
+
+      act(() => {
+        result.current.updateNote(category, conceptUUID, note2);
+      });
+
+      expect(
+        result.current.selectedServiceRequests.get(category)![0].note,
+      ).toBe(note2);
+
+      act(() => {
+        result.current.updateNote(category, conceptUUID, note3);
+      });
+
+      expect(
+        result.current.selectedServiceRequests.get(category)![0].note,
+      ).toBe(note3);
+    });
+
+    test('should update notes independently for different categories', () => {
+      const { result } = renderHook(() => useServiceRequestStore());
+      const labCategory = 'lab';
+      const radiologyCategory = 'radiology';
+      const labUUID = 'lab-uuid-1';
+      const radUUID = 'rad-uuid-1';
+      const labNote = 'Lab note';
+      const radNote = 'Radiology note';
+
+      act(() => {
+        result.current.addServiceRequest(labCategory, labUUID, 'Lab Test');
+        result.current.addServiceRequest(
+          radiologyCategory,
+          radUUID,
+          'Rad Test',
+        );
+      });
+
+      act(() => {
+        result.current.updateNote(labCategory, labUUID, labNote);
+        result.current.updateNote(radiologyCategory, radUUID, radNote);
+      });
+
+      const labRequests =
+        result.current.selectedServiceRequests.get(labCategory);
+      const radRequests =
+        result.current.selectedServiceRequests.get(radiologyCategory);
+
+      expect(labRequests![0].note).toBe(labNote);
+      expect(radRequests![0].note).toBe(radNote);
+    });
+  });
+
   // UPDATE PRIORITY TESTS
   describe('updatePriority', () => {
     test('should update priority of a service request', () => {
