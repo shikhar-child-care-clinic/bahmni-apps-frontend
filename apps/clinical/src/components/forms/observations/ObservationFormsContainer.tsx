@@ -124,7 +124,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
             }}
             observations={existingObservations ?? []}
             patient={{ uuid: patientUUID }}
-            translations={{}}
+            translations={formMetadata.translations ?? {}}
             validate={false}
             validateForm={false}
             collapse={false}
