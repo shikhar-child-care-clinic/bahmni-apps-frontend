@@ -4,18 +4,30 @@ import {
   LabTestPriority,
   groupLabTestsByDate,
   useTranslation,
+  getOrderTypes,
+  getPatientLabInvestigations,
 } from '@bahmni/services';
-import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, waitFor } from '@testing-library/react';
+import { usePatientUUID } from '../../hooks/usePatientUUID';
+import { useNotification } from '../../notification';
 import LabInvestigation from '../LabInvestigation';
 
-jest.mock('../useLabInvestigations');
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   groupLabTestsByDate: jest.fn(),
   useTranslation: jest.fn(),
+  getOrderTypes: jest.fn(),
+  getPatientLabInvestigations: jest.fn(),
 }));
 jest.mock('react-router-dom', () => ({
   useParams: jest.fn(),
+}));
+jest.mock('../../notification', () => ({
+  useNotification: jest.fn(),
+}));
+jest.mock('../../hooks/usePatientUUID', () => ({
+  usePatientUUID: jest.fn(),
 }));
 
 jest.mock('../LabInvestigationItem', () => ({
@@ -32,7 +44,42 @@ const mockUseTranslation = useTranslation as jest.MockedFunction<
   typeof useTranslation
 >;
 
+const mockGetOrderTypes = getOrderTypes as jest.MockedFunction<
+  typeof getOrderTypes
+>;
+const mockGetPatientLabInvestigations =
+  getPatientLabInvestigations as jest.MockedFunction<
+    typeof getPatientLabInvestigations
+  >;
+const mockUseNotification = useNotification as jest.MockedFunction<
+  typeof useNotification
+>;
+const mockUsePatientUUID = usePatientUUID as jest.MockedFunction<
+  typeof usePatientUUID
+>;
+
+const renderLabInvestigations = (config = { orderType: 'Lab Order' }) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        staleTime: 0,
+        gcTime: 0,
+      },
+    },
+  });
+
+  // eslint-disable-next-line react/display-name
+  return (
+    <QueryClientProvider client={queryClient}>
+      <LabInvestigation config={config} />
+    </QueryClientProvider>
+  );
+};
+
 describe('LabInvestigation', () => {
+  const mockAddNotification = jest.fn();
+
   const mockFormattedLabTests: FormattedLabTest[] = [
     {
       id: 'test-1',
@@ -89,34 +136,49 @@ describe('LabInvestigation', () => {
           LAB_TEST_ERROR_LOADING: 'Error loading lab tests',
           LAB_TEST_LOADING: 'Loading lab tests...',
           LAB_TEST_UNAVAILABLE: 'No lab investigations recorded',
+          ERROR_DEFAULT_TITLE: 'Error',
         };
         return translations[key] || key;
       },
+    } as any);
+    mockUsePatientUUID.mockReturnValue('patient-123');
+    mockUseNotification.mockReturnValue({
+      addNotification: mockAddNotification,
+      notifications: [],
+      removeNotification: jest.fn(),
+      clearAllNotifications: jest.fn(),
     });
+
+    // Mock getOrderTypes to return order types data
+    mockGetOrderTypes.mockResolvedValue({
+      results: [
+        {
+          uuid: 'lab-order-type-uuid',
+          display: 'Lab Order',
+          conceptClasses: [],
+        },
+      ],
+    } as any);
   });
 
-  it('renders loading state with message', () => {
-    (useLabInvestigations as jest.Mock).mockReturnValue({
-      labTests: [],
-      isLoading: true,
-      hasError: false,
-    });
+  it('renders loading state with message', async () => {
+    mockGetPatientLabInvestigations.mockImplementation(
+      () => new Promise(() => {}), // Never resolves
+    );
 
-    render(<LabInvestigation />);
+    render(renderLabInvestigations());
 
     expect(screen.getByText('Loading lab tests...')).toBeInTheDocument();
   });
 
-  it('renders lab tests grouped by date', () => {
-    (useLabInvestigations as jest.Mock).mockReturnValue({
-      labTests: mockFormattedLabTests,
-      isLoading: false,
-      hasError: false,
+  it('renders lab tests grouped by date', async () => {
+    mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
+
+    render(renderLabInvestigations());
+
+    await waitFor(() => {
+      expect(groupLabTestsByDate).toHaveBeenCalledWith(mockFormattedLabTests);
     });
-
-    render(<LabInvestigation />);
-
-    expect(groupLabTestsByDate).toHaveBeenCalledWith(mockFormattedLabTests);
 
     expect(screen.getByText('05/08/2025')).toBeInTheDocument();
     expect(screen.getByText('04/09/2025')).toBeInTheDocument();
@@ -125,40 +187,39 @@ describe('LabInvestigation', () => {
     expect(labItems).toHaveLength(3);
   });
 
-  it('renders empty state message when no lab tests', () => {
-    (useLabInvestigations as jest.Mock).mockReturnValue({
-      labTests: [],
-      isLoading: false,
-      hasError: false,
+  it('renders empty state message when no lab tests', async () => {
+    mockGetPatientLabInvestigations.mockResolvedValue([]);
+
+    render(renderLabInvestigations());
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('No lab investigations recorded'),
+      ).toBeInTheDocument();
     });
-
-    render(<LabInvestigation />);
-
-    expect(
-      screen.getByText('No lab investigations recorded'),
-    ).toBeInTheDocument();
   });
 
-  it('renders error message when hasError is true', () => {
-    (useLabInvestigations as jest.Mock).mockReturnValue({
-      labTests: [],
-      isLoading: false,
-      hasError: true,
+  it('renders error message when hasError is true', async () => {
+    mockGetPatientLabInvestigations.mockRejectedValue(
+      new Error('Failed to fetch'),
+    );
+
+    render(renderLabInvestigations());
+
+    await waitFor(() => {
+      expect(screen.getByText('Error loading lab tests')).toBeInTheDocument();
     });
-
-    render(<LabInvestigation />);
-
-    expect(screen.getByText('Error loading lab tests')).toBeInTheDocument();
   });
 
-  it('renders urgent tests before non-urgent tests within each date group', () => {
-    (useLabInvestigations as jest.Mock).mockReturnValue({
-      labTests: mockFormattedLabTests,
-      isLoading: false,
-      hasError: false,
-    });
+  it('renders urgent tests before non-urgent tests within each date group', async () => {
+    mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
 
-    render(<LabInvestigation />);
+    render(renderLabInvestigations());
+
+    await waitFor(() => {
+      const testNames = screen.getAllByTestId('test-name');
+      expect(testNames).toHaveLength(3);
+    });
 
     const testNames = screen.getAllByTestId('test-name');
     const testPriorities = screen.getAllByTestId('test-priority');
@@ -173,14 +234,14 @@ describe('LabInvestigation', () => {
     expect(testPriorities[2]).toHaveTextContent(LabTestPriority.routine);
   });
 
-  it('opens first accordion item by default', () => {
-    (useLabInvestigations as jest.Mock).mockReturnValue({
-      labTests: mockFormattedLabTests,
-      isLoading: false,
-      hasError: false,
-    });
+  it('opens first accordion item by default', async () => {
+    mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
 
-    render(<LabInvestigation />);
+    render(renderLabInvestigations());
+
+    await waitFor(() => {
+      expect(screen.getByText('05/08/2025')).toBeInTheDocument();
+    });
 
     const firstAccordionButton = screen.getByRole('button', {
       name: /05\/08\/2025/,
