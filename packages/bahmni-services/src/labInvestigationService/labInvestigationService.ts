@@ -70,19 +70,6 @@ export async function getLabInvestigations(
     numberOfVisits,
   );
 
-  // Debug logging
-  console.log('Generated Lab Investigation URL:', url);
-  console.log(
-    'Parameters - category:',
-    category,
-    'patientUuid:',
-    patientUuid,
-    'encounterUuidsString:',
-    encounterUuidsString,
-    'numberOfVisits:',
-    numberOfVisits,
-  );
-
   const fhirLabTestBundle = await get<Bundle<ServiceRequest>>(url);
 
   const filteredEntries = filterLabTestEntries(fhirLabTestBundle);

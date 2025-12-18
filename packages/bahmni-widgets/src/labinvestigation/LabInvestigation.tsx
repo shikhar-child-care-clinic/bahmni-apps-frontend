@@ -27,11 +27,6 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   const categoryName = config?.orderType as string;
   const numberOfVisits = config?.numberOfVisits as number;
 
-  // Debug logging
-  console.log('Lab Investigation Config:', config);
-  console.log('numberOfVisits extracted:', numberOfVisits);
-  console.log('encounterUuids:', encounterUuids);
-
   const emptyEncounterFilter =
     episodeOfCareUuids?.length === 0 ? false : encounterUuids?.length === 0;
   const {
