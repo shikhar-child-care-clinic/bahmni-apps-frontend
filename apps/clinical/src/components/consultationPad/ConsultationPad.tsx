@@ -143,19 +143,22 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
   };
 
   const handleFormSelection = (form: ObservationForm) => {
+    const isAlreadySelected = selectedForms.some((f) => f.uuid === form.uuid);
+
     // Add form using store (handles duplicates automatically)
     addForm(form);
 
-    // Log audit event for adding observation form
-    dispatchAuditEvent({
-      eventType: AUDIT_LOG_EVENT_DETAILS.ADDED_OBSERVATION_FORM
-        .eventType as AuditEventType,
-      patientUuid: patientUUID ?? undefined,
-      messageParams: {
-        formName: form.name,
-        formUuid: form.uuid,
-      },
-    });
+    if (!isAlreadySelected) {
+      dispatchAuditEvent({
+        eventType: AUDIT_LOG_EVENT_DETAILS.ADDED_OBSERVATION_FORM
+          .eventType as AuditEventType,
+        patientUuid: patientUUID ?? undefined,
+        messageParams: {
+          formName: form.name,
+          formUuid: form.uuid,
+        },
+      });
+    }
   };
 
   const handleFormRemoval = (formUuid: string) => {
