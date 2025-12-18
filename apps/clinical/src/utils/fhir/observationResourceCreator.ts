@@ -10,6 +10,31 @@ const INTERPRETATION_TO_CODE: Record<
   NORMAL: { code: 'N', display: 'Normal' },
 };
 
+const handleStringValue = (
+  value: string,
+  observation: Observation,
+): Observation | null => {
+  const trimmedValue = value.trim();
+
+  const isISODate = /^\d{4}-\d{2}-\d{2}/.test(trimmedValue);
+  if (isISODate) {
+    const dateValue = new Date(trimmedValue);
+    if (!isNaN(dateValue.getTime())) {
+      observation.valueDateTime = dateValue.toISOString();
+      return observation;
+    }
+  }
+
+  const numericValue = parseFloat(trimmedValue);
+  if (!isNaN(numericValue) && trimmedValue !== '') {
+    observation.valueQuantity = { value: numericValue };
+  } else if (trimmedValue !== '') {
+    observation.valueString = value;
+  }
+
+  return null;
+};
+
 export const createObservationResource = (
   observationPayload: ObservationDataInFormControls,
   subjectReference: Reference,
@@ -31,36 +56,29 @@ export const createObservationResource = (
 
   const value = observationPayload.value;
 
-  if (value === null || value === undefined) {
-    // No value for group parent observations
-  } else if (value instanceof Date) {
-    observation.valueDateTime = value.toISOString();
-  } else if (typeof value === 'number') {
-    observation.valueQuantity = { value: value };
-  } else if (typeof value === 'string') {
-    const trimmedValue = value.trim();
-
-    const isISODate = /^\d{4}-\d{2}-\d{2}/.test(trimmedValue);
-    if (isISODate) {
-      const dateValue = new Date(trimmedValue);
-      if (!isNaN(dateValue.getTime())) {
-        observation.valueDateTime = dateValue.toISOString();
-        return observation;
+  if (value !== null && value !== undefined) {
+    switch (typeof value) {
+      case 'number':
+        observation.valueQuantity = { value };
+        break;
+      case 'string': {
+        const result = handleStringValue(value, observation);
+        if (result) return result;
+        break;
       }
+      case 'boolean':
+        observation.valueBoolean = value;
+        break;
+      case 'object':
+        if (value instanceof Date) {
+          observation.valueDateTime = value.toISOString();
+        } else if ('uuid' in value) {
+          observation.valueCodeableConcept = createCodeableConcept([
+            createCoding(value.uuid, undefined, value.display),
+          ]);
+        }
+        break;
     }
-
-    const numericValue = parseFloat(trimmedValue);
-    if (!isNaN(numericValue) && trimmedValue !== '') {
-      observation.valueQuantity = { value: numericValue };
-    } else if (trimmedValue !== '') {
-      observation.valueString = value;
-    }
-  } else if (typeof value === 'boolean') {
-    observation.valueBoolean = value;
-  } else if (value && typeof value === 'object' && 'uuid' in value) {
-    observation.valueCodeableConcept = createCodeableConcept([
-      createCoding(value.uuid, undefined, value.display),
-    ]);
   }
 
   if (observationPayload.interpretation) {
