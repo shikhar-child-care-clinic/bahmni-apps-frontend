@@ -145,6 +145,37 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
   const handleFormSelection = (form: ObservationForm) => {
     // Add form using store (handles duplicates automatically)
     addForm(form);
+
+    // Log audit event for adding observation form
+    dispatchAuditEvent({
+      eventType: AUDIT_LOG_EVENT_DETAILS.ADDED_OBSERVATION_FORM
+        .eventType as AuditEventType,
+      patientUuid: patientUUID ?? undefined,
+      messageParams: {
+        formName: form.name,
+        formUuid: form.uuid,
+      },
+    });
+  };
+
+  const handleFormRemoval = (formUuid: string) => {
+    const form = selectedForms.find((f) => f.uuid === formUuid);
+
+    // Remove form from store
+    removeForm(formUuid);
+
+    // Log audit event for removing observation form
+    if (form) {
+      dispatchAuditEvent({
+        eventType: AUDIT_LOG_EVENT_DETAILS.REMOVED_OBSERVATION_FORM
+          .eventType as AuditEventType,
+        patientUuid: patientUUID ?? undefined,
+        messageParams: {
+          formName: form.name,
+          formUuid: form.uuid,
+        },
+      });
+    }
   };
 
   // Callback to receive observation form data
@@ -345,7 +376,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       <ObservationForms
         onFormSelect={handleFormSelection}
         selectedForms={selectedForms}
-        onRemoveForm={removeForm}
+        onRemoveForm={handleFormRemoval}
         pinnedForms={pinnedForms}
         updatePinnedForms={updatePinnedForms}
         isPinnedFormsLoading={isPinnedFormsLoading}
@@ -360,7 +391,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       <ObservationFormsContainer
         onViewingFormChange={handleViewingFormChange}
         viewingForm={viewingForm}
-        onRemoveForm={removeForm}
+        onRemoveForm={handleFormRemoval}
         pinnedForms={pinnedForms}
         updatePinnedForms={updatePinnedForms}
         onFormObservationsChange={handleFormObservationsChange}
