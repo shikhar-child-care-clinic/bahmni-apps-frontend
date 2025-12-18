@@ -2,7 +2,6 @@ import { ObservationDataInFormControls } from '@bahmni/services';
 import { Observation, Reference } from 'fhir/r4';
 import { createCodeableConcept, createCoding } from './codeableConceptCreator';
 
-// Map interpretation values from form2-controls to FHIR codes
 const INTERPRETATION_TO_CODE: Record<
   string,
   { code: string; display: string }
@@ -11,14 +10,6 @@ const INTERPRETATION_TO_CODE: Record<
   NORMAL: { code: 'N', display: 'Normal' },
 };
 
-/**
- * Creates a FHIR R4 Observation resource from ObservationDataInFormControls
- * @param observationPayload - The observation data from form2-controls
- * @param subjectReference - Reference to the patient
- * @param encounterReference - Reference to the encounter
- * @param performerReference - Reference to the practitioner
- * @returns FHIR R4 Observation resource
- */
 export const createObservationResource = (
   observationPayload: ObservationDataInFormControls,
   subjectReference: Reference,
@@ -40,15 +31,11 @@ export const createObservationResource = (
 
   const value = observationPayload.value;
 
-  // For obsGroupControl (group parent observations), value is null
-  // and only groupMembers are present - skip adding a value field
   if (value === null || value === undefined) {
-    // No value field for group parent observations
+    // No value for group parent observations
   } else if (value instanceof Date) {
-    // Date object - use valueDateTime
     observation.valueDateTime = value.toISOString();
   } else if (typeof value === 'number') {
-    // Numeric value - use valueQuantity
     observation.valueQuantity = { value: value };
   } else if (typeof value === 'string') {
     const trimmedValue = value.trim();
@@ -61,26 +48,21 @@ export const createObservationResource = (
         return observation;
       }
     }
+
     const numericValue = parseFloat(trimmedValue);
     if (!isNaN(numericValue) && trimmedValue !== '') {
-      // String contains a numeric value - convert to valueQuantity
       observation.valueQuantity = { value: numericValue };
     } else if (trimmedValue !== '') {
-      // Text string - use valueString
       observation.valueString = value;
     }
   } else if (typeof value === 'boolean') {
-    // Boolean value - use valueBoolean
     observation.valueBoolean = value;
   } else if (value && typeof value === 'object' && 'uuid' in value) {
-    // ConceptValue - coded answer - use valueCodeableConcept
     observation.valueCodeableConcept = createCodeableConcept([
       createCoding(value.uuid, undefined, value.display),
     ]);
   }
 
-  // Add interpretation if provided (receives "ABNORMAL" or "NORMAL" from form2-controls)
-  // If null/undefined, don't include interpretation field
   if (observationPayload.interpretation) {
     const interpretationValue = observationPayload.interpretation.toUpperCase();
     const mapping =
@@ -101,7 +83,6 @@ export const createObservationResource = (
     ];
   }
 
-  // Add form namespace path extension if both formNamespace and formFieldPath are provided
   if (observationPayload.formNamespace && observationPayload.formFieldPath) {
     observation.extension = [
       {
@@ -111,7 +92,6 @@ export const createObservationResource = (
     ];
   }
 
-  // Handle comments
   if (observationPayload.comment) {
     observation.note = [
       {
@@ -123,16 +103,6 @@ export const createObservationResource = (
   return observation;
 };
 
-/**
- * Recursively creates FHIR Observation resources from ObservationDataInFormControls array
- * Creates hierarchical structure with hasMember references for group observations
- * Children are ordered before parents to ensure proper reference resolution
- * @param observations - Array of observation data from form2-controls
- * @param subjectReference - Reference to the patient
- * @param encounterReference - Reference to the encounter
- * @param performerReference - Reference to the practitioner
- * @returns Array of objects containing the observation resource and its generated fullUrl
- */
 export const createObservationResources = (
   observations: ObservationDataInFormControls[],
   subjectReference: Reference,
@@ -142,9 +112,7 @@ export const createObservationResources = (
   const results: Array<{ resource: Observation; fullUrl: string }> = [];
 
   for (const obs of observations) {
-    // Process group members if present - create hierarchical structure with hasMember
     if (obs.groupMembers && obs.groupMembers.length > 0) {
-      // Recursively create observations for group members (children first)
       const memberResults = createObservationResources(
         obs.groupMembers,
         subjectReference,
@@ -152,10 +120,8 @@ export const createObservationResources = (
         performerReference,
       );
 
-      // Add child observations to results first
       results.push(...memberResults);
 
-      // Create parent observation
       const parentObservation = createObservationResource(
         obs,
         subjectReference,
@@ -163,34 +129,35 @@ export const createObservationResources = (
         performerReference,
       );
 
-      // Add hasMember references to child observations with type
       parentObservation.hasMember = memberResults.map((member) => ({
         reference: member.fullUrl,
         type: 'Observation',
       }));
 
-      // Concatenate child observation values for parent valueString
-      // Extract values from the original observation data (not the FHIR resource)
+      parentObservation.valueString = obs.groupMembers
+        .map((member) => {
+          const value = member.value;
+          if (value === null || value === undefined) return '';
+          if (typeof value === 'object' && 'display' in value)
+            return value.display;
+          return String(value);
+        })
+        .filter(Boolean)
+        .join(', ');
 
-      parentObservation.valueString = 'TODO';
-
-      // Generate a unique UUID for parent observation
       const parentUuid = crypto.randomUUID();
       const parentFullUrl = `urn:uuid:${parentUuid}`;
 
-      // Set the id field to match the UUID (required by Bahmni backend)
       const parentObservationWithId: Observation = {
         ...parentObservation,
         id: parentUuid,
       };
 
-      // Add parent observation to results (after children)
       results.push({
         resource: parentObservationWithId,
         fullUrl: parentFullUrl,
       });
     } else {
-      // Create observation for leaf observations (no children)
       const observation = createObservationResource(
         obs,
         subjectReference,
@@ -198,11 +165,9 @@ export const createObservationResources = (
         performerReference,
       );
 
-      // Generate a unique UUID for this observation
       const uuid = crypto.randomUUID();
       const fullUrl = `urn:uuid:${uuid}`;
 
-      // Set the id field to match the UUID (required by Bahmni backend)
       const observationWithId: Observation = {
         ...observation,
         id: uuid,

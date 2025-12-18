@@ -33,14 +33,11 @@ export function useObservationFormData(
   );
 
   const handleFormDataChange = useCallback((data: unknown) => {
-    let normalizedData: FormData | null = null;
-
     if (!data) {
       setFormData(null);
       return;
     }
 
-    // Handle Immutable.js ControlRecord by converting to plain JS
     let plainData: unknown = data;
     if (
       typeof data === 'object' &&
@@ -50,7 +47,8 @@ export function useObservationFormData(
       plainData = (data as { toJS: () => unknown }).toJS() as unknown;
     }
 
-    // Now handle the plain JS ControlRecord structure
+    let normalizedData: FormData | null = null;
+
     if (
       typeof plainData === 'object' &&
       plainData !== null &&
@@ -66,7 +64,6 @@ export function useObservationFormData(
         record: typeof controlRecordTree,
         controls: FormControlData[],
       ): void => {
-        // Process children if they exist
         if (record.children && Array.isArray(record.children)) {
           record.children.forEach((child) => {
             if (child && typeof child === 'object') {
@@ -84,7 +81,6 @@ export function useObservationFormData(
                 voided?: boolean;
               };
 
-              // Skip voided records
               if (childRecord.voided) {
                 return;
               }
@@ -94,7 +90,6 @@ export function useObservationFormData(
               const isObsGroupControl =
                 childRecord.control?.type === 'obsGroupControl';
 
-              // Handle obsGroupControl: create a parent control with groupMembers
               if (isObsGroupControl && conceptUuid && fieldPath) {
                 if (
                   childRecord.children &&
@@ -107,7 +102,6 @@ export function useObservationFormData(
                     groupMembers,
                   );
 
-                  // Only create the group if it has members
                   if (groupMembers.length > 0) {
                     const control: FormControlData = {
                       id: fieldPath,
@@ -119,9 +113,7 @@ export function useObservationFormData(
                     controls.push(control);
                   }
                 }
-              }
-              // Handle regular obsControl: only add if value exists
-              else if (
+              } else if (
                 childRecord.value?.value !== null &&
                 childRecord.value?.value !== undefined &&
                 childRecord.value?.value !== ''
