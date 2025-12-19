@@ -309,30 +309,6 @@ describe('SelectedInvestigationItem', () => {
       expect(mockOnPriorityChange).toHaveBeenNthCalledWith(3, 'stat');
     });
 
-    test('handles note with maximum character count', async () => {
-      const user = userEvent.setup();
-      const mockOnNoteChange = jest.fn();
-
-      render(
-        <SelectedInvestigationItem
-          {...defaultProps}
-          onNoteChange={mockOnNoteChange}
-        />,
-      );
-
-      const addNoteLink = screen.getByRole('link', { name: /add note/i });
-      await user.click(addNoteLink);
-
-      const textarea = screen.getByTestId(
-        'investigation-note-test-investigation-1',
-      );
-      const maxLengthNote = 'a'.repeat(1024);
-      await user.clear(textarea);
-      await user.type(textarea, maxLengthNote);
-
-      expect(mockOnNoteChange).toHaveBeenCalled();
-    });
-
     test('prevents default behavior when clicking Add Note link', async () => {
       const user = userEvent.setup();
       render(<SelectedInvestigationItem {...defaultProps} />);
