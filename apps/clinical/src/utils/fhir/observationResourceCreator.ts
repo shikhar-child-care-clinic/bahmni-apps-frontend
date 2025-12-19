@@ -13,6 +13,7 @@ const INTERPRETATION_TO_CODE: Record<
 const handleStringValue = (
   value: string,
   observation: Observation,
+  conceptDatatype?: string,
 ): Observation | null => {
   const trimmedValue = value.trim();
 
@@ -25,10 +26,18 @@ const handleStringValue = (
     }
   }
 
-  const numericValue = parseFloat(trimmedValue);
-  if (!isNaN(numericValue) && trimmedValue !== '') {
-    observation.valueQuantity = { value: numericValue };
-  } else if (trimmedValue !== '') {
+  // Only parse as number if the concept datatype is explicitly "Numeric"
+  // Otherwise, treat strings as strings to avoid type mismatches with backend
+  if (conceptDatatype === 'Numeric') {
+    const numericValue = parseFloat(trimmedValue);
+    if (!isNaN(numericValue) && trimmedValue !== '') {
+      observation.valueQuantity = { value: numericValue };
+      return observation;
+    }
+  }
+
+  // Default to string for Text datatype or when datatype is not specified
+  if (trimmedValue !== '') {
     observation.valueString = value;
   }
 
@@ -55,6 +64,7 @@ export const createObservationResource = (
   };
 
   const value = observationPayload.value;
+  const conceptDatatype = observationPayload.concept.datatype;
 
   if (value !== null && value !== undefined) {
     switch (typeof value) {
@@ -62,7 +72,7 @@ export const createObservationResource = (
         observation.valueQuantity = { value };
         break;
       case 'string': {
-        handleStringValue(value, observation);
+        handleStringValue(value, observation, conceptDatatype);
         break;
       }
       case 'boolean':

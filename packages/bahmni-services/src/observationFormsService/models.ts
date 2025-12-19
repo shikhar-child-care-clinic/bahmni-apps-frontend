@@ -63,7 +63,7 @@ export interface FormMetadata {
 
 // Observation data from form2-controls (used in consultation bundle)
 export interface ObservationDataInFormControls {
-  concept: { uuid: string };
+  concept: { uuid: string; datatype?: string };
   value: string | number | boolean | ConceptValue | null; // null for obsGroupControl parent observations
   obsDatetime?: string;
   groupMembers?: ObservationDataInFormControls[];

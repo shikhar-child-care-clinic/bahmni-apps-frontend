@@ -67,20 +67,70 @@ function transformControlValue(
 
 function transformGroupMembers(
   groupMembers: FormControlData[],
+  metadata: FormMetadata,
 ): ObservationDataInFormControls[] {
   return groupMembers
     .filter((member) => member.value !== null && member.value !== undefined)
-    .map((member) => ({
-      concept: { uuid: member.conceptUuid },
-      value: transformControlValue(member),
-      obsDatetime: new Date().toISOString(),
-      formNamespace: 'Bahmni',
-      formFieldPath: member.id,
-      interpretation: member.interpretation,
-      groupMembers: member.groupMembers
-        ? transformGroupMembers(member.groupMembers)
-        : undefined,
-    }));
+    .map((member) => {
+      const datatype = findConceptDatatype(metadata, member.conceptUuid);
+      return {
+        concept: { uuid: member.conceptUuid, datatype },
+        value: transformControlValue(member),
+        obsDatetime: new Date().toISOString(),
+        formNamespace: 'Bahmni',
+        formFieldPath: member.id,
+        interpretation: member.interpretation,
+        groupMembers: member.groupMembers
+          ? transformGroupMembers(member.groupMembers, metadata)
+          : undefined,
+      };
+    });
+}
+
+// Helper function to find concept datatype from metadata schema
+function findConceptDatatype(
+  metadata: FormMetadata,
+  conceptUuid: string,
+): string | undefined {
+  const schema = metadata.schema as Record<string, unknown>;
+  if (!schema?.controls || !Array.isArray(schema.controls)) {
+    return undefined;
+  }
+
+  const findInControls = (controls: unknown[]): string | undefined => {
+    for (const control of controls) {
+      if (
+        typeof control === 'object' &&
+        control !== null &&
+        'concept' in control
+      ) {
+        const concept = (control as Record<string, unknown>).concept;
+        if (
+          typeof concept === 'object' &&
+          concept !== null &&
+          'uuid' in concept &&
+          concept.uuid === conceptUuid &&
+          'datatype' in concept
+        ) {
+          return concept.datatype as string;
+        }
+      }
+      if (
+        typeof control === 'object' &&
+        control !== null &&
+        'controls' in control
+      ) {
+        const nestedControls = (control as Record<string, unknown>).controls;
+        if (Array.isArray(nestedControls)) {
+          const found = findInControls(nestedControls);
+          if (found) return found;
+        }
+      }
+    }
+    return undefined;
+  };
+
+  return findInControls(schema.controls as unknown[]);
 }
 
 export function transformFormDataToObservations(
@@ -99,14 +149,16 @@ export function transformFormDataToObservations(
       return;
     }
 
+    const datatype = findConceptDatatype(metadata, control.conceptUuid);
+
     if (control.groupMembers?.length) {
       const observation: ObservationDataInFormControls = {
-        concept: { uuid: control.conceptUuid },
+        concept: { uuid: control.conceptUuid, datatype },
         value: null,
         obsDatetime: timestamp,
         formNamespace: 'Bahmni',
         formFieldPath: control.id,
-        groupMembers: transformGroupMembers(control.groupMembers),
+        groupMembers: transformGroupMembers(control.groupMembers, metadata),
       };
 
       observations.push(observation);
@@ -121,7 +173,7 @@ export function transformFormDataToObservations(
       if (control.type === 'multiselect' && Array.isArray(control.value)) {
         control.value.forEach((selectedValue) => {
           const observation: ObservationDataInFormControls = {
-            concept: { uuid: control.conceptUuid },
+            concept: { uuid: control.conceptUuid, datatype },
             value: selectedValue,
             obsDatetime: timestamp,
             formNamespace: 'Bahmni',
@@ -138,7 +190,7 @@ export function transformFormDataToObservations(
       }
 
       const observation: ObservationDataInFormControls = {
-        concept: { uuid: control.conceptUuid },
+        concept: { uuid: control.conceptUuid, datatype },
         value: transformControlValue(control),
         obsDatetime: timestamp,
         formNamespace: 'Bahmni',
