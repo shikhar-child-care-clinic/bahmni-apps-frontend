@@ -62,8 +62,7 @@ export const createObservationResource = (
         observation.valueQuantity = { value };
         break;
       case 'string': {
-        const result = handleStringValue(value, observation);
-        if (result) return result;
+        handleStringValue(value, observation);
         break;
       }
       case 'boolean':
@@ -151,17 +150,6 @@ export const createObservationResources = (
         reference: member.fullUrl,
         type: 'Observation',
       }));
-
-      parentObservation.valueString = obs.groupMembers
-        .map((member) => {
-          const value = member.value;
-          if (value === null || value === undefined) return '';
-          if (typeof value === 'object' && 'display' in value)
-            return value.display;
-          return String(value);
-        })
-        .filter(Boolean)
-        .join(', ');
 
       const parentUuid = crypto.randomUUID();
       const parentFullUrl = `urn:uuid:${parentUuid}`;
