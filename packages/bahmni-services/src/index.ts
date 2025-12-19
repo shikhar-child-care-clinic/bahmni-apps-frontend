@@ -103,7 +103,6 @@ export {
   getTodayDate,
   calculateAgeinYearsAndMonths,
   formatDateAndTime,
-  dateComparator,
 } from './date';
 export { type Notification, notificationService } from './notification';
 export {
@@ -253,4 +252,8 @@ export {
 } from './vitalFlowSheetService';
 
 export { getServiceRequests } from './orderRequestService';
-export { getPatientPrograms, type ProgramEnrollment } from './programService';
+export {
+  getPatientPrograms,
+  type ProgramEnrollment,
+  type PatientProgramsResponse,
+} from './programService';
