@@ -90,30 +90,38 @@ export const usePatientRelationship = ({
   const handlePatientSearch = useCallback(
     (rowId: string, searchValue: string) => {
       handleSearch(rowId, searchValue);
-      updateRelationship(rowId, RELATIONSHIP_FIELDS.PATIENT_ID, searchValue);
     },
-    [handleSearch, updateRelationship],
+    [handleSearch],
   );
 
   const handlePatientSelect = useCallback(
     (rowId: string, selectedItem: PatientSuggestion | null) => {
+      setRelationships((prev) =>
+        prev.map((rel) =>
+          rel.id === rowId
+            ? {
+                ...rel,
+                patientId: selectedItem?.identifier ?? '',
+                patientUuid: selectedItem?.id ?? '',
+                patientName: selectedItem?.name ?? '',
+              }
+            : rel,
+        ),
+      );
+
       if (selectedItem) {
-        setRelationships((prev) =>
-          prev.map((rel) =>
-            rel.id === rowId
-              ? {
-                  ...rel,
-                  patientId: selectedItem.identifier,
-                  patientUuid: selectedItem.id,
-                  patientName: selectedItem.name,
-                }
-              : rel,
-          ),
-        );
         setSearchTerms((prev) => ({ ...prev, [rowId]: selectedItem.text }));
+      } else {
+        setSearchTerms((prev) => {
+          const updated = { ...prev };
+          delete updated[rowId];
+          return updated;
+        });
       }
+
+      clearFieldError(rowId, RELATIONSHIP_FIELDS.PATIENT_ID);
     },
-    [setSearchTerms],
+    [setSearchTerms, clearFieldError],
   );
 
   const addRelationship = useCallback(() => {
