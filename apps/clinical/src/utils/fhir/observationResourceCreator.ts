@@ -1,4 +1,4 @@
-import { ObservationDataInFormControls } from '@bahmni/services';
+import { ObservationDataInFormControls, ComplexValue } from '@bahmni/services';
 import { Observation, Reference } from 'fhir/r4';
 import { createCodeableConcept, createCoding } from './codeableConceptCreator';
 
@@ -83,8 +83,17 @@ export const createObservationResource = (
           observation.valueDateTime = value.toISOString();
         } else if ('uuid' in value) {
           observation.valueCodeableConcept = createCodeableConcept([
-            createCoding(value.uuid, undefined, value.display),
+            createCoding(
+              value.uuid as string,
+              undefined,
+              (value as { display?: string }).display,
+            ),
           ]);
+        } else if ('url' in value && conceptDatatype === 'Complex') {
+          // Handle Complex datatype (images, files, etc.)
+          // Store the URL as a string - the backend will handle Complex obs appropriately
+          const complexValue = value as ComplexValue;
+          observation.valueString = complexValue.url;
         }
         break;
     }

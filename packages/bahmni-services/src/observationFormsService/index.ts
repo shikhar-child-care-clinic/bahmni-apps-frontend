@@ -16,6 +16,7 @@ export {
   type ConsultationBundle,
   type DiagnosisPayload,
   type OrderPayload,
+  type ComplexValue,
 } from './models';
 export {
   transformFormDataToObservations,

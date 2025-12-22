@@ -2,9 +2,10 @@ import {
   FormMetadata,
   ObservationDataInFormControls,
   ConceptValue,
+  ComplexValue,
 } from './models';
 
-export type { ObservationDataInFormControls, ConceptValue };
+export type { ObservationDataInFormControls, ConceptValue, ComplexValue };
 
 export interface FormControlData {
   id: string;
@@ -25,6 +26,7 @@ export interface FormControlData {
     | Date
     | ConceptValue
     | ConceptValue[]
+    | ComplexValue
     | null;
   label?: string;
   units?: string;
@@ -39,7 +41,7 @@ export interface FormData {
 
 function transformControlValue(
   control: FormControlData,
-): string | number | boolean | ConceptValue {
+): string | number | boolean | ConceptValue | ComplexValue {
   if (control.value === null || control.value === undefined) {
     throw new Error(`Control ${control.id} has no value`);
   }
@@ -60,6 +62,15 @@ function transformControlValue(
     throw new Error(
       'Multiselect values should be handled by creating multiple observations',
     );
+  }
+
+  // Handle Complex datatype values (images, files, etc.) - preserve object structure
+  if (
+    typeof control.value === 'object' &&
+    !Array.isArray(control.value) &&
+    'url' in control.value
+  ) {
+    return control.value as ComplexValue;
   }
 
   return control.value as string | number | boolean;

@@ -240,6 +240,7 @@ export {
   type FormControlData,
   type ObservationDataInFormControls,
   type ConceptValue,
+  type ComplexValue,
   type ConsultationBundle,
   type ValidationError,
   type ValidationResult,

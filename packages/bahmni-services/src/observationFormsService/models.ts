@@ -64,7 +64,7 @@ export interface FormMetadata {
 // Observation data from form2-controls (used in consultation bundle)
 export interface ObservationDataInFormControls {
   concept: { uuid: string; datatype?: string };
-  value: string | number | boolean | ConceptValue | null; // null for obsGroupControl parent observations
+  value: string | number | boolean | ConceptValue | ComplexValue | null; // null for obsGroupControl parent observations
   obsDatetime?: string;
   groupMembers?: ObservationDataInFormControls[];
   comment?: string;
@@ -77,6 +77,15 @@ export interface ObservationDataInFormControls {
 export interface ConceptValue {
   uuid: string;
   display?: string;
+}
+
+// Complex value for Complex datatype (images, files, etc.)
+export interface ComplexValue {
+  url: string;
+  fileName?: string;
+  fileSize?: number;
+  contentType?: string;
+  [key: string]: unknown;
 }
 
 // Consultation bundle structure (simplified - shows observation forms integration)
