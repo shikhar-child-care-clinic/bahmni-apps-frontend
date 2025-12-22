@@ -7,6 +7,7 @@ import {
   getOrderTypes,
   getServiceRequests,
   groupByDate,
+  shouldEnableEncounterFilter,
   useTranslation,
 } from '@bahmni/services';
 import { Accordion, AccordionItem, Tag } from '@carbon/react';
@@ -57,8 +58,10 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
   const { addNotification } = useNotification();
   const categoryName = (config?.orderType as string) || '';
 
-  const emptyEncounterFilter =
-    episodeOfCareUuids?.length === 0 ? false : encounterUuids?.length === 0;
+  const emptyEncounterFilter = shouldEnableEncounterFilter(
+    episodeOfCareUuids,
+    encounterUuids,
+  );
 
   const {
     data: orderTypesData,

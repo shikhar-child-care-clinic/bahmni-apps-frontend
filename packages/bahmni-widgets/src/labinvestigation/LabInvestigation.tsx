@@ -1,6 +1,7 @@
 import { Accordion, AccordionItem, SkeletonText } from '@bahmni/design-system';
 import {
   groupLabTestsByDate,
+  shouldEnableEncounterFilter,
   useTranslation,
   LabTestsByDate,
   FormattedLabTest,
@@ -26,9 +27,6 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   const { addNotification } = useNotification();
   const categoryName = config?.orderType as string;
   const numberOfVisits = config?.numberOfVisits as number;
-
-  const emptyEncounterFilter =
-    episodeOfCareUuids?.length === 0 ? false : encounterUuids?.length === 0;
   const {
     data: orderTypesData,
     isLoading: isLoadingOrderTypes,
@@ -101,6 +99,11 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   const labTests: FormattedLabTest[] = labTestsData ?? [];
   const isLoading = isLoadingOrderTypes || isLoadingLabInvestigations;
   const hasError = isOrderTypesError || isLabInvestigationsError;
+
+  const emptyEncounterFilter = shouldEnableEncounterFilter(
+    episodeOfCareUuids,
+    encounterUuids,
+  );
 
   // Group the lab tests by date
   const labTestsByDate = useMemo<LabTestsByDate[]>(() => {

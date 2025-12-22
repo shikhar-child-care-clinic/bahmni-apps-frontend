@@ -188,7 +188,10 @@ export {
 } from './providerService';
 export { findActiveEncounterInSession } from './encounterSessionService';
 
-export { getActiveVisit } from './encounterService';
+export {
+  getActiveVisit,
+  shouldEnableEncounterFilter,
+} from './encounterService';
 
 export {
   getEncountersAndVisitsForEOC,
