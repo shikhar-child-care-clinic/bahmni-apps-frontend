@@ -1,4 +1,9 @@
-import { SortableDataTable } from '@bahmni/design-system';
+import {
+  SortableDataTable,
+  Tag,
+  Accordion,
+  AccordionItem,
+} from '@bahmni/design-system';
 import {
   RadiologyInvestigation,
   useTranslation,
@@ -7,7 +12,6 @@ import {
   FULL_MONTH_DATE_FORMAT,
   ISO_DATE_FORMAT,
 } from '@bahmni/services';
-import { Tag, Accordion, AccordionItem } from '@carbon/react';
 import React, { useMemo, useCallback } from 'react';
 import styles from './styles/RadiologyInvestigationTable.module.scss';
 import { useRadiologyInvestigation } from './useRadiologyInvestigation';
@@ -103,6 +107,7 @@ const RadiologyInvestigationTable: React.FC = () => {
           emptyStateMessage={t('NO_RADIOLOGY_INVESTIGATIONS')}
           renderCell={renderCell}
           className={styles.radiologyInvestigationTableBody}
+          data-testid="sortable-data-table"
         />
       ) : (
         <Accordion align="start">
@@ -119,7 +124,7 @@ const RadiologyInvestigationTable: React.FC = () => {
                 title={formattedDate}
                 key={date}
                 className={styles.customAccordianItem}
-                data-testid={'accordian-table-title'}
+                testId={'accordian-table-title'}
                 open={index === 0}
               >
                 <SortableDataTable
@@ -132,6 +137,7 @@ const RadiologyInvestigationTable: React.FC = () => {
                   emptyStateMessage={t('NO_RADIOLOGY_INVESTIGATIONS')}
                   renderCell={renderCell}
                   className={styles.radiologyInvestigationTableBody}
+                  data-testid="sortable-data-table"
                 />
               </AccordionItem>
             );

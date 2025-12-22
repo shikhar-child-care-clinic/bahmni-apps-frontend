@@ -1,4 +1,9 @@
-import { SortableDataTable } from '@bahmni/design-system';
+import {
+  SortableDataTable,
+  Accordion,
+  AccordionItem,
+  Tag,
+} from '@bahmni/design-system';
 import {
   FULL_MONTH_DATE_FORMAT,
   ISO_DATE_FORMAT,
@@ -11,7 +16,6 @@ import {
   useTranslation,
   ORDER_TYPE_QUERY_KEY,
 } from '@bahmni/services';
-import { Accordion, AccordionItem, Tag } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
@@ -227,6 +231,7 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
           emptyStateMessage={t('NO_SERVICE_REQUESTS')}
           renderCell={renderCell}
           className={styles.serviceRequestTableBody}
+          data-testid="sortable-data-table"
         />
       ) : (
         <Accordion align="start">
@@ -243,7 +248,7 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
                 title={formattedDate}
                 key={date}
                 className={styles.customAccordianItem}
-                data-testid={'accordian-table-title'}
+                testId={'accordian-table-title'}
                 open={index === 0}
               >
                 <SortableDataTable
@@ -256,6 +261,7 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
                   emptyStateMessage={t('NO_SERVICE_REQUESTS')}
                   renderCell={renderCell}
                   className={styles.serviceRequestTableBody}
+                  data-testid="sortable-data-table"
                 />
               </AccordionItem>
             );
