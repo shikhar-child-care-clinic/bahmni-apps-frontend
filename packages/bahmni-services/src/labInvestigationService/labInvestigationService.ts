@@ -23,7 +23,7 @@ export const mapLabTestPriority = (
   }
 };
 
-function filterLabTestEntries(labTestBundle: Bundle<ServiceRequest>) {
+export function filterLabTestEntries(labTestBundle: Bundle<ServiceRequest>) {
   if (!labTestBundle.entry) return [];
 
   //Collect all IDs that are being replaced
@@ -35,12 +35,24 @@ function filterLabTestEntries(labTestBundle: Bundle<ServiceRequest>) {
   );
 
   // Filter out entries that either have a "replaces" field or are being replaced
-  return labTestBundle.entry.filter((entry) => {
+  const filteredEntries = labTestBundle.entry.filter((entry) => {
     const entryId = entry.resource?.id;
     const isReplacer = entry.resource?.replaces;
     const isReplaced = replacedIds.has(entryId);
     return !isReplacer && !isReplaced;
   });
+
+  const filteredBundle: Bundle<ServiceRequest> = {
+    ...labTestBundle,
+    entry: filteredEntries,
+  };
+
+  const labTests =
+    filteredBundle.entry
+      ?.map((entry) => entry.resource)
+      .filter((r): r is ServiceRequest => r !== undefined) ?? [];
+
+  return labTests;
 }
 
 /**
@@ -70,14 +82,7 @@ export async function getLabInvestigations(
     numberOfVisits,
   );
 
-  const fhirLabTestBundle = await get<Bundle<ServiceRequest>>(url);
-
-  const filteredEntries = filterLabTestEntries(fhirLabTestBundle);
-
-  return {
-    ...fhirLabTestBundle,
-    entry: filteredEntries,
-  };
+  return await get<Bundle<ServiceRequest>>(url);
 }
 
 /**
@@ -102,11 +107,8 @@ export async function getLabTests(
     encounterUuids,
     numberOfVisits,
   );
-  return (
-    fhirLabTestBundle.entry
-      ?.map((entry) => entry.resource)
-      .filter((r): r is ServiceRequest => r !== undefined) ?? []
-  );
+
+  return filterLabTestEntries(fhirLabTestBundle);
 }
 
 /**
@@ -200,29 +202,6 @@ export function groupLabTestsByDate(
 }
 
 /**
- * Fetches and formats lab tests for a given patient UUID
- * @param patientUUID - The UUID of the patient
- * @returns Promise resolving to an array of lab tests grouped by date
- */
-export async function getPatientLabTestsByDate(
-  patientUUID: string,
-  category: string,
-  t: (key: string) => string,
-  encounterUuids?: string[],
-  numberOfVisits?: number,
-): Promise<LabTestsByDate[]> {
-  const labTests = await getLabTests(
-    category,
-    patientUUID,
-    t,
-    encounterUuids,
-    numberOfVisits,
-  );
-  const formattedLabTests = formatLabTests(labTests, t);
-  return groupLabTestsByDate(formattedLabTests);
-}
-
-/**
  * Fetches and formats lab investigations for a given patient UUID
  * @param patientUUID - The UUID of the patient
  * @param category - The category UUID to filter by (order type)
@@ -238,15 +217,12 @@ export async function getPatientLabInvestigations(
   encounterUuids?: string[],
   numberOfVisits?: number,
 ): Promise<FormattedLabTest[]> {
-  const bundle = await getLabInvestigations(
+  const fhirLabTestBundle = await getLabInvestigations(
     category,
     patientUUID,
     encounterUuids,
     numberOfVisits,
   );
-  const labTests =
-    bundle.entry
-      ?.map((entry) => entry.resource)
-      .filter((r): r is ServiceRequest => r !== undefined) ?? [];
+  const labTests = filterLabTestEntries(fhirLabTestBundle);
   return formatLabTests(labTests, t);
 }
