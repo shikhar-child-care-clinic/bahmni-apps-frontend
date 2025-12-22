@@ -10,7 +10,7 @@ import {
   dispatchAuditEvent,
   useTranslation,
   ObservationForm,
-  refreshQueries,
+  dispatchConsultationSaved
 } from '@bahmni/services';
 import { conditionsQueryKeys, useNotification } from '@bahmni/widgets';
 import { useQueryClient } from '@tanstack/react-query';
@@ -282,8 +282,15 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         resetServiceRequests();
         resetMedications();
 
-        if (selectedConditions.length > 0)
-          await refreshQueries(queryClient, conditionsQueryKeys(patientUUID));
+        // Dispatch consultation saved event
+        dispatchConsultationSaved({
+          patientUUID: patientUUID!,
+          updatedResources: {
+            conditions: selectedConditions.length > 0,
+            allergies: selectedAllergies.length > 0,
+          },
+        });
+        console.log('Dispatched consultation saved event');
 
         addNotification({
           title: t('CONSULTATION_SUBMITTED_SUCCESS_TITLE'),
