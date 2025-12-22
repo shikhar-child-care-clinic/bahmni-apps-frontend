@@ -1,10 +1,7 @@
 import { Bundle, ServiceRequest } from 'fhir/r4';
-import { get } from '../api';
 import { formatDate } from '../date';
-import {
-  LAB_INVESTIGATION_URL,
-  FHIR_LAB_ORDER_CONCEPT_TYPE_EXTENSION_URL,
-} from './constants';
+import { getServiceRequests } from '../orderRequestService';
+import { FHIR_LAB_ORDER_CONCEPT_TYPE_EXTENSION_URL } from './constants';
 import { FormattedLabTest, LabTestPriority, LabTestsByDate } from './models';
 
 /**
@@ -63,27 +60,6 @@ export function filterLabTestEntries(labTestBundle: Bundle<ServiceRequest>) {
  * @param numberOfVisits - Optional number of visits to filter by
  * @returns Promise resolving to ServiceRequest Bundle
  */
-export async function getLabInvestigations(
-  category: string,
-  patientUuid: string,
-  encounterUuids?: string[],
-  numberOfVisits?: number,
-): Promise<Bundle<ServiceRequest>> {
-  let encounterUuidsString: string | undefined;
-
-  if (encounterUuids && encounterUuids.length > 0) {
-    encounterUuidsString = encounterUuids.join(',');
-  }
-
-  const url = LAB_INVESTIGATION_URL(
-    category,
-    patientUuid,
-    encounterUuidsString,
-    numberOfVisits,
-  );
-
-  return await get<Bundle<ServiceRequest>>(url);
-}
 
 /**
  * Fetches lab tests for a given patient UUID
@@ -101,7 +77,7 @@ export async function getLabTests(
   encounterUuids?: string[],
   numberOfVisits?: number,
 ): Promise<ServiceRequest[]> {
-  const fhirLabTestBundle = await getLabInvestigations(
+  const fhirLabTestBundle = await getServiceRequests(
     category,
     patientUUID,
     encounterUuids,
@@ -217,7 +193,7 @@ export async function getPatientLabInvestigations(
   encounterUuids?: string[],
   numberOfVisits?: number,
 ): Promise<FormattedLabTest[]> {
-  const fhirLabTestBundle = await getLabInvestigations(
+  const fhirLabTestBundle = await getServiceRequests(
     category,
     patientUUID,
     encounterUuids,
