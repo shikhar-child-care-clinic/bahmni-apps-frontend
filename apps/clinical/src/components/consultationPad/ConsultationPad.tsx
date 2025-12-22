@@ -10,9 +10,9 @@ import {
   dispatchAuditEvent,
   useTranslation,
   ObservationForm,
-  dispatchConsultationSaved
+  dispatchConsultationSaved,
 } from '@bahmni/services';
-import { conditionsQueryKeys, useNotification } from '@bahmni/widgets';
+import { useNotification } from '@bahmni/widgets';
 import { useQueryClient } from '@tanstack/react-query';
 import React, { useEffect } from 'react';
 import { useEncounterSession } from '../../../src/hooks/useEncounterSession';
@@ -58,7 +58,6 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
   const [selectedForms, setSelectedForms] = React.useState<ObservationForm[]>(
     [],
   );
-  const queryClient = useQueryClient();
   const { t } = useTranslation();
   const { addNotification } = useNotification();
 
