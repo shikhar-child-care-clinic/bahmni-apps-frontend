@@ -28,6 +28,12 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   const { addNotification } = useNotification();
   const categoryName = config?.orderType as string;
   const numberOfVisits = config?.numberOfVisits as number;
+
+  const emptyEncounterFilter = shouldEnableEncounterFilter(
+    episodeOfCareUuids,
+    encounterUuids,
+  );
+
   const {
     data: orderTypesData,
     isLoading: isLoadingOrderTypes,
@@ -59,16 +65,15 @@ const LabInvestigation: React.FC<WidgetProps> = ({
       encounterUuids,
       numberOfVisits,
     ],
-    enabled: !!patientUUID && !!categoryUuid,
-    queryFn: async () => {
-      return await getPatientLabInvestigations(
+    enabled: !!patientUUID && !!categoryUuid && !emptyEncounterFilter,
+    queryFn: () =>
+      getPatientLabInvestigations(
         patientUUID!,
         categoryUuid,
         t,
         encounterUuids,
         numberOfVisits,
-      );
-    },
+      ),
   });
 
   useEffect(() => {
@@ -100,11 +105,6 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   const labTests: FormattedLabTest[] = labTestsData ?? [];
   const isLoading = isLoadingOrderTypes || isLoadingLabInvestigations;
   const hasError = isOrderTypesError || isLabInvestigationsError;
-
-  const emptyEncounterFilter = shouldEnableEncounterFilter(
-    episodeOfCareUuids,
-    encounterUuids,
-  );
 
   // Group the lab tests by date
   const labTestsByDate = useMemo<LabTestsByDate[]>(() => {

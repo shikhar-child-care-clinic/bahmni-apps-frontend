@@ -58,7 +58,11 @@ const mockUsePatientUUID = usePatientUUID as jest.MockedFunction<
   typeof usePatientUUID
 >;
 
-const renderLabInvestigations = (config = { orderType: 'Lab Order' }) => {
+const renderLabInvestigations = (
+  config = { orderType: 'Lab Order' },
+  encounterUuids?: string[],
+  episodeOfCareUuids?: string[],
+) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -72,7 +76,11 @@ const renderLabInvestigations = (config = { orderType: 'Lab Order' }) => {
   // eslint-disable-next-line react/display-name
   return (
     <QueryClientProvider client={queryClient}>
-      <LabInvestigation config={config} />
+      <LabInvestigation
+        config={config}
+        encounterUuids={encounterUuids}
+        episodeOfCareUuids={episodeOfCareUuids}
+      />
     </QueryClientProvider>
   );
 };
@@ -252,5 +260,79 @@ describe('LabInvestigation', () => {
 
     expect(firstAccordionButton).toHaveAttribute('aria-expanded', 'true');
     expect(secondAccordionButton).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  describe('emptyEncounterFilter condition', () => {
+    it('should not fetch lab investigations when emptyEncounterFilter is true (episodeOfCareUuids has values and encounterUuids is empty)', async () => {
+      mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
+
+      render(
+        renderLabInvestigations(
+          { orderType: 'Lab Order' },
+          [], // empty encounterUuids
+          ['episode-1'], // episodeOfCareUuids has values
+        ),
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('No lab investigations recorded'),
+        ).toBeInTheDocument();
+      });
+
+      // Verify that getPatientLabInvestigations was NOT called
+      expect(mockGetPatientLabInvestigations).not.toHaveBeenCalled();
+    });
+
+    it('should fetch lab investigations when emptyEncounterFilter is false (episodeOfCareUuids is empty)', async () => {
+      mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
+
+      render(
+        renderLabInvestigations(
+          { orderType: 'Lab Order' },
+          ['encounter-1'], // encounterUuids has values
+          [], // empty episodeOfCareUuids
+        ),
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('05/08/2025')).toBeInTheDocument();
+      });
+
+      // Verify that getPatientLabInvestigations WAS called
+      expect(mockGetPatientLabInvestigations).toHaveBeenCalled();
+    });
+
+    it('should fetch lab investigations when emptyEncounterFilter is false (both have values)', async () => {
+      mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
+
+      render(
+        renderLabInvestigations(
+          { orderType: 'Lab Order' },
+          ['encounter-1'], // encounterUuids has values
+          ['episode-1'], // episodeOfCareUuids has values
+        ),
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('05/08/2025')).toBeInTheDocument();
+      });
+
+      // Verify that getPatientLabInvestigations WAS called
+      expect(mockGetPatientLabInvestigations).toHaveBeenCalled();
+    });
+
+    it('should fetch lab investigations when emptyEncounterFilter is false (no episode provided)', async () => {
+      mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
+
+      render(renderLabInvestigations({ orderType: 'Lab Order' }));
+
+      await waitFor(() => {
+        expect(screen.getByText('05/08/2025')).toBeInTheDocument();
+      });
+
+      // Verify that getPatientLabInvestigations WAS called
+      expect(mockGetPatientLabInvestigations).toHaveBeenCalled();
+    });
   });
 });
