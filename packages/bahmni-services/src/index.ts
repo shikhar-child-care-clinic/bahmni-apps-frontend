@@ -5,6 +5,7 @@ export {
   normalizeTranslationKey,
   getUserPreferredLocale,
 } from './i18n';
+export { eventBus } from './eventBus';
 export { useCamera } from './cameraService';
 export {
   getPatientById,

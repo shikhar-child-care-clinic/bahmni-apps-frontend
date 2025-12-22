@@ -10,10 +10,9 @@ import {
   dispatchAuditEvent,
   useTranslation,
   ObservationForm,
-  refreshQueries,
+  eventBus,
 } from '@bahmni/services';
-import { conditionsQueryKeys, useNotification } from '@bahmni/widgets';
-import { useQueryClient } from '@tanstack/react-query';
+import { useNotification } from '@bahmni/widgets';
 import React, { useEffect } from 'react';
 import { useEncounterSession } from '../../../src/hooks/useEncounterSession';
 import useAllergyStore from '../../../src/stores/allergyStore';
@@ -58,7 +57,6 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
   const [selectedForms, setSelectedForms] = React.useState<ObservationForm[]>(
     [],
   );
-  const queryClient = useQueryClient();
   const { t } = useTranslation();
   const { addNotification } = useNotification();
 
@@ -261,10 +259,13 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         return;
       }
 
+      // Capture values BEFORE any async operations or state changes
+      const capturedPatientUUID = patientUUID;
+      const capturedConditionsLength = selectedConditions.length;
+
       try {
         setIsSubmitting(true);
         await submitConsultation();
-
         setIsSubmitting(false);
 
         // Dispatch audit event for successful encounter edit/creation
@@ -282,8 +283,19 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         resetServiceRequests();
         resetMedications();
 
-        if (selectedConditions.length > 0)
-          await refreshQueries(queryClient, conditionsQueryKeys(patientUUID));
+        // Publish event with metadata for widgets to handle cache invalidation
+        const eventPayload = {
+          patientUUID: capturedPatientUUID,
+          updatedWidgets: {
+            conditions: capturedConditionsLength > 0,
+          },
+        };
+        console.log(
+          '🔔 [ConsultationPad] Publishing consultation:saved event:',
+          eventPayload,
+        );
+        eventBus.publish('consultation:saved', eventPayload);
+        console.log('✅ [ConsultationPad] Event published successfully');
 
         addNotification({
           title: t('CONSULTATION_SUBMITTED_SUCCESS_TITLE'),
@@ -291,6 +303,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
           type: 'success',
           timeout: 5000,
         });
+
         onClose();
       } catch (error) {
         setIsSubmitting(false);

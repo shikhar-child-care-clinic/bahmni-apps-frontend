@@ -4,8 +4,9 @@ import {
   useTranslation,
   FormatDateResult,
   formatDateDistance,
+  eventBus,
 } from '@bahmni/services';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useMemo, useState } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
@@ -31,6 +32,7 @@ const fetchConditions = async (
 const ConditionsTable: React.FC = () => {
   const [conditions, setConditions] = useState<ConditionViewModel[]>([]);
   const patientUUID = usePatientUUID();
+  const queryClient = useQueryClient();
   const { t } = useTranslation();
   const { addNotification } = useNotification();
   const { data, isLoading, isError, error } = useQuery({
@@ -48,6 +50,61 @@ const ConditionsTable: React.FC = () => {
       });
     if (data) setConditions(data);
   }, [data, isLoading, isError, error]);
+
+  // Subscribe to consultation:saved event for cache invalidation
+  // Subscribe once on mount, unsubscribe on unmount
+  useEffect(() => {
+    console.log('👂 [ConditionsTable] Subscribed to consultation:saved event', {
+      patientUUID,
+    });
+
+    const handleConsultationSaved = (data?: unknown): void => {
+      console.log('📬 [ConditionsTable] Event received:', data);
+
+      const eventData = data as {
+        patientUUID?: string;
+        updatedWidgets?: { conditions?: boolean };
+      };
+
+      console.log('🔍 [ConditionsTable] Checking invalidation criteria:', {
+        hasConditionsFlag: eventData?.updatedWidgets?.conditions,
+        eventPatientUUID: eventData?.patientUUID,
+        currentPatientUUID: patientUUID,
+        uuidMatch: eventData?.patientUUID === patientUUID,
+        shouldInvalidate:
+          eventData?.updatedWidgets?.conditions &&
+          eventData?.patientUUID === patientUUID,
+      });
+
+      // Only invalidate if conditions were updated for this patient
+      if (
+        eventData?.updatedWidgets?.conditions &&
+        eventData?.patientUUID === patientUUID
+      ) {
+        console.log(
+          '✅ [ConditionsTable] Calling queryClient.invalidateQueries',
+        );
+        queryClient.invalidateQueries({
+          queryKey: conditionsQueryKeys(patientUUID!),
+        });
+        console.log(
+          '✅ [ConditionsTable] invalidateQueries called successfully',
+        );
+      } else {
+        console.log('⏭️ [ConditionsTable] Skipping cache invalidation');
+      }
+    };
+
+    eventBus.subscribe('consultation:saved', handleConsultationSaved);
+
+    return () => {
+      console.log(
+        '👋 [ConditionsTable] Unsubscribed from consultation:saved event',
+      );
+      eventBus.unsubscribe('consultation:saved', handleConsultationSaved);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - subscribe once on mount, unsubscribe on unmount
 
   const headers = useMemo(
     () => [
