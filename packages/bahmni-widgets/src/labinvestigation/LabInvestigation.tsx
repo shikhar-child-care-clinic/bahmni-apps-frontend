@@ -8,6 +8,7 @@ import {
   getOrderTypes,
   getFormattedError,
   getPatientLabInvestigations,
+  ORDER_TYPE_QUERY_KEY,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import React, { useMemo, useEffect } from 'react';
@@ -33,7 +34,7 @@ const LabInvestigation: React.FC<WidgetProps> = ({
     isError: isOrderTypesError,
     error: orderTypesError,
   } = useQuery({
-    queryKey: ['orderTypes'],
+    queryKey: ORDER_TYPE_QUERY_KEY,
     queryFn: getOrderTypes,
   });
 

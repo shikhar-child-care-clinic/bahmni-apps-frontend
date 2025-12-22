@@ -156,6 +156,7 @@ export {
   type FlattenedInvestigations,
   type OrderType,
   type OrderTypeResponse,
+  ORDER_TYPE_QUERY_KEY,
 } from './investigationService';
 
 export {

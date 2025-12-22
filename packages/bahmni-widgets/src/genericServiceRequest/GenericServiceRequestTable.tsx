@@ -9,6 +9,7 @@ import {
   groupByDate,
   shouldEnableEncounterFilter,
   useTranslation,
+  ORDER_TYPE_QUERY_KEY,
 } from '@bahmni/services';
 import { Accordion, AccordionItem, Tag } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
@@ -20,8 +21,6 @@ import { WidgetProps } from '../registry/model';
 import { ServiceRequestViewModel } from './models';
 import styles from './styles/GenericServiceRequestTable.module.scss';
 import { mapServiceRequest, sortServiceRequestsByPriority } from './utils';
-
-export const orderTypesQueryKeys = () => ['orderTypes'] as const;
 
 export const genericServiceRequestQueryKeys = (
   categoryUuid: string,
@@ -69,7 +68,7 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
     isError: isOrderTypesError,
     error: orderTypesError,
   } = useQuery({
-    queryKey: orderTypesQueryKeys(),
+    queryKey: ORDER_TYPE_QUERY_KEY,
     queryFn: getOrderTypes,
   });
 
