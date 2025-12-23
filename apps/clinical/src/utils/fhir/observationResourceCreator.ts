@@ -72,7 +72,20 @@ export const createObservationResource = (
         observation.valueQuantity = { value };
         break;
       case 'string': {
-        handleStringValue(value, observation, conceptDatatype);
+        // Check if this is a Complex datatype with URL string
+        if (conceptDatatype === 'Complex' && value.trim() !== '') {
+          // Handle Complex datatype when form2-controls returns just URL string
+          observation.extension ??= [];
+          observation.extension.push({
+            url: 'http://fhir.bahmni.org/ext/observation/complex-data',
+            valueAttachment: {
+              url: value,
+            },
+          });
+        } else {
+          // Handle regular string values (text, dates, numbers for Numeric type)
+          handleStringValue(value, observation, conceptDatatype);
+        }
         break;
       }
       case 'boolean':
@@ -90,8 +103,7 @@ export const createObservationResource = (
             ),
           ]);
         } else if ('url' in value && conceptDatatype === 'Complex') {
-          // Handle Complex datatype (images, files, etc.)
-          // Pass attachment data via extension with valueAttachment
+          // Handle Complex datatype with full metadata object (future-proofing)
           const complexValue = value as ComplexValue;
 
           // Add extension for Complex datatype with valueAttachment
