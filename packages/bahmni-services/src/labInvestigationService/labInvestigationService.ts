@@ -132,6 +132,7 @@ export function formatLabTests(
       }
 
       const testType = determineTestType(labTest);
+      const note = labTest.note?.[0]?.text;
 
       return {
         id: labTest.id,
@@ -143,6 +144,7 @@ export function formatLabTests(
         // Result would typically come from a separate Observation resource
         result: undefined,
         testType,
+        note,
       };
     });
 }
