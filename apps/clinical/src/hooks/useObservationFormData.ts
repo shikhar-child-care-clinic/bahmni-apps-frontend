@@ -4,6 +4,7 @@ import {
   ObservationDataInFormControls,
   FormMetadata,
   ConceptValue,
+  ComplexValue,
   transformFormDataToObservations,
   validateFormData,
   hasFormData,
@@ -141,6 +142,7 @@ export function useObservationFormData(
             | Date
             | ConceptValue
             | ConceptValue[]
+            | ComplexValue
             | null,
         };
 

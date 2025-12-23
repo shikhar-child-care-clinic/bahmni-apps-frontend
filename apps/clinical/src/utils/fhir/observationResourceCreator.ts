@@ -91,9 +91,21 @@ export const createObservationResource = (
           ]);
         } else if ('url' in value && conceptDatatype === 'Complex') {
           // Handle Complex datatype (images, files, etc.)
-          // Store the URL as a string - the backend will handle Complex obs appropriately
+          // Pass attachment data via extension with valueAttachment
           const complexValue = value as ComplexValue;
-          observation.valueString = complexValue.url;
+
+          // Add extension for Complex datatype with valueAttachment
+          observation.extension ??= [];
+
+          observation.extension.push({
+            url: 'http://fhir.bahmni.org/ext/observation/complex-data',
+            valueAttachment: {
+              url: complexValue.url,
+              title: complexValue.fileName,
+              contentType: complexValue.contentType,
+              size: complexValue.fileSize,
+            },
+          });
         }
         break;
     }
