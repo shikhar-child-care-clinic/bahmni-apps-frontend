@@ -34,3 +34,39 @@
   margin-top: $spacing-03;
   font-weight: 600;
 }
+
+.duplicateNotification {
+  margin-top: $spacing-05;
+  margin-bottom: $spacing-05;
+  width: 100%;
+  max-width: 100%;
+  background-color: #fff1f1 !important;
+  border-left: 4px solid #da1e28 !important;
+  color: #161616 !important;
+
+  :global(.cds--inline-notification__title) {
+    font-weight: 400 !important;
+  }
+
+  :global(.cds--inline-notification__subtitle) {
+    font-weight: 400 !important;
+  }
+
+  // Make close button visible with black color
+  :global(.cds--inline-notification__close-button) {
+    color: #161616 !important;
+
+    svg {
+      fill: #161616 !important;
+    }
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.1) !important;
+    }
+
+    &:focus {
+      outline: 2px solid #0f62fe !important;
+      outline-offset: -2px;
+    }
+  }
+}

@@ -288,8 +288,6 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
             allergies: selectedAllergies.length > 0,
           },
         });
-        // eslint-disable-next-line no-console
-        console.log('Dispatched consultation saved event');
 
         addNotification({
           title: t('CONSULTATION_SUBMITTED_SUCCESS_TITLE'),

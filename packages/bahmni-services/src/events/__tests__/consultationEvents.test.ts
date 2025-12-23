@@ -62,7 +62,7 @@ describe('consultationEvents', () => {
       const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener');
 
       const { unmount } = renderHook(() =>
-        useConsultationSavedEvent(callback, [])
+        useConsultationSavedEvent(callback, []),
       );
 
       unmount();

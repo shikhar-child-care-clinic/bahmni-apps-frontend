@@ -17,6 +17,65 @@ jest.mock('../styles/AllergiesForm.module.scss', () => ({
   allergiesFormTitle: 'allergiesFormTitle',
   allergiesBox: 'allergiesBox',
   selectedAllergyItem: 'selectedAllergyItem',
+  duplicateNotification: 'duplicateNotification',
+}));
+
+// Mock @bahmni/widgets
+jest.mock('@bahmni/widgets', () => ({
+  useNotification: jest.fn(() => ({
+    addNotification: jest.fn(),
+  })),
+  usePatientUUID: jest.fn(() => 'test-patient-uuid'),
+}));
+
+// Mock @bahmni/services
+jest.mock('@bahmni/services', () => ({
+  useTranslation: jest.fn(() => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        ALLERGIES_FORM_TITLE: 'Allergies',
+        ALLERGIES_SEARCH_PLACEHOLDER: 'Search for allergies',
+        ALLERGIES_SEARCH_ARIA_LABEL: 'Search for allergies',
+        ALLERGIES_ADDED_ALLERGIES: 'Added Allergies',
+        ALLERGY_ALREADY_SELECTED: 'Already added',
+        ALLERGY_ALREADY_ADDED: 'Allergen is already added',
+        LOADING_CONCEPTS: 'Loading concepts...',
+        NO_MATCHING_ALLERGEN_FOUND:
+          'No matching allergen recorded for this term',
+        ERROR_FETCHING_CONCEPTS:
+          'An unexpected error occurred while fetching allergen concepts',
+        ERROR_DEFAULT_TITLE: 'Error',
+        ALLERGY_CATEGORY_DRUG: 'Drug',
+        ALLERGY_CATEGORY_FOOD: 'Food',
+        ALLERGY_CATEGORY_ENVIRONMENT: 'Environment',
+        ALLERGY_CATEGORY_OTHER: 'Other',
+      };
+      return translations[key] || key;
+    },
+  })),
+  getFormattedAllergies: jest.fn(() => Promise.resolve([])),
+}));
+
+// Mock utils/allergy
+jest.mock('../../../../utils/allergy', () => ({
+  getCategoryDisplayName: jest.fn((type: string) => {
+    const categories: Record<string, string> = {
+      drug: 'ALLERGY_CATEGORY_DRUG',
+      food: 'ALLERGY_CATEGORY_FOOD',
+      environment: 'ALLERGY_CATEGORY_ENVIRONMENT',
+      other: 'ALLERGY_CATEGORY_OTHER',
+    };
+    return categories[type] || 'ALLERGY_CATEGORY_OTHER';
+  }),
+}));
+
+// Mock @tanstack/react-query
+jest.mock('@tanstack/react-query', () => ({
+  useQuery: jest.fn(() => ({
+    data: [],
+    isLoading: false,
+    error: null,
+  })),
 }));
 
 const mockAllergen: AllergenConcept = {
@@ -91,6 +150,7 @@ describe('AllergiesForm', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'log').mockImplementation(() => {});
     window.HTMLElement.prototype.scrollIntoView = jest.fn();
 
     // Set default mocks
@@ -265,7 +325,6 @@ describe('AllergiesForm', () => {
       const searchBox = getSearchCombobox();
       await user.type(searchBox, 'peanut');
 
-      // Verify search is triggered
       await waitFor(() => {
         expect(screen.getByDisplayValue('peanut')).toBeInTheDocument();
       });
@@ -273,8 +332,6 @@ describe('AllergiesForm', () => {
 
     it('should return empty array when search term is empty', () => {
       renderAllergiesForm();
-
-      // The component should not show any search results when search term is empty
       expect(screen.queryByText('Peanut Allergy')).not.toBeInTheDocument();
     });
 
@@ -385,7 +442,6 @@ describe('AllergiesForm', () => {
         expect(screen.getByText('Peanut Allergy [Food]')).toBeInTheDocument();
       });
 
-      // Rerender with same props should use memoized results
       rerender(<AllergiesForm />);
 
       expect(screen.getByText('Peanut Allergy [Food]')).toBeInTheDocument();
@@ -442,7 +498,7 @@ describe('AllergiesForm', () => {
       const user = userEvent.setup();
       const malformedAllergen = {
         uuid: 'test-id',
-        display: null, // null display
+        display: null,
         type: 'food',
         disabled: false,
       };
@@ -453,7 +509,6 @@ describe('AllergiesForm', () => {
 
       await user.type(getSearchCombobox(), 'malformed');
 
-      // Should not crash and handle gracefully
       await waitFor(() => {
         expect(getSearchCombobox()).toBeInTheDocument();
       });
@@ -476,6 +531,98 @@ describe('AllergiesForm', () => {
     });
   });
 
+  describe('Duplicate Allergy Detection and Prevention', () => {
+    it('should detect and prevent duplicate from currently selected allergies', async () => {
+      const user = userEvent.setup();
+      const mockAddAllergy = jest.fn();
+
+      mockAllergenSearchHook({ allergens: [mockAllergen] });
+      renderAllergiesForm({
+        selectedAllergies: [mockSelectedAllergy],
+        addAllergy: mockAddAllergy,
+      });
+
+      await user.type(getSearchCombobox(), 'peanut');
+
+      await waitFor(() => {
+        const option = screen.getByText('Peanut Allergy (Already added)');
+        expect(option).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Peanut Allergy (Already added)'));
+
+      expect(mockAddAllergy).not.toHaveBeenCalled();
+    });
+
+    it('should mark duplicate options as disabled in search results', async () => {
+      const user = userEvent.setup();
+
+      const secondAllergen: AllergenConcept = {
+        uuid: 'test-allergy-2',
+        display: 'Shellfish',
+        type: 'food',
+        disabled: false,
+      };
+
+      mockAllergenSearchHook({ allergens: [mockAllergen, secondAllergen] });
+      renderAllergiesForm({
+        selectedAllergies: [mockSelectedAllergy],
+      });
+
+      await user.type(getSearchCombobox(), 'allergy');
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Peanut Allergy (Already added)'),
+        ).toBeInTheDocument();
+
+        expect(screen.getByText('Shellfish [Food]')).toBeInTheDocument();
+      });
+
+      const options = screen.getAllByRole('option');
+      const peanutOption = options.find((option) =>
+        option.textContent?.includes('Peanut Allergy (Already added)'),
+      );
+      expect(peanutOption).toHaveAttribute('disabled');
+    });
+
+    it('should allow adding different allergy after preventing duplicate', async () => {
+      const user = userEvent.setup();
+      const mockAddAllergy = jest.fn();
+
+      const anotherAllergen: AllergenConcept = {
+        uuid: 'test-allergy-2',
+        display: 'Shellfish',
+        type: 'food',
+        disabled: false,
+      };
+
+      mockAllergenSearchHook({ allergens: [mockAllergen, anotherAllergen] });
+      renderAllergiesForm({
+        selectedAllergies: [mockSelectedAllergy],
+        addAllergy: mockAddAllergy,
+      });
+
+      await user.type(getSearchCombobox(), 'peanut');
+      await user.click(screen.getByText('Peanut Allergy (Already added)'));
+
+      expect(mockAddAllergy).not.toHaveBeenCalled();
+
+      await user.clear(getSearchCombobox());
+      await user.type(getSearchCombobox(), 'shellfish');
+
+      await waitFor(() => {
+        expect(screen.getByText('Shellfish [Food]')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Shellfish [Food]'));
+
+      await waitFor(() => {
+        expect(mockAddAllergy).toHaveBeenCalledWith(anotherAllergen);
+      });
+    });
+  });
+
   describe('Accessibility', () => {
     it('should have no accessibility violations', async () => {
       const { container } = renderAllergiesForm();
@@ -491,16 +638,9 @@ describe('AllergiesForm', () => {
     });
 
     it('should match snapshot with selected allergies', () => {
-      const selectedAllergyWithReactions = {
-        ...mockSelectedAllergy,
-        selectedReactions: [mockReactions[0]],
-        hasBeenValidated: true,
-      };
-
       const { container } = renderAllergiesForm({
-        selectedAllergies: [selectedAllergyWithReactions],
+        selectedAllergies: [mockSelectedAllergy],
       });
-
       expect(container).toMatchSnapshot();
     });
   });
