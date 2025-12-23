@@ -24,15 +24,25 @@ export interface ConsultationSavedEventPayload {
 
 /**
  * Dispatch consultation saved event using window.dispatchEvent
+ *
+ * ASYNCHRONOUS BEHAVIOR:
+ * Uses setTimeout(fn, 0) to defer event dispatch to the next event loop tick.
+ * This prevents blocking the caller and allows UI updates to happen immediately.
+ *
+ * Event listeners will be executed asynchronously after the current call stack clears.
+ *
  * @param payload - The consultation saved event data
  */
 export const dispatchConsultationSaved = (
   payload: ConsultationSavedEventPayload,
 ): void => {
-  const event = new CustomEvent(CONSULTATION_SAVED_EVENT, {
-    detail: payload,
-  });
-  window.dispatchEvent(event);
+  // Defer to next event loop tick to make it non-blocking
+  setTimeout(() => {
+    const event = new CustomEvent(CONSULTATION_SAVED_EVENT, {
+      detail: payload,
+    });
+    window.dispatchEvent(event);
+  }, 0);
 };
 
 /**

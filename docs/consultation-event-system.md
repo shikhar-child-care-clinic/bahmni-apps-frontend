@@ -6,7 +6,7 @@ This document describes the architectural approach for decoupling consultation d
 
 **Problem:** Currently, `ConsultationPad` manually calls `refreshQueries` for conditions after saving, creating tight coupling.
 
-**Solution:** Implement an EventBus-based pub-sub pattern where `ConsultationPad` publishes a "consultation saved" event with metadata about what changed, and dashboard widgets selectively refetch their own data.
+**Solution:** Implement an event-driven pub-sub pattern using Window CustomEvents where `ConsultationPad` publishes a "consultation saved" event with metadata about what changed, and dashboard widgets selectively refetch their own data.
 
 **Benefits:**
 
@@ -83,26 +83,45 @@ ConsultationPad
 
 1. **Pub-Sub Pattern**: Publishers don't know about subscribers and vice versa
 2. **Event Metadata**: Include which widgets changed to enable selective refetch
-3. **EventBus Implementation**: Custom class-based EventBus for type safety and testability
+3. **Window CustomEvents with setTimeout**: Native browser API with async behavior for non-blocking execution
 4. **Widget Responsibility**: Each widget manages its own data lifecycle
+5. **Memory Safety**: useRef pattern to prevent memory leaks
 
 ---
 
-## 3. Event Mechanism Comparison
+## 3. Event Mechanism Comparison & ADR
 
-We evaluated four different approaches before selecting EventBus:
+We evaluated five different approaches before making the final selection:
 
-### Option 1: Window CustomEvents
+### Option 1: Window CustomEvents with setTimeout ⭐ **SELECTED**
 
 ```typescript
-window.dispatchEvent(new CustomEvent("event", { detail: data }));
-window.addEventListener("event", handler);
+// Asynchronous dispatch using setTimeout
+setTimeout(() => {
+  window.dispatchEvent(new CustomEvent("consultation:saved", { detail: data }));
+}, 0);
+
+// Subscribe
+window.addEventListener("consultation:saved", handler);
 ```
 
-**Pros:** ✅ Native browser API, ✅ Simple, ✅ Works across React trees  
-**Cons:** ⚠️ Global scope pollution, ⚠️ Not React-idiomatic, ⚠️ Harder to test
+**Pros:**
+- ✅ Native browser API (no dependencies)
+- ✅ **Asynchronous** - doesn't block caller (setTimeout defers to next tick)
+- ✅ Simple implementation
+- ✅ Works across React trees
+- ✅ Zero serialization overhead (passes object references)
+- ✅ **Secure** - data stays in-process, no third-party interception
+- ✅ **PHI safe** - suitable for healthcare data
 
-### Option 2: EventEmitter Class ⭐ **SELECTED**
+**Cons:**
+- ⚠️ Global scope (mitigated with prefixed event names)
+- ⚠️ Type safety requires casting
+- ⚠️ Testing requires window mocks
+
+**Why Selected:** Best balance of simplicity, performance, security, and async behavior without external dependencies or security risks.
+
+### Option 2: EventEmitter Class
 
 ```typescript
 class EventBus {
@@ -138,7 +157,39 @@ export const useEventSubscription = (eventType, callback) => {
 - ❌ **Testing Complexity**: Every test needs Provider wrapper
 - ⚠️ **Tight Coupling to React Tree**: Context only works within same React tree
 
-### Option 4: TanStack Query Direct Invalidation
+### Option 4: Broadcast Channel API
+
+```typescript
+const channel = new BroadcastChannel("bahmni-consultation");
+
+// Publish (asynchronous)
+channel.postMessage({ type: "consultation:saved", payload: data });
+
+// Subscribe
+channel.onmessage = (event) => {
+  if (event.data.type === "consultation:saved") {
+    // handle event
+  }
+};
+```
+
+**Pros:**
+- ✅ Native browser API
+- ✅ **Truly asynchronous** - doesn't block
+- ✅ Cross-tab communication (bonus feature)
+- ✅ Simple API
+
+**Cons:**
+- ❌ **Security risk** - any script in same origin can intercept messages (including malicious browser extensions)
+- ❌ **PHI exposure risk** - patient data could be intercepted by third-party scripts
+- ❌ **HIPAA compliance concern** - unencrypted PHI accessible to any listener
+- ⚠️ **Serialization overhead** - uses Structured Clone Algorithm (CPU cost)
+- ⚠️ Browser support - not in IE11, older Safari
+- ⚠️ Type safety requires casting
+
+**Why Not Selected:** Security risks and PHI exposure make it unsuitable for healthcare applications.
+
+### Option 5: TanStack Query Direct Invalidation
 
 ```typescript
 queryClient.invalidateQueries({ predicate: (query) => {...} });
@@ -147,33 +198,38 @@ queryClient.invalidateQueries({ predicate: (query) => {...} });
 **Pros:** ✅ Using existing infrastructure, ✅ Direct  
 **Cons:** ❌ Still couples ConsultationPad to query keys, ❌ Not truly decoupled
 
-### Summary: Why EventEmitter Class Wins 🏆
+### Summary: Why Window CustomEvents with setTimeout Wins 🏆
 
-| Feature              | Window CustomEvents        | EventEmitter Class             |
-| -------------------- | -------------------------- | ------------------------------ |
-| **Type Safety**      | ❌ Manual casting required | ✅ Full TypeScript inference   |
-| **Namespace**        | ⚠️ Global scope pollution  | ✅ Completely isolated         |
-| **Testing**          | ❌ Requires window mocks   | ✅ Easy spying & cleanup       |
-| **Debugging**        | ❌ Hard to inspect         | ✅ Built-in introspection      |
-| **Error Handling**   | ❌ Can break event chain   | ✅ Graceful, all listeners run |
-| **API**              | ⚠️ Verbose & error-prone   | ✅ Clean & consistent          |
-| **Extensibility**    | ❌ Limited                 | ✅ Easy to add features        |
-| **Memory Safety**    | ⚠️ Easy to create leaks    | ✅ Clear cleanup patterns      |
-| **Code to Maintain** | 0 lines                    | ~100 lines (one-time)          |
+| Feature | Window CustomEvents (setTimeout) | EventEmitter Class | Broadcast Channel |
+|---------|----------------------------------|-------------------|-------------------|
+| **Async Behavior** | ✅ Non-blocking (setTimeout) | ⚠️ Synchronous blocking | ✅ Truly async |
+| **Type Safety** | ⚠️ Manual casting required | ✅ Full TypeScript inference | ⚠️ Manual casting |
+| **Security** | ✅ In-process only | ✅ In-process only | ❌ **PHI exposure risk** |
+| **Performance** | ✅ Zero serialization | ✅ Zero serialization | ❌ Structured Clone overhead |
+| **Testing** | ⚠️ Requires window mocks | ✅ Easy spying & cleanup | ⚠️ Harder to mock |
+| **Debugging** | ⚠️ Manual | ✅ Built-in introspection | ⚠️ Manual |
+| **API** | ✅ Simple | ✅ Clean & consistent | ✅ Simple |
+| **Namespace** | ⚠️ Global scope | ✅ Isolated | ⚠️ Global scope |
+| **Memory Safety** | ✅ Clear cleanup (useRef) | ✅ Clear cleanup patterns | ✅ Built-in cleanup |
+| **Code to Maintain** | ~50 lines | ~100 lines | ~50 lines |
+| **Dependencies** | ✅ None (native) | ✅ None | ✅ None (native) |
+| **Browser Support** | ✅ Universal | ✅ Universal | ⚠️ Modern browsers only |
+| **HIPAA Compliant** | ✅ Yes | ✅ Yes | ❌ **Security concern** |
 
-**Decision:** We chose **EventEmitter Class** because the ~100 lines of code is a one-time investment that provides:
+**Decision:** We chose **Window CustomEvents with setTimeout** because:
 
-- 🔒 **Safety**: Type-safe, namespace-isolated, memory-safe
-- 🧪 **Testability**: Easy mocking, spying, cleanup
-- 🐛 **Debuggability**: Introspection, centralized logging
-- 🎨 **Developer Experience**: Clean API, auto-cleanup
-- 📈 **Scalability**: Easy to extend with new features
+1. 🚀 **Asynchronous** - setTimeout defers to next tick, prevents blocking even with many listeners
+2. 🔒 **Secure** - Data stays in-process, no third-party interception possible
+3. 🏥 **PHI Safe** - Suitable for healthcare applications with sensitive data
+4. ⚡ **Fast** - Zero serialization overhead, passes object references
+5. 🌐 **Universal** - Works in all browsers, no compatibility issues
+6. 📦 **No Dependencies** - Native browser API
+7. ✅ **Simple** - Minimal code, easy to understand
+8. 💾 **Memory Safe** - useRef pattern prevents leaks
 
-This approach saves significant development time in debugging, testing, and maintenance throughout the project lifecycle.
+### Why Window CustomEvents Works Well Across Packages
 
-### Why EventBus Works Better Across Packages
-
-In our architecture:
+In our monorepo architecture:
 
 ```
 bahmni-apps-frontend/
@@ -181,221 +237,164 @@ bahmni-apps-frontend/
 │   └── src/components/consultationPad/
 ├── packages/bahmni-widgets/        # ConditionsTable lives here
 │   └── src/conditions/
-└── packages/bahmni-services/       # EventBus lives here
+└── packages/bahmni-services/       # Event utilities live here
     └── src/events/
 ```
 
-**React Context Challenges:**
+**Window CustomEvents Advantages:**
 
-1. **Provider Must Wrap Everything**:
-
-   ```typescript
-   // distro/src/main.tsx
-   <EventProvider>  {/* ← Must be here, above everything */}
-     <ClinicalApp>
-       <ConsultationPad />  {/* publisher */}
-     </ClinicalApp>
-     <DashboardApp>
-       <ConditionsTable />  {/* subscriber - different package! */}
-     </DashboardApp>
-   </EventProvider>
-   ```
-
-2. **Multiple Apps Problem**: If you have separate apps (clinical, registration, etc.), each needs the Provider
-3. **Testing Nightmare**: Every test file needs Provider wrapper boilerplate
-
-**EventBus Advantages:**
-
-1. **No Provider Needed**:
+1. **No Provider Needed** - Works across any boundary:
 
    ```typescript
-   // ConsultationPad.tsx
-   import { eventBus } from "@bahmni/services";
-   eventBus.publish("consultation:saved", data); // ✅ Just works
+   // ConsultationPad.tsx (apps/clinical)
+   import { dispatchConsultationSaved } from "@bahmni/services";
+   dispatchConsultationSaved(data); // ✅ Just works
 
-   // ConditionsTable.tsx (different package)
-   import { eventBus } from "@bahmni/services";
-   useEventSubscription("consultation:saved", handler); // ✅ Just works
+   // ConditionsTable.tsx (packages/bahmni-widgets)
+   import { useConsultationSavedEvent } from "@bahmni/services";
+   useConsultationSavedEvent(handler, [deps]); // ✅ Just works
    ```
 
-2. **Works Across Any Boundary**: Packages, apps, lazy-loaded modules - doesn't matter
-3. **Simple Testing**: No wrapper needed, just import and publish/subscribe
-4. **Singleton Pattern**: One instance works everywhere
+2. **Global Accessibility** - Window object is accessible everywhere in the browser
+3. **Simple Testing** - No Provider wrapper needed, just dispatch and listen
+4. **Package Independent** - Works across apps, packages, lazy-loaded modules
 
-**Visual Comparison:**
+**Why This Matters:**
 
-```
-React Context Approach (Complex):
-┌─────────────────────────────────────────┐
-│ EventProvider (in distro)               │
-│  ├── Clinical App                       │
-│  │   └── ConsultationPad (publish)      │
-│  └── Widgets Package                    │
-│      └── ConditionsTable (subscribe)    │
-└─────────────────────────────────────────┘
-       ↑ Must wrap everything!
-
-EventBus Approach (Simple):
-ConsultationPad → eventBus.publish()
-                      ↓
-                  (memory)
-                      ↓
-ConditionsTable ← eventBus.subscribe()
-       ✅ No wrapping needed!
-```
+React Context would require wrapping the entire app in `distro`, above both `apps/clinical` and `packages/bahmni-widgets`. Window events avoid this complexity entirely while maintaining the same decoupling benefits.
 
 ---
 
 ## 4. Event System Design
 
-### EventBus Class Implementation
+### Window CustomEvents Implementation
 
-**File:** `packages/bahmni-services/src/events/EventBus.ts`
+**File:** `packages/bahmni-services/src/events/consultationEvents.ts`
 
 ```typescript
-import { useEffect } from "react";
+import { useEffect, useRef } from 'react';
 
-// Event type definitions
-export type EventType = "consultation:saved" | "consultation:cancelled";
+// Event name constant
+export const CONSULTATION_SAVED_EVENT = 'consultation:saved';
 
 // Event payload interface
 export interface ConsultationSavedEventPayload {
   patientUUID: string;
-  encounterUUID?: string;
-  changedWidgets: {
+  updatedResources: {
     conditions: boolean;
     allergies: boolean;
-    medications: boolean;
-    investigations: boolean;
   };
-  timestamp: number;
 }
 
-// Type mapping for event payloads
-type EventPayload<T extends EventType> = T extends "consultation:saved"
-  ? ConsultationSavedEventPayload
-  : never;
-
 /**
- * EventBus class for managing publish-subscribe pattern
- * Provides type-safe event handling across the application
- */
-class EventBus {
-  private listeners = new Map<EventType, Set<(payload: any) => void>>();
-
-  /**
-   * Subscribe to an event
-   * @param event - The event type to subscribe to
-   * @param callback - Function to call when event is published
-   * @returns Unsubscribe function
-   */
-  subscribe<T extends EventType>(
-    event: T,
-    callback: (payload: EventPayload<T>) => void,
-  ): () => void {
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, new Set());
-    }
-    this.listeners.get(event)!.add(callback);
-
-    // Return unsubscribe function for easy cleanup
-    return () => this.unsubscribe(event, callback);
-  }
-
-  /**
-   * Publish an event to all subscribers
-   * @param event - The event type to publish
-   * @param payload - The event payload data
-   */
-  publish<T extends EventType>(event: T, payload: EventPayload<T>): void {
-    const callbacks = this.listeners.get(event);
-    if (callbacks) {
-      callbacks.forEach((callback) => {
-        try {
-          callback(payload);
-        } catch (error) {
-          console.error(`Error in event listener for ${event}:`, error);
-        }
-      });
-    }
-  }
-
-  /**
-   * Unsubscribe from an event
-   * @param event - The event type to unsubscribe from
-   * @param callback - The callback function to remove
-   */
-  private unsubscribe<T extends EventType>(
-    event: T,
-    callback: (payload: EventPayload<T>) => void,
-  ): void {
-    this.listeners.get(event)?.delete(callback);
-  }
-
-  /**
-   * Clear all listeners (useful for testing)
-   */
-  clear(): void {
-    this.listeners.clear();
-  }
-
-  /**
-   * Get number of listeners for an event (useful for debugging)
-   */
-  getListenerCount(event: EventType): number {
-    return this.listeners.get(event)?.size ?? 0;
-  }
-}
-
-// Singleton instance
-export const eventBus = new EventBus();
-
-/**
- * React hook for subscribing to events
- * Automatically handles cleanup on unmount
+ * Dispatch consultation saved event using window.dispatchEvent
  *
- * @param event - The event type to subscribe to
- * @param callback - Function to call when event is published
- * @param deps - Dependencies array for useEffect
- */
-export const useEventSubscription = <T extends EventType>(
-  event: T,
-  callback: (payload: EventPayload<T>) => void,
-  deps: any[] = [],
-) => {
-  useEffect(() => {
-    return eventBus.subscribe(event, callback);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [event, ...deps]);
-};
-```
-
-### Helper Functions
-
-```typescript
-/**
- * Convenience function to publish consultation saved event
+ * ASYNCHRONOUS BEHAVIOR:
+ * Uses setTimeout(fn, 0) to defer event dispatch to the next event loop tick.
+ * This prevents blocking the caller and allows UI updates to happen immediately.
+ *
+ * Event listeners will be executed asynchronously after the current call stack clears.
+ *
  * @param payload - The consultation saved event data
  */
-export const publishConsultationSaved = (
+export const dispatchConsultationSaved = (
   payload: ConsultationSavedEventPayload,
 ): void => {
-  eventBus.publish("consultation:saved", payload);
+  // Defer to next event loop tick to make it non-blocking
+  setTimeout(() => {
+    const event = new CustomEvent(CONSULTATION_SAVED_EVENT, {
+      detail: payload,
+    });
+    window.dispatchEvent(event);
+  }, 0);
+};
+
+/**
+ * React hook for subscribing to consultation saved events
+ *
+ * MEMORY LEAK PREVENTION:
+ * - Automatically removes event listener on component unmount
+ * - Uses useRef to maintain stable callback reference
+ * - Cleanup function ensures listener is always removed
+ *
+ * USAGE:
+ * ```typescript
+ * useConsultationSavedEvent((payload) => {
+ *   if (payload.patientUUID === currentPatient && payload.updatedResources.conditions) {
+ *     refetch();
+ *   }
+ * }, [currentPatient, refetch]);
+ * ```
+ *
+ * @param callback - Function to call when event is published
+ * @param deps - Dependencies array (should include values used in callback)
+ */
+export const useConsultationSavedEvent = (
+  callback: (payload: ConsultationSavedEventPayload) => void,
+  deps: React.DependencyList = [],
+) => {
+  // Use ref to store the latest callback without triggering re-subscription
+  const callbackRef = useRef(callback);
+
+  // Update ref when callback changes
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
+
+  useEffect(() => {
+    // Create stable handler that uses the ref
+    const handler = (event: Event) => {
+      const customEvent = event as CustomEvent<ConsultationSavedEventPayload>;
+      // Always use the latest callback from ref
+      callbackRef.current(customEvent.detail);
+    };
+
+    // Add listener
+    window.addEventListener(CONSULTATION_SAVED_EVENT, handler);
+
+    // CRITICAL: Cleanup function removes listener to prevent memory leaks
+    return () => {
+      window.removeEventListener(CONSULTATION_SAVED_EVENT, handler);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps); // Only re-subscribe when deps change
 };
 ```
+
+### Key Features
+
+**1. Asynchronous Dispatch:**
+- Uses `setTimeout(fn, 0)` to defer execution to next event loop tick
+- Prevents blocking even with multiple listeners
+- UI remains responsive during event propagation
+
+**2. Memory Safety:**
+- `useRef` pattern prevents unnecessary re-subscriptions
+- Automatic cleanup on component unmount via useEffect return
+- No orphaned listeners or memory leaks
+
+**3. Type Safety:**
+- TypeScript interfaces for payload structure
+- Compile-time checks for payload properties
+- IDE autocomplete support
+
+**4. Simplicity:**
+- ~60 lines of code total
+- No dependencies, uses native browser APIs
+- Easy to understand and maintain
 
 ---
 
 ## 5. Implementation Details
 
-### Step 1: Create EventBus in bahmni-services
+### Step 1: Create Event Utilities in bahmni-services
 
-**New File:** `packages/bahmni-services/src/events/EventBus.ts`
+**New File:** `packages/bahmni-services/src/events/consultationEvents.ts`
 
-- Implement EventBus class (see Section 4)
-- Export singleton instance
-- Export useEventSubscription hook
-- Export type definitions
+- Implement `dispatchConsultationSaved` function with setTimeout for async behavior
+- Implement `useConsultationSavedEvent` hook with useRef for memory safety
+- Export event name constant
+- Export type definitions for payload
 
 ### Step 2: Export from bahmni-services
 
@@ -404,12 +403,11 @@ export const publishConsultationSaved = (
 ```typescript
 // Add export
 export {
-  eventBus,
-  useEventSubscription,
-  publishConsultationSaved,
+  dispatchConsultationSaved,
+  useConsultationSavedEvent,
+  CONSULTATION_SAVED_EVENT,
   type ConsultationSavedEventPayload,
-  type EventType,
-} from "./events/EventBus";
+} from "./events/consultationEvents";
 ```
 
 ### Step 3: Update ConsultationPad (Publisher)
@@ -426,10 +424,10 @@ import { conditionsQueryKeys } from "@bahmni/widgets";
 **Add:**
 
 ```typescript
-import { publishConsultationSaved } from "@bahmni/services";
+import { dispatchConsultationSaved } from "@bahmni/services";
 ```
 
-**Replace (lines 267-270):**
+**Replace:**
 
 ```typescript
 // ❌ OLD CODE - Remove this
@@ -437,16 +435,12 @@ if (selectedConditions.length > 0)
   await refreshQueries(queryClient, conditionsQueryKeys(patientUUID));
 
 // ✅ NEW CODE - Add this
-publishConsultationSaved({
+dispatchConsultationSaved({
   patientUUID: patientUUID!,
-  encounterUUID: activeEncounter?.id,
-  changedWidgets: {
+  updatedResources: {
     conditions: selectedConditions.length > 0,
     allergies: selectedAllergies.length > 0,
-    medications: selectedMedications.length > 0,
-    investigations: selectedServiceRequests.length > 0,
   },
-  timestamp: Date.now(),
 });
 ```
 
@@ -457,7 +451,7 @@ publishConsultationSaved({
 **Add import:**
 
 ```typescript
-import { useEventSubscription } from "@bahmni/services";
+import { useConsultationSavedEvent } from "@bahmni/services";
 ```
 
 **Add subscription in component:**
@@ -472,15 +466,14 @@ const ConditionsTable: React.FC = () => {
   });
 
   // ✅ NEW CODE - Subscribe to consultation saved event
-  useEventSubscription(
-    "consultation:saved",
+  useConsultationSavedEvent(
     (payload) => {
       // Only refetch if:
       // 1. Event is for the same patient
       // 2. Conditions were modified during consultation
       if (
         payload.patientUUID === patientUUID &&
-        payload.changedWidgets.conditions
+        payload.updatedResources.conditions
       ) {
         refetch();
       }
@@ -519,22 +512,18 @@ const handleOnPrimaryButtonClick = async () => {
 
 ```typescript
 // ConsultationPad.tsx - AFTER
-import { publishConsultationSaved } from "@bahmni/services"; // ✅ No widget imports!
+import { dispatchConsultationSaved } from "@bahmni/services"; // ✅ No widget imports!
 
 const handleOnPrimaryButtonClick = async () => {
   await submitConsultation();
 
   // Just publish event with metadata
-  publishConsultationSaved({
+  dispatchConsultationSaved({
     patientUUID: patientUUID!,
-    encounterUUID: activeEncounter?.id,
-    changedWidgets: {
+    updatedResources: {
       conditions: selectedConditions.length > 0,
       allergies: selectedAllergies.length > 0,
-      medications: selectedMedications.length > 0,
-      investigations: selectedServiceRequests.length > 0,
     },
-    timestamp: Date.now(),
   });
 
   // That's it! ✅ Fully decoupled
@@ -544,17 +533,16 @@ const handleOnPrimaryButtonClick = async () => {
 
 ```typescript
 // ConditionsTable.tsx - AFTER
-import { useEventSubscription } from '@bahmni/services';
+import { useConsultationSavedEvent } from '@bahmni/services';
 
 const ConditionsTable: React.FC = () => {
   const patientUUID = usePatientUUID();
   const { refetch } = useQuery({...});
 
   // Widget manages its own refetch
-  useEventSubscription(
-    'consultation:saved',
+  useConsultationSavedEvent(
     (payload) => {
-      if (payload.patientUUID === patientUUID && payload.changedWidgets.conditions) {
+      if (payload.patientUUID === patientUUID && payload.updatedResources.conditions) {
         refetch(); // ✅ Selective refetch
       }
     },
@@ -582,23 +570,21 @@ Without selective refetch:
 
 With selective refetch:
 
-- ✅ ConditionsTable checks → changedWidgets.conditions === false → skips
-- ✅ AllergiesTable checks → changedWidgets.allergies === true → refetches
-- ✅ MedicationsTable checks → changedWidgets.medications === false → skips
+- ✅ ConditionsTable checks → updatedResources.conditions === false → skips
+- ✅ AllergiesTable checks → updatedResources.allergies === true → refetches
 - **Result:** 1 API call, exactly what's needed
 
 ### Implementation Pattern for All Widgets
 
 ```typescript
 // Generic pattern for any widget
-useEventSubscription(
-  'consultation:saved',
+useConsultationSavedEvent(
   (payload) => {
     // Check 1: Same patient?
     if (payload.patientUUID !== currentPatientUUID) return;
 
     // Check 2: Was this widget's data modified?
-    if (!payload.changedWidgets.{widgetType}) return;
+    if (!payload.updatedResources.{widgetType}) return;
 
     // Both checks passed → refetch
     refetch();
@@ -621,10 +607,9 @@ const AllergiesTable: React.FC = () => {
   const { refetch } = useQuery({...});
 
   // Same pattern as ConditionsTable
-  useEventSubscription(
-    'consultation:saved',
+  useConsultationSavedEvent(
     (payload) => {
-      if (payload.patientUUID === patientUUID && payload.changedWidgets.allergies) {
+      if (payload.patientUUID === patientUUID && payload.updatedResources.allergies) {
         refetch();
       }
     },
@@ -635,16 +620,16 @@ const AllergiesTable: React.FC = () => {
 };
 ```
 
-### Adding MedicationsTable
+### Adding Other Widgets
 
 ```typescript
-// Future widget following same pattern
-useEventSubscription(
-  "consultation:saved",
+// Future widgets follow the same simple pattern
+// Just check the appropriate resource flag in updatedResources
+useConsultationSavedEvent(
   (payload) => {
     if (
       payload.patientUUID === patientUUID &&
-      payload.changedWidgets.medications
+      payload.updatedResources.{resourceType}
     ) {
       refetch();
     }
@@ -657,169 +642,7 @@ useEventSubscription(
 
 ---
 
-## 9. Testing Strategy
-
-### Unit Tests for EventBus
-
-**File:** `packages/bahmni-services/src/events/__tests__/EventBus.test.ts`
-
-```typescript
-import { eventBus, ConsultationSavedEventPayload } from "../EventBus";
-
-describe("EventBus", () => {
-  beforeEach(() => {
-    eventBus.clear(); // Clean state before each test
-  });
-
-  it("should notify subscribers when event is published", () => {
-    const callback = jest.fn();
-
-    eventBus.subscribe("consultation:saved", callback);
-
-    const payload: ConsultationSavedEventPayload = {
-      patientUUID: "123",
-      changedWidgets: {
-        conditions: true,
-        allergies: false,
-        medications: false,
-        investigations: false,
-      },
-      timestamp: Date.now(),
-    };
-
-    eventBus.publish("consultation:saved", payload);
-
-    expect(callback).toHaveBeenCalledWith(payload);
-    expect(callback).toHaveBeenCalledTimes(1);
-  });
-
-  it("should support multiple subscribers", () => {
-    const callback1 = jest.fn();
-    const callback2 = jest.fn();
-
-    eventBus.subscribe("consultation:saved", callback1);
-    eventBus.subscribe("consultation:saved", callback2);
-
-    const payload: ConsultationSavedEventPayload = {
-      patientUUID: "123",
-      changedWidgets: {
-        conditions: true,
-        allergies: false,
-        medications: false,
-        investigations: false,
-      },
-      timestamp: Date.now(),
-    };
-
-    eventBus.publish("consultation:saved", payload);
-
-    expect(callback1).toHaveBeenCalledWith(payload);
-    expect(callback2).toHaveBeenCalledWith(payload);
-  });
-
-  it("should unsubscribe correctly", () => {
-    const callback = jest.fn();
-
-    const unsubscribe = eventBus.subscribe("consultation:saved", callback);
-    unsubscribe();
-
-    eventBus.publish("consultation:saved", {} as any);
-
-    expect(callback).not.toHaveBeenCalled();
-  });
-
-  it("should handle errors in callbacks gracefully", () => {
-    const errorCallback = jest.fn(() => {
-      throw new Error("Test error");
-    });
-    const normalCallback = jest.fn();
-
-    eventBus.subscribe("consultation:saved", errorCallback);
-    eventBus.subscribe("consultation:saved", normalCallback);
-
-    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
-
-    eventBus.publish("consultation:saved", {} as any);
-
-    expect(errorCallback).toHaveBeenCalled();
-    expect(normalCallback).toHaveBeenCalled(); // Should still be called
-    expect(consoleErrorSpy).toHaveBeenCalled();
-
-    consoleErrorSpy.mockRestore();
-  });
-});
-```
-
-### Integration Tests for ConditionsTable
-
-```typescript
-describe('ConditionsTable refetch on consultation save', () => {
-  it('should refetch when conditions were modified', async () => {
-    const { rerender } = render(<ConditionsTable />);
-
-    // Simulate consultation save with conditions changed
-    publishConsultationSaved({
-      patientUUID: 'test-patient',
-      changedWidgets: {
-        conditions: true, // ✅ Changed
-        allergies: false,
-        medications: false,
-        investigations: false,
-      },
-      timestamp: Date.now(),
-    });
-
-    // Assert: refetch was triggered
-    await waitFor(() => {
-      expect(screen.getByText('New Condition')).toBeInTheDocument();
-    });
-  });
-
-  it('should NOT refetch when conditions were NOT modified', async () => {
-    const refetchSpy = jest.fn();
-    // Mock useQuery to spy on refetch
-
-    render(<ConditionsTable />);
-
-    // Simulate consultation save WITHOUT conditions changed
-    publishConsultationSaved({
-      patientUUID: 'test-patient',
-      changedWidgets: {
-        conditions: false, // ❌ Not changed
-        allergies: true,
-        medications: false,
-        investigations: false,
-      },
-      timestamp: Date.now(),
-    });
-
-    // Assert: refetch was NOT called
-    expect(refetchSpy).not.toHaveBeenCalled();
-  });
-
-  it('should NOT refetch for different patient', async () => {
-    render(<ConditionsTable />); // patientUUID = 'patient-1'
-
-    // Event for different patient
-    publishConsultationSaved({
-      patientUUID: 'patient-2', // Different patient!
-      changedWidgets: {
-        conditions: true,
-        allergies: false,
-        medications: false,
-        investigations: false,
-      },
-      timestamp: Date.now(),
-    });
-
-    // Assert: refetch was NOT called (wrong patient)
-  });
-});
-```
-
----
-
-## 10. Benefits & Trade-offs
+## 9. Benefits & Trade-offs
 
 ### Benefits
 
@@ -880,45 +703,7 @@ describe('ConditionsTable refetch on consultation save', () => {
 
 ---
 
-## 11. Files Modified Summary
-
-### New Files
-
-1. `packages/bahmni-services/src/events/EventBus.ts` - EventBus implementation
-2. `packages/bahmni-services/src/events/__tests__/EventBus.test.ts` - Tests
-
-### Modified Files
-
-1. `packages/bahmni-services/src/index.ts` - Export event utilities
-2. `apps/clinical/src/components/consultationPad/ConsultationPad.tsx` - Publish events
-3. `packages/bahmni-widgets/src/conditions/ConditionsTable.tsx` - Subscribe and refetch
-
-### Future Files (When extending pattern)
-
-- `packages/bahmni-widgets/src/allergies/AllergiesTable.tsx`
-- `packages/bahmni-widgets/src/medications/MedicationsTable.tsx`
-- `packages/bahmni-widgets/src/investigations/InvestigationsTable.tsx`
-
----
-
-## 12. Migration Checklist
-
-- [ ] Create EventBus class in `packages/bahmni-services/src/events/EventBus.ts`
-- [ ] Add EventBus tests in `packages/bahmni-services/src/events/__tests__/EventBus.test.ts`
-- [ ] Export event utilities from `packages/bahmni-services/src/index.ts`
-- [ ] Update ConsultationPad to publish events instead of calling refreshQueries
-- [ ] Remove conditionsQueryKeys import from ConsultationPad
-- [ ] Update ConditionsTable to subscribe to events and handle refetch
-- [ ] Test ConditionsTable refetch behavior
-- [ ] Verify no regressions in consultation save flow
-- [ ] Document pattern for team (this document!)
-- [ ] Apply same pattern to AllergiesTable (future)
-- [ ] Apply same pattern to MedicationsTable (future)
-- [ ] Apply same pattern to InvestigationsTable (future)
-
----
-
-## Conclusion
+## 10. Conclusion
 
 This event-driven architecture provides a robust, scalable solution for decoupling consultation data refresh logic. By moving refetch responsibility to individual widgets and using selective refetch based on event metadata, we achieve:
 
