@@ -82,6 +82,7 @@ export const createObservationResource = (
               url: value,
             },
           });
+          observation.valueString = value;
         } else {
           // Handle regular string values (text, dates, numbers for Numeric type)
           handleStringValue(value, observation, conceptDatatype);
@@ -144,12 +145,11 @@ export const createObservationResource = (
   }
 
   if (observationPayload.formNamespace && observationPayload.formFieldPath) {
-    observation.extension = [
-      {
-        url: 'http://fhir.bahmni.org/ext/observation/form-namespace-path',
-        valueString: `${observationPayload.formNamespace}^${observationPayload.formFieldPath}`,
-      },
-    ];
+    observation.extension ??= [];
+    observation.extension.push({
+      url: 'http://fhir.bahmni.org/ext/observation/form-namespace-path',
+      valueString: `${observationPayload.formNamespace}^${observationPayload.formFieldPath}`,
+    });
   }
 
   if (observationPayload.comment) {
