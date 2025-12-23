@@ -13,7 +13,6 @@ import {
   dispatchConsultationSaved,
 } from '@bahmni/services';
 import { useNotification } from '@bahmni/widgets';
-import { useQueryClient } from '@tanstack/react-query';
 import React, { useEffect } from 'react';
 import { useEncounterSession } from '../../../src/hooks/useEncounterSession';
 import useAllergyStore from '../../../src/stores/allergyStore';
@@ -289,6 +288,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
             allergies: selectedAllergies.length > 0,
           },
         });
+        // eslint-disable-next-line no-console
         console.log('Dispatched consultation saved event');
 
         addNotification({
