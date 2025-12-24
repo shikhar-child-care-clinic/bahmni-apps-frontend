@@ -301,26 +301,32 @@ export const Profile = ({
       isValid = false;
     }
 
+    const showMiddleName = patientInfoConfig?.showMiddleName ?? true;
     const isMiddleNameMandatory =
       patientInfoConfig?.isMiddleNameMandatory ?? false;
-    if (isMiddleNameMandatory && !formData.middleName.trim()) {
+    if (
+      showMiddleName &&
+      isMiddleNameMandatory &&
+      !formData.middleName.trim()
+    ) {
       newValidationErrors.middleName = t(
         'CREATE_PATIENT_VALIDATION_MIDDLE_NAME_REQUIRED',
       );
       isValid = false;
-    } else if (formData.middleName.length > MAX_NAME_LENGTH) {
+    } else if (showMiddleName && formData.middleName.length > MAX_NAME_LENGTH) {
       newValidationErrors.middleName = t(
         'CREATE_PATIENT_VALIDATION_MIDDLE_NAME_MAX_LENGTH',
       );
       isValid = false;
     }
-    const isLastNameMandatory = patientInfoConfig?.isLastNameMandatory ?? true;
-    if (isLastNameMandatory && !formData.lastName.trim()) {
+    const showLastName = patientInfoConfig?.showLastName ?? true;
+    const isLastNameMandatory = patientInfoConfig?.isLastNameMandatory ?? false;
+    if (showLastName && isLastNameMandatory && !formData.lastName.trim()) {
       newValidationErrors.lastName = t(
         'CREATE_PATIENT_VALIDATION_LAST_NAME_REQUIRED',
       );
       isValid = false;
-    } else if (formData.lastName.length > MAX_NAME_LENGTH) {
+    } else if (showLastName && formData.lastName.length > MAX_NAME_LENGTH) {
       newValidationErrors.lastName = t(
         'CREATE_PATIENT_VALIDATION_LAST_NAME_MAX_LENGTH',
       );
@@ -514,12 +520,12 @@ export const Profile = ({
               />
             )}
 
-            {patientInfoConfig?.showLastName && (
+            {(patientInfoConfig?.showLastName ?? true) && (
               <TextInput
                 id="last-name"
                 labelText={getRequiredLabel(
                   'CREATE_PATIENT_LAST_NAME',
-                  patientInfoConfig?.isLastNameMandatory ?? true,
+                  patientInfoConfig?.isLastNameMandatory ?? false,
                 )}
                 placeholder={t('CREATE_PATIENT_LAST_NAME')}
                 value={formData.lastName}
