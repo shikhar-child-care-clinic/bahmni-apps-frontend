@@ -301,7 +301,7 @@ export const Profile = ({
       isValid = false;
     }
 
-    const showMiddleName = patientInfoConfig?.showMiddleName ?? true;
+    const showMiddleName = patientInfoConfig?.showMiddleName ?? false;
     const isMiddleNameMandatory =
       patientInfoConfig?.isMiddleNameMandatory ?? false;
     if (
@@ -319,7 +319,7 @@ export const Profile = ({
       );
       isValid = false;
     }
-    const showLastName = patientInfoConfig?.showLastName ?? true;
+    const showLastName = patientInfoConfig?.showLastName ?? false;
     const isLastNameMandatory = patientInfoConfig?.isLastNameMandatory ?? false;
     if (showLastName && isLastNameMandatory && !formData.lastName.trim()) {
       newValidationErrors.lastName = t(
@@ -500,7 +500,7 @@ export const Profile = ({
               onBlur={() => handleNameBlur('firstName')}
             />
 
-            {(patientInfoConfig?.showMiddleName ?? true) && (
+            {(patientInfoConfig?.showMiddleName ?? false) && (
               <TextInput
                 id="middle-name"
                 labelText={getRequiredLabel(
@@ -520,7 +520,7 @@ export const Profile = ({
               />
             )}
 
-            {(patientInfoConfig?.showLastName ?? true) && (
+            {(patientInfoConfig?.showLastName ?? false) && (
               <TextInput
                 id="last-name"
                 labelText={getRequiredLabel(
