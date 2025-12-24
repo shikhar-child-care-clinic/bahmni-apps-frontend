@@ -107,7 +107,7 @@ describe('encounterDetailsStore', () => {
       const { result } = renderHook(() => useEncounterDetailsStore());
 
       act(() => {
-        result.current.setHasError(true);
+        result.current.setIsError(true);
       });
 
       expect(result.current.isError).toBe(true);
@@ -118,13 +118,13 @@ describe('encounterDetailsStore', () => {
 
       // First set to true
       act(() => {
-        result.current.setHasError(true);
+        result.current.setIsError(true);
       });
       expect(result.current.isError).toBe(true);
 
       // Then set to false
       act(() => {
-        result.current.setHasError(false);
+        result.current.setIsError(false);
       });
       expect(result.current.isError).toBe(false);
     });
@@ -133,7 +133,7 @@ describe('encounterDetailsStore', () => {
       const { result } = renderHook(() => useEncounterDetailsStore());
 
       act(() => {
-        result.current.setHasError(true);
+        result.current.setIsError(true);
       });
 
       const state = result.current.getState();
@@ -144,7 +144,7 @@ describe('encounterDetailsStore', () => {
       const { result } = renderHook(() => useEncounterDetailsStore());
 
       act(() => {
-        result.current.setHasError(true);
+        result.current.setIsError(true);
       });
       expect(result.current.isError).toBe(true);
 
@@ -484,7 +484,7 @@ describe('encounterDetailsStore', () => {
         result.current.setEncounterDetailsFormReady(true);
         result.current.setActiveVisit(mockActiveVisit);
         result.current.setActiveVisitError(mockError);
-        result.current.setHasError(true);
+        result.current.setIsError(true);
       });
 
       // Verify values were set

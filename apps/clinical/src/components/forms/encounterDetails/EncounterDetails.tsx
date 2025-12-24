@@ -72,7 +72,7 @@ const EncounterDetails: React.FC = () => {
     setPractitioner,
     setUser,
     setPatientUUID,
-    setHasError,
+    setIsError,
   } = useEncounterDetailsStore();
 
   // Memoized values
@@ -226,14 +226,14 @@ const EncounterDetails: React.FC = () => {
 
   // Update error state in store
   useEffect(() => {
-    setHasError(
+    setIsError(
       !!locationsError ||
         !!encounterConceptsError ||
         !!practitionerError ||
         !!activeVisitError,
     );
   }, [
-    setHasError,
+    setIsError,
     locationsError,
     encounterConceptsError,
     practitionerError,

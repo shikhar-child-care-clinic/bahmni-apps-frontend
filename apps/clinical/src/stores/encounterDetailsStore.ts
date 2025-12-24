@@ -41,7 +41,7 @@ export interface EncounterDetailsState {
   setPractitioner: (practitioner: Provider | null) => void;
   setUser: (user: User | null) => void;
   setPatientUUID: (patientUUID: string | null) => void;
-  setHasError: (hasError: boolean) => void;
+  setIsError: (hasError: boolean) => void;
 
   // Reset
   reset: () => void;
@@ -80,7 +80,7 @@ export const useEncounterDetailsStore = create<EncounterDetailsState>(
     setUser: (user) => set({ user: user }),
     setPatientUUID: (patientUUID) => set({ patientUUID: patientUUID }),
 
-    setHasError: (hasError: boolean) => set({ isError: hasError }),
+    setIsError: (hasError: boolean) => set({ isError: hasError }),
 
     reset: () =>
       set({
