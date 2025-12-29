@@ -11,7 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { queryClientConfig } from './config/tanstackQuery';
 import { HOME_NAMESPACE } from './constants/app';
-import LoginPage from './pages/login/LoginPage';
+import { LoginPage } from './pages/loginPage';
 
 const queryClient = new QueryClient(queryClientConfig);
 
