@@ -180,6 +180,15 @@ export {
 } from './configService';
 
 export { getCurrentUser, getUserLoginLocation, type User } from './userService';
+export {
+  loginUser,
+  updateSessionLocation,
+  logoutUser,
+  checkSession,
+  type LoginCredentials,
+  type SessionResponse,
+  type SessionUser,
+} from './sessionService';
 export { USER_PINNED_PREFERENCE_URL } from './observationFormsService/constants';
 export {
   getCurrentProvider,
