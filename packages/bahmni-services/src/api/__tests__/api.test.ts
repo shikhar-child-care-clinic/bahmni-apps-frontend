@@ -45,7 +45,18 @@ describe('Public API Methods', () => {
 
         const result = await get('/api/patients/1');
 
-        expect(mockAxiosGet).toHaveBeenCalledWith('/api/patients/1');
+        expect(mockAxiosGet).toHaveBeenCalledWith('/api/patients/1', undefined);
+        expect(result).toEqual(mockData);
+      });
+
+      it('should make GET request with config and return response data', async () => {
+        const mockData = { id: 1, name: 'Test Patient' };
+        const config = { headers: { Authorization: 'Bearer token' } };
+        mockAxiosGet.mockResolvedValue({ data: mockData });
+
+        const result = await get('/api/patients/1', config);
+
+        expect(mockAxiosGet).toHaveBeenCalledWith('/api/patients/1', config);
         expect(result).toEqual(mockData);
       });
 
@@ -54,7 +65,7 @@ describe('Public API Methods', () => {
         mockAxiosGet.mockRejectedValue(error);
 
         await expect(get('/api/patients/1')).rejects.toThrow('Network error');
-        expect(mockAxiosGet).toHaveBeenCalledWith('/api/patients/1');
+        expect(mockAxiosGet).toHaveBeenCalledWith('/api/patients/1', undefined);
       });
     });
 
