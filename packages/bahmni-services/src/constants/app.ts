@@ -9,3 +9,5 @@ export const VISIT_LOCATION_UUID =
   OPENMRS_REST_V1 + '/bahmnicore/visitLocation/';
 export const PATIENT_PROGRAMS_URL = (patientUUID: string) =>
   `${OPENMRS_REST_V1}/bahmniprogramenrollment?patient=${patientUUID}&v=full`;
+export const GLOBAL_PROPERTY_ENDPOINT =
+  OPENMRS_REST_V1 + '/bahmnicore/sql/globalproperty';

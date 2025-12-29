@@ -189,6 +189,13 @@ export {
   type SessionResponse,
   type SessionUser,
 } from './sessionService';
+export { getLoginBranding, type LoginBranding } from './brandingService';
+export {
+  getAllowedLocalesList,
+  getLocaleLanguages,
+  getAvailableLocales,
+  type LocaleInfo,
+} from './localeService';
 export { USER_PINNED_PREFERENCE_URL } from './observationFormsService/constants';
 export {
   getCurrentProvider,
