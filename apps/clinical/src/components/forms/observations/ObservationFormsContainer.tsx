@@ -2,6 +2,7 @@ import {
   ActionArea,
   Icon,
   ICON_SIZE,
+  InlineNotification,
   SkeletonText,
 } from '@bahmni/design-system';
 import {
@@ -9,6 +10,7 @@ import {
   FormMetadata as Form2FormMetadata,
 } from '@bahmni/form2-controls';
 import '@bahmni/form2-controls/dist/bundle.css';
+import './styles/form2-controls-fixes.scss';
 import {
   ObservationForm,
   ObservationDataInFormControls,
@@ -16,7 +18,7 @@ import {
   getUserPreferredLocale,
 } from '@bahmni/services';
 import { usePatientUUID } from '@bahmni/widgets';
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DEFAULT_FORM_API_NAMES } from '../../../constants/forms';
 import { useObservationFormActions } from '../../../hooks/useObservationFormActions';
@@ -65,6 +67,8 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
 }) => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
+  const [showValidationError, setShowValidationError] = useState(false);
+
   const {
     data: formMetadata,
     isLoading: isLoadingMetadata,
@@ -99,6 +103,28 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       clearFormData,
     });
 
+  // Handle save with validation error display
+  const handleSaveWithValidation = () => {
+    if (!isValid && validationErrors.length > 0) {
+      setShowValidationError(true);
+      return;
+    }
+    setShowValidationError(false);
+    handleSaveForm();
+  };
+
+  // Handle discard with validation error cleanup
+  const handleDiscardWithCleanup = () => {
+    setShowValidationError(false);
+    handleDiscardForm();
+  };
+
+  // Handle back with validation error cleanup
+  const handleBackWithCleanup = () => {
+    setShowValidationError(false);
+    handleBackToForms();
+  };
+
   // Format error for display
   const error = queryError
     ? new Error(
@@ -110,6 +136,19 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   // Form view content when a form is selected
   const formViewContent = (
     <div className={styles.formView}>
+      {showValidationError && (
+        <div className={styles.errorNotificationWrapper}>
+          <InlineNotification
+            kind="error"
+            title={t('OBSERVATION_FORM_VALIDATION_ERROR_TITLE')}
+            subtitle={t('OBSERVATION_FORM_VALIDATION_ERROR_SUBTITLE')}
+            lowContrast
+            hideCloseButton={false}
+            onClose={() => setShowValidationError(false)}
+          />
+        </div>
+      )}
+
       <div className={styles.formContent}>
         {isLoadingMetadata ? (
           <SkeletonText width="100%" lineCount={3} />
@@ -125,8 +164,8 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
             observations={existingObservations ?? []}
             patient={{ uuid: patientUUID }}
             translations={formMetadata.translations ?? {}}
-            validate={false}
-            validateForm={false}
+            validate={showValidationError}
+            validateForm={showValidationError}
             collapse={false}
             locale={getUserPreferredLocale()}
             onValueUpdated={handleFormDataChange}
@@ -161,12 +200,12 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
         className={styles.formViewActionArea}
         title={formTitleWithPin as unknown as string}
         primaryButtonText={t('OBSERVATION_FORM_SAVE_BUTTON')}
-        onPrimaryButtonClick={handleSaveForm}
+        onPrimaryButtonClick={handleSaveWithValidation}
         isPrimaryButtonDisabled={false}
         secondaryButtonText={t('OBSERVATION_FORM_DISCARD_BUTTON')}
-        onSecondaryButtonClick={handleDiscardForm}
+        onSecondaryButtonClick={handleDiscardWithCleanup}
         tertiaryButtonText={t('OBSERVATION_FORM_BACK_BUTTON')}
-        onTertiaryButtonClick={handleBackToForms}
+        onTertiaryButtonClick={handleBackWithCleanup}
         content={formViewContent}
       />
     );

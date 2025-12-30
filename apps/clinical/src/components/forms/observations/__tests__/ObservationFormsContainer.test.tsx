@@ -1,5 +1,6 @@
 import { ObservationForm } from '@bahmni/services';
 import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
 import ObservationFormsContainer from '../ObservationFormsContainer';
 
 // Mock the defaultFormNames import
@@ -15,6 +16,7 @@ jest.mock('../../../../hooks/usePinnedObservationForms');
 const mockUseObservationFormMetadata = jest.fn();
 const mockUseObservationFormPinning = jest.fn();
 const mockUseObservationFormActions = jest.fn();
+const mockUseObservationFormData = jest.fn();
 
 jest.mock('../../../../hooks/useObservationFormMetadata', () => ({
   useObservationFormMetadata: (...args: unknown[]) =>
@@ -29,6 +31,11 @@ jest.mock('../../../../hooks/useObservationFormPinning', () => ({
 jest.mock('../../../../hooks/useObservationFormActions', () => ({
   useObservationFormActions: (...args: unknown[]) =>
     mockUseObservationFormActions(...args),
+}));
+
+jest.mock('../../../../hooks/useObservationFormData', () => ({
+  useObservationFormData: (...args: unknown[]) =>
+    mockUseObservationFormData(...args),
 }));
 
 // Mock the translation hook
@@ -46,16 +53,29 @@ jest.mock('@bahmni/services', () => ({
 }));
 
 // Mock the form2-controls package
-jest.mock('@bahmni/form2-controls', () => ({
-  Container: jest.fn(({ metadata }) => (
-    <div data-testid="form2-container">
-      Form Container with metadata: {JSON.stringify(metadata)}
-    </div>
-  )),
-}));
+const mockGetValue = jest.fn();
+
+jest.mock('@bahmni/form2-controls', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const mockReact = require('react');
+  return {
+    Container: mockReact.forwardRef((props: any, ref: any) => {
+      mockReact.useImperativeHandle(ref, () => ({
+        getValue: mockGetValue,
+      }));
+
+      return (
+        <div data-testid="form2-container">
+          Form Container with metadata: {JSON.stringify(props.metadata)}
+        </div>
+      );
+    }),
+  };
+});
 
 // Mock the form2-controls CSS
 jest.mock('@bahmni/form2-controls/dist/bundle.css', () => ({}));
+jest.mock('../styles/form2-controls-fixes.scss', () => ({}));
 
 // Mock the usePatientUUID hook
 jest.mock('@bahmni/widgets', () => ({
@@ -118,6 +138,23 @@ jest.mock('@bahmni/design-system', () => ({
       data-line-count={lineCount}
     />
   )),
+  InlineNotification: jest.fn(
+    ({ kind, title, subtitle, onClose, hideCloseButton }) => (
+      <div
+        data-testid="inline-notification"
+        data-kind={kind}
+        data-hide-close-button={hideCloseButton}
+      >
+        <div data-testid="notification-title">{title}</div>
+        <div data-testid="notification-subtitle">{subtitle}</div>
+        {onClose && (
+          <button data-testid="notification-close" onClick={onClose}>
+            Close
+          </button>
+        )}
+      </div>
+    ),
+  ),
   ICON_SIZE: {
     SM: 'SM',
     MD: 'MD',
@@ -134,6 +171,7 @@ jest.mock('../styles/ObservationFormsContainer.module.scss', () => ({
   pinIconContainer: 'pinIconContainer',
   pinned: 'pinned',
   unpinned: 'unpinned',
+  errorNotificationWrapper: 'errorNotificationWrapper',
 }));
 
 describe('ObservationFormsContainer', () => {
@@ -193,6 +231,15 @@ describe('ObservationFormsContainer', () => {
       handleSaveForm: jest.fn(),
       handleBackToForms: jest.fn(),
     });
+
+    mockUseObservationFormData.mockReturnValue({
+      observations: [],
+      hasData: false,
+      isValid: true,
+      validationErrors: [],
+      handleFormDataChange: jest.fn(),
+      clearFormData: jest.fn(),
+    });
   });
 
   describe('Rendering and Structure', () => {
@@ -244,12 +291,21 @@ describe('ObservationFormsContainer', () => {
   });
 
   describe('Button Click Handlers', () => {
-    it('should call handleSaveForm when Save button is clicked', () => {
+    it('should call handleSaveForm when Save button is clicked and form is valid', () => {
       const mockHandleSaveForm = jest.fn();
       mockUseObservationFormActions.mockReturnValue({
         handleDiscardForm: jest.fn(),
         handleSaveForm: mockHandleSaveForm,
         handleBackToForms: jest.fn(),
+      });
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: [],
+        hasData: true,
+        isValid: true,
+        validationErrors: [],
+        handleFormDataChange: jest.fn(),
+        clearFormData: jest.fn(),
       });
 
       render(
@@ -260,6 +316,40 @@ describe('ObservationFormsContainer', () => {
       fireEvent.click(saveButton);
 
       expect(mockHandleSaveForm).toHaveBeenCalled();
+    });
+
+    it('should show validation error when Save button is clicked and form is invalid', () => {
+      const mockHandleSaveForm = jest.fn();
+      mockUseObservationFormActions.mockReturnValue({
+        handleDiscardForm: jest.fn(),
+        handleSaveForm: mockHandleSaveForm,
+        handleBackToForms: jest.fn(),
+      });
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: [],
+        hasData: true,
+        isValid: false,
+        validationErrors: [{ field: 'test', message: 'Required' }],
+        handleFormDataChange: jest.fn(),
+        clearFormData: jest.fn(),
+      });
+
+      render(
+        <ObservationFormsContainer {...defaultProps} viewingForm={mockForm} />,
+      );
+
+      const saveButton = screen.getByTestId('primary-button');
+      fireEvent.click(saveButton);
+
+      // Should not call handleSaveForm
+      expect(mockHandleSaveForm).not.toHaveBeenCalled();
+
+      // Should display validation error notification
+      expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+      expect(screen.getByTestId('notification-title')).toHaveTextContent(
+        'translated_OBSERVATION_FORM_VALIDATION_ERROR_TITLE',
+      );
     });
 
     it('should call handleBackToForms when Back button is clicked', () => {
@@ -543,6 +633,192 @@ describe('ObservationFormsContainer', () => {
         pinnedForms: [nonDefaultForm],
         updatePinnedForms: mockUpdatePinnedForms,
       });
+    });
+  });
+
+  describe('Error Handling with Fallback Message', () => {
+    it('should display fallback error message when getFormattedError returns undefined message', async () => {
+      const mockError = new Error('Service error');
+      mockGetFormattedError.mockReturnValue({
+        title: 'Error',
+        message: undefined,
+      });
+
+      mockUseObservationFormMetadata.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: mockError,
+      });
+
+      render(
+        <ObservationFormsContainer {...defaultProps} viewingForm={mockForm} />,
+      );
+
+      // Should fall back to ERROR_FETCHING_FORM_METADATA translation
+      expect(
+        screen.getByText('translated_ERROR_FETCHING_FORM_METADATA'),
+      ).toBeInTheDocument();
+      expect(mockGetFormattedError).toHaveBeenCalledWith(mockError);
+    });
+
+    it('should display fallback error message when getFormattedError returns null message', async () => {
+      const mockError = new Error('Service error');
+      mockGetFormattedError.mockReturnValue({
+        title: 'Error',
+        message: null,
+      });
+
+      mockUseObservationFormMetadata.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: mockError,
+      });
+
+      render(
+        <ObservationFormsContainer {...defaultProps} viewingForm={mockForm} />,
+      );
+
+      // Should fall back to ERROR_FETCHING_FORM_METADATA translation
+      expect(
+        screen.getByText('translated_ERROR_FETCHING_FORM_METADATA'),
+      ).toBeInTheDocument();
+    });
+
+    it('should display formatted error message when available', async () => {
+      const mockError = new Error('Service error');
+      mockGetFormattedError.mockReturnValue({
+        title: 'Error',
+        message: 'Custom error message',
+      });
+
+      mockUseObservationFormMetadata.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: mockError,
+      });
+
+      render(
+        <ObservationFormsContainer {...defaultProps} viewingForm={mockForm} />,
+      );
+
+      expect(screen.getByText('Custom error message')).toBeInTheDocument();
+    });
+  });
+
+  describe('Form Validation', () => {
+    const mockMetadata = {
+      schema: {
+        name: 'Test Form Schema',
+        controls: [],
+      },
+    };
+
+    beforeEach(() => {
+      mockUseObservationFormMetadata.mockReturnValue({
+        data: mockMetadata,
+        isLoading: false,
+        error: null,
+      });
+    });
+
+    it('should close validation error notification when close button is clicked', () => {
+      mockUseObservationFormData.mockReturnValue({
+        observations: [],
+        hasData: true,
+        isValid: false,
+        validationErrors: [{ field: 'test', message: 'Required' }],
+        handleFormDataChange: jest.fn(),
+        clearFormData: jest.fn(),
+      });
+
+      render(
+        <ObservationFormsContainer {...defaultProps} viewingForm={mockForm} />,
+      );
+
+      const saveButton = screen.getByTestId('primary-button');
+      fireEvent.click(saveButton);
+
+      // Notification should be displayed
+      expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+
+      // Close the notification
+      const closeButton = screen.getByTestId('notification-close');
+      fireEvent.click(closeButton);
+
+      // Notification should be removed
+      expect(
+        screen.queryByTestId('inline-notification'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('should hide validation error when discard button is clicked', () => {
+      const mockHandleDiscardForm = jest.fn();
+      mockUseObservationFormActions.mockReturnValue({
+        handleDiscardForm: mockHandleDiscardForm,
+        handleSaveForm: jest.fn(),
+        handleBackToForms: jest.fn(),
+      });
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: [],
+        hasData: true,
+        isValid: false,
+        validationErrors: [{ field: 'test', message: 'Required' }],
+        handleFormDataChange: jest.fn(),
+        clearFormData: jest.fn(),
+      });
+
+      render(
+        <ObservationFormsContainer {...defaultProps} viewingForm={mockForm} />,
+      );
+
+      const saveButton = screen.getByTestId('primary-button');
+      fireEvent.click(saveButton);
+
+      // Notification should be displayed
+      expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+
+      // Click discard button
+      const discardButton = screen.getByTestId('secondary-button');
+      fireEvent.click(discardButton);
+
+      // Should call handleDiscardForm
+      expect(mockHandleDiscardForm).toHaveBeenCalled();
+    });
+
+    it('should hide validation error when back button is clicked', () => {
+      const mockHandleBackToForms = jest.fn();
+      mockUseObservationFormActions.mockReturnValue({
+        handleDiscardForm: jest.fn(),
+        handleSaveForm: jest.fn(),
+        handleBackToForms: mockHandleBackToForms,
+      });
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: [],
+        hasData: true,
+        isValid: false,
+        validationErrors: [{ field: 'test', message: 'Required' }],
+        handleFormDataChange: jest.fn(),
+        clearFormData: jest.fn(),
+      });
+
+      render(
+        <ObservationFormsContainer {...defaultProps} viewingForm={mockForm} />,
+      );
+
+      const saveButton = screen.getByTestId('primary-button');
+      fireEvent.click(saveButton);
+
+      // Notification should be displayed
+      expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+
+      // Click back button
+      const backButton = screen.getByTestId('tertiary-button');
+      fireEvent.click(backButton);
+
+      // Should call handleBackToForms
+      expect(mockHandleBackToForms).toHaveBeenCalled();
     });
   });
 });

@@ -1,9 +1,9 @@
 import { FormMetadata } from '@bahmni/services';
-import { renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as bahmniServices from '@bahmni/services';
-import { useObservationFormMetadata } from '../useObservationFormMetadata';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
+import { useObservationFormMetadata } from '../useObservationFormMetadata';
 
 // Mock the fetchFormMetadata function
 jest.mock('@bahmni/services', () => ({
@@ -11,9 +11,10 @@ jest.mock('@bahmni/services', () => ({
   fetchFormMetadata: jest.fn(),
 }));
 
-const mockFetchFormMetadata = bahmniServices.fetchFormMetadata as jest.MockedFunction<
-  typeof bahmniServices.fetchFormMetadata
->;
+const mockFetchFormMetadata =
+  bahmniServices.fetchFormMetadata as jest.MockedFunction<
+    typeof bahmniServices.fetchFormMetadata
+  >;
 
 describe('useObservationFormMetadata', () => {
   let queryClient: QueryClient;
@@ -37,9 +38,11 @@ describe('useObservationFormMetadata', () => {
       },
     });
 
-    return ({ children }: { children: React.ReactNode }) => (
+    const Wrapper = ({ children }: { children: React.ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
+    Wrapper.displayName = 'QueryClientWrapper';
+    return Wrapper;
   };
 
   beforeEach(() => {
@@ -54,9 +57,12 @@ describe('useObservationFormMetadata', () => {
     it('should fetch form metadata when formUuid is provided', async () => {
       mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
 
-      const { result } = renderHook(() => useObservationFormMetadata('form-uuid'), {
-        wrapper: createWrapper(),
-      });
+      const { result } = renderHook(
+        () => useObservationFormMetadata('form-uuid'),
+        {
+          wrapper: createWrapper(),
+        },
+      );
 
       expect(result.current.isLoading).toBe(true);
       expect(result.current.data).toBeUndefined();
@@ -71,9 +77,12 @@ describe('useObservationFormMetadata', () => {
     });
 
     it('should not fetch when formUuid is undefined', async () => {
-      const { result } = renderHook(() => useObservationFormMetadata(undefined), {
-        wrapper: createWrapper(),
-      });
+      const { result } = renderHook(
+        () => useObservationFormMetadata(undefined),
+        {
+          wrapper: createWrapper(),
+        },
+      );
 
       expect(result.current.isLoading).toBe(false);
       expect(result.current.data).toBeUndefined();
@@ -94,12 +103,18 @@ describe('useObservationFormMetadata', () => {
   describe('Loading States', () => {
     it('should show loading state while fetching', async () => {
       mockFetchFormMetadata.mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve(mockFormMetadata), 100)),
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => resolve(mockFormMetadata), 100),
+          ),
       );
 
-      const { result } = renderHook(() => useObservationFormMetadata('form-uuid'), {
-        wrapper: createWrapper(),
-      });
+      const { result } = renderHook(
+        () => useObservationFormMetadata('form-uuid'),
+        {
+          wrapper: createWrapper(),
+        },
+      );
 
       expect(result.current.isLoading).toBe(true);
       expect(result.current.isFetching).toBe(true);
@@ -117,9 +132,12 @@ describe('useObservationFormMetadata', () => {
     it('should transition from loading to success', async () => {
       mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
 
-      const { result } = renderHook(() => useObservationFormMetadata('form-uuid'), {
-        wrapper: createWrapper(),
-      });
+      const { result } = renderHook(
+        () => useObservationFormMetadata('form-uuid'),
+        {
+          wrapper: createWrapper(),
+        },
+      );
 
       expect(result.current.isLoading).toBe(true);
 
@@ -137,9 +155,12 @@ describe('useObservationFormMetadata', () => {
       const error = new Error('Failed to fetch form metadata');
       mockFetchFormMetadata.mockRejectedValue(error);
 
-      const { result } = renderHook(() => useObservationFormMetadata('form-uuid'), {
-        wrapper: createWrapper(),
-      });
+      const { result } = renderHook(
+        () => useObservationFormMetadata('form-uuid'),
+        {
+          wrapper: createWrapper(),
+        },
+      );
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true);
@@ -154,9 +175,12 @@ describe('useObservationFormMetadata', () => {
       const networkError = new Error('Network error');
       mockFetchFormMetadata.mockRejectedValue(networkError);
 
-      const { result } = renderHook(() => useObservationFormMetadata('form-uuid'), {
-        wrapper: createWrapper(),
-      });
+      const { result } = renderHook(
+        () => useObservationFormMetadata('form-uuid'),
+        {
+          wrapper: createWrapper(),
+        },
+      );
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true);
@@ -188,7 +212,9 @@ describe('useObservationFormMetadata', () => {
         () => useObservationFormMetadata('form-uuid'),
         {
           wrapper: ({ children }: { children: React.ReactNode }) => (
-            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+            <QueryClientProvider client={queryClient}>
+              {children}
+            </QueryClientProvider>
           ),
         },
       );
@@ -233,7 +259,9 @@ describe('useObservationFormMetadata', () => {
         () => useObservationFormMetadata('form-uuid-2'),
         {
           wrapper: ({ children }: { children: React.ReactNode }) => (
-            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+            <QueryClientProvider client={queryClient}>
+              {children}
+            </QueryClientProvider>
           ),
         },
       );
@@ -252,16 +280,22 @@ describe('useObservationFormMetadata', () => {
     it('should use correct query key format', async () => {
       mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
 
-      const { result } = renderHook(() => useObservationFormMetadata('form-uuid'), {
-        wrapper: createWrapper(),
-      });
+      const { result } = renderHook(
+        () => useObservationFormMetadata('form-uuid'),
+        {
+          wrapper: createWrapper(),
+        },
+      );
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
       });
 
       // Verify the query exists in the cache with the correct key
-      const cachedData = queryClient.getQueryData(['formMetadata', 'form-uuid']);
+      const cachedData = queryClient.getQueryData([
+        'formMetadata',
+        'form-uuid',
+      ]);
       expect(cachedData).toEqual(mockFormMetadata);
     });
 
@@ -284,13 +318,19 @@ describe('useObservationFormMetadata', () => {
 
       renderHook(() => useObservationFormMetadata('form-uuid-2'), {
         wrapper: ({ children }: { children: React.ReactNode }) => (
-          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+          <QueryClientProvider client={queryClient}>
+            {children}
+          </QueryClientProvider>
         ),
       });
 
       await waitFor(() => {
-        expect(queryClient.getQueryData(['formMetadata', 'form-uuid'])).toBeDefined();
-        expect(queryClient.getQueryData(['formMetadata', 'form-uuid-2'])).toBeDefined();
+        expect(
+          queryClient.getQueryData(['formMetadata', 'form-uuid']),
+        ).toBeDefined();
+        expect(
+          queryClient.getQueryData(['formMetadata', 'form-uuid-2']),
+        ).toBeDefined();
       });
 
       expect(queryClient.getQueryData(['formMetadata', 'form-uuid'])).toEqual(
@@ -306,18 +346,24 @@ describe('useObservationFormMetadata', () => {
     it('should be enabled when formUuid is provided', () => {
       mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
 
-      const { result } = renderHook(() => useObservationFormMetadata('form-uuid'), {
-        wrapper: createWrapper(),
-      });
+      const { result } = renderHook(
+        () => useObservationFormMetadata('form-uuid'),
+        {
+          wrapper: createWrapper(),
+        },
+      );
 
       expect(result.current.isLoading).toBe(true);
       expect(mockFetchFormMetadata).toHaveBeenCalled();
     });
 
     it('should be disabled when formUuid is undefined', () => {
-      const { result } = renderHook(() => useObservationFormMetadata(undefined), {
-        wrapper: createWrapper(),
-      });
+      const { result } = renderHook(
+        () => useObservationFormMetadata(undefined),
+        {
+          wrapper: createWrapper(),
+        },
+      );
 
       expect(result.current.isLoading).toBe(false);
       expect(result.current.fetchStatus).toBe('idle');
@@ -391,9 +437,12 @@ describe('useObservationFormMetadata', () => {
     it('should return standard React Query result properties', async () => {
       mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
 
-      const { result } = renderHook(() => useObservationFormMetadata('form-uuid'), {
-        wrapper: createWrapper(),
-      });
+      const { result } = renderHook(
+        () => useObservationFormMetadata('form-uuid'),
+        {
+          wrapper: createWrapper(),
+        },
+      );
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
@@ -410,9 +459,12 @@ describe('useObservationFormMetadata', () => {
     it('should allow manual refetch', async () => {
       mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
 
-      const { result } = renderHook(() => useObservationFormMetadata('form-uuid'), {
-        wrapper: createWrapper(),
-      });
+      const { result } = renderHook(
+        () => useObservationFormMetadata('form-uuid'),
+        {
+          wrapper: createWrapper(),
+        },
+      );
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
