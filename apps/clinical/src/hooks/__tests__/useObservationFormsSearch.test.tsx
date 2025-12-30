@@ -22,12 +22,9 @@ jest.mock('@bahmni/services', () => ({
 }));
 
 // Mock the local privilegeUtils
-jest.mock(
-  '../../components/forms/observationForms/utils/privilegeUtils',
-  () => ({
-    filterFormsByUserPrivileges: jest.fn(),
-  }),
-);
+jest.mock('../../components/forms/observations/utils/privilegeUtils', () => ({
+  filterFormsByUserPrivileges: jest.fn(),
+}));
 
 // Mock useUserPrivilege hook
 jest.mock('@bahmni/widgets', () => ({

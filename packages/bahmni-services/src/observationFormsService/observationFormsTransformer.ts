@@ -166,6 +166,10 @@ export function transformFormDataToObservations(
       return;
     }
 
+    if (control.value === null || control.value === undefined) {
+      return;
+    }
+
     if (control.type === 'multiselect' && Array.isArray(control.value)) {
       control.value.forEach((selectedValue) => {
         const observation: ObservationDataInFormControls = {

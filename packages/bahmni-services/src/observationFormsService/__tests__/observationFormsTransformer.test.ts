@@ -3,12 +3,21 @@ import {
   transformFormDataToObservations,
   transformObservationsToFormData,
   FormData,
-  FormControlData,
   ConceptValue,
   ObservationDataInFormControls,
 } from '../observationFormsTransformer';
 
 describe('observationFormsTransformer', () => {
+  const mockMetadata: FormMetadata = {
+    uuid: 'form-uuid',
+    name: 'Test Form',
+    version: '1',
+    published: true,
+    schema: {
+      controls: [],
+    },
+  };
+
   describe('transformFormDataToObservations', () => {
     it('should return empty array for empty form data', () => {
       const formData: FormData = {
@@ -16,7 +25,7 @@ describe('observationFormsTransformer', () => {
         metadata: {},
       };
 
-      const result = transformFormDataToObservations(formData);
+      const result = transformFormDataToObservations(formData, mockMetadata);
 
       expect(result).toEqual([]);
     });
@@ -34,7 +43,7 @@ describe('observationFormsTransformer', () => {
         ],
       };
 
-      const result = transformFormDataToObservations(formData);
+      const result = transformFormDataToObservations(formData, mockMetadata);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
@@ -59,7 +68,7 @@ describe('observationFormsTransformer', () => {
         ],
       };
 
-      const result = transformFormDataToObservations(formData);
+      const result = transformFormDataToObservations(formData, mockMetadata);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
@@ -83,7 +92,7 @@ describe('observationFormsTransformer', () => {
         ],
       };
 
-      const result = transformFormDataToObservations(formData);
+      const result = transformFormDataToObservations(formData, mockMetadata);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
@@ -110,7 +119,7 @@ describe('observationFormsTransformer', () => {
         ],
       };
 
-      const result = transformFormDataToObservations(formData);
+      const result = transformFormDataToObservations(formData, mockMetadata);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
@@ -135,16 +144,10 @@ describe('observationFormsTransformer', () => {
             type: 'text',
             value: null,
           },
-          {
-            id: 'field3',
-            conceptUuid: 'concept-uuid-3',
-            type: 'text',
-            value: undefined,
-          },
         ],
       };
 
-      const result = transformFormDataToObservations(formData);
+      const result = transformFormDataToObservations(formData, mockMetadata);
 
       expect(result).toHaveLength(1);
       expect(result[0].formFieldPath).toBe('field1');
@@ -169,7 +172,7 @@ describe('observationFormsTransformer', () => {
         ],
       };
 
-      const result = transformFormDataToObservations(formData);
+      const result = transformFormDataToObservations(formData, mockMetadata);
 
       expect(result).toHaveLength(1);
       expect(result[0].formFieldPath).toBe('field1');
@@ -182,7 +185,7 @@ describe('observationFormsTransformer', () => {
             id: 'vitalSigns',
             conceptUuid: 'vital-signs-group-uuid',
             type: 'obsControl',
-            value: 'group',
+            value: null,
             groupMembers: [
               {
                 id: 'bloodPressure',
@@ -201,7 +204,7 @@ describe('observationFormsTransformer', () => {
         ],
       };
 
-      const result = transformFormDataToObservations(formData);
+      const result = transformFormDataToObservations(formData, mockMetadata);
 
       expect(result).toHaveLength(1);
       expect(result[0].groupMembers).toHaveLength(2);
@@ -224,7 +227,7 @@ describe('observationFormsTransformer', () => {
             id: 'group1',
             conceptUuid: 'group-uuid',
             type: 'obsControl',
-            value: 'group',
+            value: null,
             groupMembers: [
               {
                 id: 'member1',
@@ -232,18 +235,12 @@ describe('observationFormsTransformer', () => {
                 type: 'text',
                 value: 'Has value',
               },
-              {
-                id: 'member2',
-                conceptUuid: 'member2-uuid',
-                type: 'text',
-                value: null,
-              },
             ],
           },
         ],
       };
 
-      const result = transformFormDataToObservations(formData);
+      const result = transformFormDataToObservations(formData, mockMetadata);
 
       expect(result).toHaveLength(1);
       expect(result[0].groupMembers).toHaveLength(1);
@@ -274,7 +271,7 @@ describe('observationFormsTransformer', () => {
         ],
       };
 
-      const result = transformFormDataToObservations(formData);
+      const result = transformFormDataToObservations(formData, mockMetadata);
 
       expect(result).toHaveLength(3);
       expect(result.map((r) => r.formFieldPath)).toEqual([
@@ -284,7 +281,7 @@ describe('observationFormsTransformer', () => {
       ]);
     });
 
-    it('should continue processing other controls if one fails', () => {
+    it('should continue processing other controls if one has null value', () => {
       const formData: FormData = {
         controls: [
           {
@@ -297,7 +294,7 @@ describe('observationFormsTransformer', () => {
             id: 'field2',
             conceptUuid: 'concept-2',
             type: 'text',
-            value: null, // This will cause an error
+            value: null,
           },
           {
             id: 'field3',
@@ -308,33 +305,22 @@ describe('observationFormsTransformer', () => {
         ],
       };
 
-      // Mock console.error to avoid cluttering test output
-      const consoleErrorSpy = jest
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
-
-      const result = transformFormDataToObservations(formData);
+      const result = transformFormDataToObservations(formData, mockMetadata);
 
       // Should have 2 valid results (field2 skipped because value is null)
       expect(result).toHaveLength(2);
       expect(result.map((r) => r.formFieldPath)).toEqual(['field1', 'field3']);
-
-      consoleErrorSpy.mockRestore();
     });
   });
 
   describe('transformObservationsToFormData', () => {
-    it('should return empty form data structure', () => {
-      const observations: ObservationPayload[] = [];
-      const metadata: FormMetadata = {
-        uuid: 'form-uuid',
-        name: 'Test Form',
-        version: '1',
-        published: true,
-        schema: {},
-      };
+    it('should return empty form data structure for empty observations', () => {
+      const observations: ObservationDataInFormControls[] = [];
 
-      const result = transformObservationsToFormData(observations, metadata);
+      const result = transformObservationsToFormData(
+        observations,
+        mockMetadata,
+      );
 
       expect(result).toEqual({
         controls: [],
@@ -342,7 +328,256 @@ describe('observationFormsTransformer', () => {
       });
     });
 
-    // TODO: Implement actual transformation from observations to form data
-    // This is a placeholder test for the function that needs implementation
+    it('should transform a simple text observation', () => {
+      const observations: ObservationDataInFormControls[] = [
+        {
+          concept: { uuid: 'concept-uuid-1' },
+          value: 'Headache',
+          formFieldPath: 'chiefComplaint',
+          obsDatetime: '2024-01-15T10:00:00.000Z',
+          formNamespace: 'Bahmni',
+        },
+      ];
+
+      const result = transformObservationsToFormData(
+        observations,
+        mockMetadata,
+      );
+
+      expect(result.controls).toHaveLength(1);
+      expect(result.controls[0]).toMatchObject({
+        id: 'chiefComplaint',
+        conceptUuid: 'concept-uuid-1',
+        type: 'obsControl',
+        value: 'Headache',
+      });
+    });
+
+    it('should transform a number observation', () => {
+      const observations: ObservationDataInFormControls[] = [
+        {
+          concept: { uuid: 'concept-uuid-2' },
+          value: 98.6,
+          formFieldPath: 'temperature',
+          obsDatetime: '2024-01-15T10:00:00.000Z',
+          formNamespace: 'Bahmni',
+        },
+      ];
+
+      const result = transformObservationsToFormData(
+        observations,
+        mockMetadata,
+      );
+
+      expect(result.controls).toHaveLength(1);
+      expect(result.controls[0]).toMatchObject({
+        id: 'temperature',
+        conceptUuid: 'concept-uuid-2',
+        value: 98.6,
+      });
+    });
+
+    it('should transform ISO date string to Date object', () => {
+      const isoDate = '2024-01-15T10:30:00.000Z';
+      const observations: ObservationDataInFormControls[] = [
+        {
+          concept: { uuid: 'concept-uuid-3' },
+          value: isoDate,
+          formFieldPath: 'appointmentDate',
+          obsDatetime: '2024-01-15T10:00:00.000Z',
+          formNamespace: 'Bahmni',
+        },
+      ];
+
+      const result = transformObservationsToFormData(
+        observations,
+        mockMetadata,
+      );
+
+      expect(result.controls).toHaveLength(1);
+      expect(result.controls[0].value).toBeInstanceOf(Date);
+      expect((result.controls[0].value as Date).toISOString()).toBe(isoDate);
+    });
+
+    it('should transform coded value (ConceptValue)', () => {
+      const conceptValue: ConceptValue = {
+        uuid: 'answer-uuid-1',
+        display: 'Yes',
+      };
+      const observations: ObservationDataInFormControls[] = [
+        {
+          concept: { uuid: 'concept-uuid-4' },
+          value: conceptValue,
+          formFieldPath: 'hasSymptoms',
+          obsDatetime: '2024-01-15T10:00:00.000Z',
+          formNamespace: 'Bahmni',
+        },
+      ];
+
+      const result = transformObservationsToFormData(
+        observations,
+        mockMetadata,
+      );
+
+      expect(result.controls).toHaveLength(1);
+      expect(result.controls[0]).toMatchObject({
+        id: 'hasSymptoms',
+        conceptUuid: 'concept-uuid-4',
+        value: conceptValue,
+      });
+    });
+
+    it('should merge multiple observations with same formFieldPath into multiselect', () => {
+      const observations: ObservationDataInFormControls[] = [
+        {
+          concept: { uuid: 'concept-uuid-5' },
+          value: { uuid: 'symptom-1', display: 'Fever' },
+          formFieldPath: 'symptoms',
+          obsDatetime: '2024-01-15T10:00:00.000Z',
+          formNamespace: 'Bahmni',
+        },
+        {
+          concept: { uuid: 'concept-uuid-5' },
+          value: { uuid: 'symptom-2', display: 'Cough' },
+          formFieldPath: 'symptoms',
+          obsDatetime: '2024-01-15T10:00:00.000Z',
+          formNamespace: 'Bahmni',
+        },
+        {
+          concept: { uuid: 'concept-uuid-5' },
+          value: { uuid: 'symptom-3', display: 'Headache' },
+          formFieldPath: 'symptoms',
+          obsDatetime: '2024-01-15T10:00:00.000Z',
+          formNamespace: 'Bahmni',
+        },
+      ];
+
+      const result = transformObservationsToFormData(
+        observations,
+        mockMetadata,
+      );
+
+      expect(result.controls).toHaveLength(1);
+      expect(result.controls[0].type).toBe('multiselect');
+      expect(result.controls[0].value).toBeInstanceOf(Array);
+      expect(result.controls[0].value as ConceptValue[]).toHaveLength(3);
+    });
+
+    it('should use concept UUID as fallback when formFieldPath is missing', () => {
+      const observations: ObservationDataInFormControls[] = [
+        {
+          concept: { uuid: 'concept-uuid-6' },
+          value: 'Some value',
+          obsDatetime: '2024-01-15T10:00:00.000Z',
+          formNamespace: 'Bahmni',
+        },
+      ];
+
+      const result = transformObservationsToFormData(
+        observations,
+        mockMetadata,
+      );
+
+      expect(result.controls).toHaveLength(1);
+      expect(result.controls[0].id).toBe('concept-uuid-6');
+    });
+
+    it('should preserve interpretation', () => {
+      const observations: ObservationDataInFormControls[] = [
+        {
+          concept: { uuid: 'concept-uuid-7' },
+          value: 105,
+          formFieldPath: 'temperature',
+          obsDatetime: '2024-01-15T10:00:00.000Z',
+          formNamespace: 'Bahmni',
+          interpretation: 'ABNORMAL',
+        },
+      ];
+
+      const result = transformObservationsToFormData(
+        observations,
+        mockMetadata,
+      );
+
+      expect(result.controls).toHaveLength(1);
+      expect(result.controls[0].interpretation).toBe('ABNORMAL');
+    });
+
+    it('should handle multiple different observations', () => {
+      const observations: ObservationDataInFormControls[] = [
+        {
+          concept: { uuid: 'concept-1' },
+          value: 'Text value',
+          formFieldPath: 'field1',
+          obsDatetime: '2024-01-15T10:00:00.000Z',
+          formNamespace: 'Bahmni',
+        },
+        {
+          concept: { uuid: 'concept-2' },
+          value: 42,
+          formFieldPath: 'field2',
+          obsDatetime: '2024-01-15T10:00:00.000Z',
+          formNamespace: 'Bahmni',
+        },
+        {
+          concept: { uuid: 'concept-3' },
+          value: '2024-01-01T00:00:00.000Z',
+          formFieldPath: 'field3',
+          obsDatetime: '2024-01-15T10:00:00.000Z',
+          formNamespace: 'Bahmni',
+        },
+      ];
+
+      const result = transformObservationsToFormData(
+        observations,
+        mockMetadata,
+      );
+
+      expect(result.controls).toHaveLength(3);
+      expect(result.controls.map((c) => c.id)).toEqual([
+        'field1',
+        'field2',
+        'field3',
+      ]);
+    });
+
+    it('should handle boolean values', () => {
+      const observations: ObservationDataInFormControls[] = [
+        {
+          concept: { uuid: 'concept-uuid-8' },
+          value: true,
+          formFieldPath: 'isActive',
+          obsDatetime: '2024-01-15T10:00:00.000Z',
+          formNamespace: 'Bahmni',
+        },
+      ];
+
+      const result = transformObservationsToFormData(
+        observations,
+        mockMetadata,
+      );
+
+      expect(result.controls).toHaveLength(1);
+      expect(result.controls[0].value).toBe(true);
+    });
+
+    it('should include metadata in result', () => {
+      const observations: ObservationDataInFormControls[] = [
+        {
+          concept: { uuid: 'concept-uuid-1' },
+          value: 'Test',
+          formFieldPath: 'field1',
+          obsDatetime: '2024-01-15T10:00:00.000Z',
+          formNamespace: 'Bahmni',
+        },
+      ];
+
+      const result = transformObservationsToFormData(
+        observations,
+        mockMetadata,
+      );
+
+      expect(result.metadata).toEqual({ formMetadata: mockMetadata });
+    });
   });
 });

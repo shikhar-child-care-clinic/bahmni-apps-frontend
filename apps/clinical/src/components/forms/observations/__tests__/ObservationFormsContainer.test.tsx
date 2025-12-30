@@ -311,11 +311,18 @@ describe('ObservationFormsContainer', () => {
         />,
       );
 
-      expect(mockUseObservationFormActions).toHaveBeenCalledWith({
-        viewingForm: mockForm,
-        onViewingFormChange: mockOnViewingFormChange,
-        onRemoveForm: mockOnRemoveForm,
-      });
+      expect(mockUseObservationFormActions).toHaveBeenCalledWith(
+        expect.objectContaining({
+          viewingForm: mockForm,
+          onViewingFormChange: mockOnViewingFormChange,
+          onRemoveForm: mockOnRemoveForm,
+          observations: expect.any(Array),
+          hasData: expect.any(Boolean),
+          isValid: expect.any(Boolean),
+          validationErrors: expect.any(Array),
+          clearFormData: expect.any(Function),
+        }),
+      );
     });
   });
 
