@@ -1,4 +1,4 @@
-import { ObservationDataInFormControls, ComplexValue } from '@bahmni/services';
+import { ObservationDataInFormControls } from '@bahmni/services';
 import { Observation, Reference } from 'fhir/r4';
 import { createCodeableConcept, createCoding } from './codeableConceptCreator';
 
@@ -14,34 +14,30 @@ const handleStringValue = (
   value: string,
   observation: Observation,
   conceptDatatype?: string,
-): Observation | null => {
+): void => {
   const trimmedValue = value.trim();
 
-  const isISODate = /^\d{4}-\d{2}-\d{2}/.test(trimmedValue);
-  if (isISODate) {
+  if (trimmedValue === '') {
+    return;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}/.test(trimmedValue)) {
     const dateValue = new Date(trimmedValue);
     if (!isNaN(dateValue.getTime())) {
       observation.valueDateTime = dateValue.toISOString();
-      return observation;
+      return;
     }
   }
 
-  // Only parse as number if the concept datatype is explicitly "Numeric"
-  // Otherwise, treat strings as strings to avoid type mismatches with backend
   if (conceptDatatype === 'Numeric') {
     const numericValue = parseFloat(trimmedValue);
-    if (!isNaN(numericValue) && trimmedValue !== '') {
+    if (!isNaN(numericValue)) {
       observation.valueQuantity = { value: numericValue };
-      return observation;
+      return;
     }
   }
 
-  // Default to string for Text datatype or when datatype is not specified
-  if (trimmedValue !== '') {
-    observation.valueString = value;
-  }
-
-  return null;
+  observation.valueString = value;
 };
 
 export const createObservationResource = (
@@ -72,19 +68,15 @@ export const createObservationResource = (
         observation.valueQuantity = { value };
         break;
       case 'string': {
-        // Check if this is a Complex datatype with URL string
         if (conceptDatatype === 'Complex' && value.trim() !== '') {
-          // Handle Complex datatype when form2-controls returns just URL string
+          //TODO - Image/Video Handling
           observation.extension ??= [];
           observation.extension.push({
             url: 'http://fhir.bahmni.org/ext/observation/complex-data',
-            valueAttachment: {
-              url: value,
-            },
+            valueAttachment: { url: value },
           });
           observation.valueString = value;
         } else {
-          // Handle regular string values (text, dates, numbers for Numeric type)
           handleStringValue(value, observation, conceptDatatype);
         }
         break;
@@ -103,22 +95,6 @@ export const createObservationResource = (
               (value as { display?: string }).display,
             ),
           ]);
-        } else if ('url' in value && conceptDatatype === 'Complex') {
-          // Handle Complex datatype with full metadata object (future-proofing)
-          const complexValue = value as ComplexValue;
-
-          // Add extension for Complex datatype with valueAttachment
-          observation.extension ??= [];
-
-          observation.extension.push({
-            url: 'http://fhir.bahmni.org/ext/observation/complex-data',
-            valueAttachment: {
-              url: complexValue.url,
-              title: complexValue.fileName,
-              contentType: complexValue.contentType,
-              size: complexValue.fileSize,
-            },
-          });
         }
         break;
     }

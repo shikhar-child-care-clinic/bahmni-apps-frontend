@@ -42,60 +42,52 @@ export interface FormData {
 function transformControlValue(
   control: FormControlData,
 ): string | number | boolean | ConceptValue | ComplexValue {
-  if (control.value === null || control.value === undefined) {
-    throw new Error(`Control ${control.id} has no value`);
-  }
+  const { value } = control;
 
-  if (control.value instanceof Date) {
-    return control.value.toISOString();
+  if (value instanceof Date) {
+    return value.toISOString();
   }
 
   if (
     control.type === 'select' &&
-    typeof control.value === 'object' &&
-    !Array.isArray(control.value)
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    'uuid' in value
   ) {
-    return control.value as ConceptValue;
+    return value as ConceptValue;
   }
 
-  if (control.type === 'multiselect' && Array.isArray(control.value)) {
-    throw new Error(
-      'Multiselect values should be handled by creating multiple observations',
-    );
-  }
-
-  // Handle Complex datatype values (images, files, etc.) - preserve object structure
   if (
-    typeof control.value === 'object' &&
-    !Array.isArray(control.value) &&
-    'url' in control.value
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    'url' in value
   ) {
-    return control.value as ComplexValue;
+    return (value as ComplexValue).url;
   }
 
-  return control.value as string | number | boolean;
+  return value as string | number | boolean;
 }
 
 function transformGroupMembers(
   groupMembers: FormControlData[],
   metadata: FormMetadata,
 ): ObservationDataInFormControls[] {
-  return groupMembers
-    .filter((member) => member.value !== null && member.value !== undefined)
-    .map((member) => {
-      const datatype = findConceptDatatype(metadata, member.conceptUuid);
-      return {
-        concept: { uuid: member.conceptUuid, datatype },
-        value: transformControlValue(member),
-        obsDatetime: new Date().toISOString(),
-        formNamespace: 'Bahmni',
-        formFieldPath: member.id,
-        interpretation: member.interpretation,
-        groupMembers: member.groupMembers
-          ? transformGroupMembers(member.groupMembers, metadata)
-          : undefined,
-      };
-    });
+  return groupMembers.map((member) => {
+    const datatype = findConceptDatatype(metadata, member.conceptUuid);
+    return {
+      concept: { uuid: member.conceptUuid, datatype },
+      value: transformControlValue(member),
+      obsDatetime: new Date().toISOString(),
+      formNamespace: 'Bahmni',
+      formFieldPath: member.id,
+      interpretation: member.interpretation,
+      groupMembers: member.groupMembers
+        ? transformGroupMembers(member.groupMembers, metadata)
+        : undefined,
+    };
+  });
 }
 
 // Helper function to find concept datatype from metadata schema
@@ -163,59 +155,49 @@ export function transformFormDataToObservations(
     const datatype = findConceptDatatype(metadata, control.conceptUuid);
 
     if (control.groupMembers?.length) {
-      const observation: ObservationDataInFormControls = {
+      observations.push({
         concept: { uuid: control.conceptUuid, datatype },
         value: null,
         obsDatetime: timestamp,
         formNamespace: 'Bahmni',
         formFieldPath: control.id,
         groupMembers: transformGroupMembers(control.groupMembers, metadata),
-      };
-
-      observations.push(observation);
+      });
       return;
     }
 
-    if (control.value === null || control.value === undefined) {
+    if (control.type === 'multiselect' && Array.isArray(control.value)) {
+      control.value.forEach((selectedValue) => {
+        const observation: ObservationDataInFormControls = {
+          concept: { uuid: control.conceptUuid, datatype },
+          value: selectedValue,
+          obsDatetime: timestamp,
+          formNamespace: 'Bahmni',
+          formFieldPath: control.id,
+        };
+
+        if (control.interpretation) {
+          observation.interpretation = control.interpretation;
+        }
+
+        observations.push(observation);
+      });
       return;
     }
 
-    try {
-      if (control.type === 'multiselect' && Array.isArray(control.value)) {
-        control.value.forEach((selectedValue) => {
-          const observation: ObservationDataInFormControls = {
-            concept: { uuid: control.conceptUuid, datatype },
-            value: selectedValue,
-            obsDatetime: timestamp,
-            formNamespace: 'Bahmni',
-            formFieldPath: control.id,
-          };
+    const observation: ObservationDataInFormControls = {
+      concept: { uuid: control.conceptUuid, datatype },
+      value: transformControlValue(control),
+      obsDatetime: timestamp,
+      formNamespace: 'Bahmni',
+      formFieldPath: control.id,
+    };
 
-          if (control.interpretation) {
-            observation.interpretation = control.interpretation;
-          }
-
-          observations.push(observation);
-        });
-        return;
-      }
-
-      const observation: ObservationDataInFormControls = {
-        concept: { uuid: control.conceptUuid, datatype },
-        value: transformControlValue(control),
-        obsDatetime: timestamp,
-        formNamespace: 'Bahmni',
-        formFieldPath: control.id,
-      };
-
-      if (control.interpretation) {
-        observation.interpretation = control.interpretation;
-      }
-
-      observations.push(observation);
-    } catch (error) {
-      // Silent catch - continue processing
+    if (control.interpretation) {
+      observation.interpretation = control.interpretation;
     }
+
+    observations.push(observation);
   });
 
   return observations;
