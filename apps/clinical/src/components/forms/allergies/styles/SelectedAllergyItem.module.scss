@@ -5,9 +5,10 @@
 
 .selectedAllergyTitle {
   @include type-style("heading-compact-01");
+  margin: 0;
+  justify-self: start;
   display: flex !important;
   flex-direction: column !important;
-  align-self: center;
 }
 
 .addAllergyNote {
