@@ -30,6 +30,7 @@ import {
   VALIDATION_STATE_INVALID,
 } from '../../constants/forms';
 import { useClinicalAppData } from '../../hooks/useClinicalAppData';
+import useObservationFormsSearch from '../../hooks/useObservationFormsSearch';
 import { usePinnedObservationForms } from '../../hooks/usePinnedObservationForms';
 import { ConsultationBundle } from '../../models/consultationBundle';
 import {
@@ -77,13 +78,19 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     validate: validateObservationForms,
     reset: resetObservationForms,
   } = useObservationFormsStore();
+  // Fetch observation forms once at parent level to avoid redundant API calls
+  const {
+    forms: allObservationForms,
+    isLoading: isObservationFormsLoading,
+    error: observationFormsError,
+  } = useObservationFormsSearch();
 
   // Lift pinned forms state to parent - shared by both ObservationForms and ObservationFormsContainer
   const {
     pinnedForms,
     updatePinnedForms,
     isLoading: isPinnedFormsLoading,
-  } = usePinnedObservationForms();
+  } = usePinnedObservationForms(allObservationForms);
 
   // Use the diagnosis store
   const {
@@ -408,6 +415,9 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         pinnedForms={pinnedForms}
         updatePinnedForms={updatePinnedForms}
         isPinnedFormsLoading={isPinnedFormsLoading}
+        allForms={allObservationForms}
+        isAllFormsLoading={isObservationFormsLoading}
+        observationFormsError={observationFormsError}
       />
       <MenuItemDivider />
     </>
