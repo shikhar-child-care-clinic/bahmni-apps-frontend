@@ -9,7 +9,6 @@ import { ObservationForm } from '@bahmni/services';
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DEFAULT_FORM_API_NAMES } from '../../../constants/forms';
-import useObservationFormsSearch from '../../../hooks/useObservationFormsSearch';
 import styles from './styles/ObservationForms.module.scss';
 
 interface ObservationFormsProps {
@@ -20,6 +19,10 @@ interface ObservationFormsProps {
   pinnedForms: ObservationForm[];
   updatePinnedForms: (newPinnedForms: ObservationForm[]) => Promise<void>;
   isPinnedFormsLoading: boolean;
+  // Forms data passed from parent to avoid redundant API calls
+  allForms: ObservationForm[];
+  isAllFormsLoading: boolean;
+  observationFormsError: Error | null;
 }
 
 /**
@@ -44,18 +47,29 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
     pinnedForms,
     updatePinnedForms,
     isPinnedFormsLoading,
+    allForms,
+    isAllFormsLoading,
+    observationFormsError,
   }) => {
     const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState('');
 
-    const { forms: allForms, isLoading: isAllFormsLoading } =
-      useObservationFormsSearch();
+    // Client-side filtering based on search term
+    const availableForms = useMemo(() => {
+      if (!searchTerm.trim()) return allForms;
 
-    const {
-      forms: availableForms,
-      isLoading: isSearchLoading,
-      error: searchError,
-    } = useObservationFormsSearch(searchTerm);
+      const searchTermLower = searchTerm.toLowerCase().trim();
+      const searchWords = searchTermLower.split(/\s+/);
+
+      return allForms.filter((form) => {
+        const nameLower = form.name.toLowerCase();
+        return searchWords.some((word) => nameLower.includes(word));
+      });
+    }, [allForms, searchTerm]);
+
+    // Use same loading and error state for search
+    const isSearchLoading = isAllFormsLoading;
+    const searchError = observationFormsError;
 
     // Validate and filter available forms - handle malformed data
     const validatedAvailableForms = useMemo(() => {

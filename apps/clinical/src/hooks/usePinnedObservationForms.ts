@@ -4,11 +4,8 @@ import {
   loadPinnedForms,
   savePinnedForms,
 } from '../services/pinnedFormsService';
-import useObservationFormsSearch from './useObservationFormsSearch';
 
-export function usePinnedObservationForms() {
-  const { forms: availableForms, isLoading: isFormsLoading } =
-    useObservationFormsSearch('');
+export function usePinnedObservationForms(availableForms: ObservationForm[]) {
   const [pinnedForms, setPinnedForms] = useState<ObservationForm[]>([]);
   const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
   const [error, setError] = useState<{ title: string; message: string } | null>(
@@ -46,11 +43,11 @@ export function usePinnedObservationForms() {
       }
     };
 
-    // Only load ONCE when forms finish loading
-    if (!isFormsLoading && !isInitialLoadComplete) {
+    // Only load ONCE when forms are available
+    if (availableForms.length > 0 && !isInitialLoadComplete) {
       loadPinnedFormsData();
     }
-  }, [isFormsLoading, isInitialLoadComplete]);
+  }, [availableForms.length, isInitialLoadComplete]);
 
   const updatePinnedForms = async (newPinnedForms: ObservationForm[]) => {
     // Update local state immediately (optimistic UI)
@@ -65,7 +62,7 @@ export function usePinnedObservationForms() {
     }
   };
 
-  const isLoading = isFormsLoading || !isInitialLoadComplete;
+  const isLoading = !isInitialLoadComplete;
 
   return { pinnedForms, updatePinnedForms, isLoading, error };
 }
