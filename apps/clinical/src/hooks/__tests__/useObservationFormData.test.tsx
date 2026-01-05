@@ -592,9 +592,9 @@ describe('useObservationFormData', () => {
       const { result } = renderHook(
         () =>
           useObservationFormData({
-          initialFormData: mockFormData,
-          formMetadata: mockFormMetadata,
-        }),
+            initialFormData: mockFormData,
+            formMetadata: mockFormMetadata,
+          }),
         { wrapper: createWrapper() },
       );
 
@@ -611,9 +611,9 @@ describe('useObservationFormData', () => {
       const { result } = renderHook(
         () =>
           useObservationFormData({
-          initialFormData: mockFormData,
-          formMetadata: mockFormMetadata,
-        }),
+            initialFormData: mockFormData,
+            formMetadata: mockFormMetadata,
+          }),
         { wrapper: createWrapper() },
       );
 
@@ -630,9 +630,9 @@ describe('useObservationFormData', () => {
       const { result } = renderHook(
         () =>
           useObservationFormData({
-          initialFormData: mockFormData,
-          formMetadata: mockFormMetadata,
-        }),
+            initialFormData: mockFormData,
+            formMetadata: mockFormMetadata,
+          }),
         { wrapper: createWrapper() },
       );
 
@@ -652,9 +652,9 @@ describe('useObservationFormData', () => {
       const { result } = renderHook(
         () =>
           useObservationFormData({
-          initialFormData: mockFormData,
-          formMetadata: mockFormMetadata,
-        }),
+            initialFormData: mockFormData,
+            formMetadata: mockFormMetadata,
+          }),
         { wrapper: createWrapper() },
       );
 
@@ -677,8 +677,8 @@ describe('useObservationFormData', () => {
       const { result } = renderHook(
         () =>
           useObservationFormData({
-          formMetadata: mockFormMetadata,
-        }),
+            formMetadata: mockFormMetadata,
+          }),
         { wrapper: createWrapper() },
       );
 

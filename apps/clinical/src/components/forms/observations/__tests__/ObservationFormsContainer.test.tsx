@@ -1,6 +1,5 @@
 import { ObservationForm } from '@bahmni/services';
 import { render, screen, fireEvent } from '@testing-library/react';
-import React from 'react';
 import ObservationFormsContainer from '../ObservationFormsContainer';
 
 // Mock the defaultFormNames import

@@ -84,7 +84,9 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
     formMetadata,
     isLoadingMetadata,
     metadataError,
-  } = useObservationFormData(viewingForm?.uuid ? { formUuid: viewingForm.uuid } : undefined);
+  } = useObservationFormData(
+    viewingForm?.uuid ? { formUuid: viewingForm.uuid } : undefined,
+  );
 
   const { handleDiscardForm, handleSaveForm, handleBackToForms } =
     useObservationFormActions({
