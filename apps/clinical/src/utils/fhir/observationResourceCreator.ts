@@ -1,5 +1,13 @@
 import { ObservationDataInFormControls } from '@bahmni/services';
 import { Observation, Reference } from 'fhir/r4';
+
+import {
+  CONCEPT_DATATYPE_NUMERIC,
+  CONCEPT_DATATYPE_COMPLEX,
+  FHIR_OBSERVATION_INTERPRETATION_SYSTEM,
+  FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
+  FHIR_OBSERVATION_COMPLEX_DATA_URL,
+} from '../../constants/fhir';
 import { createCodeableConcept, createCoding } from './codeableConceptCreator';
 
 const INTERPRETATION_TO_CODE: Record<
@@ -29,7 +37,7 @@ const handleStringValue = (
     }
   }
 
-  if (conceptDatatype === 'Numeric') {
+  if (conceptDatatype === CONCEPT_DATATYPE_NUMERIC) {
     const numericValue = parseFloat(trimmedValue);
     if (!isNaN(numericValue)) {
       observation.valueQuantity = { value: numericValue };
@@ -68,11 +76,14 @@ export const createObservationResource = (
         observation.valueQuantity = { value };
         break;
       case 'string': {
-        if (conceptDatatype === 'Complex' && value.trim() !== '') {
+        if (
+          conceptDatatype === CONCEPT_DATATYPE_COMPLEX &&
+          value.trim() !== ''
+        ) {
           //TODO - Image/Video Handling
           observation.extension ??= [];
           observation.extension.push({
-            url: 'http://fhir.bahmni.org/ext/observation/complex-data',
+            url: FHIR_OBSERVATION_COMPLEX_DATA_URL,
             valueAttachment: { url: value },
           });
           observation.valueString = value;
@@ -110,8 +121,7 @@ export const createObservationResource = (
       {
         coding: [
           {
-            system:
-              'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation',
+            system: FHIR_OBSERVATION_INTERPRETATION_SYSTEM,
             code: mapping.code,
             display: mapping.display,
           },
@@ -123,7 +133,7 @@ export const createObservationResource = (
   if (observationPayload.formNamespace && observationPayload.formFieldPath) {
     observation.extension ??= [];
     observation.extension.push({
-      url: 'http://fhir.bahmni.org/ext/observation/form-namespace-path',
+      url: FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
       valueString: `${observationPayload.formNamespace}^${observationPayload.formFieldPath}`,
     });
   }

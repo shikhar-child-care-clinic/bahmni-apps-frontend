@@ -14,3 +14,5 @@ export const FORM_TRANSLATIONS_URL = (
 ) =>
   OPENMRS_REST_V1 +
   `/bahmniie/form/translations?formName=${encodeURIComponent(formName)}&formUuid=${formUuid}&formVersion=${formVersion}&locale=${locale}`;
+
+export const DEFAULT_FORM_NAMESPACE = 'Bahmni';

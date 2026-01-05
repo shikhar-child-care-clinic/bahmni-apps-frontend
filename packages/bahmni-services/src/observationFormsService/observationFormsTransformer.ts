@@ -1,3 +1,4 @@
+import { DEFAULT_FORM_NAMESPACE } from './constants';
 import {
   FormMetadata,
   ObservationDataInFormControls,
@@ -80,7 +81,7 @@ function transformGroupMembers(
       concept: { uuid: member.conceptUuid, datatype },
       value: transformControlValue(member),
       obsDatetime: new Date().toISOString(),
-      formNamespace: 'Bahmni',
+      formNamespace: DEFAULT_FORM_NAMESPACE,
       formFieldPath: member.id,
       interpretation: member.interpretation,
       groupMembers: member.groupMembers
@@ -159,7 +160,7 @@ export function transformFormDataToObservations(
         concept: { uuid: control.conceptUuid, datatype },
         value: null,
         obsDatetime: timestamp,
-        formNamespace: 'Bahmni',
+        formNamespace: DEFAULT_FORM_NAMESPACE,
         formFieldPath: control.id,
         groupMembers: transformGroupMembers(control.groupMembers, metadata),
       });
@@ -176,7 +177,7 @@ export function transformFormDataToObservations(
           concept: { uuid: control.conceptUuid, datatype },
           value: selectedValue,
           obsDatetime: timestamp,
-          formNamespace: 'Bahmni',
+          formNamespace: DEFAULT_FORM_NAMESPACE,
           formFieldPath: control.id,
         };
 
@@ -193,7 +194,7 @@ export function transformFormDataToObservations(
       concept: { uuid: control.conceptUuid, datatype },
       value: transformControlValue(control),
       obsDatetime: timestamp,
-      formNamespace: 'Bahmni',
+      formNamespace: DEFAULT_FORM_NAMESPACE,
       formFieldPath: control.id,
     };
 

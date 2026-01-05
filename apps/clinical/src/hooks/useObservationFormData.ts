@@ -10,6 +10,11 @@ import {
   hasFormData,
 } from '@bahmni/services';
 import { useCallback, useState } from 'react';
+import {
+  FORM_CONTROL_TYPE_OBS_GROUP,
+  FORM_CONTROL_TYPE_OBS,
+  FORM_CONTROL_TYPE_MULTISELECT,
+} from '../constants/forms';
 
 interface UseObservationFormDataProps {
   initialFormData?: FormData | null;
@@ -105,7 +110,7 @@ export function useObservationFormData(
         if (!conceptUuid || !fieldPath) return;
 
         const isObsGroupControl =
-          controlRecord.control?.type === 'obsGroupControl';
+          controlRecord.control?.type === FORM_CONTROL_TYPE_OBS_GROUP;
 
         if (isObsGroupControl) {
           if (controlRecord.children?.length) {
@@ -119,7 +124,7 @@ export function useObservationFormData(
               controls.push({
                 id: fieldPath,
                 conceptUuid,
-                type: 'obsControl',
+                type: FORM_CONTROL_TYPE_OBS,
                 value: null,
                 groupMembers,
               });
@@ -134,7 +139,9 @@ export function useObservationFormData(
         const control: FormControlData = {
           id: fieldPath,
           conceptUuid,
-          type: Array.isArray(value) ? 'multiselect' : 'obsControl',
+          type: Array.isArray(value)
+            ? FORM_CONTROL_TYPE_MULTISELECT
+            : FORM_CONTROL_TYPE_OBS,
           value: value as
             | string
             | number
