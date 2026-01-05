@@ -4,7 +4,9 @@ import {
   ObservationDataInFormControls,
 } from '@bahmni/services';
 import * as bahmniServices from '@bahmni/services';
-import { renderHook, act } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, act, waitFor } from '@testing-library/react';
+import React from 'react';
 import { useObservationFormData } from '../useObservationFormData';
 
 // Mock the bahmni services
@@ -13,9 +15,17 @@ jest.mock('@bahmni/services', () => ({
   transformFormDataToObservations: jest.fn(() => []),
   validateFormData: jest.fn(() => ({ isValid: true, errors: [] })),
   hasFormData: jest.fn(() => false),
+  fetchFormMetadata: jest.fn(),
 }));
 
+const mockFetchFormMetadata =
+  bahmniServices.fetchFormMetadata as jest.MockedFunction<
+    typeof bahmniServices.fetchFormMetadata
+  >;
+
 describe('useObservationFormData', () => {
+  let queryClient: QueryClient;
+
   const mockFormMetadata: FormMetadata = {
     uuid: 'form-uuid',
     name: 'Test Form',
@@ -46,6 +56,24 @@ describe('useObservationFormData', () => {
     },
   ];
 
+  const createWrapper = () => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+          gcTime: Infinity,
+        },
+      },
+    });
+
+    const Wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    Wrapper.displayName = 'QueryClientWrapper';
+    return Wrapper;
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     (bahmniServices.hasFormData as jest.Mock).mockReturnValue(false);
@@ -58,34 +86,48 @@ describe('useObservationFormData', () => {
     ).mockReturnValue([]);
   });
 
+  afterEach(() => {
+    queryClient?.clear();
+  });
+
   describe('Initial State', () => {
     it('should initialize with null form data when no initial data provided', () => {
-      const { result } = renderHook(() => useObservationFormData());
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
 
       expect(result.current.formData).toBeNull();
       expect(result.current.observations).toEqual([]);
       expect(result.current.hasData).toBe(false);
       expect(result.current.isValid).toBe(true);
       expect(result.current.validationErrors).toEqual([]);
+      expect(result.current.formMetadata).toBeUndefined();
+      expect(result.current.isLoadingMetadata).toBe(false);
+      expect(result.current.metadataError).toBeNull();
     });
 
     it('should initialize with provided initial form data', () => {
-      const { result } = renderHook(() =>
-        useObservationFormData({
-          initialFormData: mockFormData,
-          formMetadata: mockFormMetadata,
-        }),
+      const { result } = renderHook(
+        () =>
+          useObservationFormData({
+            initialFormData: mockFormData,
+            formMetadata: mockFormMetadata,
+          }),
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.formData).toEqual(mockFormData);
+      expect(result.current.formMetadata).toEqual(mockFormMetadata);
     });
 
     it('should initialize with null when initial data is null', () => {
-      const { result } = renderHook(() =>
-        useObservationFormData({
-          initialFormData: null,
-          formMetadata: mockFormMetadata,
-        }),
+      const { result } = renderHook(
+        () =>
+          useObservationFormData({
+            initialFormData: null,
+            formMetadata: mockFormMetadata,
+          }),
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.formData).toBeNull();
@@ -94,11 +136,13 @@ describe('useObservationFormData', () => {
 
   describe('handleFormDataChange', () => {
     it('should set form data to null when data is falsy', () => {
-      const { result } = renderHook(() =>
-        useObservationFormData({
-          initialFormData: mockFormData,
-          formMetadata: mockFormMetadata,
-        }),
+      const { result } = renderHook(
+        () =>
+          useObservationFormData({
+            initialFormData: mockFormData,
+            formMetadata: mockFormMetadata,
+          }),
+        { wrapper: createWrapper() },
       );
 
       act(() => {
@@ -109,7 +153,9 @@ describe('useObservationFormData', () => {
     });
 
     it('should handle FormData object directly', () => {
-      const { result } = renderHook(() => useObservationFormData());
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
 
       act(() => {
         result.current.handleFormDataChange(mockFormData);
@@ -119,7 +165,9 @@ describe('useObservationFormData', () => {
     });
 
     it('should handle array of controls', () => {
-      const { result } = renderHook(() => useObservationFormData());
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
 
       const controls = [
         {
@@ -141,7 +189,9 @@ describe('useObservationFormData', () => {
     });
 
     it('should handle Immutable.js data with toJS method', () => {
-      const { result } = renderHook(() => useObservationFormData());
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
 
       const immutableData = {
         toJS: jest.fn(() => mockFormData),
@@ -156,7 +206,9 @@ describe('useObservationFormData', () => {
     });
 
     it('should extract controls from FormControlTree structure', () => {
-      const { result } = renderHook(() => useObservationFormData());
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
 
       const formControlTree = {
         formFieldPath: 'root',
@@ -188,7 +240,9 @@ describe('useObservationFormData', () => {
     });
 
     it('should skip voided controls', () => {
-      const { result } = renderHook(() => useObservationFormData());
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
 
       const formControlTree = {
         formFieldPath: 'root',
@@ -213,7 +267,9 @@ describe('useObservationFormData', () => {
     });
 
     it('should skip controls without conceptUuid', () => {
-      const { result } = renderHook(() => useObservationFormData());
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
 
       const formControlTree = {
         formFieldPath: 'root',
@@ -237,7 +293,9 @@ describe('useObservationFormData', () => {
     });
 
     it('should skip controls without formFieldPath', () => {
-      const { result } = renderHook(() => useObservationFormData());
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
 
       const formControlTree = {
         formFieldPath: 'root',
@@ -261,7 +319,9 @@ describe('useObservationFormData', () => {
     });
 
     it('should skip controls with null, undefined, or empty string values', () => {
-      const { result } = renderHook(() => useObservationFormData());
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
 
       const formControlTree = {
         formFieldPath: 'root',
@@ -301,7 +361,9 @@ describe('useObservationFormData', () => {
     });
 
     it('should handle obsGroupControl with children', () => {
-      const { result } = renderHook(() => useObservationFormData());
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
 
       const formControlTree = {
         formFieldPath: 'root',
@@ -341,7 +403,9 @@ describe('useObservationFormData', () => {
     });
 
     it('should skip obsGroupControl with no children', () => {
-      const { result } = renderHook(() => useObservationFormData());
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
 
       const formControlTree = {
         formFieldPath: 'root',
@@ -365,7 +429,9 @@ describe('useObservationFormData', () => {
     });
 
     it('should handle multiselect controls (array values)', () => {
-      const { result } = renderHook(() => useObservationFormData());
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
 
       const formControlTree = {
         formFieldPath: 'root',
@@ -393,7 +459,9 @@ describe('useObservationFormData', () => {
     });
 
     it('should include interpretation when present', () => {
-      const { result } = renderHook(() => useObservationFormData());
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
 
       const formControlTree = {
         formFieldPath: 'root',
@@ -421,11 +489,13 @@ describe('useObservationFormData', () => {
 
   describe('clearFormData', () => {
     it('should clear form data', () => {
-      const { result } = renderHook(() =>
-        useObservationFormData({
-          initialFormData: mockFormData,
-          formMetadata: mockFormMetadata,
-        }),
+      const { result } = renderHook(
+        () =>
+          useObservationFormData({
+            initialFormData: mockFormData,
+            formMetadata: mockFormMetadata,
+          }),
+        { wrapper: createWrapper() },
       );
 
       act(() => {
@@ -440,7 +510,9 @@ describe('useObservationFormData', () => {
     it('should return false when form data is null', () => {
       (bahmniServices.hasFormData as jest.Mock).mockReturnValue(false);
 
-      const { result } = renderHook(() => useObservationFormData());
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
 
       expect(result.current.hasData).toBe(false);
     });
@@ -448,11 +520,13 @@ describe('useObservationFormData', () => {
     it('should call hasFormData utility when form data exists', () => {
       (bahmniServices.hasFormData as jest.Mock).mockReturnValue(true);
 
-      const { result } = renderHook(() =>
-        useObservationFormData({
-          initialFormData: mockFormData,
-          formMetadata: mockFormMetadata,
-        }),
+      const { result } = renderHook(
+        () =>
+          useObservationFormData({
+            initialFormData: mockFormData,
+            formMetadata: mockFormMetadata,
+          }),
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.hasData).toBe(true);
@@ -462,7 +536,9 @@ describe('useObservationFormData', () => {
 
   describe('validation', () => {
     it('should return valid when form data is null', () => {
-      const { result } = renderHook(() => useObservationFormData());
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
 
       expect(result.current.isValid).toBe(true);
       expect(result.current.validationErrors).toEqual([]);
@@ -474,11 +550,13 @@ describe('useObservationFormData', () => {
         errors: [{ field: 'field-1', message: 'Required field' }],
       });
 
-      const { result } = renderHook(() =>
-        useObservationFormData({
-          initialFormData: mockFormData,
-          formMetadata: mockFormMetadata,
-        }),
+      const { result } = renderHook(
+        () =>
+          useObservationFormData({
+            initialFormData: mockFormData,
+            formMetadata: mockFormMetadata,
+          }),
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.isValid).toBe(false);
@@ -493,10 +571,12 @@ describe('useObservationFormData', () => {
 
   describe('observations', () => {
     it('should return empty array when form data is null', () => {
-      const { result } = renderHook(() =>
-        useObservationFormData({
-          formMetadata: mockFormMetadata,
-        }),
+      const { result } = renderHook(
+        () =>
+          useObservationFormData({
+            formMetadata: mockFormMetadata,
+          }),
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.observations).toEqual([]);
@@ -509,11 +589,13 @@ describe('useObservationFormData', () => {
         errors: [],
       });
 
-      const { result } = renderHook(() =>
-        useObservationFormData({
+      const { result } = renderHook(
+        () =>
+          useObservationFormData({
           initialFormData: mockFormData,
           formMetadata: mockFormMetadata,
         }),
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.observations).toEqual([]);
@@ -526,11 +608,13 @@ describe('useObservationFormData', () => {
         errors: [],
       });
 
-      const { result } = renderHook(() =>
-        useObservationFormData({
+      const { result } = renderHook(
+        () =>
+          useObservationFormData({
           initialFormData: mockFormData,
           formMetadata: mockFormMetadata,
         }),
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.observations).toEqual([]);
@@ -543,11 +627,13 @@ describe('useObservationFormData', () => {
         errors: [],
       });
 
-      const { result } = renderHook(() =>
-        useObservationFormData({
+      const { result } = renderHook(
+        () =>
+          useObservationFormData({
           initialFormData: mockFormData,
           formMetadata: mockFormMetadata,
         }),
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.observations).toEqual([]);
@@ -563,11 +649,13 @@ describe('useObservationFormData', () => {
         bahmniServices.transformFormDataToObservations as jest.Mock
       ).mockReturnValue(mockObservations);
 
-      const { result } = renderHook(() =>
-        useObservationFormData({
+      const { result } = renderHook(
+        () =>
+          useObservationFormData({
           initialFormData: mockFormData,
           formMetadata: mockFormMetadata,
         }),
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.observations).toEqual(mockObservations);
@@ -586,10 +674,12 @@ describe('useObservationFormData', () => {
         bahmniServices.transformFormDataToObservations as jest.Mock
       ).mockReturnValue(mockObservations);
 
-      const { result } = renderHook(() =>
-        useObservationFormData({
+      const { result } = renderHook(
+        () =>
+          useObservationFormData({
           formMetadata: mockFormMetadata,
         }),
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.observations).toEqual([]);
@@ -599,6 +689,124 @@ describe('useObservationFormData', () => {
       });
 
       expect(result.current.observations).toEqual(mockObservations);
+    });
+  });
+
+  describe('Metadata Fetching (consolidated from useObservationFormMetadata)', () => {
+    it('should fetch form metadata when formUuid is provided', async () => {
+      mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
+
+      const { result } = renderHook(
+        () => useObservationFormData({ formUuid: 'form-uuid' }),
+        { wrapper: createWrapper() },
+      );
+
+      expect(result.current.isLoadingMetadata).toBe(true);
+      expect(result.current.formMetadata).toBeUndefined();
+
+      await waitFor(() => {
+        expect(result.current.isLoadingMetadata).toBe(false);
+      });
+
+      expect(result.current.formMetadata).toEqual(mockFormMetadata);
+      expect(result.current.metadataError).toBeNull();
+      expect(mockFetchFormMetadata).toHaveBeenCalledWith('form-uuid');
+      expect(mockFetchFormMetadata).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not fetch when formUuid is undefined', () => {
+      const { result } = renderHook(() => useObservationFormData(), {
+        wrapper: createWrapper(),
+      });
+
+      expect(result.current.isLoadingMetadata).toBe(false);
+      expect(result.current.formMetadata).toBeUndefined();
+      expect(mockFetchFormMetadata).not.toHaveBeenCalled();
+    });
+
+    it('should use provided formMetadata instead of fetching', () => {
+      const { result } = renderHook(
+        () =>
+          useObservationFormData({
+            formMetadata: mockFormMetadata,
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      expect(result.current.formMetadata).toEqual(mockFormMetadata);
+      expect(result.current.isLoadingMetadata).toBe(false);
+      expect(mockFetchFormMetadata).not.toHaveBeenCalled();
+    });
+
+    it('should handle fetch errors', async () => {
+      const error = new Error('Failed to fetch form metadata');
+      mockFetchFormMetadata.mockRejectedValue(error);
+
+      const { result } = renderHook(
+        () => useObservationFormData({ formUuid: 'form-uuid' }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => {
+        expect(result.current.isLoadingMetadata).toBe(false);
+      });
+
+      expect(result.current.metadataError).toBeDefined();
+      expect(result.current.formMetadata).toBeUndefined();
+    });
+
+    it('should cache metadata for the same formUuid', async () => {
+      mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
+
+      const { result: result1 } = renderHook(
+        () => useObservationFormData({ formUuid: 'form-uuid' }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => {
+        expect(result1.current.formMetadata).toEqual(mockFormMetadata);
+      });
+
+      expect(mockFetchFormMetadata).toHaveBeenCalledTimes(1);
+
+      // Second render with same formUuid should use cache
+      const { result: result2 } = renderHook(
+        () => useObservationFormData({ formUuid: 'form-uuid' }),
+        {
+          wrapper: ({ children }: { children: React.ReactNode }) => (
+            <QueryClientProvider client={queryClient}>
+              {children}
+            </QueryClientProvider>
+          ),
+        },
+      );
+
+      await waitFor(() => {
+        expect(result2.current.formMetadata).toEqual(mockFormMetadata);
+      });
+
+      // Should still only have been called once (using cache)
+      expect(mockFetchFormMetadata).toHaveBeenCalledTimes(1);
+    });
+
+    it('should prefer provided formMetadata over fetched metadata', async () => {
+      const providedMetadata: FormMetadata = {
+        ...mockFormMetadata,
+        name: 'Provided Form',
+      };
+      mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
+
+      const { result } = renderHook(
+        () =>
+          useObservationFormData({
+            formUuid: 'form-uuid',
+            formMetadata: providedMetadata,
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      // Should use provided metadata immediately without fetching
+      expect(result.current.formMetadata).toEqual(providedMetadata);
     });
   });
 });
