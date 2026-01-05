@@ -1,17 +1,19 @@
-import { getUserPreferredLocale } from '../i18n/translationService';
+import {
+  getUserPreferredLocale,
+  extractObservationFormTranslations,
+  type ObservationFormTranslations,
+} from '../i18n';
 import {
   OBSERVATION_FORMS_URL,
   FORM_METADATA_URL,
   FORM_TRANSLATIONS_URL,
 } from './constants';
-import { extractFormTranslations } from './formTranslationExtractor';
 import {
   ObservationForm,
   ApiNameTranslation,
   FormApiResponse,
   FormMetadata,
   FormMetadataApiResponse,
-  FormTranslations,
 } from './models';
 
 /**
@@ -111,7 +113,7 @@ export const fetchFormMetadata = async (
   const currentLocale = getUserPreferredLocale();
 
   // Fetch translations from API endpoint if translationsUrl is present
-  let translations: FormTranslations = { labels: {}, concepts: {} };
+  let translations: ObservationFormTranslations = { labels: {}, concepts: {} };
 
   if (
     formSchema &&
@@ -134,7 +136,10 @@ export const fetchFormMetadata = async (
       const translationsResponse = await fetch(translationsUrl);
       if (translationsResponse.ok) {
         const translationsData = await translationsResponse.json();
-        translations = extractFormTranslations(translationsData, currentLocale);
+        translations = extractObservationFormTranslations(
+          translationsData,
+          currentLocale,
+        );
       }
     } catch (error) {
       // Silently fail with empty translations

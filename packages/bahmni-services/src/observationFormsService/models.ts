@@ -1,3 +1,7 @@
+import { ObservationFormTranslations } from '../i18n';
+
+export type { ObservationFormTranslations } from '../i18n';
+
 export interface FormPrivilege {
   privilegeName: string;
   editable: boolean;
@@ -44,13 +48,6 @@ export interface FormMetadataApiResponse {
   resources: FormResource[];
 }
 
-// Form translations structure (passed to form2-controls Container)
-// Nested structure with labels and concepts that form2-controls expects
-export interface FormTranslations {
-  labels: Record<string, string>;
-  concepts: Record<string, string>;
-}
-
 //Parsed form metadata structure
 export interface FormMetadata {
   uuid: string;
@@ -58,7 +55,7 @@ export interface FormMetadata {
   version: string;
   published: boolean;
   schema: unknown; // The parsed form schema/definition
-  translations?: FormTranslations; // Translations for current locale
+  translations?: ObservationFormTranslations; // Translations for current locale
 }
 
 // Observation data from form2-controls (used in consultation bundle)
