@@ -8,8 +8,11 @@ import {
   transformFormDataToObservations,
   validateFormData,
   hasFormData,
+  fetchFormMetadata,
 } from '@bahmni/services';
+import { useQuery } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
+
 import {
   FORM_CONTROL_TYPE_OBS_GROUP,
   FORM_CONTROL_TYPE_OBS,
@@ -18,7 +21,8 @@ import {
 
 interface UseObservationFormDataProps {
   initialFormData?: FormData | null;
-  formMetadata: FormMetadata;
+  formMetadata?: FormMetadata;
+  formUuid?: string;
 }
 
 interface UseObservationFormDataReturn {
@@ -29,6 +33,10 @@ interface UseObservationFormDataReturn {
   validationErrors: Array<{ field: string; message: string }>;
   handleFormDataChange: (data: unknown) => void;
   clearFormData: () => void;
+  // Metadata fetching (consolidated from useObservationFormMetadata)
+  formMetadata: FormMetadata | undefined;
+  isLoadingMetadata: boolean;
+  metadataError: Error | null;
 }
 
 interface ImmutableData {
@@ -81,12 +89,38 @@ const isFormData = (data: unknown): data is FormData => {
   );
 };
 
+/**
+ * Hook to manage observation form data and metadata
+ *
+ * This hook consolidates form metadata fetching (formerly useObservationFormMetadata)
+ * and form data management. It can be used in two ways:
+ * 1. Pass formUuid to fetch metadata automatically
+ * 2. Pass formMetadata directly if already available
+ *
+ * @param props - Configuration object with formUuid or formMetadata
+ * @returns Form data state, validation, observations, and metadata
+ */
 export function useObservationFormData(
   props?: UseObservationFormDataProps,
 ): UseObservationFormDataReturn {
   const [formData, setFormData] = useState<FormData | null>(
     props?.initialFormData ?? null,
   );
+
+  // Fetch form metadata if formUuid is provided (consolidated from useObservationFormMetadata)
+  const {
+    data: fetchedMetadata,
+    isLoading: isLoadingMetadata,
+    error: queryError,
+  } = useQuery<FormMetadata>({
+    queryKey: ['formMetadata', props?.formUuid],
+    queryFn: () => fetchFormMetadata(props!.formUuid!),
+    enabled: !!props?.formUuid,
+  });
+
+  // Use provided metadata or fetched metadata
+  const formMetadata = props?.formMetadata ?? fetchedMetadata;
+  const metadataError = queryError ? (queryError as Error) : null;
 
   const handleFormDataChange = useCallback((data: unknown) => {
     if (!data) {
@@ -189,8 +223,8 @@ export function useObservationFormData(
   const validationErrors = validation.errors;
 
   const observations =
-    formData && isValid && hasData && props?.formMetadata
-      ? transformFormDataToObservations(formData, props.formMetadata)
+    formData && isValid && hasData && formMetadata
+      ? transformFormDataToObservations(formData, formMetadata)
       : [];
 
   return {
@@ -201,5 +235,8 @@ export function useObservationFormData(
     validationErrors,
     handleFormDataChange,
     clearFormData,
+    formMetadata,
+    isLoadingMetadata,
+    metadataError,
   };
 }

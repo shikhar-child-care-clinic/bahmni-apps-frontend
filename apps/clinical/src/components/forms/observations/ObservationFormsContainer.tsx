@@ -23,7 +23,6 @@ import { useTranslation } from 'react-i18next';
 import { DEFAULT_FORM_API_NAMES } from '../../../constants/forms';
 import { useObservationFormActions } from '../../../hooks/useObservationFormActions';
 import { useObservationFormData } from '../../../hooks/useObservationFormData';
-import { useObservationFormMetadata } from '../../../hooks/useObservationFormMetadata';
 import { useObservationFormPinning } from '../../../hooks/useObservationFormPinning';
 import styles from './styles/ObservationFormsContainer.module.scss';
 
@@ -69,12 +68,6 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   const patientUUID = usePatientUUID();
   const [showValidationError, setShowValidationError] = useState(false);
 
-  const {
-    data: formMetadata,
-    isLoading: isLoadingMetadata,
-    error: queryError,
-  } = useObservationFormMetadata(viewingForm?.uuid);
-
   const { isCurrentFormPinned, handlePinToggle } = useObservationFormPinning({
     viewingForm,
     pinnedForms,
@@ -88,7 +81,10 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
     validationErrors,
     handleFormDataChange,
     clearFormData,
-  } = useObservationFormData(formMetadata ? { formMetadata } : undefined);
+    formMetadata,
+    isLoadingMetadata,
+    metadataError,
+  } = useObservationFormData(viewingForm?.uuid ? { formUuid: viewingForm.uuid } : undefined);
 
   const { handleDiscardForm, handleSaveForm, handleBackToForms } =
     useObservationFormActions({
@@ -126,9 +122,9 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   };
 
   // Format error for display
-  const error = queryError
+  const error = metadataError
     ? new Error(
-        getFormattedError(queryError).message ??
+        getFormattedError(metadataError).message ??
           t('ERROR_FETCHING_FORM_METADATA'),
       )
     : null;
