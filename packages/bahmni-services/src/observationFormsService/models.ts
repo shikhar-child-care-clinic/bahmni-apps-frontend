@@ -89,27 +89,3 @@ export interface ComplexValue {
 }
 
 // Consultation bundle structure (simplified - shows observation forms integration)
-export interface ConsultationBundle {
-  patientUuid: string;
-  encounterTypeUuid: string;
-  visitUuid?: string;
-  providers?: Array<{ uuid: string }>;
-  observations: ObservationDataInFormControls[]; // Observation forms data goes here
-  diagnoses?: DiagnosisPayload[];
-  orders?: OrderPayload[];
-  // ... other consultation data
-}
-
-// Supporting interfaces for consultation bundle
-export interface DiagnosisPayload {
-  diagnosis: { uuid: string };
-  certainty: string;
-  order: string;
-}
-
-export interface OrderPayload {
-  concept: { uuid: string };
-  orderType: string;
-  action: string;
-  // ... other order fields
-}
