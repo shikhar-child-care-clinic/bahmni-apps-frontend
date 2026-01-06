@@ -1,12 +1,20 @@
 import { getFormattedError, ObservationForm } from '@bahmni/services';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   loadPinnedForms,
   savePinnedForms,
 } from '../services/pinnedFormsService';
 import useObservationFormsSearch from './useObservationFormsSearch';
 
-export function usePinnedObservationForms() {
+interface UsePinnedObservationFormsOptions {
+  /** User UUID required for loading and saving pinned forms */
+  userUuid?: string | null;
+}
+
+export function usePinnedObservationForms(
+  options?: UsePinnedObservationFormsOptions,
+) {
+  const { userUuid } = options ?? {};
   const { forms: availableForms, isLoading: isFormsLoading } =
     useObservationFormsSearch('');
   const [pinnedForms, setPinnedForms] = useState<ObservationForm[]>([]);
@@ -25,9 +33,14 @@ export function usePinnedObservationForms() {
   // Only runs ONCE when forms finish loading
   useEffect(() => {
     const loadPinnedFormsData = async () => {
+      if (!userUuid) {
+        setIsInitialLoadComplete(true);
+        return;
+      }
+
       setError(null);
       try {
-        const names = await loadPinnedForms();
+        const names = await loadPinnedForms(userUuid);
         const currentForms = availableFormsRef.current;
         if (names.length > 0 && currentForms.length > 0) {
           const matchedForms = currentForms.filter((form) =>
@@ -46,24 +59,31 @@ export function usePinnedObservationForms() {
       }
     };
 
-    // Only load ONCE when forms finish loading
-    if (!isFormsLoading && !isInitialLoadComplete) {
+    // Only load ONCE when forms finish loading 
+    if (!isFormsLoading && !isInitialLoadComplete && userUuid) {
       loadPinnedFormsData();
     }
-  }, [isFormsLoading, isInitialLoadComplete]);
+  }, [isFormsLoading, isInitialLoadComplete, userUuid]);
 
-  const updatePinnedForms = async (newPinnedForms: ObservationForm[]) => {
-    // Update local state immediately (optimistic UI)
-    setPinnedForms(newPinnedForms);
-    try {
-      // Save to backend asynchronously
-      await savePinnedForms(newPinnedForms.map((f) => f.name));
-    } catch (err) {
-      const formattedError = getFormattedError(err);
-      setError(formattedError);
-      // Could optionally revert the optimistic update here on error
-    }
-  };
+  const updatePinnedForms = useCallback(
+    async (newPinnedForms: ObservationForm[]) => {
+      if (!userUuid) {
+        return;
+      }
+
+      // Update local state immediately (optimistic UI)
+      setPinnedForms(newPinnedForms);
+      try {
+        // Save to backend asynchronously
+        await savePinnedForms(userUuid, newPinnedForms.map((f) => f.name));
+      } catch (err) {
+        const formattedError = getFormattedError(err);
+        setError(formattedError);
+        // Could optionally revert the optimistic update here on error
+      }
+    },
+    [userUuid],
+  );
 
   const isLoading = isFormsLoading || !isInitialLoadComplete;
 
