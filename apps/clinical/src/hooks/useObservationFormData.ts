@@ -6,8 +6,6 @@ import {
   ConceptValue,
   ComplexValue,
   transformFormDataToObservations,
-  validateFormData,
-  hasFormData,
   fetchFormMetadata,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
@@ -28,9 +26,6 @@ interface UseObservationFormDataProps {
 interface UseObservationFormDataReturn {
   formData: FormData | null;
   observations: ObservationDataInFormControls[];
-  hasData: boolean;
-  isValid: boolean;
-  validationErrors: Array<{ field: string; message: string }>;
   handleFormDataChange: (data: unknown) => void;
   clearFormData: () => void;
   // Metadata fetching (consolidated from useObservationFormMetadata)
@@ -214,25 +209,14 @@ export function useObservationFormData(
     setFormData(null);
   }, []);
 
-  const hasData = formData ? hasFormData(formData) : false;
-
-  const validation = formData
-    ? validateFormData(formData)
-    : { isValid: true, errors: [] };
-  const isValid = validation.isValid;
-  const validationErrors = validation.errors;
-
   const observations =
-    formData && isValid && hasData && formMetadata
+    formData && formMetadata
       ? transformFormDataToObservations(formData, formMetadata)
       : [];
 
   return {
     formData,
     observations,
-    hasData,
-    isValid,
-    validationErrors,
     handleFormDataChange,
     clearFormData,
     formMetadata,

@@ -18,7 +18,7 @@ import {
   getUserPreferredLocale,
 } from '@bahmni/services';
 import { usePatientUUID } from '@bahmni/widgets';
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DEFAULT_FORM_API_NAMES } from '../../../constants/forms';
 import { useObservationFormActions } from '../../../hooks/useObservationFormActions';
@@ -67,6 +67,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
   const [showValidationError, setShowValidationError] = useState(false);
+  const formContainerRef = useRef<Container>(null);
 
   const { isCurrentFormPinned, handlePinToggle } = useObservationFormPinning({
     viewingForm,
@@ -76,9 +77,6 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
 
   const {
     observations,
-    hasData,
-    isValid,
-    validationErrors,
     handleFormDataChange,
     clearFormData,
     formMetadata,
@@ -94,21 +92,22 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       onViewingFormChange,
       onRemoveForm,
       observations,
-      hasData,
-      isValid,
-      validationErrors,
       onFormObservationsChange,
       clearFormData,
     });
 
-  // Handle save with validation error display
+  // Handle save with validation using form2-controls Container ref
   const handleSaveWithValidation = () => {
-    if (!isValid && validationErrors.length > 0) {
-      setShowValidationError(true);
-      return;
+    if (formContainerRef.current) {
+      const { errors } = formContainerRef.current.getValue();
+      if (errors && errors.length > 0) {
+        setShowValidationError(true);
+        return;
+      }
+
+      setShowValidationError(false);
+      handleSaveForm();
     }
-    setShowValidationError(false);
-    handleSaveForm();
   };
 
   // Handle discard with validation error cleanup
@@ -154,6 +153,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
           <div>{error.message}</div>
         ) : formMetadata && patientUUID ? (
           <Container
+            ref={formContainerRef}
             metadata={{
               ...(formMetadata.schema as Form2FormMetadata),
               name: viewingForm?.name,

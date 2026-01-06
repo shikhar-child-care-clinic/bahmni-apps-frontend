@@ -37,9 +37,6 @@ describe('useObservationFormActions', () => {
     onViewingFormChange: mockOnViewingFormChange,
     onRemoveForm: mockOnRemoveForm,
     observations: mockObservations,
-    hasData: true,
-    isValid: true,
-    validationErrors: [],
     onFormObservationsChange: mockOnFormObservationsChange,
     clearFormData: mockClearFormData,
   };
@@ -126,7 +123,7 @@ describe('useObservationFormActions', () => {
   });
 
   describe('handleSaveForm', () => {
-    it('should save observations and call onViewingFormChange when form has data and is valid', () => {
+    it('should save observations and call onViewingFormChange', () => {
       const { result } = renderHook(() =>
         useObservationFormActions(defaultProps),
       );
@@ -140,55 +137,6 @@ describe('useObservationFormActions', () => {
         mockObservations,
       );
       expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
-    });
-
-    it('should not save when hasData is false', () => {
-      const { result } = renderHook(() =>
-        useObservationFormActions({
-          ...defaultProps,
-          hasData: false,
-        }),
-      );
-
-      act(() => {
-        result.current.handleSaveForm();
-      });
-
-      expect(mockOnFormObservationsChange).not.toHaveBeenCalled();
-      expect(mockOnViewingFormChange).not.toHaveBeenCalled();
-    });
-
-    it('should not save when isValid is false', () => {
-      const { result } = renderHook(() =>
-        useObservationFormActions({
-          ...defaultProps,
-          isValid: false,
-        }),
-      );
-
-      act(() => {
-        result.current.handleSaveForm();
-      });
-
-      expect(mockOnFormObservationsChange).not.toHaveBeenCalled();
-      expect(mockOnViewingFormChange).not.toHaveBeenCalled();
-    });
-
-    it('should not save when both hasData and isValid are false', () => {
-      const { result } = renderHook(() =>
-        useObservationFormActions({
-          ...defaultProps,
-          hasData: false,
-          isValid: false,
-        }),
-      );
-
-      act(() => {
-        result.current.handleSaveForm();
-      });
-
-      expect(mockOnFormObservationsChange).not.toHaveBeenCalled();
-      expect(mockOnViewingFormChange).not.toHaveBeenCalled();
     });
 
     it('should not save when viewingForm is null', () => {
@@ -366,7 +314,9 @@ describe('useObservationFormActions', () => {
       // Change a dependency
       const newProps = {
         ...defaultProps,
-        hasData: false,
+        observations: [
+          { concept: { uuid: 'new', datatype: 'Text' }, value: 'new' },
+        ],
       };
 
       rerender(newProps);
@@ -420,7 +370,7 @@ describe('useObservationFormActions', () => {
         result.current.handleSaveForm();
       });
 
-      // Should still work but won't save (hasData would be false after discard in real scenario)
+      // Should still work and save the observations
       expect(mockOnFormObservationsChange).toHaveBeenCalledWith(
         'form-1',
         mockObservations,

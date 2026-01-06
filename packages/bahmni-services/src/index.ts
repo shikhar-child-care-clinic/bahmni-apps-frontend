@@ -231,9 +231,6 @@ export {
   fetchFormMetadata,
   transformFormDataToObservations,
   transformObservationsToFormData,
-  validateFormData,
-  hasFormData,
-  validateRequiredFields,
   type ObservationForm,
   type FormApiResponse,
   type ApiNameTranslation,
@@ -245,9 +242,6 @@ export {
   type ObservationDataInFormControls,
   type ConceptValue,
   type ComplexValue,
-  type ConsultationBundle,
-  type ValidationError,
-  type ValidationResult,
 } from './observationFormsService';
 
 export {

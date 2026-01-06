@@ -1,7 +1,6 @@
 import {
   ObservationForm,
   ObservationDataInFormControls,
-  ValidationError,
 } from '@bahmni/services';
 import { useCallback } from 'react';
 
@@ -10,9 +9,6 @@ interface UseObservationFormActionsProps {
   onViewingFormChange: (viewingForm: ObservationForm | null) => void;
   onRemoveForm?: (formUuid: string) => void;
   observations: ObservationDataInFormControls[];
-  hasData: boolean;
-  isValid: boolean;
-  validationErrors: ValidationError[];
   onFormObservationsChange?: (
     formUuid: string,
     observations: ObservationDataInFormControls[],
@@ -25,8 +21,6 @@ export function useObservationFormActions({
   onViewingFormChange,
   onRemoveForm,
   observations,
-  hasData,
-  isValid,
   onFormObservationsChange,
   clearFormData,
 }: UseObservationFormActionsProps) {
@@ -41,14 +35,6 @@ export function useObservationFormActions({
   }, [viewingForm, onRemoveForm, onViewingFormChange, clearFormData]);
 
   const handleSaveForm = useCallback(() => {
-    if (!hasData) {
-      return;
-    }
-
-    if (!isValid) {
-      return;
-    }
-
     if (viewingForm && onFormObservationsChange) {
       onFormObservationsChange(viewingForm.uuid, observations);
     }
@@ -58,8 +44,6 @@ export function useObservationFormActions({
     viewingForm,
     onViewingFormChange,
     observations,
-    hasData,
-    isValid,
     onFormObservationsChange,
   ]);
 

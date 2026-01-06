@@ -21,10 +21,3 @@ export {
   type ObservationDataInFormControls,
   type ConceptValue,
 } from './observationFormsTransformer';
-export {
-  validateFormData,
-  hasFormData,
-  validateRequiredFields,
-  type ValidationError,
-  type ValidationResult,
-} from './observationFormsValidator';

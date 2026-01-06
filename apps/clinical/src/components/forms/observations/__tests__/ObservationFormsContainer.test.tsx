@@ -221,9 +221,6 @@ describe('ObservationFormsContainer', () => {
 
     mockUseObservationFormData.mockReturnValue({
       observations: [],
-      hasData: false,
-      isValid: true,
-      validationErrors: [],
       handleFormDataChange: jest.fn(),
       clearFormData: jest.fn(),
       // Metadata fetching (consolidated from useObservationFormMetadata)
@@ -292,11 +289,17 @@ describe('ObservationFormsContainer', () => {
 
       mockUseObservationFormData.mockReturnValue({
         observations: [],
-        hasData: true,
-        isValid: true,
-        validationErrors: [],
         handleFormDataChange: jest.fn(),
         clearFormData: jest.fn(),
+        formMetadata: {
+          schema: { name: 'Test Form Schema', controls: [] },
+        },
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
+      mockGetValue.mockReturnValue({
+        errors: [],
       });
 
       render(
@@ -309,7 +312,7 @@ describe('ObservationFormsContainer', () => {
       expect(mockHandleSaveForm).toHaveBeenCalled();
     });
 
-    it('should show validation error when Save button is clicked and form is invalid', () => {
+    it('should show validation error when Save button is clicked and form has errors', () => {
       const mockHandleSaveForm = jest.fn();
       mockUseObservationFormActions.mockReturnValue({
         handleDiscardForm: jest.fn(),
@@ -319,11 +322,17 @@ describe('ObservationFormsContainer', () => {
 
       mockUseObservationFormData.mockReturnValue({
         observations: [],
-        hasData: true,
-        isValid: false,
-        validationErrors: [{ field: 'test', message: 'Required' }],
         handleFormDataChange: jest.fn(),
         clearFormData: jest.fn(),
+        formMetadata: {
+          schema: { name: 'Test Form Schema', controls: [] },
+        },
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
+      mockGetValue.mockReturnValue({
+        errors: [{ field: 'test', message: 'Required' }],
       });
 
       render(
@@ -398,9 +407,6 @@ describe('ObservationFormsContainer', () => {
           onViewingFormChange: mockOnViewingFormChange,
           onRemoveForm: mockOnRemoveForm,
           observations: expect.any(Array),
-          hasData: expect.any(Boolean),
-          isValid: expect.any(Boolean),
-          validationErrors: expect.any(Array),
           clearFormData: expect.any(Function),
         }),
       );
@@ -467,9 +473,6 @@ describe('ObservationFormsContainer', () => {
       // Mock useObservationFormData to return loading state
       mockUseObservationFormData.mockReturnValue({
         observations: [],
-        hasData: false,
-        isValid: true,
-        validationErrors: [],
         handleFormDataChange: jest.fn(),
         clearFormData: jest.fn(),
         formMetadata: undefined,
@@ -498,9 +501,6 @@ describe('ObservationFormsContainer', () => {
       // Mock useObservationFormData to return success state with data
       mockUseObservationFormData.mockReturnValue({
         observations: [],
-        hasData: false,
-        isValid: true,
-        validationErrors: [],
         handleFormDataChange: jest.fn(),
         clearFormData: jest.fn(),
         formMetadata: mockMetadata,
@@ -525,9 +525,6 @@ describe('ObservationFormsContainer', () => {
       // Mock useObservationFormData to return error state
       mockUseObservationFormData.mockReturnValue({
         observations: [],
-        hasData: false,
-        isValid: true,
-        validationErrors: [],
         handleFormDataChange: jest.fn(),
         clearFormData: jest.fn(),
         formMetadata: undefined,
@@ -655,9 +652,6 @@ describe('ObservationFormsContainer', () => {
 
       mockUseObservationFormData.mockReturnValue({
         observations: [],
-        hasData: false,
-        isValid: true,
-        validationErrors: [],
         handleFormDataChange: jest.fn(),
         clearFormData: jest.fn(),
         formMetadata: undefined,
@@ -685,9 +679,6 @@ describe('ObservationFormsContainer', () => {
 
       mockUseObservationFormData.mockReturnValue({
         observations: [],
-        hasData: false,
-        isValid: true,
-        validationErrors: [],
         handleFormDataChange: jest.fn(),
         clearFormData: jest.fn(),
         formMetadata: undefined,
@@ -714,9 +705,6 @@ describe('ObservationFormsContainer', () => {
 
       mockUseObservationFormData.mockReturnValue({
         observations: [],
-        hasData: false,
-        isValid: true,
-        validationErrors: [],
         handleFormDataChange: jest.fn(),
         clearFormData: jest.fn(),
         formMetadata: undefined,
@@ -743,23 +731,22 @@ describe('ObservationFormsContainer', () => {
     beforeEach(() => {
       mockUseObservationFormData.mockReturnValue({
         observations: [],
-        hasData: false,
-        isValid: true,
-        validationErrors: [],
         handleFormDataChange: jest.fn(),
         clearFormData: jest.fn(),
         formMetadata: mockMetadata,
         isLoadingMetadata: false,
         metadataError: null,
       });
+
+      // Mock form2-controls Container to return validation errors
+      mockGetValue.mockReturnValue({
+        errors: [{ field: 'test', message: 'Required' }],
+      });
     });
 
     it('should close validation error notification when close button is clicked', () => {
       mockUseObservationFormData.mockReturnValue({
         observations: [],
-        hasData: true,
-        isValid: false,
-        validationErrors: [{ field: 'test', message: 'Required' }],
         handleFormDataChange: jest.fn(),
         clearFormData: jest.fn(),
         formMetadata: mockMetadata,
@@ -797,11 +784,11 @@ describe('ObservationFormsContainer', () => {
 
       mockUseObservationFormData.mockReturnValue({
         observations: [],
-        hasData: true,
-        isValid: false,
-        validationErrors: [{ field: 'test', message: 'Required' }],
         handleFormDataChange: jest.fn(),
         clearFormData: jest.fn(),
+        formMetadata: mockMetadata,
+        isLoadingMetadata: false,
+        metadataError: null,
       });
 
       render(
@@ -832,11 +819,11 @@ describe('ObservationFormsContainer', () => {
 
       mockUseObservationFormData.mockReturnValue({
         observations: [],
-        hasData: true,
-        isValid: false,
-        validationErrors: [{ field: 'test', message: 'Required' }],
         handleFormDataChange: jest.fn(),
         clearFormData: jest.fn(),
+        formMetadata: mockMetadata,
+        isLoadingMetadata: false,
+        metadataError: null,
       });
 
       render(

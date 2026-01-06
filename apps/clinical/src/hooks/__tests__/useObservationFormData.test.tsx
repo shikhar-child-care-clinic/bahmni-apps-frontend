@@ -13,8 +13,6 @@ import { useObservationFormData } from '../useObservationFormData';
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   transformFormDataToObservations: jest.fn(() => []),
-  validateFormData: jest.fn(() => ({ isValid: true, errors: [] })),
-  hasFormData: jest.fn(() => false),
   fetchFormMetadata: jest.fn(),
 }));
 
@@ -76,11 +74,6 @@ describe('useObservationFormData', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (bahmniServices.hasFormData as jest.Mock).mockReturnValue(false);
-    (bahmniServices.validateFormData as jest.Mock).mockReturnValue({
-      isValid: true,
-      errors: [],
-    });
     (
       bahmniServices.transformFormDataToObservations as jest.Mock
     ).mockReturnValue([]);
@@ -98,9 +91,6 @@ describe('useObservationFormData', () => {
 
       expect(result.current.formData).toBeNull();
       expect(result.current.observations).toEqual([]);
-      expect(result.current.hasData).toBe(false);
-      expect(result.current.isValid).toBe(true);
-      expect(result.current.validationErrors).toEqual([]);
       expect(result.current.formMetadata).toBeUndefined();
       expect(result.current.isLoadingMetadata).toBe(false);
       expect(result.current.metadataError).toBeNull();
@@ -506,69 +496,6 @@ describe('useObservationFormData', () => {
     });
   });
 
-  describe('hasData', () => {
-    it('should return false when form data is null', () => {
-      (bahmniServices.hasFormData as jest.Mock).mockReturnValue(false);
-
-      const { result } = renderHook(() => useObservationFormData(), {
-        wrapper: createWrapper(),
-      });
-
-      expect(result.current.hasData).toBe(false);
-    });
-
-    it('should call hasFormData utility when form data exists', () => {
-      (bahmniServices.hasFormData as jest.Mock).mockReturnValue(true);
-
-      const { result } = renderHook(
-        () =>
-          useObservationFormData({
-            initialFormData: mockFormData,
-            formMetadata: mockFormMetadata,
-          }),
-        { wrapper: createWrapper() },
-      );
-
-      expect(result.current.hasData).toBe(true);
-      expect(bahmniServices.hasFormData).toHaveBeenCalledWith(mockFormData);
-    });
-  });
-
-  describe('validation', () => {
-    it('should return valid when form data is null', () => {
-      const { result } = renderHook(() => useObservationFormData(), {
-        wrapper: createWrapper(),
-      });
-
-      expect(result.current.isValid).toBe(true);
-      expect(result.current.validationErrors).toEqual([]);
-    });
-
-    it('should validate form data when present', () => {
-      (bahmniServices.validateFormData as jest.Mock).mockReturnValue({
-        isValid: false,
-        errors: [{ field: 'field-1', message: 'Required field' }],
-      });
-
-      const { result } = renderHook(
-        () =>
-          useObservationFormData({
-            initialFormData: mockFormData,
-            formMetadata: mockFormMetadata,
-          }),
-        { wrapper: createWrapper() },
-      );
-
-      expect(result.current.isValid).toBe(false);
-      expect(result.current.validationErrors).toEqual([
-        { field: 'field-1', message: 'Required field' },
-      ]);
-      expect(bahmniServices.validateFormData).toHaveBeenCalledWith(
-        mockFormData,
-      );
-    });
-  });
-
   describe('observations', () => {
     it('should return empty array when form data is null', () => {
       const { result } = renderHook(
@@ -582,56 +509,11 @@ describe('useObservationFormData', () => {
       expect(result.current.observations).toEqual([]);
     });
 
-    it('should return empty array when form is invalid', () => {
-      (bahmniServices.hasFormData as jest.Mock).mockReturnValue(true);
-      (bahmniServices.validateFormData as jest.Mock).mockReturnValue({
-        isValid: false,
-        errors: [],
-      });
-
-      const { result } = renderHook(
-        () =>
-          useObservationFormData({
-            initialFormData: mockFormData,
-            formMetadata: mockFormMetadata,
-          }),
-        { wrapper: createWrapper() },
-      );
-
-      expect(result.current.observations).toEqual([]);
-    });
-
-    it('should return empty array when form has no data', () => {
-      (bahmniServices.hasFormData as jest.Mock).mockReturnValue(false);
-      (bahmniServices.validateFormData as jest.Mock).mockReturnValue({
-        isValid: true,
-        errors: [],
-      });
-
-      const { result } = renderHook(
-        () =>
-          useObservationFormData({
-            initialFormData: mockFormData,
-            formMetadata: mockFormMetadata,
-          }),
-        { wrapper: createWrapper() },
-      );
-
-      expect(result.current.observations).toEqual([]);
-    });
-
     it('should return empty array when formMetadata is not provided', () => {
-      (bahmniServices.hasFormData as jest.Mock).mockReturnValue(true);
-      (bahmniServices.validateFormData as jest.Mock).mockReturnValue({
-        isValid: true,
-        errors: [],
-      });
-
       const { result } = renderHook(
         () =>
           useObservationFormData({
             initialFormData: mockFormData,
-            formMetadata: mockFormMetadata,
           }),
         { wrapper: createWrapper() },
       );
@@ -639,12 +521,7 @@ describe('useObservationFormData', () => {
       expect(result.current.observations).toEqual([]);
     });
 
-    it('should transform form data to observations when valid', () => {
-      (bahmniServices.hasFormData as jest.Mock).mockReturnValue(true);
-      (bahmniServices.validateFormData as jest.Mock).mockReturnValue({
-        isValid: true,
-        errors: [],
-      });
+    it('should transform form data to observations when formData and formMetadata exist', () => {
       (
         bahmniServices.transformFormDataToObservations as jest.Mock
       ).mockReturnValue(mockObservations);
@@ -665,11 +542,6 @@ describe('useObservationFormData', () => {
     });
 
     it('should update observations when form data changes', () => {
-      (bahmniServices.hasFormData as jest.Mock).mockReturnValue(true);
-      (bahmniServices.validateFormData as jest.Mock).mockReturnValue({
-        isValid: true,
-        errors: [],
-      });
       (
         bahmniServices.transformFormDataToObservations as jest.Mock
       ).mockReturnValue(mockObservations);
