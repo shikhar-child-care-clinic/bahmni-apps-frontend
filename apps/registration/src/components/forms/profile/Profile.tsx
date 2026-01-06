@@ -68,6 +68,14 @@ export const Profile = ({
   const { patientUuid: patientUuidFromUrl } = useParams<{
     patientUuid: string;
   }>();
+
+  // Extract field visibility and validation flags
+  const showMiddleName = patientInfoConfig?.showMiddleName ?? false;
+  const showLastName = patientInfoConfig?.showLastName ?? false;
+  const isMiddleNameMandatory =
+    patientInfoConfig?.isMiddleNameMandatory ?? false;
+  const isLastNameMandatory = patientInfoConfig?.isLastNameMandatory ?? false;
+
   const getRequiredLabel = (labelKey: string, isRequired: boolean) => {
     return (
       <>
@@ -301,9 +309,6 @@ export const Profile = ({
       isValid = false;
     }
 
-    const showMiddleName = patientInfoConfig?.showMiddleName ?? false;
-    const isMiddleNameMandatory =
-      patientInfoConfig?.isMiddleNameMandatory ?? false;
     if (
       showMiddleName &&
       isMiddleNameMandatory &&
@@ -319,8 +324,7 @@ export const Profile = ({
       );
       isValid = false;
     }
-    const showLastName = patientInfoConfig?.showLastName ?? false;
-    const isLastNameMandatory = patientInfoConfig?.isLastNameMandatory ?? false;
+
     if (showLastName && isLastNameMandatory && !formData.lastName.trim()) {
       newValidationErrors.lastName = t(
         'CREATE_PATIENT_VALIDATION_LAST_NAME_REQUIRED',
@@ -500,12 +504,12 @@ export const Profile = ({
               onBlur={() => handleNameBlur('firstName')}
             />
 
-            {(patientInfoConfig?.showMiddleName ?? false) && (
+            {showMiddleName && (
               <TextInput
                 id="middle-name"
                 labelText={getRequiredLabel(
                   'CREATE_PATIENT_MIDDLE_NAME',
-                  patientInfoConfig?.isMiddleNameMandatory ?? false,
+                  isMiddleNameMandatory,
                 )}
                 placeholder={t('CREATE_PATIENT_MIDDLE_NAME_PLACEHOLDER')}
                 value={formData.middleName}
@@ -520,12 +524,12 @@ export const Profile = ({
               />
             )}
 
-            {(patientInfoConfig?.showLastName ?? false) && (
+            {showLastName && (
               <TextInput
                 id="last-name"
                 labelText={getRequiredLabel(
                   'CREATE_PATIENT_LAST_NAME',
-                  patientInfoConfig?.isLastNameMandatory ?? false,
+                  isLastNameMandatory,
                 )}
                 placeholder={t('CREATE_PATIENT_LAST_NAME')}
                 value={formData.lastName}
