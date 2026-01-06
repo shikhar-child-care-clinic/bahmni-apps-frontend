@@ -1,13 +1,10 @@
-import {
-  ObservationForm,
-  ObservationDataInFormControls,
-} from '@bahmni/services';
+import { ObservationForm, Form2Observation } from '@bahmni/services';
 import { create } from 'zustand';
 
 export interface ObservationFormData {
   formUuid: string;
   formName: string;
-  observations: ObservationDataInFormControls[];
+  observations: Form2Observation[];
   timestamp: number;
 }
 
@@ -17,19 +14,11 @@ export interface ObservationFormsState {
   viewingForm: ObservationForm | null;
   addForm: (form: ObservationForm) => void;
   removeForm: (formUuid: string) => void;
-  updateFormData: (
-    formUuid: string,
-    observations: ObservationDataInFormControls[],
-  ) => void;
-  getFormData: (
-    formUuid: string,
-  ) => ObservationDataInFormControls[] | undefined;
+  updateFormData: (formUuid: string, observations: Form2Observation[]) => void;
+  getFormData: (formUuid: string) => Form2Observation[] | undefined;
   setViewingForm: (form: ObservationForm | null) => void;
-  getAllObservations: () => ObservationDataInFormControls[];
-  getObservationFormsData: () => Record<
-    string,
-    ObservationDataInFormControls[]
-  >;
+  getAllObservations: () => Form2Observation[];
+  getObservationFormsData: () => Record<string, Form2Observation[]>;
   validate: () => boolean;
   reset: () => void;
   getState: () => ObservationFormsState;
@@ -92,10 +81,7 @@ export const useObservationFormsStore = create<ObservationFormsState>(
       });
     },
 
-    updateFormData: (
-      formUuid: string,
-      observations: ObservationDataInFormControls[],
-    ) => {
+    updateFormData: (formUuid: string, observations: Form2Observation[]) => {
       if (!validateFormUuid(formUuid)) {
         return;
       }
@@ -139,7 +125,7 @@ export const useObservationFormsStore = create<ObservationFormsState>(
 
     getAllObservations: () => {
       const state = get();
-      const allObservations: ObservationDataInFormControls[] = [];
+      const allObservations: Form2Observation[] = [];
 
       Object.values(state.formsData).forEach((formData) => {
         allObservations.push(...formData.observations);
@@ -150,7 +136,7 @@ export const useObservationFormsStore = create<ObservationFormsState>(
 
     getObservationFormsData: () => {
       const state = get();
-      const result: Record<string, ObservationDataInFormControls[]> = {};
+      const result: Record<string, Form2Observation[]> = {};
 
       Object.entries(state.formsData).forEach(([formUuid, formData]) => {
         result[formUuid] = formData.observations;

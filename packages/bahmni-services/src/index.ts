@@ -239,7 +239,7 @@ export {
   type FormMetadata,
   type FormData,
   type FormControlData,
-  type ObservationDataInFormControls,
+  type Form2Observation,
   type ConceptValue,
   type ComplexValue,
 } from './observationFormsService';

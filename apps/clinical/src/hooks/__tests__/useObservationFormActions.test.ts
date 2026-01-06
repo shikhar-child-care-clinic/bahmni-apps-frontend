@@ -1,7 +1,4 @@
-import {
-  ObservationForm,
-  ObservationDataInFormControls,
-} from '@bahmni/services';
+import { ObservationForm, Form2Observation } from '@bahmni/services';
 import { renderHook, act } from '@testing-library/react';
 import { useObservationFormActions } from '../useObservationFormActions';
 
@@ -13,7 +10,7 @@ describe('useObservationFormActions', () => {
     privileges: [],
   };
 
-  const mockObservations: ObservationDataInFormControls[] = [
+  const mockObservations: Form2Observation[] = [
     {
       concept: {
         uuid: 'concept-1',
@@ -218,7 +215,7 @@ describe('useObservationFormActions', () => {
     });
 
     it('should save with multiple observations', () => {
-      const multipleObservations: ObservationDataInFormControls[] = [
+      const multipleObservations: Form2Observation[] = [
         {
           concept: { uuid: 'concept-1', datatype: 'Text' },
           value: 'Value 1',

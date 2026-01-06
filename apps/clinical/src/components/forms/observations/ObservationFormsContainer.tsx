@@ -13,7 +13,7 @@ import '@bahmni/form2-controls/dist/bundle.css';
 import './styles/form2-controls-fixes.scss';
 import {
   ObservationForm,
-  ObservationDataInFormControls,
+  Form2Observation,
   getFormattedError,
   getUserPreferredLocale,
 } from '@bahmni/services';
@@ -39,10 +39,10 @@ interface ObservationFormsContainerProps {
   // Callback to lift observation form data to parent for consultation bundle
   onFormObservationsChange?: (
     formUuid: string,
-    observations: ObservationDataInFormControls[],
+    observations: Form2Observation[],
   ) => void;
   // Existing saved observations for the current form (for edit mode)
-  existingObservations?: ObservationDataInFormControls[];
+  existingObservations?: Form2Observation[];
 }
 
 /**
@@ -96,8 +96,8 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       clearFormData,
     });
 
-  // Handle save with validation using form2-controls Container ref
-  const handleSaveWithValidation = () => {
+  // Validate form and save if no errors
+  const validateAndSave = () => {
     if (formContainerRef.current) {
       const { errors } = formContainerRef.current.getValue();
       if (errors && errors.length > 0) {
@@ -110,14 +110,14 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
     }
   };
 
-  // Handle discard with validation error cleanup
-  const handleDiscardWithCleanup = () => {
+  // Discard form and clear validation errors
+  const discard = () => {
     setShowValidationError(false);
     handleDiscardForm();
   };
 
-  // Handle back with validation error cleanup
-  const handleBackWithCleanup = () => {
+  // Navigate back to forms list and clear validation errors
+  const navigateToForms = () => {
     setShowValidationError(false);
     handleBackToForms();
   };
@@ -198,12 +198,12 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
         className={styles.formViewActionArea}
         title={formTitleWithPin as unknown as string}
         primaryButtonText={t('OBSERVATION_FORM_SAVE_BUTTON')}
-        onPrimaryButtonClick={handleSaveWithValidation}
+        onPrimaryButtonClick={validateAndSave}
         isPrimaryButtonDisabled={false}
         secondaryButtonText={t('OBSERVATION_FORM_DISCARD_BUTTON')}
-        onSecondaryButtonClick={handleDiscardWithCleanup}
+        onSecondaryButtonClick={discard}
         tertiaryButtonText={t('OBSERVATION_FORM_BACK_BUTTON')}
-        onTertiaryButtonClick={handleBackWithCleanup}
+        onTertiaryButtonClick={navigateToForms}
         content={formViewContent}
       />
     );

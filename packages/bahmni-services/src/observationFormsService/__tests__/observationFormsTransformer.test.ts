@@ -4,7 +4,7 @@ import {
   transformObservationsToFormData,
   FormData,
   ConceptValue,
-  ObservationDataInFormControls,
+  Form2Observation,
 } from '../observationFormsTransformer';
 
 describe('observationFormsTransformer', () => {
@@ -315,7 +315,7 @@ describe('observationFormsTransformer', () => {
 
   describe('transformObservationsToFormData', () => {
     it('should return empty form data structure for empty observations', () => {
-      const observations: ObservationDataInFormControls[] = [];
+      const observations: Form2Observation[] = [];
 
       const result = transformObservationsToFormData(
         observations,
@@ -329,7 +329,7 @@ describe('observationFormsTransformer', () => {
     });
 
     it('should transform a simple text observation', () => {
-      const observations: ObservationDataInFormControls[] = [
+      const observations: Form2Observation[] = [
         {
           concept: { uuid: 'concept-uuid-1' },
           value: 'Headache',
@@ -354,7 +354,7 @@ describe('observationFormsTransformer', () => {
     });
 
     it('should transform a number observation', () => {
-      const observations: ObservationDataInFormControls[] = [
+      const observations: Form2Observation[] = [
         {
           concept: { uuid: 'concept-uuid-2' },
           value: 98.6,
@@ -379,7 +379,7 @@ describe('observationFormsTransformer', () => {
 
     it('should transform ISO date string to Date object', () => {
       const isoDate = '2024-01-15T10:30:00.000Z';
-      const observations: ObservationDataInFormControls[] = [
+      const observations: Form2Observation[] = [
         {
           concept: { uuid: 'concept-uuid-3' },
           value: isoDate,
@@ -404,7 +404,7 @@ describe('observationFormsTransformer', () => {
         uuid: 'answer-uuid-1',
         display: 'Yes',
       };
-      const observations: ObservationDataInFormControls[] = [
+      const observations: Form2Observation[] = [
         {
           concept: { uuid: 'concept-uuid-4' },
           value: conceptValue,
@@ -428,7 +428,7 @@ describe('observationFormsTransformer', () => {
     });
 
     it('should merge multiple observations with same formFieldPath into multiselect', () => {
-      const observations: ObservationDataInFormControls[] = [
+      const observations: Form2Observation[] = [
         {
           concept: { uuid: 'concept-uuid-5' },
           value: { uuid: 'symptom-1', display: 'Fever' },
@@ -464,7 +464,7 @@ describe('observationFormsTransformer', () => {
     });
 
     it('should use concept UUID as fallback when formFieldPath is missing', () => {
-      const observations: ObservationDataInFormControls[] = [
+      const observations: Form2Observation[] = [
         {
           concept: { uuid: 'concept-uuid-6' },
           value: 'Some value',
@@ -483,7 +483,7 @@ describe('observationFormsTransformer', () => {
     });
 
     it('should preserve interpretation', () => {
-      const observations: ObservationDataInFormControls[] = [
+      const observations: Form2Observation[] = [
         {
           concept: { uuid: 'concept-uuid-7' },
           value: 105,
@@ -504,7 +504,7 @@ describe('observationFormsTransformer', () => {
     });
 
     it('should handle multiple different observations', () => {
-      const observations: ObservationDataInFormControls[] = [
+      const observations: Form2Observation[] = [
         {
           concept: { uuid: 'concept-1' },
           value: 'Text value',
@@ -542,7 +542,7 @@ describe('observationFormsTransformer', () => {
     });
 
     it('should handle boolean values', () => {
-      const observations: ObservationDataInFormControls[] = [
+      const observations: Form2Observation[] = [
         {
           concept: { uuid: 'concept-uuid-8' },
           value: true,
@@ -562,7 +562,7 @@ describe('observationFormsTransformer', () => {
     });
 
     it('should include metadata in result', () => {
-      const observations: ObservationDataInFormControls[] = [
+      const observations: Form2Observation[] = [
         {
           concept: { uuid: 'concept-uuid-1' },
           value: 'Test',

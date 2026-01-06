@@ -1,17 +1,14 @@
-import {
-  ObservationForm,
-  ObservationDataInFormControls,
-} from '@bahmni/services';
+import { ObservationForm, Form2Observation } from '@bahmni/services';
 import { useCallback } from 'react';
 
 interface UseObservationFormActionsProps {
   viewingForm: ObservationForm | null | undefined;
   onViewingFormChange: (viewingForm: ObservationForm | null) => void;
   onRemoveForm?: (formUuid: string) => void;
-  observations: ObservationDataInFormControls[];
+  observations: Form2Observation[];
   onFormObservationsChange?: (
     formUuid: string,
-    observations: ObservationDataInFormControls[],
+    observations: Form2Observation[],
   ) => void;
   clearFormData: () => void;
 }

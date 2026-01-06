@@ -12,12 +12,13 @@ export {
   type FormMetadataApiResponse,
   type FormResource,
   type ComplexValue,
+  type ObservationFormTranslations,
 } from './models';
 export {
   transformFormDataToObservations,
   transformObservationsToFormData,
   type FormData,
   type FormControlData,
-  type ObservationDataInFormControls,
+  type Form2Observation,
   type ConceptValue,
 } from './observationFormsTransformer';

@@ -59,11 +59,11 @@ export interface FormMetadata {
 }
 
 // Observation data from form2-controls (used in consultation bundle)
-export interface ObservationDataInFormControls {
+export interface Form2Observation {
   concept: { uuid: string; datatype?: string };
   value: string | number | boolean | ConceptValue | ComplexValue | null; // null for obsGroupControl parent observations
   obsDatetime?: string;
-  groupMembers?: ObservationDataInFormControls[];
+  groupMembers?: Form2Observation[];
   comment?: string;
   interpretation?: string; // Interpretation code: A=ABNORMAL, N=NORMAL, H=HIGH, L=LOW, etc.
   formNamespace?: string; // Form namespace (always "Bahmni" for form builder observations)

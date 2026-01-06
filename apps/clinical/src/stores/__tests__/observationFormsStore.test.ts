@@ -1,7 +1,4 @@
-import {
-  ObservationForm,
-  ObservationDataInFormControls,
-} from '@bahmni/services';
+import { ObservationForm, Form2Observation } from '@bahmni/services';
 import { act, renderHook } from '@testing-library/react';
 import { useObservationFormsStore } from '../observationFormsStore';
 
@@ -28,7 +25,7 @@ describe('observationFormsStore', () => {
     privileges: [],
   };
 
-  const mockObservations: ObservationDataInFormControls[] = [
+  const mockObservations: Form2Observation[] = [
     {
       concept: {
         uuid: 'concept-1',
@@ -322,7 +319,7 @@ describe('observationFormsStore', () => {
   describe('getAllObservations', () => {
     it('should return all observations from all forms', () => {
       const { result } = renderHook(() => useObservationFormsStore());
-      const observations2: ObservationDataInFormControls[] = [
+      const observations2: Form2Observation[] = [
         {
           concept: {
             uuid: 'concept-2',

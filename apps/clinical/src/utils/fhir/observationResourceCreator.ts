@@ -1,4 +1,4 @@
-import { ObservationDataInFormControls } from '@bahmni/services';
+import { Form2Observation } from '@bahmni/services';
 import { Observation, Reference } from 'fhir/r4';
 
 import {
@@ -49,7 +49,7 @@ const handleStringValue = (
 };
 
 export const createObservationResource = (
-  observationPayload: ObservationDataInFormControls,
+  observationPayload: Form2Observation,
   subjectReference: Reference,
   encounterReference: Reference,
   performerReference: Reference,
@@ -150,7 +150,7 @@ export const createObservationResource = (
 };
 
 export const createObservationResources = (
-  observations: ObservationDataInFormControls[],
+  observations: Form2Observation[],
   subjectReference: Reference,
   encounterReference: Reference,
   performerReference: Reference,

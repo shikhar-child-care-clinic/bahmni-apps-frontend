@@ -1,7 +1,7 @@
 import {
   FormData,
   FormControlData,
-  ObservationDataInFormControls,
+  Form2Observation,
   FormMetadata,
   ConceptValue,
   ComplexValue,
@@ -25,7 +25,7 @@ interface UseObservationFormDataProps {
 
 interface UseObservationFormDataReturn {
   formData: FormData | null;
-  observations: ObservationDataInFormControls[];
+  observations: Form2Observation[];
   handleFormDataChange: (data: unknown) => void;
   clearFormData: () => void;
   // Metadata fetching (consolidated from useObservationFormMetadata)

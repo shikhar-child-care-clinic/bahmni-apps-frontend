@@ -1,8 +1,4 @@
-import {
-  FormData,
-  FormMetadata,
-  ObservationDataInFormControls,
-} from '@bahmni/services';
+import { FormData, FormMetadata, Form2Observation } from '@bahmni/services';
 import * as bahmniServices from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, act, waitFor } from '@testing-library/react';
@@ -44,7 +40,7 @@ describe('useObservationFormData', () => {
     metadata: {},
   };
 
-  const mockObservations: ObservationDataInFormControls[] = [
+  const mockObservations: Form2Observation[] = [
     {
       concept: {
         uuid: 'concept-1',

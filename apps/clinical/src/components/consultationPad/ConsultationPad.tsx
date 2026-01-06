@@ -10,7 +10,7 @@ import {
   dispatchAuditEvent,
   useTranslation,
   ObservationForm,
-  ObservationDataInFormControls,
+  Form2Observation,
   refreshQueries,
 } from '@bahmni/services';
 import { conditionsQueryKeys, useNotification } from '@bahmni/widgets';
@@ -148,7 +148,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
 
   // Callback to receive observation form data
   const handleFormObservationsChange = React.useCallback(
-    (formUuid: string, observations: ObservationDataInFormControls[]) => {
+    (formUuid: string, observations: Form2Observation[]) => {
       updateFormData(formUuid, observations);
     },
     [updateFormData],

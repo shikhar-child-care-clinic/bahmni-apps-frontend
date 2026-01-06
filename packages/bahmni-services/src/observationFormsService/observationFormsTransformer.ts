@@ -1,12 +1,12 @@
 import { DEFAULT_FORM_NAMESPACE } from './constants';
 import {
   FormMetadata,
-  ObservationDataInFormControls,
+  Form2Observation,
   ConceptValue,
   ComplexValue,
 } from './models';
 
-export type { ObservationDataInFormControls, ConceptValue, ComplexValue };
+export type { Form2Observation, ConceptValue, ComplexValue };
 
 export interface FormControlData {
   id: string;
@@ -74,7 +74,7 @@ function transformControlValue(
 function transformGroupMembers(
   groupMembers: FormControlData[],
   metadata: FormMetadata,
-): ObservationDataInFormControls[] {
+): Form2Observation[] {
   return groupMembers.map((member) => {
     const datatype = findConceptDatatype(metadata, member.conceptUuid);
     return {
@@ -140,12 +140,12 @@ function findConceptDatatype(
 export function transformFormDataToObservations(
   formData: FormData,
   metadata: FormMetadata,
-): ObservationDataInFormControls[] {
+): Form2Observation[] {
   if (!formData.controls || formData.controls.length === 0) {
     return [];
   }
 
-  const observations: ObservationDataInFormControls[] = [];
+  const observations: Form2Observation[] = [];
   const timestamp = new Date().toISOString();
 
   formData.controls.forEach((control) => {
@@ -173,7 +173,7 @@ export function transformFormDataToObservations(
 
     if (control.type === 'multiselect' && Array.isArray(control.value)) {
       control.value.forEach((selectedValue) => {
-        const observation: ObservationDataInFormControls = {
+        const observation: Form2Observation = {
           concept: { uuid: control.conceptUuid, datatype },
           value: selectedValue,
           obsDatetime: timestamp,
@@ -190,7 +190,7 @@ export function transformFormDataToObservations(
       return;
     }
 
-    const observation: ObservationDataInFormControls = {
+    const observation: Form2Observation = {
       concept: { uuid: control.conceptUuid, datatype },
       value: transformControlValue(control),
       obsDatetime: timestamp,
@@ -209,7 +209,7 @@ export function transformFormDataToObservations(
 }
 
 export function transformObservationsToFormData(
-  observations: ObservationDataInFormControls[],
+  observations: Form2Observation[],
   formMetadata: FormMetadata,
 ): FormData {
   if (!observations || observations.length === 0) {
