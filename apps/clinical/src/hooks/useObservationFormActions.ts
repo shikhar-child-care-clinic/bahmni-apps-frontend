@@ -31,18 +31,18 @@ export function useObservationFormActions({
     onViewingFormChange(null);
   }, [viewingForm, onRemoveForm, onViewingFormChange, clearFormData]);
 
-  const handleSaveForm = useCallback(() => {
-    if (viewingForm && onFormObservationsChange) {
-      onFormObservationsChange(viewingForm.uuid, observations);
-    }
+  const handleSaveForm = useCallback(
+    (processedObservations?: Form2Observation[]) => {
+      if (viewingForm && onFormObservationsChange) {
+        // Use processed observations if provided (from form events), otherwise use current observations
+        const observationsToSave = processedObservations ?? observations;
+        onFormObservationsChange(viewingForm.uuid, observationsToSave);
+      }
 
-    onViewingFormChange(null);
-  }, [
-    viewingForm,
-    onViewingFormChange,
-    observations,
-    onFormObservationsChange,
-  ]);
+      onViewingFormChange(null);
+    },
+    [viewingForm, onViewingFormChange, observations, onFormObservationsChange],
+  );
 
   const handleBackToForms = useCallback(() => {
     onViewingFormChange(null);

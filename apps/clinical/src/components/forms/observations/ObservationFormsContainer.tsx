@@ -25,6 +25,7 @@ import { useObservationFormActions } from '../../../hooks/useObservationFormActi
 import { useObservationFormData } from '../../../hooks/useObservationFormData';
 import { useObservationFormPinning } from '../../../hooks/useObservationFormPinning';
 import styles from './styles/ObservationFormsContainer.module.scss';
+import { executeOnFormSaveEvent } from './utils/formEventExecutor';
 
 interface ObservationFormsContainerProps {
   // Callback to notify parent when form viewing starts/ends
@@ -98,7 +99,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
 
   // Validate form and save if no errors
   const validateAndSave = () => {
-    if (formContainerRef.current) {
+    if (formContainerRef.current && formMetadata && patientUUID) {
       const { errors } = formContainerRef.current.getValue();
       if (errors && errors.length > 0) {
         setShowValidationError(true);
@@ -106,7 +107,17 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       }
 
       setShowValidationError(false);
-      handleSaveForm();
+
+      // Execute onFormSave event before saving (if defined in form metadata)
+      // This allows forms to apply business logic, validations, or transformations
+      const processedObservations = executeOnFormSaveEvent(
+        formMetadata,
+        observations,
+        patientUUID,
+      );
+
+      // Save with processed observations
+      handleSaveForm(processedObservations);
     }
   };
 
