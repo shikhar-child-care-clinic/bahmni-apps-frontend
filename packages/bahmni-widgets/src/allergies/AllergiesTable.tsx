@@ -27,13 +27,6 @@ import {
 export const allergiesQueryKeys = (patientUUID: string) =>
   ['allergies', patientUUID] as const;
 
-const fetchAllergies = async (
-  patientUUID: string,
-): Promise<FormattedAllergy[]> => {
-  const response = await getFormattedAllergies(patientUUID!);
-  return response;
-};
-
 // Helper function to get severity CSS class
 const getSeverityClassName = (severity: string): string | undefined => {
   switch (severity?.toLowerCase()) {
@@ -60,7 +53,7 @@ const AllergiesTable: React.FC = () => {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: allergiesQueryKeys(patientUUID!),
     enabled: !!patientUUID,
-    queryFn: () => fetchAllergies(patientUUID!),
+    queryFn: () => getFormattedAllergies(patientUUID!),
   });
 
   // Listen to consultation saved events and refetch if allergies were updated

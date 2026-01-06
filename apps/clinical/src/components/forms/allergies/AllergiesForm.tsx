@@ -234,6 +234,7 @@ const AllergiesForm: React.FC = React.memo(() => {
       {showDuplicateNotification && (
         <InlineNotification
           kind="error"
+          lowContrast
           title={t('ALLERGY_ALREADY_ADDED')}
           subtitle=""
           onClose={() => setShowDuplicateNotification(false)}
