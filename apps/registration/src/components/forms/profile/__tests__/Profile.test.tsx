@@ -614,6 +614,177 @@ describe('Profile', () => {
       // Should fail validation because last name is required but empty
       expect(isValid).toBe(false);
     });
+
+    // Tests for BAH-4337: Validation should not run when fields are hidden
+    it('should NOT validate middle name when showMiddleName is false', async () => {
+      mockUseRegistrationConfig.mockReturnValue({
+        registrationConfig: {
+          patientInformation: {
+            showMiddleName: false,
+            showLastName: true,
+            isFirstNameMandatory: true,
+            isMiddleNameMandatory: true, // Mandatory but hidden
+            isLastNameMandatory: false,
+            showBirthTime: false,
+            showEnterManually: false,
+            isGenderMandatory: true,
+            isDateOfBirthMandatory: true,
+          },
+          fieldValidation: {
+            firstName: {
+              pattern: '^[a-zA-Z\\s]*$',
+              errorMessage:
+                'First name should contain only alphabets without space',
+            },
+            lastName: {
+              pattern: '^[a-zA-Z\\s]*$',
+              errorMessage:
+                'Last name should contain only alphabets without space',
+            },
+          },
+        },
+        setRegistrationConfig: undefined,
+        isLoading: false,
+        setIsLoading: undefined,
+        error: null,
+        setError: undefined,
+        refetch: undefined,
+      });
+
+      const initialData: BasicInfoData = {
+        patientIdFormat: 'BAH',
+        entryType: false,
+        firstName: 'John',
+        middleName: '', // Empty
+        lastName: 'Doe',
+        gender: 'CREATE_PATIENT_GENDER_MALE',
+        ageYears: '30',
+        ageMonths: '',
+        ageDays: '',
+        dateOfBirth: '1993-01-01',
+        birthTime: '',
+      };
+
+      await act(async () => {
+        render(<Profile ref={ref} initialData={initialData} />);
+      });
+
+      let isValid: boolean | undefined;
+      act(() => {
+        isValid = ref.current?.validate();
+      });
+
+      // Should pass validation because middle name is hidden
+      expect(isValid).toBe(true);
+    });
+
+    it('should NOT validate last name when showLastName is false', async () => {
+      mockUseRegistrationConfig.mockReturnValue({
+        registrationConfig: {
+          patientInformation: {
+            showMiddleName: true,
+            showLastName: false,
+            isFirstNameMandatory: true,
+            isMiddleNameMandatory: false,
+            isLastNameMandatory: true, // Mandatory but hidden
+            showBirthTime: false,
+            showEnterManually: false,
+            isGenderMandatory: true,
+            isDateOfBirthMandatory: true,
+          },
+          fieldValidation: {
+            firstName: undefined,
+            lastName: undefined,
+          },
+        },
+      });
+
+      const initialData: BasicInfoData = {
+        patientIdFormat: 'BAH',
+        entryType: false,
+        firstName: 'John',
+        middleName: 'M',
+        lastName: '', // Empty
+        gender: 'CREATE_PATIENT_GENDER_MALE',
+        ageYears: '30',
+        ageMonths: '',
+        ageDays: '',
+        dateOfBirth: '1993-01-01',
+        birthTime: '',
+      };
+
+      await act(async () => {
+        render(<Profile ref={ref} initialData={initialData} />);
+      });
+
+      let isValid: boolean | undefined;
+      act(() => {
+        isValid = ref.current?.validate();
+      });
+
+      // Should pass validation because last name is hidden
+      expect(isValid).toBe(true);
+    });
+
+    it('should hide middle name field when showMiddleName is false', async () => {
+      mockUseRegistrationConfig.mockReturnValue({
+        registrationConfig: {
+          patientInformation: {
+            showMiddleName: false,
+            showLastName: true,
+            isFirstNameMandatory: true,
+            isMiddleNameMandatory: false,
+            isLastNameMandatory: false,
+            showBirthTime: false,
+            showEnterManually: false,
+            isGenderMandatory: true,
+            isDateOfBirthMandatory: true,
+          },
+          fieldValidation: {
+            firstName: undefined,
+            lastName: undefined,
+          },
+        },
+      });
+
+      await act(async () => {
+        render(<Profile ref={ref} />);
+      });
+
+      expect(
+        screen.queryByLabelText(/CREATE_PATIENT_MIDDLE_NAME/),
+      ).not.toBeInTheDocument();
+    });
+
+    it('should hide last name field when showLastName is false', async () => {
+      mockUseRegistrationConfig.mockReturnValue({
+        registrationConfig: {
+          patientInformation: {
+            showMiddleName: true,
+            showLastName: false,
+            isFirstNameMandatory: true,
+            isMiddleNameMandatory: false,
+            isLastNameMandatory: false,
+            showBirthTime: false,
+            showEnterManually: false,
+            isGenderMandatory: true,
+            isDateOfBirthMandatory: true,
+          },
+          fieldValidation: {
+            firstName: undefined,
+            lastName: undefined,
+          },
+        },
+      });
+
+      await act(async () => {
+        render(<Profile ref={ref} />);
+      });
+
+      expect(
+        screen.queryByLabelText(/CREATE_PATIENT_LAST_NAME/),
+      ).not.toBeInTheDocument();
+    });
   });
 
   describe('Age Validation - 120 Years Maximum', () => {
