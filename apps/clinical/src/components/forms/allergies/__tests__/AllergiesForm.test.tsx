@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Coding } from 'fhir/r4';
@@ -37,7 +38,6 @@ jest.mock('@bahmni/services', () => ({
         ALLERGIES_SEARCH_PLACEHOLDER: 'Search for allergies',
         ALLERGIES_SEARCH_ARIA_LABEL: 'Search for allergies',
         ALLERGIES_ADDED_ALLERGIES: 'Added Allergies',
-        ALLERGY_ALREADY_SELECTED: 'Already added',
         ALLERGY_ALREADY_ADDED: 'Allergen is already added',
         LOADING_CONCEPTS: 'Loading concepts...',
         NO_MATCHING_ALLERGEN_FOUND:
@@ -250,7 +250,7 @@ describe('AllergiesForm', () => {
 
       await waitFor(async () => {
         const alreadyAddedOption = screen.getByText(
-          'Peanut Allergy (Already added)',
+          'Peanut Allergy (Allergen is already added)',
         );
         expect(alreadyAddedOption).toBeInTheDocument();
         await user.click(alreadyAddedOption);
@@ -374,7 +374,7 @@ describe('AllergiesForm', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('Peanut Allergy (Already added)'),
+          screen.getByText('Peanut Allergy (Allergen is already added)'),
         ).toBeInTheDocument();
       });
     });
@@ -545,11 +545,15 @@ describe('AllergiesForm', () => {
       await user.type(getSearchCombobox(), 'peanut');
 
       await waitFor(() => {
-        const option = screen.getByText('Peanut Allergy (Already added)');
+        const option = screen.getByText(
+          'Peanut Allergy (Allergen is already added)',
+        );
         expect(option).toBeInTheDocument();
       });
 
-      await user.click(screen.getByText('Peanut Allergy (Already added)'));
+      await user.click(
+        screen.getByText('Peanut Allergy (Allergen is already added)'),
+      );
 
       expect(mockAddAllergy).not.toHaveBeenCalled();
     });
@@ -573,7 +577,7 @@ describe('AllergiesForm', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('Peanut Allergy (Already added)'),
+          screen.getByText('Peanut Allergy (Allergen is already added)'),
         ).toBeInTheDocument();
 
         expect(screen.getByText('Shellfish [Food]')).toBeInTheDocument();
@@ -581,7 +585,9 @@ describe('AllergiesForm', () => {
 
       const options = screen.getAllByRole('option');
       const peanutOption = options.find((option) =>
-        option.textContent?.includes('Peanut Allergy (Already added)'),
+        option.textContent?.includes(
+          'Peanut Allergy (Allergen is already added)',
+        ),
       );
       expect(peanutOption).toHaveAttribute('disabled');
     });
@@ -604,7 +610,9 @@ describe('AllergiesForm', () => {
       });
 
       await user.type(getSearchCombobox(), 'peanut');
-      await user.click(screen.getByText('Peanut Allergy (Already added)'));
+      await user.click(
+        screen.getByText('Peanut Allergy (Allergen is already added)'),
+      );
 
       expect(mockAddAllergy).not.toHaveBeenCalled();
 
@@ -620,6 +628,31 @@ describe('AllergiesForm', () => {
       await waitFor(() => {
         expect(mockAddAllergy).toHaveBeenCalledWith(anotherAllergen);
       });
+    });
+  });
+
+  describe('Backend Allergies - Duplicate Detection', () => {
+    it('should prevent adding allergy that exists in backend', async () => {
+      const user = userEvent.setup();
+      const mockAddAllergy = jest.fn();
+
+      (useQuery as jest.Mock).mockReturnValue({
+        data: [{ id: mockAllergen.uuid, display: 'Peanut Allergy' }] as any,
+        isLoading: false,
+        error: null,
+      });
+      mockAllergenSearchHook({ allergens: [mockAllergen] });
+      renderAllergiesForm({ addAllergy: mockAddAllergy });
+
+      await user.type(getSearchCombobox(), 'peanut');
+
+      await waitFor(() => {
+        expect(screen.getByText('Peanut Allergy [Food]')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Peanut Allergy [Food]'));
+
+      expect(mockAddAllergy).not.toHaveBeenCalled();
     });
   });
 

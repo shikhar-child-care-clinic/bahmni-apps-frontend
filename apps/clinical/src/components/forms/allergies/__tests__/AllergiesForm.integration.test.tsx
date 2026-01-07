@@ -23,7 +23,7 @@ jest.mock('@bahmni/services', () => ({
         ALLERGIES_SEARCH_PLACEHOLDER: 'Search for allergies',
         ALLERGIES_SEARCH_ARIA_LABEL: 'Search for allergies',
         ALLERGIES_ADDED_ALLERGIES: 'Added Allergies',
-        ALLERGY_ALREADY_SELECTED: 'Already added',
+        ALLERGY_ALREADY_ADDED: 'Allergen is already added',
         LOADING_CONCEPTS: 'Loading concepts...',
         NO_MATCHING_ALLERGEN_FOUND:
           'No matching allergen recorded for this term',

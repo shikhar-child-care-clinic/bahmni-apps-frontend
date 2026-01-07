@@ -189,7 +189,7 @@ const AllergiesForm: React.FC = React.memo(() => {
       return {
         ...item,
         display: isAlreadySelected
-          ? `${item.display} (${t('ALLERGY_ALREADY_SELECTED')})`
+          ? `${item.display} (${t('ALLERGY_ALREADY_ADDED')})`
           : item.display,
         type: isAlreadySelected ? null : item.type,
         disabled: isAlreadySelected,
