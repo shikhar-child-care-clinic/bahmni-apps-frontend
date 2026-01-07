@@ -473,7 +473,7 @@ describe('useObservationFormData', () => {
     });
   });
 
-  describe('clearFormData', () => {
+  describe('resetForm', () => {
     it('should clear form data', () => {
       const { result } = renderHook(
         () =>
@@ -485,7 +485,7 @@ describe('useObservationFormData', () => {
       );
 
       act(() => {
-        result.current.clearFormData();
+        result.current.resetForm();
       });
 
       expect(result.current.formData).toBeNull();

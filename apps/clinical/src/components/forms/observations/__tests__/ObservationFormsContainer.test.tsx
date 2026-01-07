@@ -12,19 +12,7 @@ jest.mock('../../../../hooks/useObservationFormsSearch');
 jest.mock('../../../../hooks/usePinnedObservationForms');
 
 // Mock the extracted custom hooks
-const mockUseObservationFormPinning = jest.fn();
-const mockUseObservationFormActions = jest.fn();
 const mockUseObservationFormData = jest.fn();
-
-jest.mock('../../../../hooks/useObservationFormPinning', () => ({
-  useObservationFormPinning: (...args: unknown[]) =>
-    mockUseObservationFormPinning(...args),
-}));
-
-jest.mock('../../../../hooks/useObservationFormActions', () => ({
-  useObservationFormActions: (...args: unknown[]) =>
-    mockUseObservationFormActions(...args),
-}));
 
 jest.mock('../../../../hooks/useObservationFormData', () => ({
   useObservationFormData: (...args: unknown[]) =>
@@ -208,21 +196,10 @@ describe('ObservationFormsContainer', () => {
     });
 
     // Mock the extracted hooks with default values
-    mockUseObservationFormPinning.mockReturnValue({
-      isCurrentFormPinned: false,
-      handlePinToggle: jest.fn(),
-    });
-
-    mockUseObservationFormActions.mockReturnValue({
-      handleDiscardForm: jest.fn(),
-      handleSaveForm: jest.fn(),
-      handleBackToForms: jest.fn(),
-    });
-
     mockUseObservationFormData.mockReturnValue({
       observations: [],
       handleFormDataChange: jest.fn(),
-      clearFormData: jest.fn(),
+      resetForm: jest.fn(),
       // Metadata fetching (consolidated from useObservationFormMetadata)
       formMetadata: undefined,
       isLoadingMetadata: false,
@@ -290,7 +267,7 @@ describe('ObservationFormsContainer', () => {
       mockUseObservationFormData.mockReturnValue({
         observations: [],
         handleFormDataChange: jest.fn(),
-        clearFormData: jest.fn(),
+        resetForm: jest.fn(),
         formMetadata: {
           schema: { name: 'Test Form Schema', controls: [] },
         },
@@ -323,7 +300,7 @@ describe('ObservationFormsContainer', () => {
       mockUseObservationFormData.mockReturnValue({
         observations: [],
         handleFormDataChange: jest.fn(),
-        clearFormData: jest.fn(),
+        resetForm: jest.fn(),
         formMetadata: {
           schema: { name: 'Test Form Schema', controls: [] },
         },
@@ -386,30 +363,6 @@ describe('ObservationFormsContainer', () => {
       fireEvent.click(discardButton);
 
       expect(mockHandleDiscardForm).toHaveBeenCalled();
-    });
-
-    it('should pass correct props to useObservationFormActions hook', () => {
-      const mockOnViewingFormChange = jest.fn();
-      const mockOnRemoveForm = jest.fn();
-
-      render(
-        <ObservationFormsContainer
-          {...defaultProps}
-          onViewingFormChange={mockOnViewingFormChange}
-          onRemoveForm={mockOnRemoveForm}
-          viewingForm={mockForm}
-        />,
-      );
-
-      expect(mockUseObservationFormActions).toHaveBeenCalledWith(
-        expect.objectContaining({
-          viewingForm: mockForm,
-          onViewingFormChange: mockOnViewingFormChange,
-          onRemoveForm: mockOnRemoveForm,
-          observations: expect.any(Array),
-          clearFormData: expect.any(Function),
-        }),
-      );
     });
   });
 
@@ -474,7 +427,7 @@ describe('ObservationFormsContainer', () => {
       mockUseObservationFormData.mockReturnValue({
         observations: [],
         handleFormDataChange: jest.fn(),
-        clearFormData: jest.fn(),
+        resetForm: jest.fn(),
         formMetadata: undefined,
         isLoadingMetadata: true,
         metadataError: null,
@@ -502,7 +455,7 @@ describe('ObservationFormsContainer', () => {
       mockUseObservationFormData.mockReturnValue({
         observations: [],
         handleFormDataChange: jest.fn(),
-        clearFormData: jest.fn(),
+        resetForm: jest.fn(),
         formMetadata: mockMetadata,
         isLoadingMetadata: false,
         metadataError: null,
@@ -526,7 +479,7 @@ describe('ObservationFormsContainer', () => {
       mockUseObservationFormData.mockReturnValue({
         observations: [],
         handleFormDataChange: jest.fn(),
-        clearFormData: jest.fn(),
+        resetForm: jest.fn(),
         formMetadata: undefined,
         isLoadingMetadata: false,
         metadataError: mockError,
@@ -621,25 +574,6 @@ describe('ObservationFormsContainer', () => {
 
       expect(mockHandlePinToggle).toHaveBeenCalled();
     });
-
-    it('should pass correct props to useObservationFormPinning hook', () => {
-      const mockUpdatePinnedForms = jest.fn();
-
-      render(
-        <ObservationFormsContainer
-          {...defaultProps}
-          viewingForm={nonDefaultForm}
-          pinnedForms={[nonDefaultForm]}
-          updatePinnedForms={mockUpdatePinnedForms}
-        />,
-      );
-
-      expect(mockUseObservationFormPinning).toHaveBeenCalledWith({
-        viewingForm: nonDefaultForm,
-        pinnedForms: [nonDefaultForm],
-        updatePinnedForms: mockUpdatePinnedForms,
-      });
-    });
   });
 
   describe('Error Handling with Fallback Message', () => {
@@ -653,7 +587,7 @@ describe('ObservationFormsContainer', () => {
       mockUseObservationFormData.mockReturnValue({
         observations: [],
         handleFormDataChange: jest.fn(),
-        clearFormData: jest.fn(),
+        resetForm: jest.fn(),
         formMetadata: undefined,
         isLoadingMetadata: false,
         metadataError: mockError,
@@ -680,7 +614,7 @@ describe('ObservationFormsContainer', () => {
       mockUseObservationFormData.mockReturnValue({
         observations: [],
         handleFormDataChange: jest.fn(),
-        clearFormData: jest.fn(),
+        resetForm: jest.fn(),
         formMetadata: undefined,
         isLoadingMetadata: false,
         metadataError: mockError,
@@ -706,7 +640,7 @@ describe('ObservationFormsContainer', () => {
       mockUseObservationFormData.mockReturnValue({
         observations: [],
         handleFormDataChange: jest.fn(),
-        clearFormData: jest.fn(),
+        resetForm: jest.fn(),
         formMetadata: undefined,
         isLoadingMetadata: false,
         metadataError: mockError,
@@ -732,7 +666,7 @@ describe('ObservationFormsContainer', () => {
       mockUseObservationFormData.mockReturnValue({
         observations: [],
         handleFormDataChange: jest.fn(),
-        clearFormData: jest.fn(),
+        resetForm: jest.fn(),
         formMetadata: mockMetadata,
         isLoadingMetadata: false,
         metadataError: null,
@@ -748,7 +682,7 @@ describe('ObservationFormsContainer', () => {
       mockUseObservationFormData.mockReturnValue({
         observations: [],
         handleFormDataChange: jest.fn(),
-        clearFormData: jest.fn(),
+        resetForm: jest.fn(),
         formMetadata: mockMetadata,
         isLoadingMetadata: false,
         metadataError: null,
@@ -785,7 +719,7 @@ describe('ObservationFormsContainer', () => {
       mockUseObservationFormData.mockReturnValue({
         observations: [],
         handleFormDataChange: jest.fn(),
-        clearFormData: jest.fn(),
+        resetForm: jest.fn(),
         formMetadata: mockMetadata,
         isLoadingMetadata: false,
         metadataError: null,
@@ -820,7 +754,7 @@ describe('ObservationFormsContainer', () => {
       mockUseObservationFormData.mockReturnValue({
         observations: [],
         handleFormDataChange: jest.fn(),
-        clearFormData: jest.fn(),
+        resetForm: jest.fn(),
         formMetadata: mockMetadata,
         isLoadingMetadata: false,
         metadataError: null,

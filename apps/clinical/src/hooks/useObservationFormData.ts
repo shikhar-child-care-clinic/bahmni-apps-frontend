@@ -27,7 +27,7 @@ interface UseObservationFormDataReturn {
   formData: FormData | null;
   observations: Form2Observation[];
   handleFormDataChange: (data: unknown) => void;
-  clearFormData: () => void;
+  resetForm: () => void;
   // Metadata fetching (consolidated from useObservationFormMetadata)
   formMetadata: FormMetadata | undefined;
   isLoadingMetadata: boolean;
@@ -205,9 +205,9 @@ export function useObservationFormData(
     setFormData(normalizedData);
   }, []);
 
-  const clearFormData = useCallback(() => {
+  const resetForm = () => {
     setFormData(null);
-  }, []);
+  };
 
   const observations =
     formData && formMetadata
@@ -218,7 +218,7 @@ export function useObservationFormData(
     formData,
     observations,
     handleFormDataChange,
-    clearFormData,
+    resetForm,
     formMetadata,
     isLoadingMetadata,
     metadataError,

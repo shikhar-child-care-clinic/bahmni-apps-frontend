@@ -21,9 +21,7 @@ import { usePatientUUID } from '@bahmni/widgets';
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DEFAULT_FORM_API_NAMES } from '../../../constants/forms';
-import { useObservationFormActions } from '../../../hooks/useObservationFormActions';
 import { useObservationFormData } from '../../../hooks/useObservationFormData';
-import { useObservationFormPinning } from '../../../hooks/useObservationFormPinning';
 import styles from './styles/ObservationFormsContainer.module.scss';
 
 interface ObservationFormsContainerProps {
@@ -69,16 +67,10 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   const [showValidationError, setShowValidationError] = useState(false);
   const formContainerRef = useRef<Container>(null);
 
-  const { isCurrentFormPinned, handlePinToggle } = useObservationFormPinning({
-    viewingForm,
-    pinnedForms,
-    updatePinnedForms,
-  });
-
   const {
     observations,
     handleFormDataChange,
-    clearFormData,
+    resetForm,
     formMetadata,
     isLoadingMetadata,
     metadataError,
@@ -86,15 +78,43 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
     viewingForm?.uuid ? { formUuid: viewingForm.uuid } : undefined,
   );
 
-  const { handleDiscardForm, handleSaveForm, handleBackToForms } =
-    useObservationFormActions({
-      viewingForm,
-      onViewingFormChange,
-      onRemoveForm,
-      observations,
-      onFormObservationsChange,
-      clearFormData,
-    });
+  // Check if current form is pinned
+  const isCurrentFormPinned = viewingForm
+    ? pinnedForms.some((form) => form.uuid === viewingForm.uuid)
+    : false;
+
+  // Handle pin/unpin toggle
+  const handlePinToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (viewingForm) {
+      const newPinnedForms = isCurrentFormPinned
+        ? pinnedForms.filter((form) => form.uuid !== viewingForm.uuid)
+        : [...pinnedForms, viewingForm];
+      updatePinnedForms(newPinnedForms);
+    }
+  };
+
+  // Handle form discard - remove from list and exit view mode
+  const handleDiscardForm = () => {
+    if (viewingForm && onRemoveForm) {
+      onRemoveForm(viewingForm.uuid);
+    }
+    onViewingFormChange(null);
+  };
+
+  // Handle form save - lift observations to parent and exit view mode
+  const handleSaveForm = () => {
+    if (viewingForm && onFormObservationsChange) {
+      onFormObservationsChange(viewingForm.uuid, observations);
+    }
+    onViewingFormChange(null);
+  };
+
+  // Handle back navigation - exit view mode without saving
+  const handleBackToForms = () => {
+    onViewingFormChange(null);
+  };
 
   // Validate form and save if no errors
   const validateAndSave = () => {
@@ -113,6 +133,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   // Discard form and clear validation errors
   const discard = () => {
     setShowValidationError(false);
+    resetForm();
     handleDiscardForm();
   };
 
