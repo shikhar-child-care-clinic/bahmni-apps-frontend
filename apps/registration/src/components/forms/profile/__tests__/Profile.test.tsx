@@ -100,6 +100,23 @@ jest.mock('../../../../hooks/useRegistrationConfig', () => ({
   useRegistrationConfig: jest.fn(() => mockUseRegistrationConfig()),
 }));
 
+const createBasicInfoData = (
+  overrides: Partial<BasicInfoData> = {},
+): BasicInfoData => ({
+  patientIdFormat: 'BAH',
+  entryType: false,
+  firstName: 'John',
+  middleName: '',
+  lastName: 'Doe',
+  gender: 'CREATE_PATIENT_GENDER_MALE',
+  ageYears: '30',
+  ageMonths: '',
+  ageDays: '',
+  dateOfBirth: '1993-01-01',
+  birthTime: '',
+  ...overrides,
+});
+
 describe('Profile', () => {
   let ref: React.RefObject<ProfileRef | null>;
 
@@ -190,22 +207,8 @@ describe('Profile', () => {
     });
 
     it('should validate successfully with all required fields', async () => {
-      const initialData: BasicInfoData = {
-        patientIdFormat: 'BAH',
-        entryType: false,
-        firstName: 'John',
-        middleName: '',
-        lastName: 'Doe',
-        gender: 'CREATE_PATIENT_GENDER_MALE',
-        ageYears: '30',
-        ageMonths: '',
-        ageDays: '',
-        dateOfBirth: '1993-01-01',
-        birthTime: '',
-      };
-
       await act(async () => {
-        render(<Profile ref={ref} initialData={initialData} />);
+        render(<Profile ref={ref} initialData={createBasicInfoData()} />);
       });
 
       let isValid: boolean | undefined;
@@ -323,22 +326,16 @@ describe('Profile', () => {
 
   describe('clearData Method', () => {
     it('should clear all form data', async () => {
-      const initialData: BasicInfoData = {
-        patientIdFormat: 'BAH',
-        entryType: false,
-        firstName: 'John',
-        middleName: 'M',
-        lastName: 'Doe',
-        gender: 'CREATE_PATIENT_GENDER_MALE',
-        ageYears: '30',
-        ageMonths: '',
-        ageDays: '',
-        dateOfBirth: '1993-01-01',
-        birthTime: '10:00',
-      };
-
       await act(async () => {
-        render(<Profile ref={ref} initialData={initialData} />);
+        render(
+          <Profile
+            ref={ref}
+            initialData={createBasicInfoData({
+              middleName: 'M',
+              birthTime: '10:00',
+            })}
+          />,
+        );
       });
 
       act(() => {
@@ -479,22 +476,8 @@ describe('Profile', () => {
     });
 
     it('should allow empty birth time as it is optional', async () => {
-      const initialData: BasicInfoData = {
-        patientIdFormat: 'BAH',
-        entryType: false,
-        firstName: 'John',
-        middleName: '',
-        lastName: 'Doe',
-        gender: 'CREATE_PATIENT_GENDER_MALE',
-        ageYears: '30',
-        ageMonths: '',
-        ageDays: '',
-        dateOfBirth: '1993-01-01',
-        birthTime: '',
-      };
-
       await act(async () => {
-        render(<Profile ref={ref} initialData={initialData} />);
+        render(<Profile ref={ref} initialData={createBasicInfoData()} />);
       });
 
       let isValid: boolean | undefined;
@@ -536,22 +519,13 @@ describe('Profile', () => {
     });
 
     it('should pass validation with valid birth time and all required fields', async () => {
-      const initialData: BasicInfoData = {
-        patientIdFormat: 'BAH',
-        entryType: false,
-        firstName: 'John',
-        middleName: '',
-        lastName: 'Doe',
-        gender: 'CREATE_PATIENT_GENDER_MALE',
-        ageYears: '30',
-        ageMonths: '',
-        ageDays: '',
-        dateOfBirth: '1993-01-01',
-        birthTime: '15:45',
-      };
-
       await act(async () => {
-        render(<Profile ref={ref} initialData={initialData} />);
+        render(
+          <Profile
+            ref={ref}
+            initialData={createBasicInfoData({ birthTime: '15:45' })}
+          />,
+        );
       });
 
       let isValid: boolean | undefined;
@@ -651,22 +625,8 @@ describe('Profile', () => {
         refetch: jest.fn(),
       });
 
-      const initialData: BasicInfoData = {
-        patientIdFormat: 'BAH',
-        entryType: false,
-        firstName: 'John',
-        middleName: '', // Empty
-        lastName: 'Doe',
-        gender: 'CREATE_PATIENT_GENDER_MALE',
-        ageYears: '30',
-        ageMonths: '',
-        ageDays: '',
-        dateOfBirth: '1993-01-01',
-        birthTime: '',
-      };
-
       await act(async () => {
-        render(<Profile ref={ref} initialData={initialData} />);
+        render(<Profile ref={ref} initialData={createBasicInfoData()} />);
       });
 
       let isValid: boolean | undefined;
@@ -702,22 +662,13 @@ describe('Profile', () => {
         refetch: jest.fn(),
       });
 
-      const initialData: BasicInfoData = {
-        patientIdFormat: 'BAH',
-        entryType: false,
-        firstName: 'John',
-        middleName: 'M',
-        lastName: '', // Empty
-        gender: 'CREATE_PATIENT_GENDER_MALE',
-        ageYears: '30',
-        ageMonths: '',
-        ageDays: '',
-        dateOfBirth: '1993-01-01',
-        birthTime: '',
-      };
-
       await act(async () => {
-        render(<Profile ref={ref} initialData={initialData} />);
+        render(
+          <Profile
+            ref={ref}
+            initialData={createBasicInfoData({ middleName: 'M', lastName: '' })}
+          />,
+        );
       });
 
       let isValid: boolean | undefined;
@@ -818,7 +769,7 @@ describe('Profile', () => {
             lastName: {
               pattern: '^[a-zA-Z\\s]*$',
               errorMessage:
-                'Last name should contain only alphabets without space',
+                'Last name should contain only alphabets wFmithout space',
             },
           },
         },
@@ -830,22 +781,8 @@ describe('Profile', () => {
         refetch: jest.fn(),
       });
 
-      const initialData: BasicInfoData = {
-        patientIdFormat: 'BAH',
-        entryType: false,
-        firstName: 'John',
-        middleName: '', // Empty
-        lastName: 'Doe',
-        gender: 'CREATE_PATIENT_GENDER_MALE',
-        ageYears: '30',
-        ageMonths: '',
-        ageDays: '',
-        dateOfBirth: '1993-01-01',
-        birthTime: '',
-      };
-
       await act(async () => {
-        render(<Profile ref={ref} initialData={initialData} />);
+        render(<Profile ref={ref} initialData={createBasicInfoData()} />);
       });
 
       let isValid: boolean | undefined;
@@ -853,7 +790,6 @@ describe('Profile', () => {
         isValid = ref.current?.validate();
       });
 
-      // Should pass validation because showMiddleName defaults to false (field hidden)
       expect(isValid).toBe(true);
     });
 
@@ -892,22 +828,13 @@ describe('Profile', () => {
         refetch: jest.fn(),
       });
 
-      const initialData: BasicInfoData = {
-        patientIdFormat: 'BAH',
-        entryType: false,
-        firstName: 'John',
-        middleName: 'M',
-        lastName: '', // Empty
-        gender: 'CREATE_PATIENT_GENDER_MALE',
-        ageYears: '30',
-        ageMonths: '',
-        ageDays: '',
-        dateOfBirth: '1993-01-01',
-        birthTime: '',
-      };
-
       await act(async () => {
-        render(<Profile ref={ref} initialData={initialData} />);
+        render(
+          <Profile
+            ref={ref}
+            initialData={createBasicInfoData({ middleName: 'M', lastName: '' })}
+          />,
+        );
       });
 
       let isValid: boolean | undefined;
@@ -915,7 +842,6 @@ describe('Profile', () => {
         isValid = ref.current?.validate();
       });
 
-      // Should pass validation because showLastName defaults to false (field hidden)
       expect(isValid).toBe(true);
     });
 
@@ -923,8 +849,8 @@ describe('Profile', () => {
       mockUseRegistrationConfig.mockReturnValue({
         registrationConfig: {
           patientInformation: {
-            showMiddleName: false,
-            showLastName: false,
+            // showMiddleName: false,
+            // showLastName: false,
             isFirstNameMandatory: true,
             isMiddleNameMandatory: true,
             isLastNameMandatory: true,
@@ -932,7 +858,7 @@ describe('Profile', () => {
             showEnterManually: false,
             isGenderMandatory: true,
             isDateOfBirthMandatory: true,
-          },
+          } as any,
           fieldValidation: {
             firstName: {
               pattern: '^[a-zA-Z\\s]*$',
@@ -954,22 +880,13 @@ describe('Profile', () => {
         refetch: jest.fn(),
       });
 
-      const initialData: BasicInfoData = {
-        patientIdFormat: 'BAH',
-        entryType: false,
-        firstName: 'John',
-        middleName: '', // Empty but hidden
-        lastName: '', // Empty but hidden
-        gender: 'CREATE_PATIENT_GENDER_MALE',
-        ageYears: '30',
-        ageMonths: '',
-        ageDays: '',
-        dateOfBirth: '1993-01-01',
-        birthTime: '',
-      };
-
       await act(async () => {
-        render(<Profile ref={ref} initialData={initialData} />);
+        render(
+          <Profile
+            ref={ref}
+            initialData={createBasicInfoData({ middleName: '', lastName: '' })}
+          />,
+        );
       });
 
       let isValid: boolean | undefined;
@@ -1014,21 +931,17 @@ describe('Profile', () => {
       const month = String(exactDate.getMonth() + 1).padStart(2, '0');
       const year = exactDate.getFullYear();
 
-      const initialData: BasicInfoData = {
-        patientIdFormat: 'BAH',
-        entryType: false,
-        firstName: 'John',
-        middleName: '',
-        lastName: 'Doe',
-        gender: 'CREATE_PATIENT_GENDER_MALE',
-        ageYears: '120',
-        ageMonths: '0',
-        ageDays: '0',
-        dateOfBirth: `${year}-${month}-${day}`,
-        birthTime: '',
-      };
-
-      render(<Profile ref={ref} initialData={initialData} />);
+      render(
+        <Profile
+          ref={ref}
+          initialData={createBasicInfoData({
+            ageYears: '120',
+            ageMonths: '0',
+            ageDays: '0',
+            dateOfBirth: `${year}-${month}-${day}`,
+          })}
+        />,
+      );
 
       const data = ref.current?.getData();
       expect(data?.dateOfBirth).toBe(`${year}-${month}-${day}`);
@@ -1036,21 +949,17 @@ describe('Profile', () => {
     });
 
     it('should accept age of exactly 120 years in age input', () => {
-      const initialData: BasicInfoData = {
-        patientIdFormat: 'BAH',
-        entryType: false,
-        firstName: 'John',
-        middleName: '',
-        lastName: 'Doe',
-        gender: 'CREATE_PATIENT_GENDER_MALE',
-        ageYears: '120',
-        ageMonths: '0',
-        ageDays: '0',
-        dateOfBirth: '',
-        birthTime: '',
-      };
-
-      render(<Profile ref={ref} initialData={initialData} />);
+      render(
+        <Profile
+          ref={ref}
+          initialData={createBasicInfoData({
+            ageYears: '120',
+            ageMonths: '0',
+            ageDays: '0',
+            dateOfBirth: '',
+          })}
+        />,
+      );
 
       const ageYearsInput = screen.getByLabelText(
         /CREATE_PATIENT_AGE_YEARS/,
@@ -1059,21 +968,17 @@ describe('Profile', () => {
     });
 
     it('should accept age of 119 years 11 months 31 days', () => {
-      const initialData: BasicInfoData = {
-        patientIdFormat: 'BAH',
-        entryType: false,
-        firstName: 'John',
-        middleName: '',
-        lastName: 'Doe',
-        gender: 'CREATE_PATIENT_GENDER_MALE',
-        ageYears: '119',
-        ageMonths: '11',
-        ageDays: '31',
-        dateOfBirth: '',
-        birthTime: '',
-      };
-
-      render(<Profile ref={ref} initialData={initialData} />);
+      render(
+        <Profile
+          ref={ref}
+          initialData={createBasicInfoData({
+            ageYears: '119',
+            ageMonths: '11',
+            ageDays: '31',
+            dateOfBirth: '',
+          })}
+        />,
+      );
 
       const data = ref.current?.getData();
       expect(data?.ageYears).toBe('119');
@@ -1097,21 +1002,17 @@ describe('Profile', () => {
       const month = String(birthDate.getMonth() + 1).padStart(2, '0');
       const day = String(birthDate.getDate()).padStart(2, '0');
 
-      const initialData: BasicInfoData = {
-        patientIdFormat: 'BAH',
-        entryType: false,
-        firstName: 'John',
-        middleName: '',
-        lastName: 'Doe',
-        gender: 'CREATE_PATIENT_GENDER_MALE',
-        ageYears: '120',
-        ageMonths: '0',
-        ageDays: '0',
-        dateOfBirth: `${year}-${month}-${day}`,
-        birthTime: '',
-      };
-
-      render(<Profile ref={ref} initialData={initialData} />);
+      render(
+        <Profile
+          ref={ref}
+          initialData={createBasicInfoData({
+            ageYears: '120',
+            ageMonths: '0',
+            ageDays: '0',
+            dateOfBirth: `${year}-${month}-${day}`,
+          })}
+        />,
+      );
 
       let isValid: boolean | undefined;
       act(() => {
@@ -1132,21 +1033,17 @@ describe('Profile', () => {
         targetYear % 400 === 0;
 
       if (isLeapYear) {
-        const initialData: BasicInfoData = {
-          patientIdFormat: 'BAH',
-          entryType: false,
-          firstName: 'John',
-          middleName: '',
-          lastName: 'Doe',
-          gender: 'CREATE_PATIENT_GENDER_MALE',
-          ageYears: '120',
-          ageMonths: '0',
-          ageDays: '0',
-          dateOfBirth: `${targetYear}-02-29`,
-          birthTime: '',
-        };
-
-        render(<Profile ref={ref} initialData={initialData} />);
+        render(
+          <Profile
+            ref={ref}
+            initialData={createBasicInfoData({
+              ageYears: '120',
+              ageMonths: '0',
+              ageDays: '0',
+              dateOfBirth: `${targetYear}-02-29`,
+            })}
+          />,
+        );
 
         const data = ref.current?.getData();
         // eslint-disable-next-line jest/no-conditional-expect
@@ -1166,21 +1063,17 @@ describe('Profile', () => {
       const month = String(birthDate.getMonth() + 1).padStart(2, '0');
       const day = String(birthDate.getDate()).padStart(2, '0');
 
-      const initialData: BasicInfoData = {
-        patientIdFormat: 'BAH',
-        entryType: false,
-        firstName: 'John',
-        middleName: '',
-        lastName: 'Doe',
-        gender: 'CREATE_PATIENT_GENDER_MALE',
-        ageYears: '',
-        ageMonths: '',
-        ageDays: '',
-        dateOfBirth: `${year}-${month}-${day}`,
-        birthTime: '',
-      };
-
-      render(<Profile ref={ref} initialData={initialData} />);
+      render(
+        <Profile
+          ref={ref}
+          initialData={createBasicInfoData({
+            ageYears: '',
+            ageMonths: '',
+            ageDays: '',
+            dateOfBirth: `${year}-${month}-${day}`,
+          })}
+        />,
+      );
 
       const data = ref.current?.getData();
       expect(data?.dateOfBirth).toBe(`${year}-${month}-${day}`);
