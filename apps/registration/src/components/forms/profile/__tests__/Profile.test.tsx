@@ -615,15 +615,15 @@ describe('Profile', () => {
       expect(isValid).toBe(false);
     });
 
-    // Tests for BAH-4337: Validation should not run when fields are hidden
-    it('should NOT validate middle name when showMiddleName is false', async () => {
+    // Tests for validation when fields are hidden
+    it('should skip middle name validation when showMiddleName=false even if isMiddleNameMandatory=true', async () => {
       mockUseRegistrationConfig.mockReturnValue({
         registrationConfig: {
           patientInformation: {
             showMiddleName: false,
             showLastName: true,
             isFirstNameMandatory: true,
-            isMiddleNameMandatory: true, // Mandatory but hidden
+            isMiddleNameMandatory: true, // Mandatory but hidden as it is false
             isLastNameMandatory: false,
             showBirthTime: false,
             showEnterManually: false,
@@ -643,12 +643,12 @@ describe('Profile', () => {
             },
           },
         },
-        setRegistrationConfig: undefined,
+        setRegistrationConfig: jest.fn(),
         isLoading: false,
-        setIsLoading: undefined,
+        setIsLoading: jest.fn(),
         error: null,
-        setError: undefined,
-        refetch: undefined,
+        setError: jest.fn(),
+        refetch: jest.fn(),
       });
 
       const initialData: BasicInfoData = {
@@ -678,7 +678,7 @@ describe('Profile', () => {
       expect(isValid).toBe(true);
     });
 
-    it('should NOT validate last name when showLastName is false', async () => {
+    it('should skip last name validation when showLastName=false even if isLastNameMandatory=true', async () => {
       mockUseRegistrationConfig.mockReturnValue({
         registrationConfig: {
           patientInformation: {
@@ -686,17 +686,20 @@ describe('Profile', () => {
             showLastName: false,
             isFirstNameMandatory: true,
             isMiddleNameMandatory: false,
-            isLastNameMandatory: true, // Mandatory but hidden
+            isLastNameMandatory: true, // Mandatory but hidden as it is false
             showBirthTime: false,
             showEnterManually: false,
             isGenderMandatory: true,
             isDateOfBirthMandatory: true,
           },
-          fieldValidation: {
-            firstName: undefined,
-            lastName: undefined,
-          },
-        },
+          fieldValidation: {},
+        } as any,
+        setRegistrationConfig: jest.fn(),
+        isLoading: false,
+        setIsLoading: jest.fn(),
+        error: null,
+        setError: jest.fn(),
+        refetch: jest.fn(),
       });
 
       const initialData: BasicInfoData = {
@@ -740,11 +743,14 @@ describe('Profile', () => {
             isGenderMandatory: true,
             isDateOfBirthMandatory: true,
           },
-          fieldValidation: {
-            firstName: undefined,
-            lastName: undefined,
-          },
-        },
+          fieldValidation: {},
+        } as any,
+        setRegistrationConfig: jest.fn(),
+        isLoading: false,
+        setIsLoading: jest.fn(),
+        error: null,
+        setError: jest.fn(),
+        refetch: jest.fn(),
       });
 
       await act(async () => {
@@ -770,17 +776,214 @@ describe('Profile', () => {
             isGenderMandatory: true,
             isDateOfBirthMandatory: true,
           },
-          fieldValidation: {
-            firstName: undefined,
-            lastName: undefined,
-          },
-        },
+          fieldValidation: {},
+        } as any,
+        setRegistrationConfig: jest.fn(),
+        isLoading: false,
+        setIsLoading: jest.fn(),
+        error: null,
+        setError: jest.fn(),
+        refetch: jest.fn(),
       });
 
       await act(async () => {
         render(<Profile ref={ref} />);
       });
 
+      expect(
+        screen.queryByLabelText(/CREATE_PATIENT_LAST_NAME/),
+      ).not.toBeInTheDocument();
+    });
+
+    it('should skip middle name validation when showMiddleName is undefined (missing) even if isMiddleNameMandatory=true', async () => {
+      mockUseRegistrationConfig.mockReturnValue({
+        registrationConfig: {
+          patientInformation: {
+            // showMiddleName property omitted - testing default behavior
+            showLastName: true,
+            isFirstNameMandatory: true,
+            isMiddleNameMandatory: true, // Mandatory but field is hidden by default
+            isLastNameMandatory: false,
+            showBirthTime: false,
+            showEnterManually: false,
+            isGenderMandatory: true,
+            isDateOfBirthMandatory: true,
+          } as any,
+          fieldValidation: {
+            firstName: {
+              pattern: '^[a-zA-Z\\s]*$',
+              errorMessage:
+                'First name should contain only alphabets without space',
+            },
+            lastName: {
+              pattern: '^[a-zA-Z\\s]*$',
+              errorMessage:
+                'Last name should contain only alphabets without space',
+            },
+          },
+        },
+        setRegistrationConfig: jest.fn(),
+        isLoading: false,
+        setIsLoading: jest.fn(),
+        error: null,
+        setError: jest.fn(),
+        refetch: jest.fn(),
+      });
+
+      const initialData: BasicInfoData = {
+        patientIdFormat: 'BAH',
+        entryType: false,
+        firstName: 'John',
+        middleName: '', // Empty
+        lastName: 'Doe',
+        gender: 'CREATE_PATIENT_GENDER_MALE',
+        ageYears: '30',
+        ageMonths: '',
+        ageDays: '',
+        dateOfBirth: '1993-01-01',
+        birthTime: '',
+      };
+
+      await act(async () => {
+        render(<Profile ref={ref} initialData={initialData} />);
+      });
+
+      let isValid: boolean | undefined;
+      act(() => {
+        isValid = ref.current?.validate();
+      });
+
+      // Should pass validation because showMiddleName defaults to false (field hidden)
+      expect(isValid).toBe(true);
+    });
+
+    it('should skip last name validation when showLastName is undefined (missing) even if isLastNameMandatory=true', async () => {
+      mockUseRegistrationConfig.mockReturnValue({
+        registrationConfig: {
+          patientInformation: {
+            showMiddleName: true,
+            // showLastName property omitted - testing default behavior
+            isFirstNameMandatory: true,
+            isMiddleNameMandatory: false,
+            isLastNameMandatory: true, // Mandatory but field is hidden by default
+            showBirthTime: false,
+            showEnterManually: false,
+            isGenderMandatory: true,
+            isDateOfBirthMandatory: true,
+          } as any,
+          fieldValidation: {
+            firstName: {
+              pattern: '^[a-zA-Z\\s]*$',
+              errorMessage:
+                'First name should contain only alphabets without space',
+            },
+            lastName: {
+              pattern: '^[a-zA-Z\\s]*$',
+              errorMessage:
+                'Last name should contain only alphabets without space',
+            },
+          },
+        },
+        setRegistrationConfig: jest.fn(),
+        isLoading: false,
+        setIsLoading: jest.fn(),
+        error: null,
+        setError: jest.fn(),
+        refetch: jest.fn(),
+      });
+
+      const initialData: BasicInfoData = {
+        patientIdFormat: 'BAH',
+        entryType: false,
+        firstName: 'John',
+        middleName: 'M',
+        lastName: '', // Empty
+        gender: 'CREATE_PATIENT_GENDER_MALE',
+        ageYears: '30',
+        ageMonths: '',
+        ageDays: '',
+        dateOfBirth: '1993-01-01',
+        birthTime: '',
+      };
+
+      await act(async () => {
+        render(<Profile ref={ref} initialData={initialData} />);
+      });
+
+      let isValid: boolean | undefined;
+      act(() => {
+        isValid = ref.current?.validate();
+      });
+
+      // Should pass validation because showLastName defaults to false (field hidden)
+      expect(isValid).toBe(true);
+    });
+
+    it('should NOT validate both fields when both show configs are missing but both mandatory flags are true', async () => {
+      mockUseRegistrationConfig.mockReturnValue({
+        registrationConfig: {
+          patientInformation: {
+            showMiddleName: false,
+            showLastName: false,
+            isFirstNameMandatory: true,
+            isMiddleNameMandatory: true,
+            isLastNameMandatory: true,
+            showBirthTime: false,
+            showEnterManually: false,
+            isGenderMandatory: true,
+            isDateOfBirthMandatory: true,
+          },
+          fieldValidation: {
+            firstName: {
+              pattern: '^[a-zA-Z\\s]*$',
+              errorMessage:
+                'First name should contain only alphabets without space',
+            },
+            lastName: {
+              pattern: '^[a-zA-Z\\s]*$',
+              errorMessage:
+                'Last name should contain only alphabets without space',
+            },
+          },
+        },
+        setRegistrationConfig: jest.fn(),
+        isLoading: false,
+        setIsLoading: jest.fn(),
+        error: null,
+        setError: jest.fn(),
+        refetch: jest.fn(),
+      });
+
+      const initialData: BasicInfoData = {
+        patientIdFormat: 'BAH',
+        entryType: false,
+        firstName: 'John',
+        middleName: '', // Empty but hidden
+        lastName: '', // Empty but hidden
+        gender: 'CREATE_PATIENT_GENDER_MALE',
+        ageYears: '30',
+        ageMonths: '',
+        ageDays: '',
+        dateOfBirth: '1993-01-01',
+        birthTime: '',
+      };
+
+      await act(async () => {
+        render(<Profile ref={ref} initialData={initialData} />);
+      });
+
+      let isValid: boolean | undefined;
+      act(() => {
+        isValid = ref.current?.validate();
+      });
+
+      // Should pass validation because both fields are hidden
+      expect(isValid).toBe(true);
+
+      // Verify both fields are not rendered
+      expect(
+        screen.queryByLabelText(/CREATE_PATIENT_MIDDLE_NAME/),
+      ).not.toBeInTheDocument();
       expect(
         screen.queryByLabelText(/CREATE_PATIENT_LAST_NAME/),
       ).not.toBeInTheDocument();
