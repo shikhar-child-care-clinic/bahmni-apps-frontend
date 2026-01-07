@@ -248,7 +248,7 @@ export {
 
 export {
   dispatchConsultationSaved,
-  useConsultationSavedEvent,
+  useConsultationSaved,
   CONSULTATION_SAVED_EVENT,
   type ConsultationSavedEventPayload,
 } from './events/consultationEvents';

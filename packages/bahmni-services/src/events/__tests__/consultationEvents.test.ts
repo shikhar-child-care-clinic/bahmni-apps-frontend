@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import {
   dispatchConsultationSaved,
-  useConsultationSavedEvent,
+  useConsultationSaved,
   CONSULTATION_SAVED_EVENT,
   type ConsultationSavedEventPayload,
 } from '../consultationEvents';
@@ -40,11 +40,11 @@ describe('consultationEvents', () => {
     });
   });
 
-  describe('useConsultationSavedEvent', () => {
+  describe('useConsultationSaved', () => {
     it('should call callback when event is dispatched', () => {
       const callback = jest.fn();
 
-      renderHook(() => useConsultationSavedEvent(callback, []));
+      renderHook(() => useConsultationSaved(callback, []));
 
       const payload: ConsultationSavedEventPayload = {
         patientUUID: 'patient-123',
@@ -61,9 +61,7 @@ describe('consultationEvents', () => {
       const callback = jest.fn();
       const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener');
 
-      const { unmount } = renderHook(() =>
-        useConsultationSavedEvent(callback, []),
-      );
+      const { unmount } = renderHook(() => useConsultationSaved(callback, []));
 
       unmount();
 

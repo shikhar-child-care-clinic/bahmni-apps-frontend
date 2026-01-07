@@ -251,8 +251,8 @@ bahmni-apps-frontend/
    dispatchConsultationSaved(data); // ✅ Just works
 
    // ConditionsTable.tsx (packages/bahmni-widgets)
-   import { useConsultationSavedEvent } from "@bahmni/services";
-   useConsultationSavedEvent(handler, [deps]); // ✅ Just works
+   import { useConsultationSaved } from "@bahmni/services";
+   useConsultationSaved(handler, [deps]); // ✅ Just works
    ```
 
 2. **Global Accessibility** - Window object is accessible everywhere in the browser
@@ -319,7 +319,7 @@ export const dispatchConsultationSaved = (
  *
  * USAGE:
  * ```typescript
- * useConsultationSavedEvent((payload) => {
+ * useConsultationSaved((payload) => {
  *   if (payload.patientUUID === currentPatient && payload.updatedResources.conditions) {
  *     refetch();
  *   }
@@ -329,7 +329,7 @@ export const dispatchConsultationSaved = (
  * @param callback - Function to call when event is published
  * @param deps - Dependencies array (should include values used in callback)
  */
-export const useConsultationSavedEvent = (
+export const useConsultationSaved = (
   callback: (payload: ConsultationSavedEventPayload) => void,
   deps: React.DependencyList = [],
 ) => {
@@ -392,7 +392,7 @@ export const useConsultationSavedEvent = (
 **New File:** `packages/bahmni-services/src/events/consultationEvents.ts`
 
 - Implement `dispatchConsultationSaved` function with setTimeout for async behavior
-- Implement `useConsultationSavedEvent` hook with useRef for memory safety
+- Implement `useConsultationSaved` hook with useRef for memory safety
 - Export event name constant
 - Export type definitions for payload
 
@@ -404,7 +404,7 @@ export const useConsultationSavedEvent = (
 // Add export
 export {
   dispatchConsultationSaved,
-  useConsultationSavedEvent,
+  useConsultationSaved,
   CONSULTATION_SAVED_EVENT,
   type ConsultationSavedEventPayload,
 } from "./events/consultationEvents";
@@ -451,7 +451,7 @@ dispatchConsultationSaved({
 **Add import:**
 
 ```typescript
-import { useConsultationSavedEvent } from "@bahmni/services";
+import { useConsultationSaved } from "@bahmni/services";
 ```
 
 **Add subscription in component:**
@@ -466,7 +466,7 @@ const ConditionsTable: React.FC = () => {
   });
 
   // ✅ NEW CODE - Subscribe to consultation saved event
-  useConsultationSavedEvent(
+  useConsultationSaved(
     (payload) => {
       // Only refetch if:
       // 1. Event is for the same patient
@@ -533,14 +533,14 @@ const handleOnPrimaryButtonClick = async () => {
 
 ```typescript
 // ConditionsTable.tsx - AFTER
-import { useConsultationSavedEvent } from '@bahmni/services';
+import { useConsultationSaved } from '@bahmni/services';
 
 const ConditionsTable: React.FC = () => {
   const patientUUID = usePatientUUID();
   const { refetch } = useQuery({...});
 
   // Widget manages its own refetch
-  useConsultationSavedEvent(
+  useConsultationSaved(
     (payload) => {
       if (payload.patientUUID === patientUUID && payload.updatedResources.conditions) {
         refetch(); // ✅ Selective refetch
@@ -578,7 +578,7 @@ With selective refetch:
 
 ```typescript
 // Generic pattern for any widget
-useConsultationSavedEvent(
+useConsultationSaved(
   (payload) => {
     // Check 1: Same patient?
     if (payload.patientUUID !== currentPatientUUID) return;
@@ -607,7 +607,7 @@ const AllergiesTable: React.FC = () => {
   const { refetch } = useQuery({...});
 
   // Same pattern as ConditionsTable
-  useConsultationSavedEvent(
+  useConsultationSaved(
     (payload) => {
       if (payload.patientUUID === patientUUID && payload.updatedResources.allergies) {
         refetch();
@@ -625,7 +625,7 @@ const AllergiesTable: React.FC = () => {
 ```typescript
 // Future widgets follow the same simple pattern
 // Just check the appropriate resource flag in updatedResources
-useConsultationSavedEvent(
+useConsultationSaved(
   (payload) => {
     if (
       payload.patientUUID === patientUUID &&

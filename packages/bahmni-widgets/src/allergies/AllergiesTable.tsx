@@ -10,7 +10,7 @@ import {
   FormattedAllergy,
   getFormattedAllergies,
   useTranslation,
-  useConsultationSavedEvent,
+  useConsultationSaved,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -57,7 +57,7 @@ const AllergiesTable: React.FC = () => {
   });
 
   // Listen to consultation saved events and refetch if allergies were updated
-  useConsultationSavedEvent(
+  useConsultationSaved(
     (payload) => {
       // Only refetch if:
       // 1. Event is for the same patient
