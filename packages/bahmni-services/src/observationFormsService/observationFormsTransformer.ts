@@ -48,23 +48,16 @@ function transformControlValue(
   if (value === null || typeof value !== 'object') {
     return value as string | number | boolean;
   }
-  
+
   if (value instanceof Date) {
     return value.toISOString();
   }
 
-  if (
-    control.type === 'select' &&
-    !Array.isArray(value) &&
-    'uuid' in value
-  ) {
+  if (control.type === 'select' && !Array.isArray(value) && 'uuid' in value) {
     return value as ConceptValue;
   }
 
-  if (
-    !Array.isArray(value) &&
-    'url' in value
-  ) {
+  if (!Array.isArray(value) && 'url' in value) {
     return (value as ComplexValue).url;
   }
 
