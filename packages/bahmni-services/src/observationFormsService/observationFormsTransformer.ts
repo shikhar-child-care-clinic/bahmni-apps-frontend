@@ -1,3 +1,4 @@
+import { DATETIME_REGEX_PATTERN } from '../constants/fhir';
 import { DEFAULT_FORM_NAMESPACE } from './constants';
 import {
   FormMetadata,
@@ -237,7 +238,7 @@ export function transformObservationsToFormData(
 
       if (
         typeof obs.value === 'string' &&
-        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(obs.value)
+        DATETIME_REGEX_PATTERN.test(obs.value)
       ) {
         const parsedDate = new Date(obs.value);
         if (!isNaN(parsedDate.getTime())) {

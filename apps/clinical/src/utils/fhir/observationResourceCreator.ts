@@ -1,22 +1,18 @@
-import { Form2Observation } from '@bahmni/services';
-import { Observation, Reference } from 'fhir/r4';
-
 import {
+  Form2Observation,
   CONCEPT_DATATYPE_NUMERIC,
   CONCEPT_DATATYPE_COMPLEX,
   FHIR_OBSERVATION_INTERPRETATION_SYSTEM,
   FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
   FHIR_OBSERVATION_COMPLEX_DATA_URL,
-} from '../../constants/fhir';
-import { createCodeableConcept, createCoding } from './codeableConceptCreator';
+  FHIR_OBSERVATION_STATUS_FINAL,
+  FHIR_RESOURCE_TYPE_OBSERVATION,
+  DATE_REGEX_PATTERN,
+  INTERPRETATION_TO_CODE,
+} from '@bahmni/services';
+import { Observation, Reference } from 'fhir/r4';
 
-const INTERPRETATION_TO_CODE: Record<
-  string,
-  { code: string; display: string }
-> = {
-  ABNORMAL: { code: 'A', display: 'Abnormal' },
-  NORMAL: { code: 'N', display: 'Normal' },
-};
+import { createCodeableConcept, createCoding } from './codeableConceptCreator';
 
 const handleStringValue = (
   value: string,
@@ -29,7 +25,7 @@ const handleStringValue = (
     return;
   }
 
-  if (/^\d{4}-\d{2}-\d{2}/.test(trimmedValue)) {
+  if (DATE_REGEX_PATTERN.test(trimmedValue)) {
     const dateValue = new Date(trimmedValue);
     if (!isNaN(dateValue.getTime())) {
       observation.valueDateTime = dateValue.toISOString();
@@ -55,8 +51,8 @@ export const createObservationResource = (
   performerReference: Reference,
 ): Observation => {
   const observation: Observation = {
-    resourceType: 'Observation',
-    status: 'final',
+    resourceType: FHIR_RESOURCE_TYPE_OBSERVATION,
+    status: FHIR_OBSERVATION_STATUS_FINAL,
     code: createCodeableConcept([
       createCoding(observationPayload.concept.uuid),
     ]),
