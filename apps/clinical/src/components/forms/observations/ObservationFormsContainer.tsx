@@ -112,7 +112,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   };
 
   // Handle back navigation - exit view mode without saving
-  const handleBackToForms = () => {
+  const handleBack = () => {
     onViewingFormChange(null);
   };
 
@@ -140,7 +140,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   // Navigate back to forms list and clear validation errors
   const navigateToForms = () => {
     setShowValidationError(false);
-    handleBackToForms();
+    handleBack();
   };
 
   // Format error for display

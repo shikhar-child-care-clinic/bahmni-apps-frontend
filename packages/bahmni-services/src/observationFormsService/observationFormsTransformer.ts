@@ -45,14 +45,16 @@ function transformControlValue(
 ): string | number | boolean | ConceptValue | ComplexValue {
   const { value } = control;
 
+  if (value === null || typeof value !== 'object') {
+    return value as string | number | boolean;
+  }
+  
   if (value instanceof Date) {
     return value.toISOString();
   }
 
   if (
     control.type === 'select' &&
-    typeof value === 'object' &&
-    value !== null &&
     !Array.isArray(value) &&
     'uuid' in value
   ) {
@@ -60,15 +62,13 @@ function transformControlValue(
   }
 
   if (
-    typeof value === 'object' &&
-    value !== null &&
     !Array.isArray(value) &&
     'url' in value
   ) {
     return (value as ComplexValue).url;
   }
 
-  return value as string | number | boolean;
+  return value as ConceptValue | string | number | boolean;
 }
 
 function transformGroupMembers(
