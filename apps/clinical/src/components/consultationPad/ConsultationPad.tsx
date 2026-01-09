@@ -11,10 +11,9 @@ import {
   useTranslation,
   ObservationForm,
   Form2Observation,
-  refreshQueries,
+  dispatchConsultationSaved,
 } from '@bahmni/services';
-import { conditionsQueryKeys, useNotification } from '@bahmni/widgets';
-import { useQueryClient } from '@tanstack/react-query';
+import { useNotification } from '@bahmni/widgets';
 import React, { useEffect } from 'react';
 import { useEncounterSession } from '../../../src/hooks/useEncounterSession';
 import useAllergyStore from '../../../src/stores/allergyStore';
@@ -55,7 +54,6 @@ interface ConsultationPadProps {
 
 const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const queryClient = useQueryClient();
   const { t } = useTranslation();
   const { addNotification } = useNotification();
 
@@ -296,8 +294,14 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         // Clear observation forms data after successful save
         resetObservationForms();
 
-        if (selectedConditions.length > 0)
-          await refreshQueries(queryClient, conditionsQueryKeys(patientUUID));
+        // Dispatch consultation saved event
+        dispatchConsultationSaved({
+          patientUUID: patientUUID!,
+          updatedResources: {
+            conditions: selectedConditions.length > 0,
+            allergies: selectedAllergies.length > 0,
+          },
+        });
 
         addNotification({
           title: t('CONSULTATION_SUBMITTED_SUCCESS_TITLE'),
