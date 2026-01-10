@@ -1,76 +1,117 @@
-import { detectBrowser } from '../utils';
+import {
+  validateUsername,
+  validatePassword,
+  VALIDATION_RULES,
+  getLoginErrorCode,
+  LOGIN_ERROR_CODES,
+} from '../utils';
 
-describe('detectBrowser', () => {
-  const originalUserAgent = navigator.userAgent;
-
-  afterEach(() => {
-    Object.defineProperty(navigator, 'userAgent', {
-      value: originalUserAgent,
-      writable: true,
-    });
+describe('validateUsername', () => {
+  it('should return null for valid username', () => {
+    const result = validateUsername('johndoe');
+    expect(result).toBeNull();
   });
 
-  it('should detect Chrome browser as supported', () => {
-    Object.defineProperty(navigator, 'userAgent', {
-      value:
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      writable: true,
-    });
-
-    const result = detectBrowser();
-
-    expect(result.isSupported).toBe(true);
-    expect(result.browserName).toBe('Chrome');
+  it('should return null for valid username with minimum length', () => {
+    const result = validateUsername('ab');
+    expect(result).toBeNull();
   });
 
-  it('should detect Firefox browser as supported', () => {
-    Object.defineProperty(navigator, 'userAgent', {
-      value:
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
-      writable: true,
-    });
-
-    const result = detectBrowser();
-
-    expect(result.isSupported).toBe(true);
-    expect(result.browserName).toBe('Firefox');
+  it('should return null for username with whitespace that meets minimum length after trim', () => {
+    const result = validateUsername('  john  ');
+    expect(result).toBeNull();
   });
 
-  it('should detect Edge browser as unsupported', () => {
-    Object.defineProperty(navigator, 'userAgent', {
-      value:
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
-      writable: true,
-    });
-
-    const result = detectBrowser();
-
-    expect(result.isSupported).toBe(false);
-    expect(result.browserName).toBe('Edge');
+  it('should return error for empty username', () => {
+    const result = validateUsername('');
+    expect(result).toBe(VALIDATION_RULES.USERNAME.REQUIRED);
   });
 
-  it('should detect Safari browser as unsupported', () => {
-    Object.defineProperty(navigator, 'userAgent', {
-      value:
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
-      writable: true,
-    });
-
-    const result = detectBrowser();
-
-    expect(result.isSupported).toBe(false);
-    expect(result.browserName).toBe('Safari');
+  it('should return error for username with only whitespace', () => {
+    const result = validateUsername('   ');
+    expect(result).toBe(VALIDATION_RULES.USERNAME.REQUIRED);
   });
 
-  it('should detect unknown browser as unsupported', () => {
-    Object.defineProperty(navigator, 'userAgent', {
-      value: 'Unknown Browser',
-      writable: true,
-    });
+  it('should return error for username shorter than minimum length', () => {
+    const result = validateUsername('a');
+    expect(result).toBe(VALIDATION_RULES.USERNAME.MIN_LENGTH_MESSAGE);
+  });
 
-    const result = detectBrowser();
+  it('should return error for username with whitespace that is too short after trim', () => {
+    const result = validateUsername(' a ');
+    expect(result).toBe(VALIDATION_RULES.USERNAME.MIN_LENGTH_MESSAGE);
+  });
 
-    expect(result.isSupported).toBe(false);
-    expect(result.browserName).toBe('Unknown');
+  it('should handle special characters in username', () => {
+    const result = validateUsername('user@123');
+    expect(result).toBeNull();
+  });
+
+  it('should handle numbers in username', () => {
+    const result = validateUsername('user123');
+    expect(result).toBeNull();
+  });
+});
+
+describe('validatePassword', () => {
+  it('should return null for valid password', () => {
+    const result = validatePassword('password123');
+    expect(result).toBeNull();
+  });
+
+  it('should return null for password with special characters', () => {
+    const result = validatePassword('P@ssw0rd!');
+    expect(result).toBeNull();
+  });
+
+  it('should return null for password with spaces', () => {
+    const result = validatePassword('pass word 123');
+    expect(result).toBeNull();
+  });
+
+  it('should return error for empty password', () => {
+    const result = validatePassword('');
+    expect(result).toBe(VALIDATION_RULES.PASSWORD.REQUIRED);
+  });
+
+  it('should return error for password shorter than minimum length', () => {
+    const result = validatePassword('short');
+    expect(result).toBe(VALIDATION_RULES.PASSWORD.MIN_LENGTH_MESSAGE);
+  });
+
+  it('should handle numeric-only password', () => {
+    const result = validatePassword('123456789');
+    expect(result).toBeNull();
+  });
+
+  it('should handle very long password', () => {
+    const result = validatePassword('a'.repeat(100));
+    expect(result).toBeNull();
+  });
+});
+
+describe('getLoginErrorCode', () => {
+  it('should return INVALID_CREDENTIALS for "Unauthorized" error', () => {
+    const error = new Error('Unauthorized');
+    const result = getLoginErrorCode(error);
+    expect(result).toBe(LOGIN_ERROR_CODES.INVALID_CREDENTIALS);
+  });
+
+  it('should return NETWORK_ERROR for "Network Error"', () => {
+    const error = new Error('Network Error');
+    const result = getLoginErrorCode(error);
+    expect(result).toBe(LOGIN_ERROR_CODES.NETWORK_ERROR);
+  });
+
+  it('should return SERVER_ERROR for "Server Error"', () => {
+    const error = new Error('Server Error');
+    const result = getLoginErrorCode(error);
+    expect(result).toBe(LOGIN_ERROR_CODES.SERVER_ERROR);
+  });
+
+  it('should return GENERIC_ERROR for unknown error messages', () => {
+    const error = new Error('Something went wrong');
+    const result = getLoginErrorCode(error);
+    expect(result).toBe(LOGIN_ERROR_CODES.GENERIC_ERROR);
   });
 });

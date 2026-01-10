@@ -1,23 +1,54 @@
-import { SUPPORTED_BROWSERS } from '../../constants/login';
+export const VALIDATION_RULES = {
+  USERNAME: {
+    REQUIRED: 'LOGIN_ERROR_USERNAME_REQUIRED',
+    MIN_LENGTH: 2,
+    MIN_LENGTH_MESSAGE: 'LOGIN_ERROR_USERNAME_TOO_SHORT',
+  },
+  PASSWORD: {
+    REQUIRED: 'LOGIN_ERROR_PASSWORD_REQUIRED',
+    MIN_LENGTH: 8,
+    MIN_LENGTH_MESSAGE: 'LOGIN_ERROR_PASSWORD_TOO_SHORT',
+  },
+} as const;
 
-export const detectBrowser = () => {
-  const userAgent = navigator.userAgent;
-
-  if (userAgent.includes('Edg')) {
-    return { isSupported: false, browserName: 'Edge' };
+export const validateUsername = (username: string): string | null => {
+  if (!username || username.trim().length === 0) {
+    return VALIDATION_RULES.USERNAME.REQUIRED;
   }
-
-  if (userAgent.includes('Chrome')) {
-    return { isSupported: true, browserName: SUPPORTED_BROWSERS.CHROME };
+  if (username.trim().length < VALIDATION_RULES.USERNAME.MIN_LENGTH) {
+    return VALIDATION_RULES.USERNAME.MIN_LENGTH_MESSAGE;
   }
+  return null;
+};
 
-  if (userAgent.includes('Firefox')) {
-    return { isSupported: true, browserName: SUPPORTED_BROWSERS.FIREFOX };
+export const validatePassword = (password: string): string | null => {
+  if (!password || password.length === 0) {
+    return VALIDATION_RULES.PASSWORD.REQUIRED;
   }
-
-  if (userAgent.includes('Safari')) {
-    return { isSupported: false, browserName: 'Safari' };
+  if (password.length < VALIDATION_RULES.PASSWORD.MIN_LENGTH) {
+    return VALIDATION_RULES.PASSWORD.MIN_LENGTH_MESSAGE;
   }
+  return null;
+};
 
-  return { isSupported: false, browserName: 'Unknown' };
+export const LOGIN_ERROR_CODES = {
+  INVALID_CREDENTIALS: 'LOGIN_ERROR_INVALID_CREDENTIALS',
+  NETWORK_ERROR: 'LOGIN_ERROR_NETWORK',
+  SERVER_ERROR: 'LOGIN_ERROR_SERVER',
+  GENERIC_ERROR: 'LOGIN_ERROR_GENERIC',
+} as const;
+
+export const getLoginErrorCode = (error: Error): string => {
+  const errorMessage = error.message;
+
+  switch (errorMessage) {
+    case 'Unauthorized':
+      return LOGIN_ERROR_CODES.INVALID_CREDENTIALS;
+    case 'Network Error':
+      return LOGIN_ERROR_CODES.NETWORK_ERROR;
+    case 'Server Error':
+      return LOGIN_ERROR_CODES.SERVER_ERROR;
+    default:
+      return LOGIN_ERROR_CODES.GENERIC_ERROR;
+  }
 };

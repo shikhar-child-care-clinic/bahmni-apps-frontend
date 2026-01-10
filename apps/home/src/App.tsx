@@ -3,7 +3,6 @@ import { initAppI18n, initializeAuditListener } from '@bahmni/services';
 import {
   NotificationProvider,
   NotificationServiceComponent,
-  UserPrivilegeProvider,
 } from '@bahmni/widgets';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -44,11 +43,9 @@ const HomeApp: React.FC = () => {
       <NotificationProvider>
         <NotificationServiceComponent />
         <QueryClientProvider client={queryClient}>
-          <UserPrivilegeProvider>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-            </Routes>
-          </UserPrivilegeProvider>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+          </Routes>
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
       </NotificationProvider>
