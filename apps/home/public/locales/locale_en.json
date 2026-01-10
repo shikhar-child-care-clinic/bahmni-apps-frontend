@@ -1,5 +1,20 @@
 {
-  "HOME_TITLE": "Home",
-  "USERNAME": "Username",
-  "PASSWORD": "Password"
+  "LOGIN_ERROR": "Login Failed",
+  "LOGIN_ERROR_GENERIC": "An unexpected error occurred. Please try again.",
+  "LOGIN_ERROR_INVALID_CREDENTIALS": "Invalid username or password",
+  "LOGIN_ERROR_NETWORK": "Unable to connect to the server. Please check your internet connection and try again.",
+  "LOGIN_ERROR_PASSWORD_REQUIRED": "Password is required",
+  "LOGIN_ERROR_PASSWORD_TOO_SHORT": "Password must be at least 8 characters",
+  "LOGIN_ERROR_SERVER": "The server encountered an error. Please try again later.",
+  "LOGIN_ERROR_USERNAME_REQUIRED": "Username is required",
+  "LOGIN_ERROR_USERNAME_TOO_SHORT": "Username must be at least 2 characters",
+  "LOGIN_LABEL_LOGIN": "Login",
+  "LOGIN_LABEL_PASSWORD": "Password",
+  "LOGIN_LABEL_USERNAME": "Username",
+  "LOGIN_LOADING": "Logging in...",
+  "LOGIN_MESSAGE_ENTER_PASSWORD": "Enter your password",
+  "LOGIN_MESSAGE_ENTER_USERNAME": "Enter your username",
+  "LOGIN_PAGE_HIDE_PASSWORD": "Hide Password",
+  "LOGIN_PAGE_SHOW_PASSWORD": "Show Password",
+  "LOGIN_PAGE_TITLE": "Login"
 }

@@ -1,0 +1,20 @@
+{
+  "LOGIN_ERROR": "Error de inicio de sesión",
+  "LOGIN_ERROR_GENERIC": "Ocurrió un error inesperado. Por favor, inténtelo de nuevo.",
+  "LOGIN_ERROR_INVALID_CREDENTIALS": "Usuario o contraseña inválidos",
+  "LOGIN_ERROR_NETWORK": "No se puede conectar al servidor. Por favor, verifique su conexión a internet e inténtelo de nuevo.",
+  "LOGIN_ERROR_PASSWORD_REQUIRED": "La contraseña es obligatoria",
+  "LOGIN_ERROR_PASSWORD_TOO_SHORT": "La contraseña debe tener al menos 8 caracteres",
+  "LOGIN_ERROR_SERVER": "El servidor encontró un error. Por favor, inténtelo más tarde.",
+  "LOGIN_ERROR_USERNAME_REQUIRED": "El nombre de usuario es obligatorio",
+  "LOGIN_ERROR_USERNAME_TOO_SHORT": "El nombre de usuario debe tener al menos 2 caracteres",
+  "LOGIN_LABEL_LOGIN": "Iniciar sesión",
+  "LOGIN_LABEL_PASSWORD": "Contraseña",
+  "LOGIN_LABEL_USERNAME": "Usuario",
+  "LOGIN_LOADING": "Iniciando sesión...",
+  "LOGIN_MESSAGE_ENTER_PASSWORD": "Ingrese su contraseña",
+  "LOGIN_MESSAGE_ENTER_USERNAME": "Ingrese su nombre de usuario",
+  "LOGIN_PAGE_HIDE_PASSWORD": "Ocultar contraseña",
+  "LOGIN_PAGE_SHOW_PASSWORD": "Mostrar contraseña",
+  "LOGIN_PAGE_TITLE": "Iniciar sesión"
+}
