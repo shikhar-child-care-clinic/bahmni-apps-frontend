@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import { getFormattedError } from '../errorHandling';
+import { SESSION_URL } from '../sessionService/constants';
 import { LOGIN_PATH } from './constants';
 import {
   decodeHtmlEntities,
@@ -36,7 +37,12 @@ client.interceptors.response.use(
     }
   },
   function (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
+    const url = getResponseUrl(error.config);
+    if (
+      axios.isAxiosError(error) &&
+      error.response?.status === 401 &&
+      !url.includes(SESSION_URL)
+    ) {
       window.location.href = LOGIN_PATH;
       return Promise.reject(error);
     }

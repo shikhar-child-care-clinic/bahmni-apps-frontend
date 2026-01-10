@@ -1,4 +1,5 @@
 import * as api from '../../api';
+import * as errorHandling from '../../errorHandling';
 import { LoginCredentials } from '../models';
 import {
   loginUser,
@@ -8,10 +9,15 @@ import {
 } from '../sessionService';
 
 jest.mock('../../api');
+jest.mock('../../errorHandling');
 
 const mockGet = api.get as jest.MockedFunction<typeof api.get>;
 const mockPost = api.post as jest.MockedFunction<typeof api.post>;
 const mockDel = api.del as jest.MockedFunction<typeof api.del>;
+const mockGetFormattedError =
+  errorHandling.getFormattedError as jest.MockedFunction<
+    typeof errorHandling.getFormattedError
+  >;
 
 describe('sessionService', () => {
   beforeEach(() => {
@@ -45,18 +51,42 @@ describe('sessionService', () => {
       expect(document.cookie).toContain('bahmni.user=testuser');
     });
 
-    it('should throw error for invalid credentials', async () => {
-      mockGet.mockRejectedValueOnce({ response: { status: 401 } });
-
-      await expect(loginUser(credentials)).rejects.toEqual({
-        response: { status: 401 },
+    it('should throw formatted error for invalid credentials (401)', async () => {
+      const error = { response: { status: 401 } };
+      mockGet.mockRejectedValueOnce(error);
+      mockGetFormattedError.mockReturnValueOnce({
+        title: 'Unauthorized',
+        message:
+          'The username or password provided is incorrect. Please try again.',
       });
+
+      await expect(loginUser(credentials)).rejects.toThrow('Unauthorized');
+      expect(mockGetFormattedError).toHaveBeenCalledWith(error);
     });
 
-    it('should throw error for network failures', async () => {
-      mockGet.mockRejectedValueOnce(new Error('Network error'));
+    it('should throw formatted error for network failures', async () => {
+      const error = new Error('Network error');
+      mockGet.mockRejectedValueOnce(error);
+      mockGetFormattedError.mockReturnValueOnce({
+        title: 'Network Error',
+        message:
+          'Unable to connect to the server. Please check your internet connection.',
+      });
 
-      await expect(loginUser(credentials)).rejects.toThrow('Network error');
+      await expect(loginUser(credentials)).rejects.toThrow('Network Error');
+      expect(mockGetFormattedError).toHaveBeenCalledWith(error);
+    });
+
+    it('should throw formatted error for server errors (500)', async () => {
+      const error = { response: { status: 500 } };
+      mockGet.mockRejectedValueOnce(error);
+      mockGetFormattedError.mockReturnValueOnce({
+        title: 'Server Error',
+        message: 'The server encountered an error. Please try again later.',
+      });
+
+      await expect(loginUser(credentials)).rejects.toThrow('Server Error');
+      expect(mockGetFormattedError).toHaveBeenCalledWith(error);
     });
 
     it('should not set cookie when authentication fails', async () => {

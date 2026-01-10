@@ -138,13 +138,14 @@ describe('Axios Client', () => {
     });
 
     describe('Error Handling', () => {
-      it('should handle 401 errors by redirecting to login', async () => {
+      it('should handle 401 errors by redirecting to login for non-session URLs', async () => {
         const mockError = {
           response: { status: 401 },
           isAxiosError: true,
+          config: { url: '/openmrs/ws/rest/v1/patient' },
         };
 
-        // Mock axios.isAxiosError
+        getResponseUrl.mockReturnValue('/openmrs/ws/rest/v1/patient');
         (axios.isAxiosError as unknown as jest.Mock) = jest
           .fn()
           .mockReturnValue(true);
@@ -156,6 +157,28 @@ describe('Axios Client', () => {
           responseInterceptor.rejected(mockError),
         ).rejects.toBe(mockError);
         expect(window.location.href).toBe('/login');
+      });
+
+      it('should NOT redirect to login for 401 errors on session URL', async () => {
+        const mockError = {
+          response: { status: 401 },
+          isAxiosError: true,
+          config: { url: '/openmrs/ws/rest/v1/session' },
+        };
+
+        getResponseUrl.mockReturnValue('/openmrs/ws/rest/v1/session');
+        (axios.isAxiosError as unknown as jest.Mock) = jest
+          .fn()
+          .mockReturnValue(true);
+
+        const responseInterceptor = (client.interceptors.response as any)
+          .handlers[0];
+
+        await expect(() =>
+          responseInterceptor.rejected(mockError),
+        ).rejects.toBe('Error: Test error message');
+        expect(window.location.href).toBe('');
+        expect(getFormattedError).toHaveBeenCalledWith(mockError);
       });
 
       it('should handle non-401 Axios errors', async () => {

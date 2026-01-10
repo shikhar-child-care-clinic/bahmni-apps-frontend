@@ -1,4 +1,5 @@
 import { get, post, del } from '../api';
+import { getFormattedError } from '../errorHandling';
 import {
   SESSION_URL,
   BAHMNI_USER_COOKIE,
@@ -10,19 +11,24 @@ import { deleteCookie, setCookie } from './utils';
 export const loginUser = async (
   credentials: LoginCredentials,
 ): Promise<SessionResponse> => {
-  const authHeader = btoa(`${credentials.username}:${credentials.password}`);
+  try {
+    const authHeader = btoa(`${credentials.username}:${credentials.password}`);
 
-  const sessionData = await get<SessionResponse>(SESSION_URL, {
-    headers: {
-      Authorization: `Basic ${authHeader}`,
-    },
-  });
+    const sessionData = await get<SessionResponse>(SESSION_URL, {
+      headers: {
+        Authorization: `Basic ${authHeader}`,
+      },
+    });
 
-  if (sessionData.authenticated && sessionData.user) {
-    setCookie(BAHMNI_USER_COOKIE, sessionData.user.username);
+    if (sessionData.authenticated && sessionData.user) {
+      setCookie(BAHMNI_USER_COOKIE, sessionData.user.username);
+    }
+
+    return sessionData;
+  } catch (error) {
+    const { title } = getFormattedError(error);
+    throw new Error(title);
   }
-
-  return sessionData;
 };
 
 export const updateSessionLocation = async (
