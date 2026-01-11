@@ -99,6 +99,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   const handleDiscardForm = () => {
     if (viewingForm && onRemoveForm) {
       onRemoveForm(viewingForm.uuid);
+      removeSavedForm(viewingForm.uuid);
     }
     onViewingFormChange(null);
   };
@@ -154,15 +155,19 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   // Form view content when a form is selected
   const formViewContent = (
     <div className={styles.formView}>
-      {showValidationError && (
+      {validationErrorType && (
         <div className={styles.errorNotificationWrapper}>
           <InlineNotification
             kind="error"
-            title={t('OBSERVATION_FORM_VALIDATION_ERROR_TITLE')}
-            subtitle={t('OBSERVATION_FORM_VALIDATION_ERROR_SUBTITLE')}
+            title={t(
+              `OBSERVATION_FORM_VALIDATION_ERROR_TITLE_${validationErrorType}`,
+            )}
+            subtitle={t(
+              `OBSERVATION_FORM_VALIDATION_ERROR_SUBTITLE_${validationErrorType}`,
+            )}
             lowContrast
             hideCloseButton={false}
-            onClose={() => setShowValidationError(false)}
+            onClose={() => setValidationErrorType(null)}
           />
         </div>
       )}

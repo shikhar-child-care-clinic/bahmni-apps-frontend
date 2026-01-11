@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { ObservationForm, Form2Observation } from '@bahmni/services';
 import { create } from 'zustand';
 
@@ -167,6 +168,51 @@ export const useObservationFormsStore = create<ObservationFormsState>(
     },
 
     getState: () => get(),
+=======
+import { create } from 'zustand';
+
+export interface SavedObservationForm {
+  formUuid: string;
+  observations: any[];
+  validationState: null | 'mandatory' | 'invalid' | 'empty';
+}
+
+interface ObservationFormsState {
+  savedForms: SavedObservationForm[];
+
+  addSavedForm: (form: SavedObservationForm) => void;
+  getSavedForm: (formUuid: string) => SavedObservationForm | undefined;
+  removeSavedForm: (formUuid: string) => void;
+}
+
+export const useObservationFormsStore = create<ObservationFormsState>(
+  (set, get) => ({
+    savedForms: [],
+
+    addSavedForm: (form) => {
+      set((state) => {
+        const existingIndex = state.savedForms.findIndex(
+          (f) => f.formUuid === form.formUuid,
+        );
+        if (existingIndex >= 0) {
+          const updated = [...state.savedForms];
+          updated[existingIndex] = form;
+          return { savedForms: updated };
+        }
+        return { savedForms: [...state.savedForms, form] };
+      });
+    },
+
+    getSavedForm: (formUuid) => {
+      return get().savedForms.find((form) => form.formUuid === formUuid);
+    },
+
+    removeSavedForm: (formUuid) => {
+      set((state) => ({
+        savedForms: state.savedForms.filter((f) => f.formUuid !== formUuid),
+      }));
+    },
+>>>>>>> 14363d2f (BAH-4283|Add. Validation and error in added forms)
   }),
 );
 

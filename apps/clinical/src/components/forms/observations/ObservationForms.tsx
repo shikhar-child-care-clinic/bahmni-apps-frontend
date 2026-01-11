@@ -10,6 +10,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DEFAULT_FORM_API_NAMES } from '../../../constants/forms';
 import useObservationFormsSearch from '../../../hooks/useObservationFormsSearch';
+import { useObservationFormsStore } from '../../../stores/observationFormsStore';
 import styles from './styles/ObservationForms.module.scss';
 
 interface ObservationFormsProps {
@@ -47,6 +48,7 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
   }) => {
     const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState('');
+    const { getSavedForm } = useObservationFormsStore();
 
     const { forms: allForms, isLoading: isAllFormsLoading } =
       useObservationFormsSearch();
@@ -220,18 +222,28 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
               title={t('OBSERVATION_FORMS_ADDED_FORMS')}
               dataTestId="added-forms-container"
             >
-              {selectedForms.map((form: ObservationForm) => (
-                <FormCard
-                  key={form.uuid}
-                  title={form.name}
-                  icon="fa-file-lines"
-                  actionIcon="fa-times"
-                  onOpen={() => onFormSelect?.(form)}
-                  onActionClick={() => onRemoveForm?.(form.uuid)}
-                  dataTestId={`selected-form-${form.uuid}`}
-                  ariaLabel={`Open ${form.name} form`}
-                />
-              ))}
+              {selectedForms.map((form: ObservationForm) => {
+                const savedFormData = getSavedForm(form.uuid);
+                const errorMessage = savedFormData?.validationState
+                  ? t(
+                      `OBSERVATION_FORM_VALIDATION_ERROR_TITLE_${savedFormData.validationState}`,
+                    )
+                  : undefined;
+
+                return (
+                  <FormCard
+                    key={form.uuid}
+                    title={form.name}
+                    icon="fa-file-lines"
+                    actionIcon="fa-times"
+                    onOpen={() => onFormSelect?.(form)}
+                    onActionClick={() => onRemoveForm?.(form.uuid)}
+                    dataTestId={`selected-form-${form.uuid}`}
+                    ariaLabel={`Open ${form.name} form`}
+                    errorMessage={errorMessage}
+                  />
+                );
+              })}
             </FormCardContainer>
           </div>
         )}
