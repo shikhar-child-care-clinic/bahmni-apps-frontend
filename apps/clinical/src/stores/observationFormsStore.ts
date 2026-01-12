@@ -21,6 +21,9 @@ export interface ObservationFormsState {
     validationState?: null | 'mandatory' | 'invalid' | 'empty'
   ) => void;
   getFormData: (formUuid: string) => ObservationFormData | undefined;
+  getFormValidationStatus: (
+    formUuid: string,
+  ) => null | 'mandatory' | 'invalid' | 'empty';
   setViewingForm: (form: ObservationForm | null) => void;
   getAllObservations: () => Form2Observation[];
   getObservationFormsData: () => Record<string, Form2Observation[]>;
@@ -124,6 +127,15 @@ export const useObservationFormsStore = create<ObservationFormsState>(
 
       const state = get();
       return state.formsData[formUuid];
+    },
+
+    getFormValidationStatus: (formUuid: string) => {
+      if (!validateFormUuid(formUuid)) {
+        return null;
+      }
+
+      const state = get();
+      return state.formsData[formUuid]?.validationState ?? null;
     },
 
     setViewingForm: (form: ObservationForm | null) => {

@@ -48,7 +48,7 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
   }) => {
     const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState('');
-    const { getFormData } = useObservationFormsStore();
+    const { getFormData, getFormValidationStatus } = useObservationFormsStore();
 
     const { forms: allForms, isLoading: isAllFormsLoading } =
       useObservationFormsSearch();
@@ -224,9 +224,14 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
             >
               {selectedForms.map((form: ObservationForm) => {
                 const savedFormData = getFormData(form.uuid);
-                const errorMessage = savedFormData?.validationState
+                const validationState = savedFormData?.validationState;
+
+                // Only show error indicator for mandatory/empty errors (not for invalid)
+                const showError =
+                  validationState === 'mandatory' || validationState === 'empty';
+                const errorMessage = showError
                   ? t(
-                      `OBSERVATION_FORM_VALIDATION_ERROR_TITLE_${savedFormData.validationState.toUpperCase()}`,
+                      `OBSERVATION_FORM_VALIDATION_ERROR_TITLE_${validationState.toUpperCase()}`,
                     )
                   : undefined;
 

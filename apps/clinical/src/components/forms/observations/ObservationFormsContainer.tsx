@@ -190,9 +190,38 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
     handleDiscardForm();
   };
 
-  // Navigate back to forms list and clear validation errors
+  // Navigate back to forms list - validate and save form even with errors
   const navigateToForms = () => {
+    if (formContainerRef.current && viewingForm) {
+      const { errors } = formContainerRef.current.getValue();
+
+      // Determine validation state
+      const isEmpty = !observations || observations.length === 0;
+
+      let validationState: null | 'mandatory' | 'invalid' | 'empty' = null;
+
+      if (isEmpty) {
+        validationState = 'empty';
+      } else if (errors && errors.length > 0) {
+        // Check for mandatory errors
+        const flatErrors = errors.flat();
+        const hasMandatoryError = flatErrors.some((err: any) => {
+          const message = err.get ? err.get('message') : err.message;
+          return message === 'mandatory';
+        });
+        validationState = hasMandatoryError ? 'mandatory' : 'invalid';
+      }
+
+      // Save form with validation state (adds to "Added forms")
+      if (onFormObservationsChange) {
+        onFormObservationsChange(viewingForm.uuid, observations, validationState);
+      }
+    }
+
+    // Clear local validation UI state
     setValidationErrorType(null);
+
+    // Navigate back to forms list
     handleBack();
   };
 
