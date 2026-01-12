@@ -6,6 +6,7 @@ export interface ObservationFormData {
   formName: string;
   observations: Form2Observation[];
   timestamp: number;
+  validationState?: null | 'mandatory' | 'invalid' | 'empty';
 }
 
 export interface ObservationFormsState {

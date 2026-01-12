@@ -64,7 +64,9 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
 }) => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
-  const [showValidationError, setShowValidationError] = useState(false);
+  const [validationErrorType, setValidationErrorType] = useState<
+    null | 'mandatory' | 'invalid' | 'empty'
+  >(null);
   const formContainerRef = useRef<Container>(null);
 
   const {
@@ -97,6 +99,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
 
   // Handle form discard - remove from list and exit view mode
   const handleDiscardForm = () => {
+    setValidationErrorType(null);
     if (viewingForm && onRemoveForm) {
       onRemoveForm(viewingForm.uuid);
     }
@@ -119,27 +122,42 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   // Validate form and save if no errors
   const validateAndSave = () => {
     if (formContainerRef.current) {
-      const { errors } = formContainerRef.current.getValue();
-      if (errors && errors.length > 0) {
-        setShowValidationError(true);
-        return;
-      }
+      const { observations, errors } = formContainerRef.current.getValue();
 
-      setShowValidationError(false);
+      const isEmpty = !observations || observations.length === 0;
+      const hasErrors = errors && errors.length > 0;
+
+      if (validationErrorType) {
+        if (hasErrors) {
+          // Flatten nested error arrays and check for mandatory errors
+          const flatErrors = errors.flat();
+          const hasMandatoryError = flatErrors.some((err: any) => {
+            const message = err.get ? err.get('message') : err.message;
+            return message === 'mandatory';
+          });
+
+          setValidationErrorType(hasMandatoryError ? 'mandatory' : 'invalid');
+          return;
+        } else if (isEmpty) {
+          setValidationErrorType('empty');
+          return;
+        }
+      }
+      setValidationErrorType(null);
       handleSaveForm();
     }
   };
 
   // Discard form and clear validation errors
   const discard = () => {
-    setShowValidationError(false);
+    setValidationErrorType(null);
     resetForm();
     handleDiscardForm();
   };
 
   // Navigate back to forms list and clear validation errors
   const navigateToForms = () => {
-    setShowValidationError(false);
+    setValidationErrorType(null);
     handleBack();
   };
 
@@ -154,15 +172,19 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   // Form view content when a form is selected
   const formViewContent = (
     <div className={styles.formView}>
-      {showValidationError && (
+      {validationErrorType && (
         <div className={styles.errorNotificationWrapper}>
           <InlineNotification
             kind="error"
-            title={t('OBSERVATION_FORM_VALIDATION_ERROR_TITLE')}
-            subtitle={t('OBSERVATION_FORM_VALIDATION_ERROR_SUBTITLE')}
+            title={t(
+              `OBSERVATION_FORM_VALIDATION_ERROR_TITLE_${validationErrorType}`,
+            )}
+            subtitle={t(
+              `OBSERVATION_FORM_VALIDATION_ERROR_SUBTITLE_${validationErrorType}`,
+            )}
             lowContrast
             hideCloseButton={false}
-            onClose={() => setShowValidationError(false)}
+            onClose={() => setValidationErrorType(null)}
           />
         </div>
       )}
@@ -183,8 +205,8 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
             observations={existingObservations ?? []}
             patient={{ uuid: patientUUID }}
             translations={formMetadata.translations ?? {}}
-            validate={showValidationError}
-            validateForm={showValidationError}
+            validate={validationErrorType !== null}
+            validateForm
             collapse={false}
             locale={getUserPreferredLocale()}
             onValueUpdated={handleFormDataChange}
@@ -218,7 +240,11 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       <ActionArea
         className={styles.formViewActionArea}
         title={formTitleWithPin as unknown as string}
-        primaryButtonText={t('OBSERVATION_FORM_SAVE_BUTTON')}
+        primaryButtonText={
+          validationErrorType
+            ? t('OBSERVATION_FORM_CONTINUE_ANYWAY_BUTTON')
+            : t('OBSERVATION_FORM_SAVE_BUTTON')
+        }
         onPrimaryButtonClick={validateAndSave}
         isPrimaryButtonDisabled={false}
         secondaryButtonText={t('OBSERVATION_FORM_DISCARD_BUTTON')}

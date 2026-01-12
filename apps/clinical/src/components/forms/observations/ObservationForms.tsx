@@ -48,7 +48,7 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
   }) => {
     const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState('');
-    const { getSavedForm } = useObservationFormsStore();
+    const { getFormData } = useObservationFormsStore();
 
     const { forms: allForms, isLoading: isAllFormsLoading } =
       useObservationFormsSearch();
@@ -223,7 +223,7 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
               dataTestId="added-forms-container"
             >
               {selectedForms.map((form: ObservationForm) => {
-                const savedFormData = getSavedForm(form.uuid);
+                const savedFormData = getFormData(form.uuid);
                 const errorMessage = savedFormData?.validationState
                   ? t(
                       `OBSERVATION_FORM_VALIDATION_ERROR_TITLE_${savedFormData.validationState}`,
