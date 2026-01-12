@@ -1,6 +1,6 @@
 export {
   dispatchConsultationSaved,
-  subscribeConsultationSaved,
+  useSubscribeConsultationSaved,
   CONSULTATION_SAVED_EVENT,
   type ConsultationSavedEventPayload,
 } from './consultationEvents';

@@ -15,13 +15,9 @@ export {
   getPrimaryIdentifierType,
   createPatient,
   updatePatient,
-  createVisit,
-  getActiveVisitByPatient,
   getIdentifierData,
   getGenders,
   getAddressHierarchyEntries,
-  getVisitTypes,
-  getVisitLocationUUID,
   getOrderedAddressHierarchyLevels,
   getPatientImageAsDataUrl,
   getPatientProfile,
@@ -35,7 +31,6 @@ export {
   type IdentifierTypesResponse,
   type CreatePatientRequest,
   type CreatePatientResponse,
-  type VisitData,
   type PatientName,
   type PatientAddress,
   type PatientIdentifier,
@@ -60,6 +55,16 @@ export {
   MAX_NAME_LENGTH,
   MAX_PHONE_NUMBER_LENGTH,
 } from './patientService';
+export {
+  getVisitTypes,
+  checkIfActiveVisitExists,
+  createVisitForPatient,
+  getActiveVisitByPatient,
+  type VisitType,
+  type VisitTypes,
+  type VisitData,
+  type ActiveVisit,
+} from './visitService';
 export {
   searchAppointmentsByAttribute,
   updateAppointmentStatus,
@@ -140,7 +145,7 @@ export {
 export {
   getPatientRadiologyInvestigations,
   getPatientRadiologyInvestigationBundle,
-  type RadiologyInvestigation,
+  getPatientRadiologyInvestigationBundleWithImagingStudy,
 } from './radiologyInvestigationService';
 export {
   getPatientLabInvestigations,
@@ -153,6 +158,7 @@ export {
 export {
   getFlattenedInvestigations,
   getOrderTypes,
+  getCategoryUuidFromOrderTypes,
   type FlattenedInvestigations,
   type OrderType,
   type OrderTypeResponse,
@@ -214,6 +220,16 @@ export {
   HL7_CONDITION_CATEGORY_CONDITION_CODE,
   HL7_CONDITION_CATEGORY_DIAGNOSIS_CODE,
   FHIR_ENCOUNTER_TYPE_CODE_SYSTEM,
+  FHIR_OBSERVATION_INTERPRETATION_SYSTEM,
+  FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
+  FHIR_OBSERVATION_COMPLEX_DATA_URL,
+  CONCEPT_DATATYPE_NUMERIC,
+  CONCEPT_DATATYPE_COMPLEX,
+  FHIR_OBSERVATION_STATUS_FINAL,
+  FHIR_RESOURCE_TYPE_OBSERVATION,
+  DATE_REGEX_PATTERN,
+  DATETIME_REGEX_PATTERN,
+  INTERPRETATION_TO_CODE,
 } from './constants/fhir';
 
 export {
@@ -229,12 +245,19 @@ export {
 export {
   fetchObservationForms,
   fetchFormMetadata,
+  transformFormDataToObservations,
+  transformObservationsToFormData,
   type ObservationForm,
   type FormApiResponse,
   type ApiNameTranslation,
   type FormPrivilege,
   type ApiFormPrivilege,
   type FormMetadata,
+  type FormData,
+  type FormControlData,
+  type Form2Observation,
+  type ConceptValue,
+  type ComplexValue,
 } from './observationFormsService';
 
 export {

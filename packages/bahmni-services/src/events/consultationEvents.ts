@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
  * Alternative approach to EventEmitter class for comparison
  *
  * MEMORY LEAK PREVENTION:
- * - subscribeConsultationSaved hook ensures proper cleanup via useEffect return
+ * - useSubscribeConsultationSaved hook ensures proper cleanup via useEffect return
  * - Event listeners are removed on component unmount
  * - Callback is memoized to prevent unnecessary re-subscriptions
  */
