@@ -68,6 +68,13 @@ jest.mock('../../../../constants/forms', () => ({
   DEFAULT_FORM_API_NAMES: ['History and Examination', 'Vitals'],
 }));
 
+// Mock the formEventExecutor
+const mockExecuteOnFormSaveEvent = jest.fn();
+jest.mock('../utils/formEventExecutor', () => ({
+  executeOnFormSaveEvent: (...args: unknown[]) =>
+    mockExecuteOnFormSaveEvent(...args),
+}));
+
 // Mock ActionArea component
 jest.mock('@bahmni/design-system', () => ({
   ActionArea: jest.fn(
@@ -205,6 +212,11 @@ describe('ObservationFormsContainer', () => {
       isLoadingMetadata: false,
       metadataError: null,
     });
+
+    // Mock executeOnFormSaveEvent to return observations as-is (pass-through by default)
+    mockExecuteOnFormSaveEvent.mockImplementation(
+      (_metadata, observations) => observations,
+    );
   });
 
   describe('Rendering and Structure', () => {

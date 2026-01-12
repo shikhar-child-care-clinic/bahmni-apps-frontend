@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { DEFAULT_FORM_API_NAMES } from '../../../constants/forms';
 import { useObservationFormData } from '../../../hooks/useObservationFormData';
 import styles from './styles/ObservationFormsContainer.module.scss';
+import { executeOnFormSaveEvent } from './utils/formEventExecutor';
 
 interface ObservationFormsContainerProps {
   // Callback to notify parent when form viewing starts/ends
@@ -104,9 +105,9 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   };
 
   // Handle form save - lift observations to parent and exit view mode
-  const handleSaveForm = () => {
+  const handleSaveForm = (processedObservations: Form2Observation[]) => {
     if (viewingForm && onFormObservationsChange) {
-      onFormObservationsChange(viewingForm.uuid, observations);
+      onFormObservationsChange(viewingForm.uuid, processedObservations);
     }
     onViewingFormChange(null);
   };
@@ -126,7 +127,17 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       }
 
       setShowValidationError(false);
-      handleSaveForm();
+
+      // Execute onFormSave event before saving (if defined in form metadata)
+      // This allows forms to apply business logic, validations, or transformations
+      const processedObservations = executeOnFormSaveEvent(
+        formMetadata!,
+        observations,
+        patientUUID!,
+      );
+
+      // Save with processed observations
+      handleSaveForm(processedObservations);
     }
   };
 
