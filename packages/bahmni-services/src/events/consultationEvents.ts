@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
  * Alternative approach to EventEmitter class for comparison
  *
  * MEMORY LEAK PREVENTION:
- * - useConsultationSaved hook ensures proper cleanup via useEffect return
+ * - subscribeConsultationSaved hook ensures proper cleanup via useEffect return
  * - Event listeners are removed on component unmount
  * - Callback is memoized to prevent unnecessary re-subscriptions
  */
@@ -55,7 +55,7 @@ export const dispatchConsultationSaved = (
  *
  * USAGE:
  * ```typescript
- * useConsultationSaved((payload) => {
+ * useSubscribeConsultationSaved((payload) => {
  *   if (payload.patientUUID === currentPatient && payload.updatedResources.conditions) {
  *     refetch();
  *   }
@@ -65,7 +65,7 @@ export const dispatchConsultationSaved = (
  * @param callback - Function to call when event is published
  * @param deps - Dependencies array (should include values used in callback)
  */
-export const useConsultationSaved = (
+export const useSubscribeConsultationSaved = (
   callback: (payload: ConsultationSavedEventPayload) => void,
   deps: React.DependencyList = [],
 ) => {
