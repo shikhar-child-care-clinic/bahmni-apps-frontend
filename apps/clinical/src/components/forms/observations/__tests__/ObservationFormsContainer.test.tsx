@@ -273,6 +273,7 @@ describe('ObservationFormsContainer', () => {
 
       mockGetValue.mockReturnValue({
         errors: [],
+        observations: [{ concept: { uuid: 'test' }, value: 'test value' }],
       });
 
       render(
@@ -290,6 +291,7 @@ describe('ObservationFormsContainer', () => {
       expect(mockOnFormObservationsChange).toHaveBeenCalledWith(
         mockForm.uuid,
         expect.any(Array),
+        null, // validationState is null when form is saved without errors
       );
       expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
     });
@@ -338,18 +340,41 @@ describe('ObservationFormsContainer', () => {
 
     it('should call onViewingFormChange when Back button is clicked', () => {
       const mockOnViewingFormChange = jest.fn();
+      const mockOnFormObservationsChange = jest.fn();
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: [],
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: {
+          schema: { name: 'Test Form Schema', controls: [] },
+        },
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
+      mockGetValue.mockReturnValue({
+        errors: [],
+        observations: [],
+      });
 
       render(
         <ObservationFormsContainer
           {...defaultProps}
           viewingForm={mockForm}
           onViewingFormChange={mockOnViewingFormChange}
+          onFormObservationsChange={mockOnFormObservationsChange}
         />,
       );
 
       const backButton = screen.getByTestId('tertiary-button');
       fireEvent.click(backButton);
 
+      expect(mockOnFormObservationsChange).toHaveBeenCalledWith(
+        mockForm.uuid,
+        [],
+        'empty',
+      );
       expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
     });
 
@@ -745,6 +770,7 @@ describe('ObservationFormsContainer', () => {
 
     it('should hide validation error when back button is clicked', () => {
       const mockOnViewingFormChange = jest.fn();
+      const mockOnFormObservationsChange = jest.fn();
 
       mockUseObservationFormData.mockReturnValue({
         observations: [],
@@ -755,11 +781,17 @@ describe('ObservationFormsContainer', () => {
         metadataError: null,
       });
 
+      mockGetValue.mockReturnValue({
+        errors: [],
+        observations: [],
+      });
+
       render(
         <ObservationFormsContainer
           {...defaultProps}
           viewingForm={mockForm}
           onViewingFormChange={mockOnViewingFormChange}
+          onFormObservationsChange={mockOnFormObservationsChange}
         />,
       );
 
@@ -773,8 +805,217 @@ describe('ObservationFormsContainer', () => {
       const backButton = screen.getByTestId('tertiary-button');
       fireEvent.click(backButton);
 
-      // Should call onViewingFormChange to exit form view
+      // Should save form with validation state and call onViewingFormChange to exit form view
+      expect(mockOnFormObservationsChange).toHaveBeenCalledWith(
+        mockForm.uuid,
+        [],
+        'empty',
+      );
       expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
+    });
+  });
+
+  describe('Back Button Validation and Save', () => {
+    const mockMetadata = {
+      schema: {
+        name: 'Test Form Schema',
+        controls: [],
+      },
+    };
+
+    it('should save form with valid data and no validation state when Back is clicked', () => {
+      const mockOnFormObservationsChange = jest.fn();
+      const mockOnViewingFormChange = jest.fn();
+      const mockObservations = [{ concept: { uuid: 'test' }, value: 'test' }];
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: mockObservations,
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: mockMetadata,
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
+      mockGetValue.mockReturnValue({
+        errors: [],
+        observations: mockObservations,
+      });
+
+      render(
+        <ObservationFormsContainer
+          {...defaultProps}
+          viewingForm={mockForm}
+          onFormObservationsChange={mockOnFormObservationsChange}
+          onViewingFormChange={mockOnViewingFormChange}
+        />,
+      );
+
+      const backButton = screen.getByTestId('tertiary-button');
+      fireEvent.click(backButton);
+
+      // Should save with null validation state (no errors)
+      expect(mockOnFormObservationsChange).toHaveBeenCalledWith(
+        mockForm.uuid,
+        mockObservations,
+        null,
+      );
+      expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
+    });
+
+    it('should save form with "empty" validation state when Back is clicked on empty form', () => {
+      const mockOnFormObservationsChange = jest.fn();
+      const mockOnViewingFormChange = jest.fn();
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: [],
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: mockMetadata,
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
+      mockGetValue.mockReturnValue({
+        errors: [],
+        observations: [],
+      });
+
+      render(
+        <ObservationFormsContainer
+          {...defaultProps}
+          viewingForm={mockForm}
+          onFormObservationsChange={mockOnFormObservationsChange}
+          onViewingFormChange={mockOnViewingFormChange}
+        />,
+      );
+
+      const backButton = screen.getByTestId('tertiary-button');
+      fireEvent.click(backButton);
+
+      expect(mockOnFormObservationsChange).toHaveBeenCalledWith(
+        mockForm.uuid,
+        [],
+        'empty',
+      );
+      expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
+    });
+
+    it('should save form with "mandatory" validation state when Back is clicked with mandatory errors', () => {
+      const mockOnFormObservationsChange = jest.fn();
+      const mockOnViewingFormChange = jest.fn();
+      const mockObservations = [{ concept: { uuid: 'test' }, value: '' }];
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: mockObservations,
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: mockMetadata,
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
+      mockGetValue.mockReturnValue({
+        errors: [{ message: 'mandatory' }],
+        observations: mockObservations,
+      });
+
+      render(
+        <ObservationFormsContainer
+          {...defaultProps}
+          viewingForm={mockForm}
+          onFormObservationsChange={mockOnFormObservationsChange}
+          onViewingFormChange={mockOnViewingFormChange}
+        />,
+      );
+
+      const backButton = screen.getByTestId('tertiary-button');
+      fireEvent.click(backButton);
+
+      expect(mockOnFormObservationsChange).toHaveBeenCalledWith(
+        mockForm.uuid,
+        mockObservations,
+        'mandatory',
+      );
+      expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
+    });
+
+    it('should save form with "invalid" validation state when Back is clicked with non-mandatory errors', () => {
+      const mockOnFormObservationsChange = jest.fn();
+      const mockOnViewingFormChange = jest.fn();
+      const mockObservations = [{ concept: { uuid: 'test' }, value: 'abc' }];
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: mockObservations,
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: mockMetadata,
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
+      mockGetValue.mockReturnValue({
+        errors: [{ message: 'invalid format' }],
+        observations: mockObservations,
+      });
+
+      render(
+        <ObservationFormsContainer
+          {...defaultProps}
+          viewingForm={mockForm}
+          onFormObservationsChange={mockOnFormObservationsChange}
+          onViewingFormChange={mockOnViewingFormChange}
+        />,
+      );
+
+      const backButton = screen.getByTestId('tertiary-button');
+      fireEvent.click(backButton);
+
+      expect(mockOnFormObservationsChange).toHaveBeenCalledWith(
+        mockForm.uuid,
+        mockObservations,
+        'invalid',
+      );
+      expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
+    });
+
+    it('should handle errors with get method for mandatory check', () => {
+      const mockOnFormObservationsChange = jest.fn();
+      const mockOnViewingFormChange = jest.fn();
+      const mockObservations = [{ concept: { uuid: 'test' }, value: '' }];
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: mockObservations,
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: mockMetadata,
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
+      // Error object with get method (Immutable.js style)
+      mockGetValue.mockReturnValue({
+        errors: [{ get: (key: string) => (key === 'message' ? 'mandatory' : '') }],
+        observations: mockObservations,
+      });
+
+      render(
+        <ObservationFormsContainer
+          {...defaultProps}
+          viewingForm={mockForm}
+          onFormObservationsChange={mockOnFormObservationsChange}
+          onViewingFormChange={mockOnViewingFormChange}
+        />,
+      );
+
+      const backButton = screen.getByTestId('tertiary-button');
+      fireEvent.click(backButton);
+
+      expect(mockOnFormObservationsChange).toHaveBeenCalledWith(
+        mockForm.uuid,
+        mockObservations,
+        'mandatory',
+      );
     });
   });
 });

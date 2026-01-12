@@ -290,12 +290,14 @@ const createMockObservationFormsStore = () => ({
   }),
   updateFormData: jest.fn(),
   getFormData: jest.fn(() => undefined),
+  getFormValidationStatus: jest.fn(() => null),
   setViewingForm: jest.fn((form: any) => {
     mockObservationFormsStoreState.viewingForm = form;
   }),
   getAllObservations: jest.fn(() => []),
   getObservationFormsData: jest.fn(() => ({})),
   validate: jest.fn(() => true),
+  hasObservationFormErrors: jest.fn(() => false),
   reset: jest.fn(() => {
     mockObservationFormsStoreState.selectedForms = [];
     mockObservationFormsStoreState.formsData = {};
