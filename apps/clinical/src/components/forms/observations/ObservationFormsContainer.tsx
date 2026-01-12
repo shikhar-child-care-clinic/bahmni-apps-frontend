@@ -38,6 +38,7 @@ interface ObservationFormsContainerProps {
   onFormObservationsChange?: (
     formUuid: string,
     observations: Form2Observation[],
+    validationState?: null | 'mandatory' | 'invalid' | 'empty'
   ) => void;
   // Existing saved observations for the current form (for edit mode)
   existingObservations?: Form2Observation[];
@@ -71,13 +72,29 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
 
   const {
     observations,
-    handleFormDataChange,
+    handleFormDataChange: originalHandleFormDataChange,
     resetForm,
     formMetadata,
     isLoadingMetadata,
     metadataError,
   } = useObservationFormData(
     viewingForm?.uuid ? { formUuid: viewingForm.uuid } : undefined,
+  );
+
+  // Wrap handleFormDataChange to clear validation error when user starts editing
+  const handleFormDataChange = React.useCallback(
+    (data: unknown) => {
+      // Clear validation error type when user makes changes
+      if (validationErrorType) {
+        setValidationErrorType(null);
+      }
+      // Clear stored validation state in the store
+      if (viewingForm && onFormObservationsChange) {
+        onFormObservationsChange(viewingForm.uuid, observations, null);
+      }
+      originalHandleFormDataChange(data);
+    },
+    [originalHandleFormDataChange, validationErrorType, viewingForm, onFormObservationsChange, observations],
   );
 
   // Check if current form is pinned
@@ -109,7 +126,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   // Handle form save - lift observations to parent and exit view mode
   const handleSaveForm = () => {
     if (viewingForm && onFormObservationsChange) {
-      onFormObservationsChange(viewingForm.uuid, observations);
+      onFormObservationsChange(viewingForm.uuid, observations, validationErrorType);
     }
     onViewingFormChange(null);
   };
@@ -122,30 +139,48 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   // Validate form and save if no errors
   const validateAndSave = () => {
     if (formContainerRef.current) {
+      // If validationErrorType is already set, user clicked "Continue Anyway"
+      // Skip validation and save directly
+      if (validationErrorType) {
+        setValidationErrorType(null);
+        handleSaveForm();
+        return;
+      }
+
       const { observations, errors } = formContainerRef.current.getValue();
 
       const isEmpty = !observations || observations.length === 0;
       const hasErrors = errors && errors.length > 0;
 
-      if (validationErrorType) {
-        if (hasErrors) {
-          // Flatten nested error arrays and check for mandatory errors
-          const flatErrors = errors.flat();
-          const hasMandatoryError = flatErrors.some((err: any) => {
-            const message = err.get ? err.get('message') : err.message;
-            return message === 'mandatory';
-          });
-
-          setValidationErrorType(hasMandatoryError ? 'mandatory' : 'invalid');
-          return;
-        } else if (isEmpty) {
-          setValidationErrorType('empty');
-          return;
-        }
+      // Check for empty form
+      if (isEmpty) {
+        setValidationErrorType('empty');
+        return;
       }
+
+      // Check for validation errors
+      if (hasErrors) {
+        // Flatten nested error arrays and check for mandatory errors
+        const flatErrors = errors.flat();
+        const hasMandatoryError = flatErrors.some((err: any) => {
+          const message = err.get ? err.get('message') : err.message;
+          return message === 'mandatory';
+        });
+
+        setValidationErrorType(hasMandatoryError ? 'mandatory' : 'invalid');
+        return;
+      }
+
+      // If we reach here, validation passed
       setValidationErrorType(null);
       handleSaveForm();
     }
+  };
+
+  // Continue anyway - save form even with validation errors
+  const continueAnyway = () => {
+    setValidationErrorType(null);
+    handleSaveForm();
   };
 
   // Discard form and clear validation errors
@@ -177,10 +212,10 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
           <InlineNotification
             kind="error"
             title={t(
-              `OBSERVATION_FORM_VALIDATION_ERROR_TITLE_${validationErrorType}`,
+              `OBSERVATION_FORM_VALIDATION_ERROR_TITLE_${validationErrorType.toUpperCase()}`,
             )}
             subtitle={t(
-              `OBSERVATION_FORM_VALIDATION_ERROR_SUBTITLE_${validationErrorType}`,
+              `OBSERVATION_FORM_VALIDATION_ERROR_SUBTITLE_${validationErrorType.toUpperCase()}`,
             )}
             lowContrast
             hideCloseButton={false}
@@ -206,7 +241,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
             patient={{ uuid: patientUUID }}
             translations={formMetadata.translations ?? {}}
             validate={validationErrorType !== null}
-            validateForm
+            validateForm={true}
             collapse={false}
             locale={getUserPreferredLocale()}
             onValueUpdated={handleFormDataChange}
@@ -245,7 +280,11 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
             ? t('OBSERVATION_FORM_CONTINUE_ANYWAY_BUTTON')
             : t('OBSERVATION_FORM_SAVE_BUTTON')
         }
-        onPrimaryButtonClick={validateAndSave}
+        onPrimaryButtonClick={
+          validationErrorType
+            ? continueAnyway
+            : validateAndSave
+        }
         isPrimaryButtonDisabled={false}
         secondaryButtonText={t('OBSERVATION_FORM_DISCARD_BUTTON')}
         onSecondaryButtonClick={discard}

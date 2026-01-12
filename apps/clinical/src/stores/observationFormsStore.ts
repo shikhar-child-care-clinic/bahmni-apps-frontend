@@ -15,12 +15,17 @@ export interface ObservationFormsState {
   viewingForm: ObservationForm | null;
   addForm: (form: ObservationForm) => void;
   removeForm: (formUuid: string) => void;
-  updateFormData: (formUuid: string, observations: Form2Observation[]) => void;
-  getFormData: (formUuid: string) => Form2Observation[] | undefined;
+  updateFormData: (
+    formUuid: string,
+    observations: Form2Observation[],
+    validationState?: null | 'mandatory' | 'invalid' | 'empty'
+  ) => void;
+  getFormData: (formUuid: string) => ObservationFormData | undefined;
   setViewingForm: (form: ObservationForm | null) => void;
   getAllObservations: () => Form2Observation[];
   getObservationFormsData: () => Record<string, Form2Observation[]>;
   validate: () => boolean;
+  hasObservationFormErrors: () => boolean;
   reset: () => void;
   getState: () => ObservationFormsState;
 }
@@ -82,7 +87,11 @@ export const useObservationFormsStore = create<ObservationFormsState>(
       });
     },
 
-    updateFormData: (formUuid: string, observations: Form2Observation[]) => {
+    updateFormData: (
+      formUuid: string,
+      observations: Form2Observation[],
+      validationState?: null | 'mandatory' | 'invalid' | 'empty'
+    ) => {
       if (!validateFormUuid(formUuid)) {
         return;
       }
@@ -102,6 +111,7 @@ export const useObservationFormsStore = create<ObservationFormsState>(
             formName: form.name,
             observations,
             timestamp: Date.now(),
+            validationState,
           },
         },
       }));
@@ -113,7 +123,7 @@ export const useObservationFormsStore = create<ObservationFormsState>(
       }
 
       const state = get();
-      return state.formsData[formUuid]?.observations;
+      return state.formsData[formUuid];
     },
 
     setViewingForm: (form: ObservationForm | null) => {
@@ -157,6 +167,19 @@ export const useObservationFormsStore = create<ObservationFormsState>(
       }
 
       return true;
+    },
+
+    hasObservationFormErrors: () => {
+      const state = get();
+
+      for (const form of state.selectedForms) {
+        const formData = state.formsData[form.uuid];
+        if (formData?.validationState === 'mandatory') {
+          return true;
+        }
+      }
+
+      return false;
     },
 
     reset: () => {

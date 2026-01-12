@@ -67,6 +67,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     updateFormData,
     getFormData,
     getObservationFormsData,
+    hasObservationFormErrors,
     reset: resetObservationForms,
   } = useObservationFormsStore();
 
@@ -146,8 +147,12 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
 
   // Callback to receive observation form data
   const handleFormObservationsChange = React.useCallback(
-    (formUuid: string, observations: Form2Observation[]) => {
-      updateFormData(formUuid, observations);
+    (
+      formUuid: string,
+      observations: Form2Observation[],
+      validationState?: null | 'mandatory' | 'invalid' | 'empty'
+    ) => {
+      updateFormData(formUuid, observations, validationState);
     },
     [updateFormData],
   );
@@ -263,10 +268,22 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       const isConditionsAndDiagnosesValid = validate();
       const isAllergiesValid = validateAllAllergies();
       const isMedicationsValid = validateAllMedications();
+      const hasFormErrors = hasObservationFormErrors();
+
+      if (hasFormErrors) {
+        addNotification({
+          title: t('OBSERVATION_FORMS_MANDATORY_ERROR_TITLE'),
+          message: t('OBSERVATION_FORMS_MANDATORY_ERROR_MESSAGE'),
+          type: 'error',
+          timeout: 5000,
+        });
+      }
+
       if (
         !isConditionsAndDiagnosesValid ||
         !isAllergiesValid ||
-        !isMedicationsValid
+        !isMedicationsValid ||
+        hasFormErrors
       ) {
         return;
       }
@@ -367,7 +384,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         pinnedForms={pinnedForms}
         updatePinnedForms={updatePinnedForms}
         onFormObservationsChange={handleFormObservationsChange}
-        existingObservations={getFormData(viewingForm.uuid)}
+        existingObservations={getFormData(viewingForm.uuid)?.observations}
       />
     );
   }

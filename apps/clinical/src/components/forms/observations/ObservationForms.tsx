@@ -226,7 +226,7 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
                 const savedFormData = getFormData(form.uuid);
                 const errorMessage = savedFormData?.validationState
                   ? t(
-                      `OBSERVATION_FORM_VALIDATION_ERROR_TITLE_${savedFormData.validationState}`,
+                      `OBSERVATION_FORM_VALIDATION_ERROR_TITLE_${savedFormData.validationState.toUpperCase()}`,
                     )
                   : undefined;
 
