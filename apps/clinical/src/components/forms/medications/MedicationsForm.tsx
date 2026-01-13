@@ -5,13 +5,16 @@ import {
   DropdownSkeleton,
   Tile,
 } from '@bahmni/design-system';
-import { useTranslation } from '@bahmni/services';
+import { getConfig, useTranslation } from '@bahmni/services';
+import { useQuery } from '@tanstack/react-query';
 import React, { useState, useMemo, useRef } from 'react';
-import useMedicationConfig from '../../../hooks/useMedicationConfig';
 import { useMedicationSearch } from '../../../hooks/useMedicationSearch';
 import { MedicationFilterResult } from '../../../models/medication';
+import { MedicationConfig } from '../../../models/medicationConfig';
 import { getMedicationDisplay } from '../../../services/medicationService';
 import { useMedicationStore } from '../../../stores/medicationsStore';
+import { MEDICATIONS_CONFIG_URL } from './constants';
+import medicationConfigSchema from './schema.json';
 import SelectedMedicationItem from './SelectedMedicationItem';
 import styles from './styles/MedicationsForm.module.scss';
 
@@ -25,11 +28,20 @@ const MedicationsForm: React.FC = React.memo(() => {
   const { t } = useTranslation();
   const [searchMedicationTerm, setSearchMedicationTerm] = useState('');
   const isSelectingRef = useRef(false);
+
   const {
-    medicationConfig,
-    loading: medicationConfigLoading,
+    data: medicationConfig,
+    isLoading: medicationConfigLoading,
     error: medicationConfigError,
-  } = useMedicationConfig();
+  } = useQuery({
+    queryKey: ['clinicConfig'],
+    queryFn: () =>
+      getConfig<MedicationConfig>(
+        MEDICATIONS_CONFIG_URL,
+        medicationConfigSchema,
+      ),
+  });
+
   const { searchResults, loading, error } =
     useMedicationSearch(searchMedicationTerm);
 

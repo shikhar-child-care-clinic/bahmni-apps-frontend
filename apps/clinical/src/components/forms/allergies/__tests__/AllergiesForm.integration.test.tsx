@@ -3,7 +3,10 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Coding } from 'fhir/r4';
 import i18n from '../../../../../setupTests.i18n';
-import { useClinicalConfig, ClinicalConfigProvider } from '../../../../providers/clinicConfig';
+import {
+  useClinicalConfig,
+  ClinicalConfigProvider,
+} from '../../../../providers/clinicConfig';
 import { useAllergyStore } from '../../../../stores/allergyStore';
 import AllergiesForm from '../AllergiesForm';
 
