@@ -1,143 +1,48 @@
 import Ajv from 'ajv';
-import i18next from 'i18next';
 import { get } from '../api';
-import { getFormattedError } from '../errorHandling';
-import { notificationService } from '../notification';
-import { generateId } from '../utils';
-import {
-  CLINICAL_CONFIG_URL,
-  DASHBOARD_CONFIG_URL,
-  MEDICATIONS_CONFIG_URL,
-  REGISTRATION_CONFIG_URL,
-  ERROR_MESSAGES,
-  ERROR_TITLES,
-} from './constants';
-import {
-  ClinicalConfig,
-  DashboardConfig,
-  MedicationJSONConfig,
-  RegistrationConfig,
-} from './models';
-import clinicalConfigSchema from './schemas/clinicalConfig.schema.json';
-import dashboardConfigSchema from './schemas/dashboardConfig.schema.json';
-import medicationConfigSchema from './schemas/medicationConfig.schema.json';
-import registrationConfigSchema from './schemas/registrationConfig.schema.json';
+import { ERROR_MESSAGES } from './constants';
 
 /**
- * Fetches and validates clinical app configuration from the server
+ * Generic configuration fetcher and validator
  *
- * @returns Validated configuration object or null if invalid/error
- * @throws Error if fetch fails or validation fails
- */
-export const getClinicalConfig = async <
-  T extends ClinicalConfig,
->(): Promise<T | null> => {
-  return getConfig<T>(CLINICAL_CONFIG_URL, clinicalConfigSchema);
-};
-
-/**
- * Fetches and validates dashboard configuration from the server
- *
- * @param dashboardURL - URL path to fetch the dashboard configuration
- * @returns Validated configuration object or null if invalid/error
- * @throws Error if fetch fails or validation fails
- */
-export const getDashboardConfig = async <T extends DashboardConfig>(
-  dashboardURL: string,
-): Promise<T | null> => {
-  const config = await getConfig<T>(
-    DASHBOARD_CONFIG_URL(dashboardURL),
-    dashboardConfigSchema,
-  );
-
-  if (config && config.sections && config.sections.length > 0) {
-    config.sections = config.sections.map((section) => {
-      if (!section.id) {
-        return {
-          ...section,
-          id: generateId(),
-        };
-      }
-      return section;
-    });
-  }
-
-  return config;
-};
-
-/**
- * Fetches and validates medication configuration from the server
- *
- * @returns Validated medication configuration object or null if invalid/error
- * @throws Error if fetch fails or validation fails
- */
-export const getMedicationConfig =
-  async (): Promise<MedicationJSONConfig | null> => {
-    return getConfig<MedicationJSONConfig>(
-      MEDICATIONS_CONFIG_URL,
-      medicationConfigSchema,
-    );
-  };
-
-/**
- * Fetches and validates registration configuration from the server
- *
- * @returns Validated registration configuration object or null if invalid/error
- * @throws Error if fetch fails or validation fails
- */
-export const getRegistrationConfig =
-  async (): Promise<RegistrationConfig | null> => {
-    return getConfig<RegistrationConfig>(
-      REGISTRATION_CONFIG_URL,
-      registrationConfigSchema,
-    );
-  };
-
-/**
- * Fetches and validates configuration from the server
+ * It fetches config from a URL, validates against a schema, and optionally post-processes the result.
  *
  * @param configPath - URL path to fetch the configuration
  * @param configSchema - JSON schema for validation
- * @returns Validated configuration object or null if invalid/error
- * @throws Error if fetch fails or validation fails
+ * @param options - Optional configuration options
+ * @param options.postProcess - Optional function to transform the config after validation
+ * @returns Validated (and optionally post-processed) configuration object or null if invalid/error
+ *
+ * @example
+ * const config = await getConfig<MyConfig>(url, schema);
+ *
+ * @example
+ * const config = await getConfig<MyConfig>(url, schema, {
+ *   postProcess: (config) => ({ ...config, processedAt: Date.now() })
+ * });
  */
-const getConfig = async <
-  T extends
-    | ClinicalConfig
-    | DashboardConfig
-    | MedicationJSONConfig
-    | RegistrationConfig,
->(
+export const getConfig = async <T>(
   configPath: string,
   configSchema: Record<string, unknown>,
+  options?: {
+    postProcess?: (config: T) => T | Promise<T>;
+  },
 ): Promise<T | null> => {
-  try {
-    // Fetch configuration from server
-    const config = await fetchConfig<T>(configPath);
-    if (!config) {
-      notificationService.showError(
-        i18next.t(ERROR_TITLES.CONFIG_ERROR),
-        i18next.t(ERROR_MESSAGES.CONFIG_NOT_FOUND),
-      );
-      return null;
-    }
-
-    // Validate configuration against schema
-    const isValid = await validateConfig(config, configSchema);
-    if (!isValid) {
-      notificationService.showError(
-        i18next.t(ERROR_TITLES.VALIDATION_ERROR),
-        i18next.t(ERROR_MESSAGES.VALIDATION_FAILED),
-      );
-      return null;
-    }
-
-    return config;
-  } catch (error) {
-    const { title, message } = getFormattedError(error);
-    notificationService.showError(title, message);
-    return null;
+  const config = await fetchConfig<T>(configPath);
+  if (!config) {
+    throw new Error(ERROR_MESSAGES.CONFIG_NOT_FOUND);
   }
+
+  const isValid = await validateConfig(config, configSchema);
+  if (!isValid) {
+    throw new Error(ERROR_MESSAGES.VALIDATION_FAILED);
+  }
+
+  if (options?.postProcess) {
+    return await options.postProcess(config);
+  }
+
+  return config;
 };
 
 /**
@@ -145,16 +50,9 @@ const getConfig = async <
  *
  * @param configPath - URL path to fetch the configuration
  * @returns Configuration object or null if fetch fails
- * @throws Error if network request fails
  */
 const fetchConfig = async <T>(configPath: string): Promise<T | null> => {
-  try {
-    const config = await get<T>(configPath);
-    return config;
-  } catch (error) {
-    const { message } = getFormattedError(error);
-    throw new Error(message);
-  }
+  return await get<T>(configPath);
 };
 
 /**
