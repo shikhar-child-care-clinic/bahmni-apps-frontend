@@ -21,6 +21,7 @@ export interface ActionAreaProps {
   className?: string; // Optional CSS class
   ariaLabel?: string; // Accessible label for the component
   buttonGroupAriaLabel?: string; // Aria label for the button group
+  hidden?: boolean;
 }
 
 /**
@@ -45,6 +46,7 @@ export const ActionArea: React.FC<ActionAreaProps> = ({
   className,
   ariaLabel,
   buttonGroupAriaLabel = 'Action buttons',
+  hidden = false,
 }) => {
   const buttonCountClass =
     tertiaryButtonText && onTertiaryButtonClick
@@ -56,7 +58,9 @@ export const ActionArea: React.FC<ActionAreaProps> = ({
 
   return (
     <div
-      className={classNames(styles.actionArea, className)}
+      className={classNames(styles.actionArea, className, {
+        [styles.hidden]: hidden,
+      })}
       role="region"
       aria-label={accessibleLabel}
     >

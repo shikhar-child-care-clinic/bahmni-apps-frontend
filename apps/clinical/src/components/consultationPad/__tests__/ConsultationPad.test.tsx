@@ -719,7 +719,7 @@ describe('ConsultationPad', () => {
       expect(screen.getByTestId('wrapper-viewing-form')).toHaveTextContent(
         'Test Form',
       );
-      expect(screen.queryByTestId('mock-action-area')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('mock-action-area')).toBeInTheDocument();
     });
 
     it('should manage selectedForms state correctly', async () => {

@@ -15,6 +15,10 @@
   overflow: hidden;
 }
 
+.hidden {
+  visibility: hidden;
+}
+
 .title {
   @include type-style("heading-03");
   padding: $spacing-06;
