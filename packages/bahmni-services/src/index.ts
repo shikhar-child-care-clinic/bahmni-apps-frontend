@@ -43,6 +43,8 @@ export {
   type PersonAttributeTypesResponse,
   type ConceptAnswer,
   type PersonAttributeConcept,
+  type PatientSearchField,
+  type AppointmentSearchField,
   AttributeFormat,
   AttributeInputType,
   getInputTypeForFormat,

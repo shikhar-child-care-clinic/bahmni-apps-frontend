@@ -37,6 +37,8 @@ export {
   type PersonAttributeTypesResponse,
   type ConceptAnswer,
   type PersonAttributeConcept,
+  type PatientSearchField,
+  type AppointmentSearchField,
 } from './models';
 export {
   AttributeFormat,

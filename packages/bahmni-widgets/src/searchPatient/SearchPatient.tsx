@@ -2,8 +2,8 @@ import { Search, Button, Dropdown, Tag } from '@bahmni/design-system';
 import {
   PatientSearchResultBundle,
   useTranslation,
-  getRegistrationConfig,
   PatientSearchField,
+  AppointmentSearchField,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
@@ -12,9 +12,17 @@ import { PatientSearchType, SearchContext } from './SearchStrategy.interface';
 import searchStrategyRegistry from './strategies/SearchStrategyRegistry';
 import styles from './styles/SearchPatient.module.scss';
 
-interface SearchPatientProps {
+export interface PatientSearchConfigShape {
+  patientSearch: {
+    customAttributes: PatientSearchField[];
+    appointment: AppointmentSearchField[];
+  };
+}
+
+interface SearchPatientProps<TConfig extends PatientSearchConfigShape> {
   buttonTitle: string;
   searchBarPlaceholder: string;
+  getConfig: () => Promise<TConfig | null>;
   onSearch: (
     data: PatientSearchResultBundle | undefined,
     searchTerm: string,
@@ -25,11 +33,12 @@ interface SearchPatientProps {
   ) => void;
 }
 
-const SearchPatient: React.FC<SearchPatientProps> = ({
+const SearchPatient = <TConfig extends PatientSearchConfigShape>({
   buttonTitle,
   searchBarPlaceholder,
+  getConfig,
   onSearch,
-}) => {
+}: SearchPatientProps<TConfig>) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [advanceSearchInput, setAdvanceSearchInput] = useState('');
@@ -46,8 +55,8 @@ const SearchPatient: React.FC<SearchPatientProps> = ({
     isError: configIsError,
     error: configError,
   } = useQuery({
-    queryKey: ['registrationConfig'],
-    queryFn: () => getRegistrationConfig(),
+    queryKey: ['patientSearchConfig'],
+    queryFn: getConfig,
     staleTime: 0,
     gcTime: 0,
   });

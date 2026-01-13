@@ -3,15 +3,13 @@ import {
   searchPatientByNameOrId,
   searchPatientByCustomAttribute,
   useTranslation,
-  getRegistrationConfig,
 } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { validRegistrationConfig } from '../../../../bahmni-services/src/configService/__mocks__/configMocks';
 import { useNotification } from '../../notification';
-import SearchPatient from '../SearchPatient';
+import SearchPatient, { PatientSearchConfigShape } from '../SearchPatient';
 
 expect.extend(toHaveNoViolations);
 
@@ -20,7 +18,6 @@ jest.mock('@bahmni/services', () => ({
   searchPatientByNameOrId: jest.fn(),
   searchPatientByCustomAttribute: jest.fn(),
   useTranslation: jest.fn(),
-  getRegistrationConfig: jest.fn(),
 }));
 jest.mock('../../notification');
 const mockOnSearch = jest.fn();
@@ -29,9 +26,51 @@ const mockAddNotification = jest.fn();
 const mockUseTranslation = useTranslation as jest.MockedFunction<
   typeof useTranslation
 >;
-const mockGetRegistrationConfig = getRegistrationConfig as jest.MockedFunction<
-  typeof getRegistrationConfig
+const mockGetConfig = jest.fn() as jest.MockedFunction<
+  () => Promise<PatientSearchConfigShape | null>
 >;
+const validRegistrationConfig = {
+  patientSearch: {
+    customAttributes: [
+      {
+        translationKey: 'REGISTRATION_PATIENT_SEARCH_DROPDOWN_PHONE_NUMBER',
+        fields: ['phoneNumber', 'alternatePhoneNumber'],
+        columnTranslationKeys: [
+          'REGISTRATION_PATIENT_SEARCH_HEADER_PHONE_NUMBER',
+          'REGISTRATION_PATIENT_SEARCH_HEADER_ALTERNATE_PHONE_NUMBER',
+        ],
+        type: 'person',
+      },
+      {
+        translationKey: 'REGISTRATION_PATIENT_SEARCH_DROPDOWN_EMAIL',
+        fields: ['email'],
+        columnTranslationKeys: ['REGISTRATION_PATIENT_SEARCH_HEADER_EMAIL'],
+        type: 'person',
+      },
+      {
+        translationKey: 'REGISTRATION_PATIENT_SEARCH_DROPDOWN_VILLAGE',
+        fields: ['village'],
+        columnTranslationKeys: ['REGISTRATION_PATIENT_SEARCH_HEADER_VILLAGE'],
+        type: 'address',
+      },
+      {
+        translationKey: 'REGISTRATION_PATIENT_SEARCH_DROPDOWN_LOCALITY',
+        fields: ['locality'],
+        columnTranslationKeys: ['REGISTRATION_PATIENT_SEARCH_HEADER_LOCALITY'],
+        type: 'address',
+      },
+      {
+        translationKey: 'REGISTRATION_PATIENT_SEARCH_DROPDOWN_PROGRAM_NAME',
+        fields: ['programName'],
+        columnTranslationKeys: [
+          'REGISTRATION_PATIENT_SEARCH_HEADER_PROGRAM_NAME',
+        ],
+        type: 'program',
+      },
+    ],
+  },
+};
+
 const mockSearchPatientData: PatientSearchResult[] = [
   {
     uuid: '02f47490-d657-48ee-98e7-4c9133ea168b',
@@ -135,7 +174,7 @@ describe('SearchPatient', () => {
         return translations[key] || key;
       }) as any,
     } as any);
-    mockGetRegistrationConfig.mockResolvedValue(validRegistrationConfig as any);
+    mockGetConfig.mockResolvedValue(validRegistrationConfig as any);
   });
 
   afterEach(() => {
@@ -148,6 +187,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -178,6 +218,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -225,6 +266,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -263,6 +305,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -312,6 +355,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -363,6 +407,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -426,6 +471,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -451,6 +497,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -473,6 +520,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -509,6 +557,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -537,6 +586,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -584,6 +634,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -648,6 +699,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -708,6 +760,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -736,6 +789,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -760,6 +814,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -784,6 +839,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -806,6 +862,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -822,65 +879,13 @@ describe('SearchPatient', () => {
     expect(nameSearchInput).toHaveValue('John Doe');
   });
 
-  it('should show notification when config validation fails', async () => {
-    const configError = new Error('Schema validation failed');
-    mockGetRegistrationConfig.mockRejectedValue(configError);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <SearchPatient
-          buttonTitle={buttonTitle}
-          searchBarPlaceholder={searchBarPlaceholder}
-          onSearch={mockOnSearch}
-        />
-      </QueryClientProvider>,
-    );
-
-    await waitFor(() => {
-      expect(mockAddNotification).toHaveBeenCalledWith({
-        type: 'error',
-        title: 'CONFIG_ERROR_SCHEMA_VALIDATION_FAILED',
-        message: 'Schema validation failed',
-      });
-    });
-  });
-
-  it('should show notification when config has no patient search fields', async () => {
-    const configWithoutSearchFields = {
-      config: {
-        patientSearch: {},
-      },
-    };
-
-    mockGetRegistrationConfig.mockResolvedValue(
-      configWithoutSearchFields as any,
-    );
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <SearchPatient
-          buttonTitle={buttonTitle}
-          searchBarPlaceholder={searchBarPlaceholder}
-          onSearch={mockOnSearch}
-        />
-      </QueryClientProvider>,
-    );
-
-    await waitFor(() => {
-      expect(mockAddNotification).toHaveBeenCalledWith({
-        type: 'error',
-        title: 'CONFIG_ERROR_NOT_FOUND',
-        message: 'No patient search configuration found',
-      });
-    });
-  });
-
   it('should search by email when email is selected from dropdown', async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,
@@ -923,6 +928,7 @@ describe('SearchPatient', () => {
         <SearchPatient
           buttonTitle={buttonTitle}
           searchBarPlaceholder={searchBarPlaceholder}
+          getConfig={mockGetConfig}
           onSearch={mockOnSearch}
         />
       </QueryClientProvider>,

@@ -1,10 +1,9 @@
-import { PatientSearchField } from '../configService/models/registrationConfig';
 import {
   OPENMRS_FHIR_R4,
   OPENMRS_REST_V1,
   OPENMRS_REST_V2,
-  VISIT_LOCATION_UUID,
 } from '../constants/app';
+import { PatientSearchField } from './models';
 
 /**
  * Configuration mapping for different field types used in patient search.
