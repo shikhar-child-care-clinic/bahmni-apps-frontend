@@ -1,12 +1,21 @@
 import { ObservationForm, Form2Observation } from '@bahmni/services';
 import { create } from 'zustand';
+import {
+  VALIDATION_STATE_EMPTY,
+  VALIDATION_STATE_MANDATORY,
+  VALIDATION_STATE_INVALID,
+} from '../constants/forms';
 
 export interface ObservationFormData {
   formUuid: string;
   formName: string;
   observations: Form2Observation[];
   timestamp: number;
-  validationState?: null | 'mandatory' | 'invalid' | 'empty';
+  validationState?:
+    | null
+    | typeof VALIDATION_STATE_EMPTY
+    | typeof VALIDATION_STATE_MANDATORY
+    | typeof VALIDATION_STATE_INVALID;
 }
 
 export interface ObservationFormsState {
@@ -18,12 +27,13 @@ export interface ObservationFormsState {
   updateFormData: (
     formUuid: string,
     observations: Form2Observation[],
-    validationState?: null | 'mandatory' | 'invalid' | 'empty'
+    validationState?:
+      | null
+      | typeof VALIDATION_STATE_EMPTY
+      | typeof VALIDATION_STATE_MANDATORY
+      | typeof VALIDATION_STATE_INVALID,
   ) => void;
   getFormData: (formUuid: string) => ObservationFormData | undefined;
-  getFormValidationStatus: (
-    formUuid: string,
-  ) => null | 'mandatory' | 'invalid' | 'empty';
   setViewingForm: (form: ObservationForm | null) => void;
   getAllObservations: () => Form2Observation[];
   getObservationFormsData: () => Record<string, Form2Observation[]>;
@@ -93,7 +103,11 @@ export const useObservationFormsStore = create<ObservationFormsState>(
     updateFormData: (
       formUuid: string,
       observations: Form2Observation[],
-      validationState?: null | 'mandatory' | 'invalid' | 'empty'
+      validationState?:
+        | null
+        | typeof VALIDATION_STATE_EMPTY
+        | typeof VALIDATION_STATE_MANDATORY
+        | typeof VALIDATION_STATE_INVALID,
     ) => {
       if (!validateFormUuid(formUuid)) {
         return;
@@ -127,15 +141,6 @@ export const useObservationFormsStore = create<ObservationFormsState>(
 
       const state = get();
       return state.formsData[formUuid];
-    },
-
-    getFormValidationStatus: (formUuid: string) => {
-      if (!validateFormUuid(formUuid)) {
-        return null;
-      }
-
-      const state = get();
-      return state.formsData[formUuid]?.validationState ?? null;
     },
 
     setViewingForm: (form: ObservationForm | null) => {
@@ -186,7 +191,10 @@ export const useObservationFormsStore = create<ObservationFormsState>(
 
       for (const form of state.selectedForms) {
         const formData = state.formsData[form.uuid];
-        if (formData?.validationState === 'mandatory') {
+        if (
+          formData?.validationState === VALIDATION_STATE_MANDATORY ||
+          formData?.validationState === VALIDATION_STATE_EMPTY
+        ) {
           return true;
         }
       }

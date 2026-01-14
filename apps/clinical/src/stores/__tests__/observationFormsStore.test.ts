@@ -1,5 +1,10 @@
 import { ObservationForm, Form2Observation } from '@bahmni/services';
 import { act, renderHook } from '@testing-library/react';
+import {
+  VALIDATION_STATE_EMPTY,
+  VALIDATION_STATE_MANDATORY,
+  VALIDATION_STATE_INVALID,
+} from '../../constants/forms';
 import { useObservationFormsStore } from '../observationFormsStore';
 
 describe('observationFormsStore', () => {
@@ -258,11 +263,15 @@ describe('observationFormsStore', () => {
 
       act(() => {
         result.current.addForm(mockForm1);
-        result.current.updateFormData('form-1', mockObservations, 'mandatory');
+        result.current.updateFormData(
+          'form-1',
+          mockObservations,
+          VALIDATION_STATE_MANDATORY,
+        );
       });
 
       const formData = result.current.formsData['form-1'];
-      expect(formData.validationState).toBe('mandatory');
+      expect(formData.validationState).toBe(VALIDATION_STATE_MANDATORY);
     });
 
     it('should update validation state to null when form is fixed', () => {
@@ -270,11 +279,15 @@ describe('observationFormsStore', () => {
 
       act(() => {
         result.current.addForm(mockForm1);
-        result.current.updateFormData('form-1', mockObservations, 'mandatory');
+        result.current.updateFormData(
+          'form-1',
+          mockObservations,
+          VALIDATION_STATE_MANDATORY,
+        );
       });
 
       expect(result.current.formsData['form-1'].validationState).toBe(
-        'mandatory',
+        VALIDATION_STATE_MANDATORY,
       );
 
       act(() => {
@@ -289,17 +302,23 @@ describe('observationFormsStore', () => {
 
       act(() => {
         result.current.addForm(mockForm1);
-        result.current.updateFormData('form-1', [], 'empty');
-      });
-
-      expect(result.current.formsData['form-1'].validationState).toBe('empty');
-
-      act(() => {
-        result.current.updateFormData('form-1', mockObservations, 'invalid');
+        result.current.updateFormData('form-1', [], VALIDATION_STATE_EMPTY);
       });
 
       expect(result.current.formsData['form-1'].validationState).toBe(
-        'invalid',
+        VALIDATION_STATE_EMPTY,
+      );
+
+      act(() => {
+        result.current.updateFormData(
+          'form-1',
+          mockObservations,
+          VALIDATION_STATE_INVALID,
+        );
+      });
+
+      expect(result.current.formsData['form-1'].validationState).toBe(
+        VALIDATION_STATE_INVALID,
       );
     });
   });
@@ -329,82 +348,6 @@ describe('observationFormsStore', () => {
 
       const data = result.current.getFormData('');
       expect(data).toBeUndefined();
-    });
-  });
-
-  describe('getFormValidationStatus', () => {
-    it('should return null for form without validation errors', () => {
-      const { result } = renderHook(() => useObservationFormsStore());
-
-      act(() => {
-        result.current.addForm(mockForm1);
-        result.current.updateFormData('form-1', mockObservations, null);
-      });
-
-      const status = result.current.getFormValidationStatus('form-1');
-      expect(status).toBeNull();
-    });
-
-    it('should return "mandatory" for form with mandatory errors', () => {
-      const { result } = renderHook(() => useObservationFormsStore());
-
-      act(() => {
-        result.current.addForm(mockForm1);
-        result.current.updateFormData('form-1', mockObservations, 'mandatory');
-      });
-
-      const status = result.current.getFormValidationStatus('form-1');
-      expect(status).toBe('mandatory');
-    });
-
-    it('should return "invalid" for form with invalid data', () => {
-      const { result } = renderHook(() => useObservationFormsStore());
-
-      act(() => {
-        result.current.addForm(mockForm1);
-        result.current.updateFormData('form-1', mockObservations, 'invalid');
-      });
-
-      const status = result.current.getFormValidationStatus('form-1');
-      expect(status).toBe('invalid');
-    });
-
-    it('should return "empty" for empty form', () => {
-      const { result } = renderHook(() => useObservationFormsStore());
-
-      act(() => {
-        result.current.addForm(mockForm1);
-        result.current.updateFormData('form-1', [], 'empty');
-      });
-
-      const status = result.current.getFormValidationStatus('form-1');
-      expect(status).toBe('empty');
-    });
-
-    it('should return null for non-existent form', () => {
-      const { result } = renderHook(() => useObservationFormsStore());
-
-      const status = result.current.getFormValidationStatus('non-existent');
-      expect(status).toBeNull();
-    });
-
-    it('should return null for invalid uuid', () => {
-      const { result } = renderHook(() => useObservationFormsStore());
-
-      const status = result.current.getFormValidationStatus('');
-      expect(status).toBeNull();
-    });
-
-    it('should return null when validationState is not set', () => {
-      const { result } = renderHook(() => useObservationFormsStore());
-
-      act(() => {
-        result.current.addForm(mockForm1);
-        result.current.updateFormData('form-1', mockObservations);
-      });
-
-      const status = result.current.getFormValidationStatus('form-1');
-      expect(status).toBeNull();
     });
   });
 
@@ -558,6 +501,100 @@ describe('observationFormsStore', () => {
       });
 
       expect(result.current.validate()).toBe(true);
+    });
+  });
+
+  describe('hasObservationFormErrors', () => {
+    it('should return false when no forms are selected', () => {
+      const { result } = renderHook(() => useObservationFormsStore());
+
+      expect(result.current.hasObservationFormErrors()).toBe(false);
+    });
+
+    it('should return false when selected forms have no validation errors', () => {
+      const { result } = renderHook(() => useObservationFormsStore());
+
+      act(() => {
+        result.current.addForm(mockForm1);
+        result.current.updateFormData('form-1', mockObservations, null);
+      });
+
+      expect(result.current.hasObservationFormErrors()).toBe(false);
+    });
+
+    it('should return true when a selected form has mandatory validation error', () => {
+      const { result } = renderHook(() => useObservationFormsStore());
+
+      act(() => {
+        result.current.addForm(mockForm1);
+        result.current.updateFormData(
+          'form-1',
+          mockObservations,
+          VALIDATION_STATE_MANDATORY,
+        );
+      });
+
+      expect(result.current.hasObservationFormErrors()).toBe(true);
+    });
+
+    it('should return true when a selected form has empty validation error', () => {
+      const { result } = renderHook(() => useObservationFormsStore());
+
+      act(() => {
+        result.current.addForm(mockForm1);
+        result.current.updateFormData('form-1', [], VALIDATION_STATE_EMPTY);
+      });
+
+      expect(result.current.hasObservationFormErrors()).toBe(true);
+    });
+
+    it('should return false when a selected form has only invalid validation error', () => {
+      const { result } = renderHook(() => useObservationFormsStore());
+
+      act(() => {
+        result.current.addForm(mockForm1);
+        result.current.updateFormData(
+          'form-1',
+          mockObservations,
+          VALIDATION_STATE_INVALID,
+        );
+      });
+
+      expect(result.current.hasObservationFormErrors()).toBe(false);
+    });
+
+    it('should return true when at least one form has mandatory or empty error', () => {
+      const { result } = renderHook(() => useObservationFormsStore());
+
+      act(() => {
+        result.current.addForm(mockForm1);
+        result.current.addForm(mockForm2);
+        result.current.updateFormData('form-1', mockObservations, null); // Valid
+        result.current.updateFormData('form-2', [], VALIDATION_STATE_EMPTY); // Error
+      });
+
+      expect(result.current.hasObservationFormErrors()).toBe(true);
+    });
+
+    it('should return false when all forms have invalid errors only', () => {
+      const { result } = renderHook(() => useObservationFormsStore());
+
+      act(() => {
+        result.current.addForm(mockForm1);
+        result.current.addForm(mockForm2);
+        result.current.updateFormData(
+          'form-1',
+          mockObservations,
+          VALIDATION_STATE_INVALID,
+        );
+        result.current.updateFormData(
+          'form-2',
+          mockObservations,
+          VALIDATION_STATE_INVALID,
+        );
+      });
+
+      expect(result.current.hasObservationFormErrors()).toBe(false);
     });
   });
 

@@ -8,7 +8,12 @@ import {
 import { ObservationForm } from '@bahmni/services';
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DEFAULT_FORM_API_NAMES } from '../../../constants/forms';
+import {
+  DEFAULT_FORM_API_NAMES,
+  VALIDATION_STATE_EMPTY,
+  VALIDATION_STATE_MANDATORY,
+  VALIDATION_STATE_INVALID,
+} from '../../../constants/forms';
 import useObservationFormsSearch from '../../../hooks/useObservationFormsSearch';
 import { useObservationFormsStore } from '../../../stores/observationFormsStore';
 import styles from './styles/ObservationForms.module.scss';
@@ -48,7 +53,7 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
   }) => {
     const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState('');
-    const { getFormData, getFormValidationStatus } = useObservationFormsStore();
+    const { getFormData } = useObservationFormsStore();
 
     const { forms: allForms, isLoading: isAllFormsLoading } =
       useObservationFormsSearch();
@@ -226,9 +231,11 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
                 const savedFormData = getFormData(form.uuid);
                 const validationState = savedFormData?.validationState;
 
-                // Only show error indicator for mandatory/empty errors (not for invalid)
+                // Show error indicator for all validation error types
                 const showError =
-                  validationState === 'mandatory' || validationState === 'empty';
+                  validationState === VALIDATION_STATE_MANDATORY ||
+                  validationState === VALIDATION_STATE_INVALID ||
+                  validationState === VALIDATION_STATE_EMPTY;
                 const errorMessage = showError
                   ? t(
                       `OBSERVATION_FORM_VALIDATION_ERROR_TITLE_${validationState.toUpperCase()}`,

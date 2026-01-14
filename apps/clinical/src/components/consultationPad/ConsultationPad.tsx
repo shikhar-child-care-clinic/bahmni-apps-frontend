@@ -23,6 +23,11 @@ import { useMedicationStore } from '../../../src/stores/medicationsStore';
 import { useObservationFormsStore } from '../../../src/stores/observationFormsStore';
 import useServiceRequestStore from '../../../src/stores/serviceRequestStore';
 import { ERROR_TITLES } from '../../constants/errors';
+import {
+  VALIDATION_STATE_EMPTY,
+  VALIDATION_STATE_MANDATORY,
+  VALIDATION_STATE_INVALID,
+} from '../../constants/forms';
 import { useClinicalAppData } from '../../hooks/useClinicalAppData';
 import { usePinnedObservationForms } from '../../hooks/usePinnedObservationForms';
 import { ConsultationBundle } from '../../models/consultationBundle';
@@ -150,7 +155,11 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     (
       formUuid: string,
       observations: Form2Observation[],
-      validationState?: null | 'mandatory' | 'invalid' | 'empty'
+      validationState?:
+        | null
+        | typeof VALIDATION_STATE_EMPTY
+        | typeof VALIDATION_STATE_MANDATORY
+        | typeof VALIDATION_STATE_INVALID,
     ) => {
       updateFormData(formUuid, observations, validationState);
     },

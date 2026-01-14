@@ -20,7 +20,12 @@ import {
 import { usePatientUUID } from '@bahmni/widgets';
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DEFAULT_FORM_API_NAMES } from '../../../constants/forms';
+import {
+  DEFAULT_FORM_API_NAMES,
+  VALIDATION_STATE_EMPTY,
+  VALIDATION_STATE_MANDATORY,
+  VALIDATION_STATE_INVALID,
+} from '../../../constants/forms';
 import { useObservationFormData } from '../../../hooks/useObservationFormData';
 import styles from './styles/ObservationFormsContainer.module.scss';
 
@@ -38,7 +43,11 @@ interface ObservationFormsContainerProps {
   onFormObservationsChange?: (
     formUuid: string,
     observations: Form2Observation[],
-    validationState?: null | 'mandatory' | 'invalid' | 'empty'
+    validationState?:
+      | null
+      | typeof VALIDATION_STATE_EMPTY
+      | typeof VALIDATION_STATE_MANDATORY
+      | typeof VALIDATION_STATE_INVALID,
   ) => void;
   // Existing saved observations for the current form (for edit mode)
   existingObservations?: Form2Observation[];
@@ -66,7 +75,10 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
   const [validationErrorType, setValidationErrorType] = useState<
-    null | 'mandatory' | 'invalid' | 'empty'
+    | null
+    | typeof VALIDATION_STATE_EMPTY
+    | typeof VALIDATION_STATE_MANDATORY
+    | typeof VALIDATION_STATE_INVALID
   >(null);
   const formContainerRef = useRef<Container>(null);
 
@@ -94,7 +106,13 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       }
       originalHandleFormDataChange(data);
     },
-    [originalHandleFormDataChange, validationErrorType, viewingForm, onFormObservationsChange, observations],
+    [
+      originalHandleFormDataChange,
+      validationErrorType,
+      viewingForm,
+      onFormObservationsChange,
+      observations,
+    ],
   );
 
   // Check if current form is pinned
@@ -126,13 +144,12 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   // Handle form save - lift observations to parent and exit view mode
   const handleSaveForm = () => {
     if (viewingForm && onFormObservationsChange) {
-      onFormObservationsChange(viewingForm.uuid, observations, validationErrorType);
+      onFormObservationsChange(
+        viewingForm.uuid,
+        observations,
+        validationErrorType,
+      );
     }
-    onViewingFormChange(null);
-  };
-
-  // Handle back navigation - exit view mode without saving
-  const handleBack = () => {
     onViewingFormChange(null);
   };
 
@@ -154,20 +171,24 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
 
       // Check for empty form
       if (isEmpty) {
-        setValidationErrorType('empty');
+        setValidationErrorType(VALIDATION_STATE_EMPTY);
         return;
       }
 
       // Check for validation errors
       if (hasErrors) {
-        // Flatten nested error arrays and check for mandatory errors
-        const flatErrors = errors.flat();
-        const hasMandatoryError = flatErrors.some((err: any) => {
-          const message = err.get ? err.get('message') : err.message;
-          return message === 'mandatory';
-        });
-
-        setValidationErrorType(hasMandatoryError ? 'mandatory' : 'invalid');
+        const hasMandatoryError = errors
+          .flat()
+          .some(
+            (err) =>
+              (err.get?.('message') ?? err.message) ===
+              VALIDATION_STATE_MANDATORY,
+          );
+        setValidationErrorType(
+          hasMandatoryError
+            ? VALIDATION_STATE_MANDATORY
+            : VALIDATION_STATE_INVALID,
+        );
         return;
       }
 
@@ -188,41 +209,6 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
     setValidationErrorType(null);
     resetForm();
     handleDiscardForm();
-  };
-
-  // Navigate back to forms list - validate and save form even with errors
-  const navigateToForms = () => {
-    if (formContainerRef.current && viewingForm) {
-      const { errors } = formContainerRef.current.getValue();
-
-      // Determine validation state
-      const isEmpty = !observations || observations.length === 0;
-
-      let validationState: null | 'mandatory' | 'invalid' | 'empty' = null;
-
-      if (isEmpty) {
-        validationState = 'empty';
-      } else if (errors && errors.length > 0) {
-        // Check for mandatory errors
-        const flatErrors = errors.flat();
-        const hasMandatoryError = flatErrors.some((err: any) => {
-          const message = err.get ? err.get('message') : err.message;
-          return message === 'mandatory';
-        });
-        validationState = hasMandatoryError ? 'mandatory' : 'invalid';
-      }
-
-      // Save form with validation state (adds to "Added forms")
-      if (onFormObservationsChange) {
-        onFormObservationsChange(viewingForm.uuid, observations, validationState);
-      }
-    }
-
-    // Clear local validation UI state
-    setValidationErrorType(null);
-
-    // Navigate back to forms list
-    handleBack();
   };
 
   // Format error for display
@@ -270,7 +256,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
             patient={{ uuid: patientUUID }}
             translations={formMetadata.translations ?? {}}
             validate={validationErrorType !== null}
-            validateForm={true}
+            validateForm
             collapse={false}
             locale={getUserPreferredLocale()}
             onValueUpdated={handleFormDataChange}
@@ -310,15 +296,11 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
             : t('OBSERVATION_FORM_SAVE_BUTTON')
         }
         onPrimaryButtonClick={
-          validationErrorType
-            ? continueAnyway
-            : validateAndSave
+          validationErrorType ? continueAnyway : validateAndSave
         }
         isPrimaryButtonDisabled={false}
         secondaryButtonText={t('OBSERVATION_FORM_DISCARD_BUTTON')}
         onSecondaryButtonClick={discard}
-        tertiaryButtonText={t('OBSERVATION_FORM_BACK_BUTTON')}
-        onTertiaryButtonClick={navigateToForms}
         content={formViewContent}
       />
     );
