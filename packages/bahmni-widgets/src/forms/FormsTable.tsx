@@ -275,6 +275,7 @@ const FormsTable: React.FC<WidgetProps> = ({
         selectedRecord &&
         createPortal(
           <Modal
+            id="formDetailsModal"
             open={isModalOpen}
             onRequestClose={handleCloseModal}
             modalHeading={selectedRecord.formName}
