@@ -42,17 +42,34 @@ export const executeOnFormSaveEvent = (
       formUuid: metadata.uuid,
     };
 
-    // Execute event script safely using Function constructor
-    // The script receives formContext and can modify formContext.observations
-    const eventFunction = new Function(
-      'formContext',
-      `
-      ${decodedScript}
-      return formContext.observations;
-    `,
-    );
+    // The script can be in different formats:
+    // 1. Anonymous function: function(form) { ... }
+    // 2. Function body code: formContext.observations = ...
+    // We need to detect which format and handle accordingly
 
-    const result = eventFunction(formContext);
+    let result;
+    const trimmedScript = decodedScript.trim();
+
+    // Check if script starts with "function" - it's a function expression
+    if (trimmedScript.startsWith('function')) {
+      // Wrap in parentheses to make it an expression, then call it
+      const wrappedScript = `(${decodedScript})(formContext)`;
+      const eventFunction = new Function(
+        'formContext',
+        `return ${wrappedScript}`,
+      );
+      result = eventFunction(formContext);
+    } else {
+      // It's function body code - execute directly
+      const eventFunction = new Function(
+        'formContext',
+        `
+        ${decodedScript}
+        return formContext.observations;
+      `,
+      );
+      result = eventFunction(formContext);
+    }
 
     // Return modified observations if event returns them
     if (Array.isArray(result)) {
