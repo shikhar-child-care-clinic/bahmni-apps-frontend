@@ -22,11 +22,16 @@ export {
 
 // Hooks
 export { usePatientUUID } from './hooks/usePatientUUID';
-export { useActivePractitioner } from './hooks/useActivePractitioner';
 export { useUserPrivilege } from './userPrivileges/useUserPrivilege';
 
 // User Privileges
 export { UserPrivilegeProvider } from './userPrivileges/UserPrivilegeProvider';
+
+// Active Practitioner
+export { ActivePractitionerProvider } from './activePractitioner/ActivePractitionerProvider';
+export { useActivePractitioner } from './activePractitioner/useActivePractitioner';
+export { ActivePractitionerContext } from './activePractitioner/ActivePractitionerContext';
+export type { ActivePractitionerContextType } from './activePractitioner/ActivePractitionerContext';
 
 // Widget Registry
 export {
