@@ -6,21 +6,29 @@ import {
   useSidebarNavigation,
   ActionAreaLayout,
 } from '@bahmni/design-system';
-import { useTranslation, BAHMNI_HOME_PATH } from '@bahmni/services';
+import {
+  useTranslation,
+  BAHMNI_HOME_PATH,
+  getConfig,
+  generateId,
+} from '@bahmni/services';
 import { useNotification, useUserPrivilege } from '@bahmni/widgets';
-import React, { Suspense, useMemo, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ConsultationPad from '../components/consultationPad/ConsultationPad';
 import DashboardContainer from '../components/dashboardContainer/DashboardContainer';
 import PatientHeader from '../components/patientHeader/PatientHeader';
 import { BAHMNI_CLINICAL_PATH } from '../constants/app';
-import { useClinicalConfig } from '../hooks/useClinicalConfig';
-import { useDashboardConfig } from '../hooks/useDashboardConfig';
 import { ClinicalAppProvider } from '../providers/ClinicalAppProvider';
+import { useClinicalConfig } from '../providers/clinicConfig';
 import {
   getDefaultDashboard,
   getSidebarItems,
 } from '../services/consultationPageService';
+import { useQuery } from '@tanstack/react-query';
+import { DASHBOARD_CONFIG_URL } from './constant';
+import dashboardConfigSchema from './schema.json';
+import { DashboardConfig } from './models';
 
 const breadcrumbItems = [
   { id: 'home', label: 'Home', href: BAHMNI_HOME_PATH },
@@ -82,11 +90,43 @@ const ConsultationPage: React.FC = () => {
   }, [searchParams]);
   const currentDashboard = useMemo(() => {
     if (!clinicalConfig) return null;
-    return getDefaultDashboard(clinicalConfig.dashboards || []);
+    return getDefaultDashboard(clinicalConfig.dashboards ?? []);
   }, [clinicalConfig]);
 
-  const dashboardUrl = currentDashboard?.url ?? null;
-  const { dashboardConfig } = useDashboardConfig(dashboardUrl);
+  const dashboardURL = currentDashboard?.url ?? null;
+
+  const {
+    data: dashboardConfig,
+    isLoading: isDashboardConfigLoading,
+    error: dashboardConfigError,
+  } = useQuery({
+    queryKey: ['dashboardConfig', dashboardURL],
+    queryFn: () =>
+      getConfig<DashboardConfig>(
+        DASHBOARD_CONFIG_URL(dashboardURL),
+        dashboardConfigSchema,
+        {
+          postProcess: (config) => {
+            if (config?.sections?.length > 0) {
+              config.sections = config.sections.map((section) =>
+                section.id ? section : { ...section, id: generateId() },
+              );
+            }
+            return config;
+          },
+        },
+      ),
+  });
+
+  useEffect(() => {
+    if (dashboardConfigError) {
+      addNotification({
+        title: t('ERROR_LOADING_DASHBOARD_CONFIG'),
+        message: dashboardConfigError.message,
+        type: 'error',
+      });
+    }
+  }, [dashboardConfigError]);
 
   const sidebarItems = useMemo(() => {
     if (!dashboardConfig) return [];
@@ -110,7 +150,7 @@ const ConsultationPage: React.FC = () => {
     return <Loading description={t('ERROR_LOADING_DASHBOARD')} role="alert" />;
   }
 
-  if (!dashboardConfig) {
+  if (isDashboardConfigLoading) {
     return (
       <Loading description={t('LOADING_DASHBOARD_CONFIG')} role="status" />
     );
@@ -145,7 +185,7 @@ const ConsultationPage: React.FC = () => {
             }
           >
             <DashboardContainer
-              sections={dashboardConfig.sections}
+              sections={dashboardConfig!.sections}
               activeItemId={activeItemId}
             />
           </Suspense>
