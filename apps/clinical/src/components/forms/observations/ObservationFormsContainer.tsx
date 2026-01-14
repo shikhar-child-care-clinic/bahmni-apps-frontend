@@ -103,14 +103,6 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
     onViewingFormChange(null);
   };
 
-  // Handle form save - lift observations to parent and exit view mode
-  const handleSaveForm = () => {
-    if (viewingForm && onFormObservationsChange) {
-      onFormObservationsChange(viewingForm.uuid, observations);
-    }
-    onViewingFormChange(null);
-  };
-
   // Handle back navigation - exit view mode without saving
   const handleBack = () => {
     onViewingFormChange(null);
@@ -119,14 +111,26 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   // Validate form and save if no errors
   const validateAndSave = () => {
     if (formContainerRef.current) {
-      const { errors } = formContainerRef.current.getValue();
+      const { observations: currentObservations, errors } =
+        formContainerRef.current.getValue();
+
       if (errors && errors.length > 0) {
         setShowValidationError(true);
         return;
       }
 
       setShowValidationError(false);
-      handleSaveForm();
+
+      const observationsToSave: Form2Observation[] =
+        currentObservations && currentObservations.length > 0
+          ? (currentObservations as Form2Observation[])
+          : observations;
+
+      // Save with observations from Container
+      if (viewingForm && onFormObservationsChange) {
+        onFormObservationsChange(viewingForm.uuid, observationsToSave);
+      }
+      onViewingFormChange(null);
     }
   };
 
@@ -137,9 +141,31 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
     handleDiscardForm();
   };
 
-  // Navigate back to forms list and clear validation errors
+  // Navigate back to forms list and auto-save current state
   const navigateToForms = () => {
     setShowValidationError(false);
+
+    // Auto-save current form state when navigating back (draft save)
+    // This preserves user input when they close and reopen the form
+    if (viewingForm && onFormObservationsChange && formContainerRef.current) {
+      try {
+        // Get latest values directly from Container for deep nested controls
+        const { observations: currentObservations } =
+          formContainerRef.current.getValue();
+
+        // Use current observations from Container if available, otherwise use state
+        const observationsToSave: Form2Observation[] =
+          currentObservations && currentObservations.length > 0
+            ? (currentObservations as Form2Observation[])
+            : observations;
+
+        onFormObservationsChange(viewingForm.uuid, observationsToSave);
+      } catch {
+        // Fallback to state observations if getValue fails
+        onFormObservationsChange(viewingForm.uuid, observations);
+      }
+    }
+
     handleBack();
   };
 
