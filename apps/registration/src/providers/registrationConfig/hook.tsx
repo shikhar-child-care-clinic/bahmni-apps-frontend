@@ -1,7 +1,11 @@
 import { useContext } from 'react';
-import { RegistrationConfigContext } from '../contexts/RegistrationConfigContext';
-import { RegistrationConfigContextType } from '../models/registrationConfig';
+import { RegistrationConfigContext } from './context';
+import { RegistrationConfigContextType } from './models';
 
+/**
+ * Custom hook to access the config context
+ * @returns The config context values including config, loading state, and error
+ */
 export const useRegistrationConfig = (): RegistrationConfigContextType => {
   const context = useContext(RegistrationConfigContext);
 

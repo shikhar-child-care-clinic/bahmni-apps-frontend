@@ -94,8 +94,8 @@ const mockUseRegistrationConfig = jest.fn(() => ({
   },
 }));
 
-jest.mock('../../../../hooks/useRegistrationConfig', () => ({
-  useRegistrationConfig: () => mockUseRegistrationConfig(),
+jest.mock('../../../../providers/registrationConfig', () => ({
+  useRegistrationConfig: jest.fn(() => mockUseRegistrationConfig()),
 }));
 
 describe('ContactInfo', () => {
