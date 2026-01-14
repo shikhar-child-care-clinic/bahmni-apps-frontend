@@ -502,16 +502,14 @@ describe('FormsTable', () => {
       mockGetPatientFormData.mockResolvedValue(mockFormResponseData);
 
       const encounterUuids: string[] = [];
-      renderFormsTable({ encounterUuids });
-
-      await waitFor(() => {
-        expect(screen.getByText('Vitals Form')).toBeInTheDocument();
+      renderFormsTable({
+        encounterUuids,
+        episodeOfCareUuids: ['episodeUuid-1'],
       });
 
-      // Should show all providers
-      expect(screen.getByText('Dr. Smith')).toBeInTheDocument();
-      expect(screen.getByText('Dr. Johnson')).toBeInTheDocument();
-      expect(screen.getByText('Dr. Williams')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('No forms available')).toBeInTheDocument();
+      });
     });
 
     it('shows all forms when encounterUuids is not provided', async () => {
@@ -522,6 +520,10 @@ describe('FormsTable', () => {
       await waitFor(() => {
         expect(screen.getByText('Vitals Form')).toBeInTheDocument();
       });
+
+      // Should show all forms
+      expect(screen.getByText('Vitals Form')).toBeInTheDocument();
+      expect(screen.getByText('History Form')).toBeInTheDocument();
 
       // Should show all providers
       expect(screen.getByText('Dr. Smith')).toBeInTheDocument();
