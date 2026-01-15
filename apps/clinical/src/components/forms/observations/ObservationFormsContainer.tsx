@@ -66,6 +66,9 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
   const [showValidationError, setShowValidationError] = useState(false);
+  const [scriptExecutionError, setScriptExecutionError] = useState<
+    string | null
+  >(null);
   const formContainerRef = useRef<Container>(null);
 
   const {
@@ -127,17 +130,27 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       }
 
       setShowValidationError(false);
+      setScriptExecutionError(null);
 
-      // Execute onFormSave event before saving (if defined in form metadata)
-      // This allows forms to apply business logic, validations, or transformations
-      const processedObservations = executeOnFormSaveEvent(
-        formMetadata!,
-        observations,
-        patientUUID!,
-      );
+      try {
+        // Execute onFormSave event before saving (if defined in form metadata)
+        // This allows forms to apply business logic, validations, or transformations
+        const processedObservations = executeOnFormSaveEvent(
+          formMetadata!,
+          observations,
+          patientUUID!,
+        );
 
-      // Save with processed observations
-      handleSaveForm(processedObservations);
+        // Save with processed observations
+        handleSaveForm(processedObservations);
+      } catch (error) {
+        // Display error to user if onFormSave event script fails
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : t('OBSERVATION_FORM_SCRIPT_ERROR_MESSAGE');
+        setScriptExecutionError(errorMessage);
+      }
     }
   };
 
@@ -174,6 +187,19 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
             lowContrast
             hideCloseButton={false}
             onClose={() => setShowValidationError(false)}
+          />
+        </div>
+      )}
+
+      {scriptExecutionError && (
+        <div className={styles.errorNotificationWrapper}>
+          <InlineNotification
+            kind="error"
+            title={t('OBSERVATION_FORM_SCRIPT_ERROR_TITLE')}
+            subtitle={scriptExecutionError}
+            lowContrast
+            hideCloseButton={false}
+            onClose={() => setScriptExecutionError(null)}
           />
         </div>
       )}

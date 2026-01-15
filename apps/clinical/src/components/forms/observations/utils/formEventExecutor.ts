@@ -86,12 +86,18 @@ export const executeOnFormSaveEvent = (
     // If event doesn't return anything, use the modified context
     return formContext.observations;
   } catch (error) {
+    // Log for debugging
     console.error(
       `[FormEvent] Error executing onFormSave for form ${metadata.name}:`,
       error,
     );
-    // Return original observations on error to prevent data loss
-    return observations;
+
+    // Re-throw with better context for component to handle
+    throw new Error(
+      `Failed to execute onFormSave event for form "${metadata.name}": ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
   }
 };
 
