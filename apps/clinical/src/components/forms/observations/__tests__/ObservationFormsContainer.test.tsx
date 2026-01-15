@@ -66,6 +66,9 @@ jest.mock('@bahmni/widgets', () => ({
 // Mock the constants
 jest.mock('../../../../constants/forms', () => ({
   DEFAULT_FORM_API_NAMES: ['History and Examination', 'Vitals'],
+  VALIDATION_STATE_EMPTY: 'empty',
+  VALIDATION_STATE_MANDATORY: 'mandatory',
+  VALIDATION_STATE_INVALID: 'invalid',
 }));
 
 // Mock ActionArea component
@@ -627,13 +630,13 @@ describe('ObservationFormsContainer', () => {
       fireEvent.click(saveButton);
 
       // Notification should be displayed
-      // await waitFor(() => {
-      //   expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
-      // });
+      await waitFor(() => {
+        expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+      });
 
       // Close the notification
-      // const closeButton = screen.getByTestId('notification-close');
-      // fireEvent.click(closeButton);
+      const closeButton = screen.getByTestId('notification-close');
+      fireEvent.click(closeButton);
 
       // Notification should be removed
       await waitFor(() => {
@@ -672,13 +675,13 @@ describe('ObservationFormsContainer', () => {
       expect(mockOnFormObservationsChange).not.toHaveBeenCalled();
       expect(mockOnViewingFormChange).not.toHaveBeenCalled();
 
-      // // Should display validation error notification
-      // await waitFor(() => {
-      //   expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
-      //   expect(screen.getByTestId('notification-title')).toHaveTextContent(
-      //     'translated_OBSERVATION_FORM_VALIDATION_ERROR_TITLE_MANDATORY',
-      //   );
-      // });
+      // Should display validation error notification
+      await waitFor(() => {
+        expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+        expect(screen.getByTestId('notification-title')).toHaveTextContent(
+          'translated_OBSERVATION_FORM_VALIDATION_ERROR_TITLE_MANDATORY',
+        );
+      });
     });
 
     it('should hide validation error when discard button is clicked', async () => {
@@ -707,10 +710,10 @@ describe('ObservationFormsContainer', () => {
       const saveButton = screen.getByTestId('primary-button');
       fireEvent.click(saveButton);
 
-      // // Notification should be displayed
-      // await waitFor(() => {
-      //   expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
-      // });
+      // Notification should be displayed
+      await waitFor(() => {
+        expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+      });
 
       // Click discard button
       const discardButton = screen.getByTestId('secondary-button');
@@ -720,6 +723,186 @@ describe('ObservationFormsContainer', () => {
       expect(mockResetForm).toHaveBeenCalled();
       expect(mockOnRemoveForm).toHaveBeenCalledWith(mockForm.uuid);
       expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
+    });
+
+    it('should show empty form validation error when form has no observations', async () => {
+      const mockOnFormObservationsChange = jest.fn();
+
+      // Mock getValue to return empty observations
+      mockGetValue.mockReturnValue({
+        observations: [],
+        errors: [],
+      });
+
+      render(
+        <ObservationFormsContainer
+          {...defaultProps}
+          viewingForm={mockForm}
+          onFormObservationsChange={mockOnFormObservationsChange}
+        />,
+      );
+
+      const saveButton = screen.getByTestId('primary-button');
+      fireEvent.click(saveButton);
+
+      // Should not save when form is empty
+      expect(mockOnFormObservationsChange).not.toHaveBeenCalled();
+
+      // Should display empty validation error notification
+      await waitFor(() => {
+        expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+        expect(screen.getByTestId('notification-title')).toHaveTextContent(
+          'translated_OBSERVATION_FORM_VALIDATION_ERROR_TITLE_EMPTY',
+        );
+      });
+    });
+
+    it('should show invalid field validation error but not block submission', async () => {
+      const mockOnFormObservationsChange = jest.fn();
+      const mockOnViewingFormChange = jest.fn();
+
+      // Mock getValue to return invalid error (not mandatory)
+      mockGetValue.mockReturnValue({
+        observations: [{ concept: { uuid: 'test' }, value: 'invalid value' }],
+        errors: [{ message: 'invalid' }],
+      });
+
+      render(
+        <ObservationFormsContainer
+          {...defaultProps}
+          viewingForm={mockForm}
+          onFormObservationsChange={mockOnFormObservationsChange}
+          onViewingFormChange={mockOnViewingFormChange}
+        />,
+      );
+
+      const saveButton = screen.getByTestId('primary-button');
+      fireEvent.click(saveButton);
+
+      // Should not save on first click (shows error)
+      expect(mockOnFormObservationsChange).not.toHaveBeenCalled();
+
+      // Should display invalid validation error notification
+      await waitFor(() => {
+        expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+        expect(screen.getByTestId('notification-title')).toHaveTextContent(
+          'translated_OBSERVATION_FORM_VALIDATION_ERROR_TITLE_INVALID',
+        );
+      });
+    });
+
+    it('should allow Continue Anyway functionality by clicking Save again after validation error', async () => {
+      const mockOnFormObservationsChange = jest.fn();
+      const mockOnViewingFormChange = jest.fn();
+
+      render(
+        <ObservationFormsContainer
+          {...defaultProps}
+          viewingForm={mockForm}
+          onFormObservationsChange={mockOnFormObservationsChange}
+          onViewingFormChange={mockOnViewingFormChange}
+        />,
+      );
+
+      const saveButton = screen.getByTestId('primary-button');
+
+      // First click - should show validation error
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+      });
+
+      // Should not have saved yet
+      expect(mockOnFormObservationsChange).not.toHaveBeenCalled();
+
+      // Second click - should skip validation and save (Continue Anyway)
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(mockOnFormObservationsChange).toHaveBeenCalledWith(
+          mockForm.uuid,
+          expect.any(Array),
+          'mandatory', // validationState is passed with the error type
+        );
+        expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
+      });
+    });
+
+    it('should prioritize mandatory error over invalid error when both exist', async () => {
+      // Mock getValue to return multiple error types
+      mockGetValue.mockReturnValue({
+        observations: [{ concept: { uuid: 'test' }, value: 'test' }],
+        errors: [{ message: 'mandatory' }, { message: 'invalid' }],
+      });
+
+      render(
+        <ObservationFormsContainer {...defaultProps} viewingForm={mockForm} />,
+      );
+
+      const saveButton = screen.getByTestId('primary-button');
+      fireEvent.click(saveButton);
+
+      // Should show mandatory error (higher priority)
+      await waitFor(() => {
+        expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+        expect(screen.getByTestId('notification-title')).toHaveTextContent(
+          'translated_OBSERVATION_FORM_VALIDATION_ERROR_TITLE_MANDATORY',
+        );
+      });
+    });
+
+    it('should display correct subtitle for each validation error type', async () => {
+      // Setup with formMetadata for mandatory error test
+      mockUseObservationFormData.mockReturnValue({
+        observations: [],
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: mockMetadata,
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
+      // Test mandatory error subtitle
+      mockGetValue.mockReturnValue({
+        observations: [{ concept: { uuid: 'test' }, value: 'test' }],
+        errors: [{ message: 'mandatory' }],
+      });
+
+      const { rerender } = render(
+        <ObservationFormsContainer {...defaultProps} viewingForm={mockForm} />,
+      );
+
+      fireEvent.click(screen.getByTestId('primary-button'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+        expect(screen.getByTestId('notification-subtitle')).toHaveTextContent(
+          'translated_OBSERVATION_FORM_VALIDATION_ERROR_SUBTITLE_MANDATORY',
+        );
+      });
+
+      // Close notification
+      fireEvent.click(screen.getByTestId('notification-close'));
+
+      // Test empty error subtitle
+      mockGetValue.mockReturnValue({
+        observations: [],
+        errors: [],
+      });
+
+      rerender(
+        <ObservationFormsContainer {...defaultProps} viewingForm={mockForm} />,
+      );
+
+      fireEvent.click(screen.getByTestId('primary-button'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+        expect(screen.getByTestId('notification-subtitle')).toHaveTextContent(
+          'translated_OBSERVATION_FORM_VALIDATION_ERROR_SUBTITLE_EMPTY',
+        );
+      });
     });
   });
 });
