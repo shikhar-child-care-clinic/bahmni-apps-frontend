@@ -116,6 +116,12 @@ export const fetchFormMetadata = async (
   const formSchema = JSON.parse(data.resources[0].value);
   const currentLocale = getUserPreferredLocale();
 
+  // Use fallback values from schema if API response doesn't have them
+  const formName = formSchema.name ?? data.name;
+  const formUuidValue = data.uuid ?? formSchema.uuid;
+  const formVersion = formSchema.version ?? data.version ?? '1';
+  const formPublished = data.published ?? false;
+
   // Fetch translations from API endpoint if translationsUrl is present
   let translations: ObservationFormTranslations = { labels: {}, concepts: {} };
 
@@ -126,13 +132,9 @@ export const fetchFormMetadata = async (
     typeof formSchema.translationsUrl === 'string'
   ) {
     try {
-      const formName = formSchema.name ?? data.name;
-      const formUuid = data.uuid ?? formSchema.uuid;
-      const formVersion = formSchema.version ?? data.version ?? '1';
-
       const translationsUrl = FORM_TRANSLATIONS_URL(
         formName,
-        formUuid,
+        formUuidValue,
         formVersion,
         currentLocale,
       );
@@ -151,10 +153,10 @@ export const fetchFormMetadata = async (
   }
 
   return {
-    uuid: data.uuid,
-    name: data.name,
-    version: data.version,
-    published: data.published,
+    uuid: formUuidValue,
+    name: formName,
+    version: formVersion,
+    published: formPublished,
     schema: formSchema,
     translations,
   };
