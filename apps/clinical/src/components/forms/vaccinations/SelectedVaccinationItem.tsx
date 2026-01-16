@@ -215,7 +215,7 @@ const SelectedVaccinationItem: React.FC<SelectedVaccinationItemProps> =
             <Column sm={2} md={4} lg={8} className={styles.vaccinationActions}>
               <Checkbox
                 id={`stat-${id}`}
-                labelText={t('VACCINATION_STAT')}
+                labelText={t('MEDICATION_STAT')}
                 aria-label="STAT"
                 checked={isSTAT}
                 onChange={(e) => updateisSTAT(id, e.target.checked)}
@@ -230,7 +230,7 @@ const SelectedVaccinationItem: React.FC<SelectedVaccinationItemProps> =
                 size="sm"
                 step={1}
                 value={dosage}
-                label={t('VACCINATION_DOSAGE_INPUT_LABEL')}
+                label={t('MEDICATION_DOSAGE_INPUT_LABEL')}
                 aria-label="Dosage"
                 className={styles.dosageInput}
                 hideLabel
@@ -246,8 +246,8 @@ const SelectedVaccinationItem: React.FC<SelectedVaccinationItemProps> =
 
               <Dropdown
                 id={`dosage-unit-${id}`}
-                titleText={t('VACCINATION_DOSAGE_UNIT_INPUT_LABEL')}
-                label={t('VACCINATION_DOSAGE_UNIT_INPUT_LABEL')}
+                titleText={t('MEDICATION_DOSAGE_UNIT_INPUT_LABEL')}
+                label={t('MEDICATION_DOSAGE_UNIT_INPUT_LABEL')}
                 aria-label="Dosage Unit"
                 className={styles.dosageUnit}
                 hideLabel
@@ -269,8 +269,8 @@ const SelectedVaccinationItem: React.FC<SelectedVaccinationItemProps> =
             <Column sm={1} md={2} lg={4} className={styles.column}>
               <Dropdown
                 id={`frequency-${id}`}
-                titleText={t('VACCINATION_FREQUENCY_INPUT_LABEL')}
-                label={t('VACCINATION_FREQUENCY_INPUT_LABEL')}
+                titleText={t('MEDICATION_FREQUENCY_INPUT_LABEL')}
+                label={t('MEDICATION_FREQUENCY_INPUT_LABEL')}
                 aria-label="Frequency"
                 hideLabel
                 size="sm"
@@ -295,7 +295,7 @@ const SelectedVaccinationItem: React.FC<SelectedVaccinationItemProps> =
             <Column sm={2} md={3} lg={6} className={styles.durationControls}>
               <NumberInput
                 id={`duration-${id}`}
-                label={t('VACCINATION_DURATION_INPUT_LABEL')}
+                label={t('MEDICATION_DURATION_INPUT_LABEL')}
                 aria-label="Duration"
                 className={styles.durationInput}
                 hideLabel
@@ -315,8 +315,8 @@ const SelectedVaccinationItem: React.FC<SelectedVaccinationItemProps> =
               />
               <Dropdown
                 id={`duration-unit-${id}`}
-                titleText={t('VACCINATION_DURATION_UNIT_INPUT_LABEL')}
-                label={t('VACCINATION_DURATION_UNIT_INPUT_LABEL')}
+                titleText={t('MEDICATION_DURATION_UNIT_INPUT_LABEL')}
+                label={t('MEDICATION_DURATION_UNIT_INPUT_LABEL')}
                 aria-label="Duration Unit"
                 className={styles.durationUnit}
                 hideLabel
@@ -341,8 +341,8 @@ const SelectedVaccinationItem: React.FC<SelectedVaccinationItemProps> =
             <Column sm={1} md={2} lg={4} className={styles.column}>
               <Dropdown
                 id={`vac-instructions-${id}`}
-                titleText={t('VACCINATION_INSTRUCTIONS_INPUT_LABEL')}
-                label={t('VACCINATION_INSTRUCTIONS_INPUT_LABEL')}
+                titleText={t('MEDICATION_INSTRUCTIONS_INPUT_LABEL')}
+                label={t('MEDICATION_INSTRUCTIONS_INPUT_LABEL')}
                 aria-label="Vaccination Instructions"
                 hideLabel
                 size="sm"
@@ -361,8 +361,8 @@ const SelectedVaccinationItem: React.FC<SelectedVaccinationItemProps> =
             <Column sm={1} md={2} lg={4} className={styles.column}>
               <Dropdown
                 id={`route-${id}`}
-                titleText={t('VACCINATION_ROUTE_INPUT_LABEL')}
-                label={t('VACCINATION_ROUTE_INPUT_LABEL')}
+                titleText={t('MEDICATION_ROUTE_INPUT_LABEL')}
+                label={t('MEDICATION_ROUTE_INPUT_LABEL')}
                 aria-label="Route"
                 hideLabel
                 size="sm"
@@ -395,7 +395,7 @@ const SelectedVaccinationItem: React.FC<SelectedVaccinationItemProps> =
                 <DatePickerInput
                   id={`start-date-${id}`}
                   placeholder={DATE_PICKER_INPUT_FORMAT}
-                  labelText={t('VACCINATION_START_DATE_INPUT_LABEL')}
+                  labelText={t('MEDICATION_START_DATE_INPUT_LABEL')}
                   aria-label="Start Date"
                   hideLabel
                   size="sm"
