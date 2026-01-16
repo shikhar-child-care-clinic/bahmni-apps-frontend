@@ -63,6 +63,7 @@ export const ActionArea: React.FC<ActionAreaProps> = ({
       })}
       role="region"
       aria-label={accessibleLabel}
+      aria-hidden={hidden}
     >
       <h2 className={styles.title} id="action-area-title">
         {title}
