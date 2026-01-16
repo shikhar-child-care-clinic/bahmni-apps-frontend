@@ -208,10 +208,18 @@ const SelectedMedicationItem: React.FC<SelectedMedicationItemProps> =
         setDefaultDurationUnit();
       }, [setDefaultInstruction, setDefaultDurationUnit]);
 
+      const medicineName = display.split('(')[0];
+      const medicineDetails = display.includes('(')
+        ? '(' + display.split('(').slice(1).join('(')
+        : '';
+
       return (
         <Grid condensed={false} narrow={false}>
           <Column sm={2} md={4} lg={8} className={styles.medicationTitle}>
-            {display}
+            <span>{medicineName}</span>
+            {medicineDetails && (
+              <span className={styles.medicineDetails}>{medicineDetails}</span>
+            )}
           </Column>
           <Column sm={2} md={4} lg={8} className={styles.medicationActions}>
             <Checkbox

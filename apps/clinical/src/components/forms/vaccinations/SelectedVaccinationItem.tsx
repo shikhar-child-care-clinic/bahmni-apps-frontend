@@ -206,11 +206,19 @@ const SelectedVaccinationItem: React.FC<SelectedVaccinationItemProps> =
         setDefaultDurationUnit();
       }, [setDefaultInstruction, setDefaultDurationUnit]);
 
+      const vaccineName = display.split('(')[0];
+      const VaccineDetails = display.includes('(')
+        ? '(' + display.split('(').slice(1).join('(')
+        : '';
+
       return (
         <>
           <Grid condensed={false} narrow={false}>
             <Column sm={2} md={4} lg={8} className={styles.vaccinationTitle}>
-              {display}
+              <span>{vaccineName}</span>
+              {VaccineDetails && (
+                <span className={styles.vaccineDetails}>{VaccineDetails}</span>
+              )}
             </Column>
             <Column sm={2} md={4} lg={8} className={styles.vaccinationActions}>
               <Checkbox

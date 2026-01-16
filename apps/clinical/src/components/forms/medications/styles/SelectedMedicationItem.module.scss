@@ -12,6 +12,9 @@
   @include type-style("heading-compact-02");
   margin-bottom: $spacing-04;
   margin-left: 0;
+  .medicineDetails {
+    @include type-style("body-short-02");
+  }
 }
 
 .medicationActions {
