@@ -84,7 +84,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
 
   const {
     observations,
-    handleFormDataChange: originalHandleFormDataChange,
+    handleFormDataChange: baseHandleFormDataChange,
     resetForm,
     formMetadata,
     isLoadingMetadata,
@@ -104,10 +104,10 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       if (viewingForm && onFormObservationsChange) {
         onFormObservationsChange(viewingForm.uuid, observations, null);
       }
-      originalHandleFormDataChange(data);
+      baseHandleFormDataChange(data);
     },
     [
-      originalHandleFormDataChange,
+      baseHandleFormDataChange,
       validationErrorType,
       viewingForm,
       onFormObservationsChange,

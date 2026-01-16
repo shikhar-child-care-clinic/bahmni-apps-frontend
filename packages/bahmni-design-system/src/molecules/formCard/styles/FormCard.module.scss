@@ -79,7 +79,6 @@
 .errorMessage {
   @include type-style("label-01");
   color: $support-error;
-  font-weight: 400;
   margin-top: -$spacing-04;
   margin-left: $spacing-05 + $spacing-02;
 }

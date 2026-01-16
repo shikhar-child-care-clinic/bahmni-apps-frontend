@@ -296,7 +296,6 @@ const createMockObservationFormsStore = () => ({
   getAllObservations: jest.fn(() => []),
   getObservationFormsData: jest.fn(() => ({})),
   validate: jest.fn(() => true),
-  hasObservationFormErrors: jest.fn(() => false),
   reset: jest.fn(() => {
     mockObservationFormsStoreState.selectedForms = [];
     mockObservationFormsStoreState.formsData = {};

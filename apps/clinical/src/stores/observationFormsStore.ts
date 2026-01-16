@@ -38,7 +38,6 @@ export interface ObservationFormsState {
   getAllObservations: () => Form2Observation[];
   getObservationFormsData: () => Record<string, Form2Observation[]>;
   validate: () => boolean;
-  hasObservationFormErrors: () => boolean;
   reset: () => void;
   getState: () => ObservationFormsState;
 }
@@ -175,32 +174,22 @@ export const useObservationFormsStore = create<ObservationFormsState>(
 
     validate: () => {
       const state = get();
-
       for (const form of state.selectedForms) {
         const formData = state.formsData[form.uuid];
+        // Check if form has no data
         if (!formData || formData.observations.length === 0) {
           return false;
         }
-      }
-
-      return true;
-    },
-
-    hasObservationFormErrors: () => {
-      const state = get();
-
-      for (const form of state.selectedForms) {
-        const formData = state.formsData[form.uuid];
+        // Check if form has validation errors
         if (
-          formData?.validationState === VALIDATION_STATE_MANDATORY ||
-          formData?.validationState === VALIDATION_STATE_EMPTY ||
-          formData?.validationState === VALIDATION_STATE_INVALID
+          formData.validationState === VALIDATION_STATE_MANDATORY ||
+          formData.validationState === VALIDATION_STATE_EMPTY ||
+          formData.validationState === VALIDATION_STATE_INVALID
         ) {
-          return true;
+          return false;
         }
       }
-
-      return false;
+      return true;
     },
 
     reset: () => {

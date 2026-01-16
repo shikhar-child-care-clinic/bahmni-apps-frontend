@@ -72,7 +72,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     updateFormData,
     getFormData,
     getObservationFormsData,
-    hasObservationFormErrors,
+    validate: validateObservationForms,
     reset: resetObservationForms,
   } = useObservationFormsStore();
 
@@ -277,9 +277,9 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       const isConditionsAndDiagnosesValid = validate();
       const isAllergiesValid = validateAllAllergies();
       const isMedicationsValid = validateAllMedications();
-      const hasFormErrors = hasObservationFormErrors();
+      const isObservationFormValid = validateObservationForms();
 
-      if (hasFormErrors) {
+      if (!isObservationFormValid) {
         addNotification({
           title: t('OBSERVATION_FORMS_MANDATORY_ERROR_TITLE'),
           message: t('OBSERVATION_FORMS_MANDATORY_ERROR_MESSAGE'),
@@ -292,7 +292,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         !isConditionsAndDiagnosesValid ||
         !isAllergiesValid ||
         !isMedicationsValid ||
-        hasFormErrors
+        !isObservationFormValid
       ) {
         return;
       }
