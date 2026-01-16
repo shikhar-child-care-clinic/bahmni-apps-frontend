@@ -8,7 +8,9 @@ exports[`SelectedMedicationItem Snapshot Tests matches snapshot with default pro
     <div
       class="medicationTitle cds--sm:col-span-2 cds--md:col-span-4 cds--lg:col-span-8 cds--css-grid-column"
     >
-      Paracetamol 500mg
+      <span>
+        Paracetamol 500mg
+      </span>
     </div>
     <div
       class="medicationActions cds--sm:col-span-2 cds--md:col-span-4 cds--lg:col-span-8 cds--css-grid-column"
@@ -656,7 +658,9 @@ exports[`SelectedMedicationItem Snapshot Tests matches snapshot with errors 1`] 
     <div
       class="medicationTitle cds--sm:col-span-2 cds--md:col-span-4 cds--lg:col-span-8 cds--css-grid-column"
     >
-      Paracetamol 500mg
+      <span>
+        Paracetamol 500mg
+      </span>
     </div>
     <div
       class="medicationActions cds--sm:col-span-2 cds--md:col-span-4 cds--lg:col-span-8 cds--css-grid-column"
