@@ -164,7 +164,8 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
         return;
       }
 
-      const { observations, errors } = formContainerRef.current.getValue();
+      const { observations: currentObservations, errors } =
+        formContainerRef.current.getValue();
 
       const isEmpty = !observations || observations.length === 0;
       const hasErrors = errors && errors.length > 0;
@@ -194,7 +195,17 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
 
       // If we reach here, validation passed
       setValidationErrorType(null);
-      handleSaveForm();
+
+      const observationsToSave: Form2Observation[] =
+        currentObservations && currentObservations.length > 0
+          ? (currentObservations as Form2Observation[])
+          : observations;
+
+      // Save with observations from Container
+      if (viewingForm && onFormObservationsChange) {
+        onFormObservationsChange(viewingForm.uuid, observationsToSave);
+      }
+      onViewingFormChange(null);
     }
   };
 

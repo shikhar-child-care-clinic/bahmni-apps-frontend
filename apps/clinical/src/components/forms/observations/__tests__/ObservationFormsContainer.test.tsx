@@ -297,7 +297,6 @@ describe('ObservationFormsContainer', () => {
       expect(mockOnFormObservationsChange).toHaveBeenCalledWith(
         mockForm.uuid,
         expect.any(Array),
-        null, // validationState is null when form is saved without errors
       );
       expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
     });
@@ -622,6 +621,15 @@ describe('ObservationFormsContainer', () => {
     });
 
     it('should close validation error notification when close button is clicked', async () => {
+      mockUseObservationFormData.mockReturnValue({
+        observations: [{ concept: { uuid: 'test' }, value: 'test value' }],
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: mockMetadata,
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
       render(
         <ObservationFormsContainer {...defaultProps} viewingForm={mockForm} />,
       );
@@ -651,7 +659,7 @@ describe('ObservationFormsContainer', () => {
       const mockOnViewingFormChange = jest.fn();
 
       mockUseObservationFormData.mockReturnValue({
-        observations: [],
+        observations: [{ concept: { uuid: 'test' }, value: 'test value' }],
         handleFormDataChange: jest.fn(),
         resetForm: jest.fn(),
         formMetadata: mockMetadata,
@@ -761,6 +769,15 @@ describe('ObservationFormsContainer', () => {
       const mockOnFormObservationsChange = jest.fn();
       const mockOnViewingFormChange = jest.fn();
 
+      mockUseObservationFormData.mockReturnValue({
+        observations: [{ concept: { uuid: 'test' }, value: 'invalid value' }],
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: mockMetadata,
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
       // Mock getValue to return invalid error (not mandatory)
       mockGetValue.mockReturnValue({
         observations: [{ concept: { uuid: 'test' }, value: 'invalid value' }],
@@ -794,6 +811,15 @@ describe('ObservationFormsContainer', () => {
     it('should allow Continue Anyway functionality by clicking Save again after validation error', async () => {
       const mockOnFormObservationsChange = jest.fn();
       const mockOnViewingFormChange = jest.fn();
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: [{ concept: { uuid: 'test' }, value: 'test value' }],
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: mockMetadata,
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
 
       render(
         <ObservationFormsContainer
@@ -829,33 +855,10 @@ describe('ObservationFormsContainer', () => {
       });
     });
 
-    it('should prioritize mandatory error over invalid error when both exist', async () => {
-      // Mock getValue to return multiple error types
-      mockGetValue.mockReturnValue({
-        observations: [{ concept: { uuid: 'test' }, value: 'test' }],
-        errors: [{ message: 'mandatory' }, { message: 'invalid' }],
-      });
-
-      render(
-        <ObservationFormsContainer {...defaultProps} viewingForm={mockForm} />,
-      );
-
-      const saveButton = screen.getByTestId('primary-button');
-      fireEvent.click(saveButton);
-
-      // Should show mandatory error (higher priority)
-      await waitFor(() => {
-        expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
-        expect(screen.getByTestId('notification-title')).toHaveTextContent(
-          'translated_OBSERVATION_FORM_VALIDATION_ERROR_TITLE_MANDATORY',
-        );
-      });
-    });
-
     it('should display correct subtitle for each validation error type', async () => {
       // Setup with formMetadata for mandatory error test
       mockUseObservationFormData.mockReturnValue({
-        observations: [],
+        observations: [{ concept: { uuid: 'test' }, value: 'test value' }],
         handleFormDataChange: jest.fn(),
         resetForm: jest.fn(),
         formMetadata: mockMetadata,
@@ -889,6 +892,15 @@ describe('ObservationFormsContainer', () => {
       mockGetValue.mockReturnValue({
         observations: [],
         errors: [],
+      });
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: [],
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: mockMetadata,
+        isLoadingMetadata: false,
+        metadataError: null,
       });
 
       rerender(

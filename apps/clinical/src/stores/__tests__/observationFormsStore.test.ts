@@ -548,7 +548,7 @@ describe('observationFormsStore', () => {
       expect(result.current.hasObservationFormErrors()).toBe(true);
     });
 
-    it('should return false when a selected form has only invalid validation error', () => {
+    it('should return true when a selected form has invalid validation error', () => {
       const { result } = renderHook(() => useObservationFormsStore());
 
       act(() => {
@@ -560,10 +560,10 @@ describe('observationFormsStore', () => {
         );
       });
 
-      expect(result.current.hasObservationFormErrors()).toBe(false);
+      expect(result.current.hasObservationFormErrors()).toBe(true);
     });
 
-    it('should return true when at least one form has mandatory or empty error', () => {
+    it('should return true when at least one form has mandatory, empty, or invalid error', () => {
       const { result } = renderHook(() => useObservationFormsStore());
 
       act(() => {
@@ -576,7 +576,7 @@ describe('observationFormsStore', () => {
       expect(result.current.hasObservationFormErrors()).toBe(true);
     });
 
-    it('should return false when all forms have invalid errors only', () => {
+    it('should return true when all forms have invalid errors', () => {
       const { result } = renderHook(() => useObservationFormsStore());
 
       act(() => {
@@ -594,7 +594,7 @@ describe('observationFormsStore', () => {
         );
       });
 
-      expect(result.current.hasObservationFormErrors()).toBe(false);
+      expect(result.current.hasObservationFormErrors()).toBe(true);
     });
   });
 

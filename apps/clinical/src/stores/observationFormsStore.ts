@@ -193,7 +193,8 @@ export const useObservationFormsStore = create<ObservationFormsState>(
         const formData = state.formsData[form.uuid];
         if (
           formData?.validationState === VALIDATION_STATE_MANDATORY ||
-          formData?.validationState === VALIDATION_STATE_EMPTY
+          formData?.validationState === VALIDATION_STATE_EMPTY ||
+          formData?.validationState === VALIDATION_STATE_INVALID
         ) {
           return true;
         }
