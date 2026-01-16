@@ -199,11 +199,14 @@ describe('MedicationService', () => {
         form: {
           text: 'Tablet',
         },
+        code: {
+          text: 'Paracetamol Code',
+        },
       };
 
       const result = getMedicationDisplay(medication);
 
-      expect(result).toBe('Paracetamol (Tablet)');
+      expect(result).toBe('Paracetamol (Tablet)- Paracetamol Code');
     });
 
     it('should return medication display name without form', () => {
