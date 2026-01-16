@@ -403,7 +403,7 @@ const SelectedVaccinationItem: React.FC<SelectedVaccinationItemProps> =
                 />
               </DatePicker>
             </Column>
-            <Column sm={4} md={8} lg={16} className={styles.totalQuantity}>
+            <Column sm={4} md={8} lg={16} className={styles.footerRow}>
               {!hasNote && (
                 <Link
                   href="#"
@@ -411,7 +411,6 @@ const SelectedVaccinationItem: React.FC<SelectedVaccinationItemProps> =
                     e.preventDefault();
                     setHasNote(true);
                   }}
-                  className={styles.addVaccinationNote}
                 >
                   {t('ADD_VACCINATION_NOTE')}
                 </Link>

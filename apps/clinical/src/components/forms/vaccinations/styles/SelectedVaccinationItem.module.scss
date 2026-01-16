@@ -14,11 +14,6 @@
   margin-left: 0;
 }
 
-.addVaccinationNote {
-  margin-left: $spacing-03;
-  font-size: 0.875rem;
-}
-
 .vaccinationActions {
   display: flex !important;
   flex-direction: row !important;
@@ -60,8 +55,10 @@
   width: 50%;
 }
 
-.totalQuantity {
-  justify-self: end;
+.footerRow {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
 }
 
 .statControl {
