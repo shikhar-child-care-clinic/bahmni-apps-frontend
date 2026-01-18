@@ -91,6 +91,11 @@
   color: $text-secondary;
 }
 
+.abnormalValue {
+  @include type-style('heading-compact-01');
+  color: $support-error;
+}
+
 .commentSection {
   margin-block-start: $spacing-04;
   padding-block-start: $spacing-04;
