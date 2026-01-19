@@ -122,6 +122,7 @@ describe('diagnosesService', () => {
         const mockConditions = [
           createMockDiagnosis({
             id: 'confirmed-diagnosis',
+            code: { text: 'Confirmed Condition' },
             verificationStatus: {
               coding: [
                 { code: 'confirmed', display: 'Confirmed', system: 'test' },
@@ -130,6 +131,7 @@ describe('diagnosesService', () => {
           }),
           createMockDiagnosis({
             id: 'provisional-diagnosis',
+            code: { text: 'Provisional Condition' },
             verificationStatus: {
               coding: [
                 { code: 'provisional', display: 'Provisional', system: 'test' },
@@ -143,8 +145,16 @@ describe('diagnosesService', () => {
 
         const result = await getPatientDiagnoses(patientUUID);
 
-        expect(result[0].certainty).toEqual(CERTAINITY_CONCEPTS[0]); // confirmed
-        expect(result[1].certainty).toEqual(CERTAINITY_CONCEPTS[1]); // provisional
+        expect(result).toHaveLength(2);
+        const confirmedResult = result.find(
+          (d) => d.display === 'Confirmed Condition',
+        );
+        const provisionalResult = result.find(
+          (d) => d.display === 'Provisional Condition',
+        );
+
+        expect(confirmedResult?.certainty).toEqual(CERTAINITY_CONCEPTS[0]); // confirmed
+        expect(provisionalResult?.certainty).toEqual(CERTAINITY_CONCEPTS[1]); // provisional
       });
 
       it('should handle malformed FHIR data', async () => {
@@ -645,7 +655,7 @@ describe('diagnosesService', () => {
 
         expect(result).toHaveLength(3);
         const resultMap = new Map(result.map((d) => [d.display, d]));
-        
+
         expect(resultMap.get('Diabetes')?.id).toBe('diabetes-2'); // Most recent
         expect(resultMap.get('Asthma')?.id).toBe('unique-1'); // Only one
         expect(resultMap.get('Hypertension')?.id).toBe('hypertension-2'); // Most recent

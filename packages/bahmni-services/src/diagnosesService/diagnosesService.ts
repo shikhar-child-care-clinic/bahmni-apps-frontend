@@ -83,7 +83,6 @@ function formatDiagnoses(bundle: Bundle): Diagnosis[] {
  * @returns Deduplicated array of diagnoses
  */
 function deduplicateDiagnoses(diagnoses: Diagnosis[]): Diagnosis[] {
-  console.log('[DEDUP] Input diagnoses count:', diagnoses.length);
   const diagnosisMap = new Map<string, Diagnosis>();
 
   for (const diagnosis of diagnoses) {
@@ -96,8 +95,6 @@ function deduplicateDiagnoses(diagnoses: Diagnosis[]): Diagnosis[] {
       continue;
     }
 
-    console.log('[DEDUP] Found duplicate:', diagnosis.display);
-
     // Keep the most recent by recordedDate, use id as tiebreaker
     const existingDate = new Date(existing.recordedDate).getTime();
     const currentDate = new Date(diagnosis.recordedDate).getTime();
@@ -106,16 +103,11 @@ function deduplicateDiagnoses(diagnoses: Diagnosis[]): Diagnosis[] {
       currentDate > existingDate ||
       (currentDate === existingDate && diagnosis.id > existing.id)
     ) {
-      console.log('[DEDUP] Keeping newer entry:', diagnosis.id);
       diagnosisMap.set(key, diagnosis);
-    } else {
-      console.log('[DEDUP] Keeping existing entry:', existing.id);
     }
   }
 
-  const result = Array.from(diagnosisMap.values());
-  console.log('[DEDUP] Output diagnoses count:', result.length);
-  return result;
+  return Array.from(diagnosisMap.values());
 }
 
 /**
