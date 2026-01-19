@@ -130,6 +130,13 @@ jest.mock('../../../components/forms/medications/MedicationsForm', () => ({
   ),
 }));
 
+jest.mock('../../../components/forms/vaccinations/VaccinationForm', () => ({
+  __esModule: true,
+  default: () => (
+    <div data-testid="mock-vaccination-forms">Vaccination Form</div>
+  ),
+}));
+
 // Mock services
 jest.mock('../../../services/consultationBundleService', () => ({
   postConsultationBundle: jest.fn(),

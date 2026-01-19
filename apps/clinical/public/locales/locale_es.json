@@ -277,6 +277,8 @@
   "VITAL_SIGNS_RESPIRATORY_RATE": "Frecuencia respiratoria",
   "VITAL_SIGNS_SYSTOLIC_BLOOD_PRESSURE": "Presión arterial sistólica",
   "VITAL_SIGNS_TEMPERATURE": "Temperatura",
+  "VACCINATION_ADD_NOTE": "Agregar Nota",
+  "VACCINATION_ADD_NOTE_PLACEHOLDER": "Agregar notas para la vacuna",
   "VACCINATION_ADDED_VACCINATIONS": "Vacunas agregadas",
   "VACCINATION_FORM_TITLE": "Vacunas",
   "VACCINATION_SEARCH_PLACEHOLDER": "Buscar para agregar vacuna",
@@ -284,7 +286,5 @@
   "LOADING_VACCINATIONS": "Cargando vacunas...",
   "ERROR_SEARCHING_VACCINATIONS": "Error al buscar vacunas",
   "NO_MATCHING_VACCINATIONS_FOUND": "No se encontraron vacunas coincidentes",
-  "ERROR_FETCHING_VACCINATION_CONFIG": "Error al obtener la configuración de vacunas",
-  "ADD_VACCINATION_NOTE": "Agregar Nota",
-  "ADD_VACCINATION_NOTE_PLACEHOLDER": "Agregar notas para la vacuna"
+  "ERROR_FETCHING_VACCINATION_CONFIG": "Error al obtener la configuración de vacunas"
 }

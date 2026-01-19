@@ -277,6 +277,8 @@
   "VITAL_SIGNS_RESPIRATORY_RATE": "Respiratory rate",
   "VITAL_SIGNS_SYSTOLIC_BLOOD_PRESSURE": "Systolic blood pressure",
   "VITAL_SIGNS_TEMPERATURE": "Temperature",
+  "VACCINATION_ADD_NOTE": "Add Note",
+  "VACCINATION_ADD_NOTE_PLACEHOLDER": "Add notes for the vaccination",
   "VACCINATION_ADDED_VACCINATIONS": "Added vaccinations",
   "VACCINATION_FORM_TITLE": "Vaccinations",
   "VACCINATION_SEARCH_PLACEHOLDER": "Search to add vaccination",
@@ -284,7 +286,5 @@
   "LOADING_VACCINATIONS": "Loading vaccinations...",
   "ERROR_SEARCHING_VACCINATIONS": "Error searching vaccinations",
   "NO_MATCHING_VACCINATIONS_FOUND": "No matching vaccinations found",
-  "ERROR_FETCHING_VACCINATION_CONFIG": "Error fetching vaccination configuration",
-  "ADD_VACCINATION_NOTE": "Add Note",
-  "ADD_VACCINATION_NOTE_PLACEHOLDER": "Add notes for the vaccination"
+  "ERROR_FETCHING_VACCINATION_CONFIG": "Error fetching vaccination configuration"
 }

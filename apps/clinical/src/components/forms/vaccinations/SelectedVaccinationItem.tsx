@@ -420,7 +420,7 @@ const SelectedVaccinationItem: React.FC<SelectedVaccinationItemProps> =
                     setHasNote(true);
                   }}
                 >
-                  {t('ADD_VACCINATION_NOTE')}
+                  {t('VACCINATION_ADD_NOTE')}
                 </Link>
               )}
               <span>
@@ -433,8 +433,8 @@ const SelectedVaccinationItem: React.FC<SelectedVaccinationItemProps> =
             <TextAreaWClose
               id={`vaccination-note-${id}`}
               data-testid={`vaccination-note-${id}`}
-              labelText={t('ADD_VACCINATION_NOTE')}
-              placeholder={t('ADD_VACCINATION_NOTE_PLACEHOLDER')}
+              labelText={t('VACCINATION_ADD_NOTE')}
+              placeholder={t('VACCINATION_ADD_NOTE_PLACEHOLDER')}
               value={note ?? ''}
               onChange={(event) => {
                 const target = event.target;
