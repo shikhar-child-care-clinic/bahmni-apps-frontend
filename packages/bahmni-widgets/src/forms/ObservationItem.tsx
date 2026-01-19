@@ -1,7 +1,7 @@
+import classNames from 'classnames';
 import React from 'react';
 import { ObservationData } from './models';
 import styles from './styles/FormsTable.module.scss';
-import classNames from 'classnames';
 
 interface ObservationItemProps {
   observation: ObservationData;
@@ -13,6 +13,7 @@ interface ObservationMemberProps {
   depth?: number;
 }
 
+const INTERPRETATION_ABNORMAL = 'ABNORMAL';
 /**
  * Utility function to get range string and abnormal status for an observation
  */
@@ -35,7 +36,7 @@ const getObservationDisplayInfo = (observation: ObservationData) => {
 
   const isAbnormal =
     observation.interpretation &&
-    observation.interpretation.toUpperCase() === 'ABNORMAL';
+    observation.interpretation.toUpperCase() === INTERPRETATION_ABNORMAL;
 
   return { units, rangeString, isAbnormal };
 };
