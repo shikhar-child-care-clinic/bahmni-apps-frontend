@@ -2,7 +2,6 @@ import { Form2Observation, FormMetadata } from '@bahmni/services';
 import {
   executeOnFormSaveEvent,
   hasFormSaveEvent,
-  getFormSaveEventScript,
 } from '../formEventExecutor';
 
 describe('formEventExecutor', () => {
@@ -368,52 +367,6 @@ describe('formEventExecutor', () => {
       const result = hasFormSaveEvent(metadata);
 
       expect(result).toBe(false);
-    });
-  });
-
-  describe('getFormSaveEventScript', () => {
-    it('should decode and return the onFormSave script', () => {
-      const script = 'function(form) { return form.observations; }';
-      const encodedScript = btoa(script);
-      const metadata = createMockMetadata(encodedScript);
-
-      const result = getFormSaveEventScript(metadata);
-
-      expect(result).toBe(script);
-    });
-
-    it('should return null when no onFormSave event exists', () => {
-      const metadata = createMockMetadata();
-
-      const result = getFormSaveEventScript(metadata);
-
-      expect(result).toBeNull();
-    });
-
-    it('should return null when base64 decoding fails', () => {
-      const metadata = {
-        name: 'Test Form',
-        uuid: 'form-uuid-123',
-        version: '1',
-        schema: {
-          events: {
-            onFormSave: 'invalid-base64!!!',
-          },
-        },
-      } as FormMetadata;
-
-      const result = getFormSaveEventScript(metadata);
-
-      expect(result).toBeNull();
-    });
-
-    it('should handle empty script correctly', () => {
-      const encodedScript = btoa('');
-      const metadata = createMockMetadata(encodedScript);
-
-      const result = getFormSaveEventScript(metadata);
-
-      expect(result).toBeNull();
     });
   });
 });

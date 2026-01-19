@@ -25,6 +25,7 @@ import {
   VALIDATION_STATE_EMPTY,
   VALIDATION_STATE_MANDATORY,
   VALIDATION_STATE_INVALID,
+  VALIDATION_STATE_SCRIPT_ERROR,
 } from '../../../constants/forms';
 import { useObservationFormData } from '../../../hooks/useObservationFormData';
 import styles from './styles/ObservationFormsContainer.module.scss';
@@ -48,7 +49,8 @@ interface ObservationFormsContainerProps {
       | null
       | typeof VALIDATION_STATE_EMPTY
       | typeof VALIDATION_STATE_MANDATORY
-      | typeof VALIDATION_STATE_INVALID,
+      | typeof VALIDATION_STATE_INVALID
+      | typeof VALIDATION_STATE_SCRIPT_ERROR,
   ) => void;
   // Existing saved observations for the current form (for edit mode)
   existingObservations?: Form2Observation[];
@@ -80,8 +82,9 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
     | typeof VALIDATION_STATE_EMPTY
     | typeof VALIDATION_STATE_MANDATORY
     | typeof VALIDATION_STATE_INVALID
+    | typeof VALIDATION_STATE_SCRIPT_ERROR
   >(null);
-  const [scriptExecutionError, setScriptExecutionError] = useState<
+  const [validationErrorMessage, setValidationErrorMessage] = useState<
     string | null
   >(null);
   const formContainerRef = useRef<Container>(null);
@@ -152,7 +155,8 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       | null
       | typeof VALIDATION_STATE_EMPTY
       | typeof VALIDATION_STATE_MANDATORY
-      | typeof VALIDATION_STATE_INVALID = null,
+      | typeof VALIDATION_STATE_INVALID
+      | typeof VALIDATION_STATE_SCRIPT_ERROR = null,
   ) => {
     if (viewingForm && onFormObservationsChange) {
       onFormObservationsChange(
@@ -206,7 +210,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
 
       // If we reach here, validation passed
       setValidationErrorType(null);
-      setScriptExecutionError(null);
+      setValidationErrorMessage(null);
 
       try {
         // Use current observations from Container if available, otherwise use state
@@ -239,7 +243,8 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
           error instanceof Error
             ? error.message
             : t('OBSERVATION_FORM_SCRIPT_ERROR_MESSAGE');
-        setScriptExecutionError(errorMessage);
+        setValidationErrorType(VALIDATION_STATE_SCRIPT_ERROR);
+        setValidationErrorMessage(errorMessage);
       }
     }
   };
@@ -285,18 +290,22 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
         </div>
       )}
 
-      {scriptExecutionError && (
-        <div className={styles.errorNotificationWrapper}>
-          <InlineNotification
-            kind="error"
-            title={t('OBSERVATION_FORM_SCRIPT_ERROR_TITLE')}
-            subtitle={scriptExecutionError}
-            lowContrast
-            hideCloseButton={false}
-            onClose={() => setScriptExecutionError(null)}
-          />
-        </div>
-      )}
+      {validationErrorType === VALIDATION_STATE_SCRIPT_ERROR &&
+        validationErrorMessage && (
+          <div className={styles.errorNotificationWrapper}>
+            <InlineNotification
+              kind="error"
+              title={t('OBSERVATION_FORM_SCRIPT_ERROR_TITLE')}
+              subtitle={validationErrorMessage}
+              lowContrast
+              hideCloseButton={false}
+              onClose={() => {
+                setValidationErrorType(null);
+                setValidationErrorMessage(null);
+              }}
+            />
+          </div>
+        )}
 
       <div className={styles.formContent}>
         {isLoadingMetadata ? (
