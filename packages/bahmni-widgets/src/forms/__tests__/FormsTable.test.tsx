@@ -498,7 +498,7 @@ describe('FormsTable', () => {
       expect(screen.queryByText('Dr. Johnson')).not.toBeInTheDocument();
     });
 
-    it('shows all forms when encounterUuids is empty array', async () => {
+    it('Show empty list when episode reference is given but no encounter has been generated yet', async () => {
       mockGetPatientFormData.mockResolvedValue(mockFormResponseData);
 
       const encounterUuids: string[] = [];
