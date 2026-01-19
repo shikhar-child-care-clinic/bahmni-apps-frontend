@@ -1,6 +1,7 @@
 import React from 'react';
 import { ObservationData } from './models';
 import styles from './styles/FormsTable.module.scss';
+import classNames from 'classnames';
 
 interface ObservationItemProps {
   observation: ObservationData;
@@ -20,7 +21,6 @@ const getObservationDisplayInfo = (observation: ObservationData) => {
   const lowNormal = observation.concept?.lowNormal;
   const hiNormal = observation.concept?.hiNormal;
 
-  // Using != null to catch both null and undefined
   const hasLow = lowNormal != null;
   const hasHigh = hiNormal != null;
 
@@ -33,7 +33,6 @@ const getObservationDisplayInfo = (observation: ObservationData) => {
           ? ` (<${hiNormal})`
           : '';
 
-  // Check if value is abnormal based on interpretation field
   const isAbnormal =
     observation.interpretation &&
     observation.interpretation.toUpperCase() === 'ABNORMAL';
@@ -88,13 +87,19 @@ const ObservationMember: React.FC<ObservationMemberProps> = ({
       style={{ paddingLeft: `${depth * 16}px` }}
     >
       <p
-        className={`${styles.memberLabel} ${isAbnormal ? styles.abnormalValue : ''}`}
+        className={classNames(
+          styles.memberLabel,
+          isAbnormal ? styles.abnormalValue : '',
+        )}
       >
         {displayLabel}
         {rangeString}
       </p>
       <p
-        className={`${styles.memberValue} ${isAbnormal ? styles.abnormalValue : ''}`}
+        className={classNames(
+          styles.memberValue,
+          isAbnormal ? styles.abnormalValue : '',
+        )}
       >
         {member.valueAsString}
         {units && ` ${units}`}
@@ -110,7 +115,6 @@ export const ObservationItem: React.FC<ObservationItemProps> = ({
   const hasGroupMembers =
     observation.groupMembers && observation.groupMembers.length > 0;
 
-  // Extract units, range, and abnormal status for non-grouped observations
   const { units, rangeString, isAbnormal } =
     getObservationDisplayInfo(observation);
 
@@ -125,7 +129,10 @@ export const ObservationItem: React.FC<ObservationItemProps> = ({
         }
       >
         <p
-          className={`${hasGroupMembers ? styles.groupLabel : styles.rowLabel} ${!hasGroupMembers && isAbnormal ? styles.abnormalValue : ''}`}
+          className={classNames(
+            hasGroupMembers ? styles.groupLabel : styles.rowLabel,
+            !hasGroupMembers && isAbnormal ? styles.abnormalValue : '',
+          )}
         >
           {observation.conceptNameToDisplay}
           {!hasGroupMembers && rangeString && (
@@ -144,7 +151,10 @@ export const ObservationItem: React.FC<ObservationItemProps> = ({
           </div>
         ) : (
           <p
-            className={`${styles.rowValue} ${isAbnormal ? styles.abnormalValue : ''}`}
+            className={classNames(
+              styles.rowValue,
+              isAbnormal ? styles.abnormalValue : '',
+            )}
           >
             {observation.valueAsString}
             {units && ` ${units}`}
