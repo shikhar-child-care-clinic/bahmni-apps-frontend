@@ -639,6 +639,12 @@ exports[`SelectedMedicationItem Snapshot Tests matches snapshot with default pro
     <div
       class="cds--sm:col-span-4 cds--md:col-span-8 cds--lg:col-span-16 cds--css-grid-column"
     >
+      <a
+        class="cds--link"
+        href="#"
+      >
+        MEDICATION_ADD_NOTE
+      </a>
       <span>
         Total quantity
          : 
@@ -1453,6 +1459,12 @@ exports[`SelectedMedicationItem Snapshot Tests matches snapshot with errors 1`] 
     <div
       class="cds--sm:col-span-4 cds--md:col-span-8 cds--lg:col-span-16 cds--css-grid-column"
     >
+      <a
+        class="cds--link"
+        href="#"
+      >
+        MEDICATION_ADD_NOTE
+      </a>
       <span>
         Total quantity
          : 

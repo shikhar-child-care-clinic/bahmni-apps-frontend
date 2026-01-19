@@ -199,6 +199,8 @@
   "MEDICATION_START_DATE_INPUT_LABEL": "Fecha de inicio",
   "MEDICATION_STAT": "STAT",
   "MEDICATION_TOTAL_QUANTITY": "Cantidad total",
+  "MEDICATION_ADD_NOTE": "Agregar Nota",
+  "MEDICATION_ADD_NOTE_PLACEHOLDER": "Agregar notas para el medicamento",
   "NETWORK_ERROR": "Se produjo un error de red",
   "NO_ACTIVE_MEDICATIONS": "No hay medicamentos activos",
   "NO_ALLERGIES": "No hay alergias registradas para este paciente",
