@@ -361,6 +361,70 @@ describe('medicationRequestResourceCreator', () => {
         },
       });
     });
+
+    it('should include note when provided', () => {
+      // Arrange
+      const entryWithNote = {
+        ...mockMedicationEntry,
+        note: 'Take with food. Avoid alcohol.',
+      };
+
+      // Act
+      const result = createMedicationRequestResource(
+        entryWithNote,
+        mockSubjectReference,
+        mockEncounterReference,
+        mockRequesterReference,
+      );
+
+      // Assert
+      expect(result.note).toBeDefined();
+      expect(result.note).toHaveLength(1);
+      expect(result.note![0]).toEqual({
+        text: 'Take with food. Avoid alcohol.',
+      });
+    });
+
+    it('should trim whitespace from note', () => {
+      // Arrange
+      const entryWithWhitespaceNote = {
+        ...mockMedicationEntry,
+        note: '   Important instructions   ',
+      };
+
+      // Act
+      const result = createMedicationRequestResource(
+        entryWithWhitespaceNote,
+        mockSubjectReference,
+        mockEncounterReference,
+        mockRequesterReference,
+      );
+
+      // Assert
+      expect(result.note).toBeDefined();
+      expect(result.note![0]).toEqual({
+        text: 'Important instructions',
+      });
+    });
+
+    it('should not include note when not provided', () => {
+      // Arrange
+      const entryWithoutNote = {
+        ...mockMedicationEntry,
+        note: undefined,
+      };
+
+      // Act
+      const result = createMedicationRequestResource(
+        entryWithoutNote,
+        mockSubjectReference,
+        mockEncounterReference,
+        mockRequesterReference,
+      );
+
+      // Assert
+      expect(result.note).toBeUndefined();
+    });
   });
 
   describe('createMedicationRequestResources', () => {
