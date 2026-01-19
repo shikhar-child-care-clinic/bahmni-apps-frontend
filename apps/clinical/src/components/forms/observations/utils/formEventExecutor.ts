@@ -1,10 +1,19 @@
 import { Form2Observation, FormMetadata } from '@bahmni/services';
 
+// Form field accessor provides access to observation data
+// Supports both old format (currentRecord/getValue) and direct property access
+interface FormFieldAccessor extends Partial<Form2Observation> {
+  currentRecord: Form2Observation | null;
+  getValue: () => Form2Observation['value'] | null;
+}
+
 interface FormEventContext {
   observations: Form2Observation[];
   patient: { uuid: string };
   formName?: string;
   formUuid?: string;
+  // Backward compatibility: Provide get() method for
+  get?: (conceptNameOrUuid: string, index?: number) => FormFieldAccessor;
 }
 
 /**
@@ -40,19 +49,59 @@ export const executeOnFormSaveEvent = (
       patient: { uuid: patientUuid },
       formName: metadata.name,
       formUuid: metadata.uuid,
+      get: (conceptNameOrUuid: string, index: number = 0) => {
+        const findObservations = (
+          obsList: Form2Observation[],
+        ): Form2Observation[] => {
+          const results: Form2Observation[] = [];
+
+          for (const obs of obsList) {
+            const concept = obs.concept as { uuid: string; name?: string };
+            if (
+              concept?.name === conceptNameOrUuid ||
+              concept?.uuid === conceptNameOrUuid
+            ) {
+              results.push(obs);
+            }
+
+            if (obs.groupMembers && obs.groupMembers.length > 0) {
+              results.push(...findObservations(obs.groupMembers));
+            }
+          }
+
+          return results;
+        };
+
+        const matchingObs = findObservations(formContext.observations);
+
+        const observation = matchingObs[index];
+
+        if (!observation) {
+          return {
+            currentRecord: null,
+            getValue: () => null,
+          };
+        }
+
+        return Object.assign(observation, {
+          currentRecord: observation,
+          getValue: () => observation.value,
+        }) as FormFieldAccessor;
+      },
     };
 
     // The script can be in different formats:
-    // 1. Anonymous function: function(form) { ... }
-    // 2. Function body code: formContext.observations = ...
-    // We need to detect which format and handle accordingly
+    // 1. Anonymous function with 'form' parameter: function(form) { ... } (legacy)
+    // 2. Anonymous function with 'formContext' parameter: function(formContext) { ... } (new)
+    // 3. Function body code: formContext.observations = ...
+    // We support both 'form' and 'formContext' parameter names for compatibility
 
     let result;
     const trimmedScript = decodedScript.trim();
 
     // Check if script starts with "function" - it's a function expression
     if (trimmedScript.startsWith('function')) {
-      // Wrap in parentheses to make it an expression, then call it
+      // Both 'form' and 'formContext' parameter names work - they get the same object
       const wrappedScript = `(${decodedScript})(formContext)`;
       const eventFunction = new Function(
         'formContext',
@@ -60,15 +109,16 @@ export const executeOnFormSaveEvent = (
       );
       result = eventFunction(formContext);
     } else {
-      // It's function body code - execute directly
+      // It's function body code - make both 'form' and 'formContext' available
       const eventFunction = new Function(
         'formContext',
+        'form',
         `
         ${decodedScript}
         return formContext.observations;
       `,
       );
-      result = eventFunction(formContext);
+      result = eventFunction(formContext, formContext);
     }
 
     // Return modified observations if event returns them

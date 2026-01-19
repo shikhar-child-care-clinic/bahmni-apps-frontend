@@ -123,7 +123,8 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   // Validate form and save if no errors
   const validateAndSave = () => {
     if (formContainerRef.current) {
-      const { errors } = formContainerRef.current.getValue();
+      const { observations: currentObservations, errors } =
+        formContainerRef.current.getValue();
       if (errors && errors.length > 0) {
         setShowValidationError(true);
         return;
@@ -133,11 +134,25 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       setScriptExecutionError(null);
 
       try {
+        // Use current observations from Container if available, otherwise use state
+        // Filter out observations with undefined values (incomplete/partial data)
+        const hasValidData = (obs: (typeof currentObservations)[number]) =>
+          obs.value !== undefined ||
+          (obs.groupMembers && obs.groupMembers.length > 0);
+
+        const validCurrentObservations =
+          currentObservations?.filter(hasValidData);
+
+        const observationsToValidate: Form2Observation[] =
+          validCurrentObservations && validCurrentObservations.length > 0
+            ? (validCurrentObservations as Form2Observation[])
+            : observations;
+
         // Execute onFormSave event before saving (if defined in form metadata)
         // This allows forms to apply business logic, validations, or transformations
         const processedObservations = executeOnFormSaveEvent(
           formMetadata!,
-          observations,
+          observationsToValidate,
           patientUUID!,
         );
 

@@ -789,4 +789,138 @@ describe('ObservationFormsContainer', () => {
       expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
     });
   });
+
+  describe('Script Execution Error Handling', () => {
+    it('should display error notification when onFormSave event script throws Error', () => {
+      const mockOnFormObservationsChange = jest.fn();
+      const mockOnViewingFormChange = jest.fn();
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: [{ concept: { uuid: 'test' }, value: 'test value' }],
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: {
+          schema: { name: 'Test Form Schema', controls: [] },
+        },
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
+      mockGetValue.mockReturnValue({
+        errors: [],
+      });
+
+      // Mock executeOnFormSaveEvent to throw an Error
+      mockExecuteOnFormSaveEvent.mockImplementation(() => {
+        throw new Error('Validation failed: Date must be in the future');
+      });
+
+      render(
+        <ObservationFormsContainer
+          {...defaultProps}
+          viewingForm={mockForm}
+          onFormObservationsChange={mockOnFormObservationsChange}
+          onViewingFormChange={mockOnViewingFormChange}
+        />,
+      );
+
+      const saveButton = screen.getByTestId('primary-button');
+      fireEvent.click(saveButton);
+
+      // Error notification should be displayed with the error message
+      expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+      expect(
+        screen.getByText(/Validation failed: Date must be in the future/),
+      ).toBeInTheDocument();
+
+      // Should NOT call onFormObservationsChange when script fails
+      expect(mockOnFormObservationsChange).not.toHaveBeenCalled();
+      expect(mockOnViewingFormChange).not.toHaveBeenCalled();
+    });
+
+    it('should display fallback error when onFormSave event script throws non-Error object', () => {
+      const mockOnFormObservationsChange = jest.fn();
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: [{ concept: { uuid: 'test' }, value: 'test value' }],
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: {
+          schema: { name: 'Test Form Schema', controls: [] },
+        },
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
+      mockGetValue.mockReturnValue({
+        errors: [],
+      });
+
+      // Mock executeOnFormSaveEvent to throw a non-Error object
+      mockExecuteOnFormSaveEvent.mockImplementation(() => {
+        throw { message: 'Custom error object' };
+      });
+
+      render(
+        <ObservationFormsContainer
+          {...defaultProps}
+          viewingForm={mockForm}
+          onFormObservationsChange={mockOnFormObservationsChange}
+        />,
+      );
+
+      const saveButton = screen.getByTestId('primary-button');
+      fireEvent.click(saveButton);
+
+      // Should display fallback error message
+      expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+      expect(
+        screen.getByText(/translated_OBSERVATION_FORM_SCRIPT_ERROR_MESSAGE/),
+      ).toBeInTheDocument();
+
+      // Should NOT call onFormObservationsChange when script fails
+      expect(mockOnFormObservationsChange).not.toHaveBeenCalled();
+    });
+
+    it('should close script error notification when close button is clicked', () => {
+      mockUseObservationFormData.mockReturnValue({
+        observations: [{ concept: { uuid: 'test' }, value: 'test value' }],
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: {
+          schema: { name: 'Test Form Schema', controls: [] },
+        },
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
+      mockGetValue.mockReturnValue({
+        errors: [],
+      });
+
+      // Mock executeOnFormSaveEvent to throw an Error
+      mockExecuteOnFormSaveEvent.mockImplementation(() => {
+        throw new Error('Script error');
+      });
+
+      render(
+        <ObservationFormsContainer {...defaultProps} viewingForm={mockForm} />,
+      );
+
+      const saveButton = screen.getByTestId('primary-button');
+      fireEvent.click(saveButton);
+
+      // Error notification should be displayed
+      expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+
+      // Click close button on notification
+      const closeButton = screen.getByTestId('notification-close');
+      fireEvent.click(closeButton);
+
+      // Error notification should be removed
+      expect(
+        screen.queryByTestId('inline-notification'),
+      ).not.toBeInTheDocument();
+    });
+  });
 });
