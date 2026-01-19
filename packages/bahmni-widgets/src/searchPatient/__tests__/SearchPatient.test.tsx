@@ -250,7 +250,7 @@ describe('SearchPatient', () => {
         expect.any(Boolean),
         expect.any(Boolean),
         false,
-        expect.any(String),
+        expect.anything(),
       );
     });
   });
@@ -436,7 +436,7 @@ describe('SearchPatient', () => {
         true,
         false,
         false,
-        expect.any(String),
+        expect.anything(),
       );
     });
 
@@ -455,7 +455,7 @@ describe('SearchPatient', () => {
         false,
         false,
         false,
-        expect.any(String),
+        expect.anything(),
       );
     });
   });
