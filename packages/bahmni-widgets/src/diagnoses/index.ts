@@ -1,1 +1,4 @@
-export { default as DiagnosesTable } from './DiagnosesTable';
+export {
+  default as DiagnosesTable,
+  diagnosesQueryKeys,
+} from './DiagnosesTable';

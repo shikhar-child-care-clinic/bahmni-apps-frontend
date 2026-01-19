@@ -298,7 +298,8 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         dispatchConsultationSaved({
           patientUUID: patientUUID!,
           updatedResources: {
-            conditions: selectedConditions.length > 0,
+            conditions:
+              selectedDiagnoses.length > 0 || selectedConditions.length > 0,
             allergies: selectedAllergies.length > 0,
           },
         });
