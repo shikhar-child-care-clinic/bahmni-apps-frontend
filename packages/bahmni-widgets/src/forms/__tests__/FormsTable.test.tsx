@@ -422,7 +422,7 @@ describe('FormsTable', () => {
       });
 
       // The most recent record should appear first within the Vitals Form group
-      const vitalsAccordion = screen.getAllByTestId('accordian-table-title')[1];
+      const vitalsAccordion = screen.getByTestId('accordian-title-Vitals Form');
       expect(
         within(vitalsAccordion).getByText('Vitals Form'),
       ).toBeInTheDocument();

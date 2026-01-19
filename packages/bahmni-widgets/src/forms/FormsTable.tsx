@@ -249,7 +249,7 @@ const FormsTable: React.FC<WidgetProps> = ({
                   title={formName}
                   key={formName}
                   className={styles.customAccordianItem}
-                  testId="accordian-table-title"
+                  testId={`accordian-title-${formName}`}
                   open={index === 0}
                 >
                   <SortableDataTable
@@ -262,7 +262,7 @@ const FormsTable: React.FC<WidgetProps> = ({
                     emptyStateMessage={t('FORMS_UNAVAILABLE')}
                     renderCell={renderCell}
                     className={styles.formsTableBody}
-                    data-testid="sortable-data-table"
+                    data-testid="forms-data-table"
                   />
                 </AccordionItem>
               );
