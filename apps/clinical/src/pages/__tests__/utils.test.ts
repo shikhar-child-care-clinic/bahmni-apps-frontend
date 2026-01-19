@@ -4,10 +4,7 @@ import {
 } from '../../__mocks__/configMocks';
 import { Dashboard } from '../../providers/clinicConfig/models';
 import { DashboardConfig } from '../models';
-import {
-  getDefaultDashboard,
-  getSidebarItems,
-} from '../util';
+import { getDefaultDashboard, getSidebarItems } from '../util';
 
 const mockTranslation = jest.fn((key: string) => key);
 

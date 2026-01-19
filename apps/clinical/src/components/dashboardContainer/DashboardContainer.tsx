@@ -97,7 +97,10 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
   }
 
   return (
-    <Section className={styles.sectionContainer}>
+    <Section
+      className={styles.sectionContainer}
+      data-testid="dashboard-container"
+    >
       {sections.map((section) => (
         <article
           key={section.id}

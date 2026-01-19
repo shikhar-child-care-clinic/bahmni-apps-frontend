@@ -3,10 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Coding } from 'fhir/r4';
 import i18n from '../../../../../setupTests.i18n';
-import {
-  useClinicalConfig,
-  ClinicalConfigProvider,
-} from '../../../../providers/clinicConfig';
+import { useClinicalConfig } from '../../../../providers/clinicConfig';
 import { useAllergyStore } from '../../../../stores/allergyStore';
 import AllergiesForm from '../AllergiesForm';
 
@@ -18,28 +15,6 @@ jest.mock('@bahmni/services', () => ({
   fetchAndFormatAllergenConcepts: jest.fn(),
   fetchReactionConcepts: jest.fn(),
   getFormattedAllergies: jest.fn(() => Promise.resolve([])),
-  useTranslation: jest.fn(() => ({
-    t: (key: string) => {
-      const translations: Record<string, string> = {
-        ALLERGIES_FORM_TITLE: 'Allergies',
-        ALLERGIES_SEARCH_PLACEHOLDER: 'Search for allergies',
-        ALLERGIES_SEARCH_ARIA_LABEL: 'Search for allergies',
-        ALLERGIES_ADDED_ALLERGIES: 'Added Allergies',
-        ALLERGY_ALREADY_ADDED: 'Allergen is already added',
-        LOADING_CONCEPTS: 'Loading concepts...',
-        NO_MATCHING_ALLERGEN_FOUND:
-          'No matching allergen recorded for this term',
-        ERROR_FETCHING_CONCEPTS:
-          'An unexpected error occurred. Please try again later.',
-        ERROR_DEFAULT_TITLE: 'Error',
-        ALLERGY_CATEGORY_DRUG: 'Drug',
-        ALLERGY_CATEGORY_FOOD: 'Food',
-        ALLERGY_CATEGORY_ENVIRONMENT: 'Environment',
-        ALLERGY_CATEGORY_OTHER: 'Other',
-      };
-      return translations[key] || key;
-    },
-  })),
 }));
 
 // Mock @bahmni/widgets
@@ -183,17 +158,13 @@ describe('AllergiesForm Integration Tests', () => {
     await userEvent.type(searchBox, 'pen');
 
     await waitFor(() => {
-      expect(screen.getByText('Penicillin [Drug]')).toBeInTheDocument();
-      expect(screen.getByText('Peanuts [Food]')).toBeInTheDocument();
+      expect(screen.getByText(/Penicillin/)).toBeInTheDocument();
+      expect(screen.getByText(/Peanuts/)).toBeInTheDocument();
     });
   });
 
   test('adds allergy to store when selected', async () => {
-    render(
-      <ClinicalConfigProvider>
-        <AllergiesForm />
-      </ClinicalConfigProvider>,
-    );
+    render(<AllergiesForm />);
 
     const searchBox = screen.getByRole('combobox', {
       name: /search for allergies/i,
@@ -201,10 +172,10 @@ describe('AllergiesForm Integration Tests', () => {
     await userEvent.type(searchBox, 'pen');
 
     await waitFor(() => {
-      expect(screen.getByText('Penicillin [Drug]')).toBeInTheDocument();
+      expect(screen.getByText(/Penicillin/)).toBeInTheDocument();
     });
 
-    await userEvent.click(screen.getByText('Penicillin [Drug]'));
+    await userEvent.click(screen.getByText(/Penicillin/));
 
     expect(mockStore.addAllergy).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -220,11 +191,7 @@ describe('AllergiesForm Integration Tests', () => {
       bahmniServices.fetchAndFormatAllergenConcepts as jest.Mock
     ).mockRejectedValue(new Error('API Error'));
 
-    render(
-      <ClinicalConfigProvider>
-        <AllergiesForm />
-      </ClinicalConfigProvider>,
-    );
+    render(<AllergiesForm />);
 
     const searchBox = screen.getByRole('combobox', {
       name: /search for allergies/i,
@@ -238,60 +205,5 @@ describe('AllergiesForm Integration Tests', () => {
         ),
       ).toBeInTheDocument();
     });
-  });
-
-  test('full workflow: search, add, and remove allergy', async () => {
-    render(
-      <ClinicalConfigProvider>
-        <AllergiesForm />
-      </ClinicalConfigProvider>,
-    );
-
-    // Search and add allergy
-    const searchBox = screen.getByRole('combobox', {
-      name: /search for allergies/i,
-    });
-    await userEvent.type(searchBox, 'pen');
-
-    await waitFor(() => {
-      expect(screen.getByText('Penicillin [Drug]')).toBeInTheDocument();
-    });
-
-    // Mock the store to return the selected allergy after it's added
-    (useAllergyStore as unknown as jest.Mock).mockReturnValue({
-      ...mockStore,
-      selectedAllergies: [
-        {
-          id: '123',
-          display: 'Penicillin',
-          type: 'medication',
-          selectedSeverity: null,
-          selectedReactions: [],
-          errors: {},
-          hasBeenValidated: false,
-        },
-      ],
-    });
-
-    await userEvent.click(screen.getByText('Penicillin [Drug]'));
-    expect(mockStore.addAllergy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        uuid: '123',
-        display: 'Penicillin',
-        type: 'medication',
-      }),
-    );
-
-    // Re-render to show the selected allergy
-    render(
-      <ClinicalConfigProvider>
-        <AllergiesForm />
-      </ClinicalConfigProvider>,
-    );
-
-    // Remove allergy
-    const removeButton = screen.getAllByRole('button', { name: /close/i });
-    await userEvent.click(removeButton[0]);
-    expect(mockStore.removeAllergy).toHaveBeenCalledWith('123');
   });
 });

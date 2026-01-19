@@ -6,11 +6,11 @@ import {
 import { renderHook, waitFor, act } from '@testing-library/react';
 import React from 'react';
 import { ALLERGEN_TYPES } from '../../constants/allergy';
+import { useClinicalConfig } from '../../providers/clinicConfig';
 import useAllergenSearch from '../useAllergenSearch';
-import { useClinicalConfig } from '../useClinicalConfig';
 
 // Mock hooks
-jest.mock('../useClinicalConfig');
+jest.mock('../../providers/clinicConfig');
 jest.mock('@bahmni/services', () => ({
   fetchAndFormatAllergenConcepts: jest.fn(),
   fetchReactionConcepts: jest.fn(),

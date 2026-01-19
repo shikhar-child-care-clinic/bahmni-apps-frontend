@@ -13,6 +13,7 @@ import {
   generateId,
 } from '@bahmni/services';
 import { useNotification, useUserPrivilege } from '@bahmni/widgets';
+import { useQuery } from '@tanstack/react-query';
 import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ConsultationPad from '../components/consultationPad/ConsultationPad';
@@ -21,14 +22,10 @@ import PatientHeader from '../components/patientHeader/PatientHeader';
 import { BAHMNI_CLINICAL_PATH } from '../constants/app';
 import { ClinicalAppProvider } from '../providers/ClinicalAppProvider';
 import { useClinicalConfig } from '../providers/clinicConfig';
-import {
-  getDefaultDashboard,
-  getSidebarItems,
-} from '../services/consultationPageService';
-import { useQuery } from '@tanstack/react-query';
 import { DASHBOARD_CONFIG_URL } from './constant';
-import dashboardConfigSchema from './schema.json';
 import { DashboardConfig } from './models';
+import dashboardConfigSchema from './schema.json';
+import { getDefaultDashboard, getSidebarItems } from './util';
 
 const breadcrumbItems = [
   { id: 'home', label: 'Home', href: BAHMNI_HOME_PATH },
@@ -74,7 +71,8 @@ const globalActions = [
  */
 const ConsultationPage: React.FC = () => {
   const { t } = useTranslation();
-  const { clinicalConfig } = useClinicalConfig();
+  const { clinicalConfig, isLoading: clinicalConfigLoading } =
+    useClinicalConfig();
   const { userPrivileges } = useUserPrivilege();
   const { addNotification } = useNotification();
   const [isActionAreaVisible, setIsActionAreaVisible] = useState(false);
@@ -88,6 +86,7 @@ const ConsultationPage: React.FC = () => {
       .map((id) => id.trim())
       .filter(Boolean);
   }, [searchParams]);
+
   const currentDashboard = useMemo(() => {
     if (!clinicalConfig) return null;
     return getDefaultDashboard(clinicalConfig.dashboards ?? []);
@@ -103,7 +102,7 @@ const ConsultationPage: React.FC = () => {
     queryKey: ['dashboardConfig', dashboardURL],
     queryFn: () =>
       getConfig<DashboardConfig>(
-        DASHBOARD_CONFIG_URL(dashboardURL),
+        DASHBOARD_CONFIG_URL(dashboardURL!),
         dashboardConfigSchema,
         {
           postProcess: (config) => {
@@ -116,6 +115,7 @@ const ConsultationPage: React.FC = () => {
           },
         },
       ),
+    enabled: !!dashboardURL,
   });
 
   useEffect(() => {
@@ -135,8 +135,14 @@ const ConsultationPage: React.FC = () => {
 
   const { activeItemId, handleItemClick } = useSidebarNavigation(sidebarItems);
 
-  if (!clinicalConfig) {
-    return <Loading description={t('LOADING_CLINICAL_CONFIG')} role="status" />;
+  if (clinicalConfigLoading) {
+    return (
+      <Loading
+        id="loading-clinical-config"
+        description={t('LOADING_CLINICAL_CONFIG')}
+        role="status"
+      />
+    );
   }
   if (!userPrivileges) {
     return <Loading description={t('LOADING_USER_PRIVILEGES')} role="status" />;
@@ -147,12 +153,22 @@ const ConsultationPage: React.FC = () => {
       message: t('ERROR_NO_DEFAULT_DASHBOARD'),
       type: 'error',
     });
-    return <Loading description={t('ERROR_LOADING_DASHBOARD')} role="alert" />;
+    return (
+      <div
+        id="error-no-default-dashboard"
+        data-testid="error-no-default-dashboard-test-id"
+      />
+    );
   }
 
   if (isDashboardConfigLoading) {
     return (
-      <Loading description={t('LOADING_DASHBOARD_CONFIG')} role="status" />
+      <Loading
+        id="loading-dashboard-config"
+        data-testid="loading-dashboard-config-test-id"
+        description={t('LOADING_DASHBOARD_CONFIG')}
+        role="status"
+      />
     );
   }
 
@@ -177,8 +193,11 @@ const ConsultationPage: React.FC = () => {
         }
         mainDisplay={
           <Suspense
+            data-testid="suspense-dashboard-container-test-id"
             fallback={
               <Loading
+                id="loading-dashboard-content"
+                data-testid="loading-dashboard-content-test-id"
                 description={t('LOADING_DASHBOARD_CONTENT')}
                 role="status"
               />

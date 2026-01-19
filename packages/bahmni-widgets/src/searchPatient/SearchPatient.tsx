@@ -12,17 +12,13 @@ import { PatientSearchType, SearchContext } from './SearchStrategy.interface';
 import searchStrategyRegistry from './strategies/SearchStrategyRegistry';
 import styles from './styles/SearchPatient.module.scss';
 
-export interface PatientSearchConfigShape {
-  patientSearch: {
+interface SearchPatientProps {
+  buttonTitle: string;
+  searchBarPlaceholder: string;
+  patientSearch?: {
     customAttributes: PatientSearchField[];
     appointment: AppointmentSearchField[];
   };
-}
-
-interface SearchPatientProps<TConfig extends PatientSearchConfigShape> {
-  buttonTitle: string;
-  searchBarPlaceholder: string;
-  getConfig: () => Promise<TConfig | null>;
   onSearch: (
     data: PatientSearchResultBundle | undefined,
     searchTerm: string,
@@ -33,12 +29,12 @@ interface SearchPatientProps<TConfig extends PatientSearchConfigShape> {
   ) => void;
 }
 
-const SearchPatient = <TConfig extends PatientSearchConfigShape>({
+const SearchPatient = ({
   buttonTitle,
   searchBarPlaceholder,
-  getConfig,
+  patientSearch,
   onSearch,
-}: SearchPatientProps<TConfig>) => {
+}: SearchPatientProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [advanceSearchInput, setAdvanceSearchInput] = useState('');
@@ -49,17 +45,6 @@ const SearchPatient = <TConfig extends PatientSearchConfigShape>({
   const [dropdownItems, setDropdownItems] = useState<string[]>([]);
   const [selectedDropdownItem, setSelectedDropdownItem] = useState<string>('');
   const [searchFields, setSearchFields] = useState<PatientSearchField[]>([]);
-
-  const {
-    data: configData,
-    isError: configIsError,
-    error: configError,
-  } = useQuery({
-    queryKey: ['patientSearchConfig'],
-    queryFn: getConfig,
-    staleTime: 0,
-    gcTime: 0,
-  });
 
   const getSearchType = (
     searchField?: PatientSearchField,
@@ -210,21 +195,10 @@ const SearchPatient = <TConfig extends PatientSearchConfigShape>({
   };
 
   useEffect(() => {
-    if (configIsError) {
-      addNotification({
-        title: t('CONFIG_ERROR_SCHEMA_VALIDATION_FAILED'),
-        message:
-          configError instanceof Error
-            ? configError.message
-            : String(configError),
-        type: 'error',
-      });
-      setDropdownItems([]);
-      setSelectedDropdownItem('');
-    } else if (configData?.patientSearch?.customAttributes) {
+    if (patientSearch?.customAttributes) {
       const combinedFields = [
-        ...(configData.patientSearch.customAttributes || []),
-        ...(configData.patientSearch.appointment || []),
+        ...(patientSearch.customAttributes || []),
+        ...(patientSearch.appointment || []),
       ];
       setSearchFields(combinedFields);
 
@@ -233,7 +207,7 @@ const SearchPatient = <TConfig extends PatientSearchConfigShape>({
       );
       setDropdownItems(labels);
       setSelectedDropdownItem(labels[0] || '');
-    } else if (configData && dropdownItems.length === 0) {
+    } else if (patientSearch && dropdownItems.length === 0) {
       addNotification({
         title: t('CONFIG_ERROR_NOT_FOUND'),
         message: 'No patient search configuration found',
@@ -242,7 +216,7 @@ const SearchPatient = <TConfig extends PatientSearchConfigShape>({
       setDropdownItems([]);
       setSelectedDropdownItem('');
     }
-  }, [configData, configIsError, configError, addNotification, t]);
+  }, [patientSearch]);
 
   useEffect(() => {
     if (isError && searchTerm) {

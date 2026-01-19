@@ -1,6 +1,6 @@
 import { HeaderSideNavItem } from '@bahmni/design-system';
-import { DashboardConfig } from './models';
 import { Dashboard } from '../providers/clinicConfig/models';
+import { DashboardConfig } from './models';
 
 /**
  * Gets the default dashboard from an array of dashboards

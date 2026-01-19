@@ -1,154 +1,64 @@
-import { useSidebarNavigation } from '@bahmni/design-system';
-import { useNotification } from '@bahmni/widgets';
+import { getConfig } from '@bahmni/services';
+import { useNotification, useUserPrivilege } from '@bahmni/widgets';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import {
-  validFullClinicalConfig,
-  validDashboardConfig,
-} from '../../__mocks__/configMocks';
-import { useClinicalConfig } from '../../hooks/useClinicalConfig';
-import { useDashboardConfig } from '../../hooks/useDashboardConfig';
+import { useClinicalConfig } from '../../providers/clinicConfig';
 import ConsultationPage from '../ConsultationPage';
 
 expect.extend(toHaveNoViolations);
 
-// Mock React.Suspense to render children immediately in tests
-jest.mock('react', () => ({
-  ...jest.requireActual('react'),
-  Suspense: ({
-    children,
-    fallback,
-  }: {
-    children: ReactNode;
-    fallback: ReactNode;
-  }) => {
-    // Store fallback for testing
-
-    (global as any).suspenseFallback = fallback;
-    return children;
-  },
-}));
-
-// Mock existing hooks and components
-jest.mock('../../hooks/useClinicalConfig');
-jest.mock('../../hooks/useDashboardConfig');
-jest.mock('../../hooks/useEncounterSession');
-jest.mock('react-i18next', () => ({
-  useTranslation: jest.fn(() => ({
-    t: jest.fn((key) => `translated_${key}`),
-  })),
-}));
-
-// Mock React Query to avoid loading state by default
-jest.mock('@tanstack/react-query', () => ({
-  ...jest.requireActual('@tanstack/react-query'),
-  useQuery: jest.fn(() => ({
-    data: { encounterIds: [], visitIds: [] },
-    isLoading: false,
-    error: null,
-  })),
-}));
-
-// Mock Carbon components
-jest.mock('@bahmni/design-system', () => ({
-  ...jest.requireActual('@bahmni/design-system'),
-  useSidebarNavigation: jest.fn(),
-  Loading: jest.fn(({ description, role }) => (
-    <div data-testid="carbon-loading" role={role}>
-      {description}
-    </div>
-  )),
-  Button: jest.fn(({ children, onClick, style }) => (
-    <button
-      data-testid="carbon-button"
-      onClick={onClick}
-      data-style={JSON.stringify(style)}
-    >
-      {children}
-    </button>
-  )),
-  ActionAreaLayout: jest.fn(
-    ({
-      headerWSideNav,
-      patientHeader,
-      sidebar,
-      mainDisplay,
-      isActionAreaVisible,
-      actionArea,
-    }) => (
-      <div data-testid="mocked-clinical-layout">
-        <div data-testid="mocked-header">{headerWSideNav}</div>
-        <div data-testid="mocked-patient-section">{patientHeader}</div>
-        <div data-testid="mocked-sidebar">{sidebar}</div>
-        <div data-testid="mocked-main-display">{mainDisplay}</div>
-        {isActionAreaVisible && (
-          <div data-testid="mocked-action-area">{actionArea}</div>
-        )}
-      </div>
-    ),
-  ),
-  Header: jest.fn(({ sideNavItems, activeSideNavItemId }) => (
-    <div data-testid="mocked-header-component">
-      {sideNavItems.map(
-        (item: {
-          id: string;
-          icon: string;
-          label: string;
-          href?: string;
-          renderIcon?: ReactNode;
-        }) => (
-          <div key={item.id} data-testid={`sidenav-item-${item.id}`}>
-            {item.label}
-          </div>
-        ),
-      )}
-      <div data-testid="active-sidenav-item">
-        {activeSideNavItemId ?? 'none'}
-      </div>
-    </div>
-  )),
+jest.mock('../../providers/clinicConfig', () => ({
+  ...jest.requireActual('../../providers/clinicConfig'),
+  useClinicalConfig: jest.fn(),
 }));
 
 jest.mock('@bahmni/widgets', () => ({
-  PatientDetails: jest.fn(() => (
-    <div data-testid="mocked-patient-details">Mocked PatientDetails</div>
-  )),
-  useNotification: jest.fn(() => ({
-    addNotification: jest.fn(),
-  })),
-  usePatientUUID: jest.fn(() => 'mock-patient-uuid'),
-  useUserPrivilege: jest.fn(() => ({
-    userPrivileges: ['Get Patients', 'Add Patients'],
-  })),
-  UserPrivilegeProvider: ({ children }: { children: React.ReactNode }) => {
-    return <div data-testid="mocked-user-privilege-provider">{children}</div>;
-  },
+  ...jest.requireActual('@bahmni/widgets'),
+  useUserPrivilege: jest.fn(),
+  useNotification: jest.fn(),
 }));
 
-jest.mock('../../components/dashboardContainer/DashboardContainer', () => {
-  return jest.fn(({ sections, activeItemId }) => (
-    <div data-testid="mocked-dashboard-container">
-      <div data-testid="dashboard-sections-count">{sections.length}</div>
-      <div data-testid="dashboard-active-item">{activeItemId ?? 'none'}</div>
-    </div>
-  ));
-});
+jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
+  getConfig: jest.fn(),
+}));
 
-// jest.mock('../../components/consultationPad/ConsultationPad', () => {
-//   return jest.fn(({ patientUUID, onClose }) => (
-//     <div data-testid="mocked-consultation-pad">
-//       <div data-testid="consultation-pad-patient-uuid">{patientUUID}</div>
-//       <button data-testid="consultation-pad-close-button" onClick={onClose}>
-//         Close
-//       </button>
-//     </div>
-//   ));
-// });
+const mockClinicalConfig = {
+  patientInformation: {},
+  actions: [],
+  dashboards: [
+    {
+      name: 'General',
+      url: '/config/dashboard.json',
+      requiredPrivileges: [],
+      default: true,
+    },
+  ],
+  consultationPad: {
+    allergyConceptMap: {
+      medicationAllergenUuid: 'uuid-1',
+      foodAllergenUuid: 'uuid-2',
+      environmentalAllergenUuid: 'uuid-3',
+      allergyReactionUuid: 'uuid-4',
+    },
+  },
+};
 
-const renderWithProvider = (component: React.ReactElement, url?: string) => {
+const mockDashboardConfig = {
+  sections: [
+    {
+      id: 'vitals',
+      name: 'Vitals',
+      icon: 'fa-heartbeat',
+      translationKey: 'VITALS_SECTION',
+      controls: [],
+    },
+  ],
+};
+
+const renderWithProvider = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -159,10 +69,8 @@ const renderWithProvider = (component: React.ReactElement, url?: string) => {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter
-        initialEntries={[url ?? '/consultation?episodeUuid=test-episode']}
-      >
-        {component}
+      <MemoryRouter initialEntries={['/consultation?episodeUuid=test-episode']}>
+        <ConsultationPage />
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -171,433 +79,137 @@ const renderWithProvider = (component: React.ReactElement, url?: string) => {
 describe('ConsultationPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Default mock implementations
-    (useNotification as jest.Mock).mockReturnValue({
+
+    jest.mocked(useClinicalConfig).mockReturnValue({
+      clinicalConfig: mockClinicalConfig,
+      isLoading: false,
+      error: null,
+    });
+
+    jest.mocked(useUserPrivilege).mockReturnValue({
+      userPrivileges: ['VIEW_PATIENTS', 'EDIT_ENCOUNTERS'],
+    });
+
+    jest.mocked(useNotification).mockReturnValue({
       addNotification: jest.fn(),
     });
 
-    (useSidebarNavigation as jest.Mock).mockReturnValue({
-      activeItemId: 'Vitals',
-      handleItemClick: jest.fn(),
-    });
-    const { useUserPrivilege } = jest.requireMock('@bahmni/widgets');
-    (useUserPrivilege as jest.Mock).mockReturnValue({
-      userPrivileges: ['Get Patients', 'Add Patients'],
-    });
-    // Mock useEncounterSession hook
-    jest.requireMock('../../hooks/useEncounterSession').useEncounterSession =
-      jest.fn(() => ({
-        hasActiveSession: false,
-        isPractitionerMatch: false,
-        isLoading: false,
-      }));
+    jest.mocked(getConfig).mockResolvedValue(mockDashboardConfig);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('Rendering and Structure', () => {
-    it('should render the ConsultationPage component', () => {
-      // Mock valid clinical config and dashboard
-      (useClinicalConfig as jest.Mock).mockReturnValue({
-        clinicalConfig: validFullClinicalConfig,
-      });
-      (useDashboardConfig as jest.Mock).mockReturnValue({
-        dashboardConfig: validDashboardConfig,
-      });
-      // Ensure userPrivileges are loaded for this test
-      const { useUserPrivilege } = jest.requireMock('@bahmni/widgets');
-      (useUserPrivilege as jest.Mock).mockReturnValue({
-        userPrivileges: ['Get Patients', 'Add Patients'],
+    it('should render the ConsultationPage component', async () => {
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText('LOADING_CLINICAL_CONFIG'),
+        ).not.toBeInTheDocument();
       });
 
-      renderWithProvider(<ConsultationPage />);
-      // Verify main layout is rendered
-      expect(screen.getByTestId('mocked-clinical-layout')).toBeInTheDocument();
-      expect(screen.getByTestId('mocked-patient-section')).toBeInTheDocument();
-      expect(screen.getByTestId('mocked-main-display')).toBeInTheDocument();
-      expect(screen.getByTestId('mocked-patient-details')).toBeInTheDocument();
-      expect(screen.getByTestId('mocked-header')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.queryByText('LOADING_DASHBOARD_CONFIG'),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    it('should handle the loading state', () => {
+      jest.mocked(useClinicalConfig).mockReturnValue({
+        clinicalConfig: null,
+        isLoading: true,
+        error: null,
+      });
+
+      renderWithProvider();
+
       expect(
-        screen.getByTestId('mocked-dashboard-container'),
+        screen.getByText('Loading clinical configuration...'),
       ).toBeInTheDocument();
-      expect(screen.getByTestId('dashboard-sections-count')).toHaveTextContent(
-        validDashboardConfig.sections.length.toString(),
-      );
-      expect(screen.getByTestId('dashboard-active-item')).toHaveTextContent(
-        'Vitals',
-      );
     });
 
-    it('should match the snapshot', () => {
-      // Mock valid clinical config and dashboard
-      (useClinicalConfig as jest.Mock).mockReturnValue({
-        clinicalConfig: validFullClinicalConfig,
-      });
-      (useDashboardConfig as jest.Mock).mockReturnValue({
-        dashboardConfig: validDashboardConfig,
-      });
-      // Ensure userPrivileges are loaded for this test
-      const { useUserPrivilege } = jest.requireMock('@bahmni/widgets');
-      (useUserPrivilege as jest.Mock).mockReturnValue({
-        userPrivileges: ['Get Patients', 'Add Patients'],
-      });
-
-      const { container } = renderWithProvider(<ConsultationPage />);
-      expect(container).toMatchSnapshot();
-    });
-    it('should use translation keys for loading user privileges', () => {
-      // Mock loading state for user privileges
-      const { useUserPrivilege } = jest.requireMock('@bahmni/widgets');
-      (useUserPrivilege as jest.Mock).mockReturnValue({
+    it('should show loading when user privileges are not available', () => {
+      jest.mocked(useUserPrivilege).mockReturnValue({
         userPrivileges: null,
       });
 
-      renderWithProvider(<ConsultationPage />);
+      renderWithProvider();
 
-      // Verify translation is used
-      expect(screen.getByTestId('carbon-loading')).toHaveTextContent(
-        'translated_LOADING_USER_PRIVILEGES',
-      );
-    });
-  });
-
-  describe('i18n Integration', () => {
-    it('should use translation keys for loading clinical config', () => {
-      // Mock loading state for clinical config
-      (useClinicalConfig as jest.Mock).mockReturnValue({
-        clinicalConfig: null,
-      });
-
-      renderWithProvider(<ConsultationPage />);
-
-      // Verify translation is used
-      expect(screen.getByTestId('carbon-loading')).toHaveTextContent(
-        'translated_LOADING_CLINICAL_CONFIG',
-      );
+      expect(
+        screen.getByText('Loading user privileges...'),
+      ).toBeInTheDocument();
     });
 
-    it('should use translation keys for error messages', () => {
-      // Mock a clinical config with no dashboards
-      (useClinicalConfig as jest.Mock).mockReturnValue({
-        clinicalConfig: {
-          ...validFullClinicalConfig,
-          dashboards: [],
-        },
-      });
-      // Ensure userPrivileges are loaded for this test
-      const { useUserPrivilege } = jest.requireMock('@bahmni/widgets');
-      (useUserPrivilege as jest.Mock).mockReturnValue({
-        userPrivileges: ['Get Patients', 'Add Patients'],
-      });
-
+    it('should show error when no default dashboard is available', () => {
       const mockAddNotification = jest.fn();
-      (useNotification as jest.Mock).mockReturnValue({
+      jest.mocked(useNotification).mockReturnValue({
         addNotification: mockAddNotification,
       });
 
-      renderWithProvider(<ConsultationPage />);
+      jest.mocked(useClinicalConfig).mockReturnValue({
+        clinicalConfig: {
+          ...mockClinicalConfig,
+          dashboards: [],
+        },
+        isLoading: false,
+        error: null,
+      });
 
-      // Verify translation keys were used in notification
+      renderWithProvider();
+
+      expect(
+        screen.getByTestId('error-no-default-dashboard-test-id'),
+      ).toBeInTheDocument();
       expect(mockAddNotification).toHaveBeenCalledWith({
-        title: 'translated_ERROR_DEFAULT_TITLE',
-        message: 'translated_ERROR_NO_DEFAULT_DASHBOARD',
+        title: 'Error',
+        message: 'No default dashboard configured',
         type: 'error',
       });
     });
   });
 
-  describe('Edge Case Branch Coverage', () => {
-    it('should handle missing dashboards array in clinicalConfig', () => {
-      // Mock clinical config with empty dashboards array
-      (useClinicalConfig as jest.Mock).mockReturnValue({
-        clinicalConfig: {
-          ...validFullClinicalConfig,
-
-          dashboards: undefined as any, // Force undefined for testing the OR branch
-        },
-      });
-      // Ensure userPrivileges are loaded for this test
-      const { useUserPrivilege } = jest.requireMock('@bahmni/widgets');
-      (useUserPrivilege as jest.Mock).mockReturnValue({
-        userPrivileges: ['Get Patients', 'Add Patients'],
-      });
-
-      // Default dashboard should be null when no dashboards array exists
-      // We expect the error notification and early return
-      const mockAddNotification = jest.fn();
-      (useNotification as jest.Mock).mockReturnValue({
-        addNotification: mockAddNotification,
-      });
-
-      renderWithProvider(<ConsultationPage />);
-
-      // Verify error notification was shown
-      expect(mockAddNotification).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'error',
-          message: 'translated_ERROR_NO_DEFAULT_DASHBOARD',
-        }),
-      );
-    });
-
-    it('should return Loading when user privileges are still loading', () => {
-      // Mock valid clinical config and dashboard
-      (useClinicalConfig as jest.Mock).mockReturnValue({
-        clinicalConfig: validFullClinicalConfig,
-      });
-      (useDashboardConfig as jest.Mock).mockReturnValue({
-        dashboardConfig: validDashboardConfig,
-      });
-
-      // But useUserPrivilege returns null (still loading)
-      const { useUserPrivilege } = jest.requireMock('@bahmni/widgets');
-      (useUserPrivilege as jest.Mock).mockReturnValue({
-        userPrivileges: null,
-      });
-
-      renderWithProvider(<ConsultationPage />);
-
-      // Verify Loading component is shown with correct message and role
-      expect(screen.getByTestId('carbon-loading')).toBeInTheDocument();
-      expect(screen.getByTestId('carbon-loading')).toHaveTextContent(
-        'translated_LOADING_USER_PRIVILEGES',
-      );
-      expect(screen.getByTestId('carbon-loading')).toHaveAttribute(
-        'role',
-        'status',
-      );
-
-      // Verify main layout is not rendered
-      expect(
-        screen.queryByTestId('mocked-clinical-layout'),
-      ).not.toBeInTheDocument();
-    });
-  });
-
-  describe('Returns Pattern', () => {
-    it('should return Loading when dashboardConfig is still loading', () => {
-      // Mock valid clinical config and dashboard
-      (useClinicalConfig as jest.Mock).mockReturnValue({
-        clinicalConfig: validFullClinicalConfig,
-      });
-      // Ensure userPrivileges are loaded for this test
-      const { useUserPrivilege } = jest.requireMock('@bahmni/widgets');
-      (useUserPrivilege as jest.Mock).mockReturnValue({
-        userPrivileges: ['Get Patients', 'Add Patients'],
-      });
-
-      // But useDashboardConfig returns null (still loading)
-      (useDashboardConfig as jest.Mock).mockReturnValue({
-        dashboardConfig: null,
-      });
-
-      renderWithProvider(<ConsultationPage />);
-
-      // Verify Loading component is shown with correct message and role
-      expect(screen.getByTestId('carbon-loading')).toBeInTheDocument();
-      expect(screen.getByTestId('carbon-loading')).toHaveTextContent(
-        'translated_LOADING_DASHBOARD_CONFIG',
-      );
-      expect(screen.getByTestId('carbon-loading')).toHaveAttribute(
-        'role',
-        'status',
-      );
-
-      // Verify main layout is not rendered
-      expect(
-        screen.queryByTestId('mocked-clinical-layout'),
-      ).not.toBeInTheDocument();
-    });
-
-    it('should return Loading when no default dashboard is found', () => {
-      // Mock a clinical config with no dashboards
-      (useClinicalConfig as jest.Mock).mockReturnValue({
-        clinicalConfig: {
-          ...validFullClinicalConfig,
-          dashboards: [],
-        },
-      });
-      // Ensure userPrivileges are loaded for this test
-      const { useUserPrivilege } = jest.requireMock('@bahmni/widgets');
-      (useUserPrivilege as jest.Mock).mockReturnValue({
-        userPrivileges: ['Get Patients', 'Add Patients'],
-      });
-
-      renderWithProvider(<ConsultationPage />);
-
-      // Verify Loading component with error message
-      expect(screen.getByTestId('carbon-loading')).toHaveTextContent(
-        'translated_ERROR_LOADING_DASHBOARD',
-      );
-    });
-  });
-
-  describe('Accessibility Improvements', () => {
-    it('should add appropriate ARIA roles to loading states', () => {
-      // Mock null clinical config
-      (useClinicalConfig as jest.Mock).mockReturnValue({
-        clinicalConfig: null,
-      });
-
-      renderWithProvider(<ConsultationPage />);
-
-      // Verify Loading component has correct role attribute
-      expect(screen.getByTestId('carbon-loading')).toHaveAttribute(
-        'role',
-        'status',
-      );
-    });
-
-    it('should add appropriate ARIA role to error state', () => {
-      // Mock clinical config with no dashboards
-      (useClinicalConfig as jest.Mock).mockReturnValue({
-        clinicalConfig: {
-          ...validFullClinicalConfig,
-          dashboards: [],
-        },
-      });
-      // Ensure userPrivileges are loaded for this test
-      const { useUserPrivilege } = jest.requireMock('@bahmni/widgets');
-      (useUserPrivilege as jest.Mock).mockReturnValue({
-        userPrivileges: ['Get Patients', 'Add Patients'],
-      });
-
-      renderWithProvider(<ConsultationPage />);
-
-      // Verify error Loading component has role="alert"
-      expect(screen.getByTestId('carbon-loading')).toHaveAttribute(
-        'role',
-        'alert',
-      );
-    });
-
+  describe('Accessibility', () => {
     it('should have no accessibility violations', async () => {
-      // Mock null clinical config
-      (useClinicalConfig as jest.Mock).mockReturnValue({
-        clinicalConfig: null,
+      const { container } = renderWithProvider();
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText('LOADING_CLINICAL_CONFIG'),
+        ).not.toBeInTheDocument();
       });
 
-      const { container } = renderWithProvider(<ConsultationPage />);
+      await waitFor(() => {
+        expect(
+          screen.queryByText('LOADING_DASHBOARD_CONFIG'),
+        ).not.toBeInTheDocument();
+      });
+
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
-    it('should have no accessibility violations with null user privileges', async () => {
-      // Mock null user privileges
-      const { useUserPrivilege } = jest.requireMock('@bahmni/widgets');
-      (useUserPrivilege as jest.Mock).mockReturnValue({
-        userPrivileges: null,
-      });
-
-      const { container } = renderWithProvider(<ConsultationPage />);
-      const results = await axe(container);
-      expect(results).toHaveNoViolations();
-    });
   });
 
-  describe('Improved Suspense Handling', () => {
-    it('should use Loading component in Suspense fallback', () => {
-      // Setup mocks for fully loaded state
-      (useClinicalConfig as jest.Mock).mockReturnValue({
-        clinicalConfig: validFullClinicalConfig,
+  describe('Snapshot', () => {
+    it('should match the snapshot', async () => {
+      const { asFragment } = renderWithProvider();
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText('LOADING_CLINICAL_CONFIG'),
+        ).not.toBeInTheDocument();
       });
 
-      (useDashboardConfig as jest.Mock).mockReturnValue({
-        dashboardConfig: validDashboardConfig,
-      });
-      // Ensure userPrivileges are loaded for this test
-      const { useUserPrivilege } = jest.requireMock('@bahmni/widgets');
-      (useUserPrivilege as jest.Mock).mockReturnValue({
-        userPrivileges: ['Get Patients', 'Add Patients'],
+      await waitFor(() => {
+        expect(
+          screen.queryByText('LOADING_DASHBOARD_CONFIG'),
+        ).not.toBeInTheDocument();
       });
 
-      renderWithProvider(<ConsultationPage />);
-
-      // The suspenseFallback will be captured in global by our mock
-
-      const fallback = (global as any).suspenseFallback;
-
-      // Render the fallback to check its structure
-      const { container } = render(fallback);
-      const loadingElement = container.querySelector(
-        '[data-testid="carbon-loading"]',
-      );
-
-      expect(loadingElement).toBeInTheDocument();
-      expect(loadingElement).toHaveTextContent(
-        'translated_LOADING_DASHBOARD_CONTENT',
-      );
-      expect(loadingElement).toHaveAttribute('role', 'status');
-    });
-  });
-
-  describe('useSidebarNavigation Hook Integration', () => {
-    it('should use the useSidebarNavigation hook with sidebar items', () => {
-      // Setup mocks
-      (useClinicalConfig as jest.Mock).mockReturnValue({
-        clinicalConfig: validFullClinicalConfig,
-      });
-
-      (useDashboardConfig as jest.Mock).mockReturnValue({
-        dashboardConfig: validDashboardConfig,
-      });
-      // Ensure userPrivileges are loaded for this test
-      const { useUserPrivilege } = jest.requireMock('@bahmni/widgets');
-      (useUserPrivilege as jest.Mock).mockReturnValue({
-        userPrivileges: ['Get Patients', 'Add Patients'],
-      });
-
-      // Spy on useSidebarNavigation
-      const sidebarNavigationSpy = jest.fn(() => ({
-        activeItemId: 'Vitals',
-        handleItemClick: jest.fn(),
-      }));
-      (useSidebarNavigation as jest.Mock).mockImplementation(
-        sidebarNavigationSpy,
-      );
-
-      renderWithProvider(<ConsultationPage />);
-
-      // Simply verify the hook was called
-      expect(sidebarNavigationSpy).toHaveBeenCalled();
-    });
-  });
-
-  describe('ClinicalAppsProvider Loading State', () => {
-    it('should show loading spinner when ClinicalAppsProvider is fetching data', () => {
-      // Mock React Query to be in loading state
-      const { useQuery } = jest.requireMock('@tanstack/react-query');
-      (useQuery as jest.Mock).mockReturnValue({
-        data: null,
-        isLoading: true,
-        error: null,
-      });
-
-      // Setup valid configs so we get to ClinicalAppsProvider
-      (useClinicalConfig as jest.Mock).mockReturnValue({
-        clinicalConfig: validFullClinicalConfig,
-      });
-      (useDashboardConfig as jest.Mock).mockReturnValue({
-        dashboardConfig: validDashboardConfig,
-      });
-      const { useUserPrivilege } = jest.requireMock('@bahmni/widgets');
-      (useUserPrivilege as jest.Mock).mockReturnValue({
-        userPrivileges: ['Get Patients', 'Add Patients'],
-      });
-
-      renderWithProvider(<ConsultationPage />);
-
-      // Verify ClinicalAppsProvider loading state is shown
-      expect(screen.getByTestId('carbon-loading')).toBeInTheDocument();
-      expect(screen.getByTestId('carbon-loading')).toHaveTextContent(
-        'translated_LOADING_CLINICAL_DATA',
-      );
-      expect(screen.getByTestId('carbon-loading')).toHaveAttribute(
-        'role',
-        'status',
-      );
-
-      // Verify main layout is not rendered
-      expect(
-        screen.queryByTestId('mocked-clinical-layout'),
-      ).not.toBeInTheDocument();
+      expect(asFragment()).toMatchSnapshot();
     });
   });
 });

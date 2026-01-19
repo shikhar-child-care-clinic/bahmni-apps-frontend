@@ -153,6 +153,7 @@
   "NOTIFICATION_UNABLE_TO_GET_ADDITIONAL_DATA": "Unable to get patient additional data",
   "REGISTRATION_DAYS_SHORT": "d",
   "REGISTRATION_MONTHS_SHORT": "m",
+  "REGISTRATION_PATIENT_SEARCH_APPOINTMENT": "Search by Appointment",
   "REGISTRATION_YEARS_SHORT": "y",
   "SUCCESS": "Success",
   "VIEWED_REGISTRATION_PATIENT_SEARCH_MESSAGE": "User {{username}} accessed patient search screen in registration app"

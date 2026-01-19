@@ -16,7 +16,10 @@ import { axe, toHaveNoViolations } from 'jest-axe';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import PatientSearchPage from '..';
 import i18n from '../../../../setupTests.i18n';
-import { RegistrationConfigProvider } from '../../../providers/RegistrationConfigProvider';
+import {
+  useRegistrationConfig,
+  RegistrationConfigProvider,
+} from '../../../providers/registrationConfig';
 import * as appointmentSearchResultActionHandler from '../appointmentSearchResultActionHandler';
 
 expect.extend(toHaveNoViolations);
@@ -147,6 +150,11 @@ const mockUserPrivileges = [
 let mockSearchData: any = null;
 let mockOnSearchArgs: any[];
 
+jest.mock('../../../providers/registrationConfig', () => ({
+  ...jest.requireActual('../../../providers/registrationConfig'),
+  useRegistrationConfig: jest.fn(),
+}));
+
 jest.mock('@bahmni/widgets', () => ({
   ...jest.requireActual('@bahmni/widgets'),
   useUserPrivilege: jest.fn(() => ({
@@ -183,6 +191,50 @@ jest.mock('@bahmni/widgets', () => ({
 
 describe('PatientSearchPage', () => {
   let queryClient: QueryClient;
+  const mockRegistrationConfig = {
+    patientSearch: {
+      customAttributes: [
+        {
+          translationKey: 'REGISTRATION_PATIENT_SEARCH_PHONE_NUMBER',
+          fields: ['phoneNumber', 'alternatePhoneNumber'],
+          expectedFields: [
+            {
+              field: 'phoneNumber',
+              translationKey: 'Phone Number',
+            },
+            {
+              field: 'alternatePhoneNumber',
+              translationKey: 'Alternate Phone Number',
+            },
+          ],
+          type: 'person',
+        },
+      ],
+      appointment: [
+        {
+          translationKey: 'REGISTRATION_PATIENT_SEARCH_APPOINTMENT',
+          fields: ['appointmentNumber'],
+          expectedFields: [
+            {
+              field: 'appointmentNumber',
+              translationKey: 'Appointment Number',
+            },
+          ],
+          type: 'appointment',
+          actions: [
+            {
+              type: 'navigate',
+              translationKey: 'View Details',
+              onAction: {
+                navigation: '/patient/{{patientUuid}}/appointments',
+              },
+              enabledRule: [],
+            },
+          ],
+        },
+      ],
+    },
+  };
 
   beforeEach(() => {
     i18n.changeLanguage('en');
@@ -190,50 +242,13 @@ describe('PatientSearchPage', () => {
 
     mockSearchData = null;
 
-    (getRegistrationConfig as jest.Mock).mockResolvedValue({
-      patientSearch: {
-        customAttributes: [
-          {
-            translationKey: 'REGISTRATION_PATIENT_SEARCH_PHONE_NUMBER',
-            fields: ['phoneNumber', 'alternatePhoneNumber'],
-            expectedFields: [
-              {
-                field: 'phoneNumber',
-                translationKey: 'Phone Number',
-              },
-              {
-                field: 'alternatePhoneNumber',
-                translationKey: 'Alternate Phone Number',
-              },
-            ],
-            type: 'person',
-          },
-        ],
-        appointment: [
-          {
-            translationKey: 'REGISTRATION_PATIENT_SEARCH_APPOINTMENT',
-            fields: ['appointmentNumber'],
-            expectedFields: [
-              {
-                field: 'appointmentNumber',
-                translationKey: 'Appointment Number',
-              },
-            ],
-            type: 'appointment',
-            actions: [
-              {
-                type: 'navigate',
-                translationKey: 'View Details',
-                onAction: {
-                  navigation: '/patient/{{patientUuid}}/appointments',
-                },
-                enabledRule: [],
-              },
-            ],
-          },
-        ],
-      },
+    (useRegistrationConfig as jest.Mock).mockReturnValue({
+      registrationConfig: mockRegistrationConfig,
     });
+
+    (getRegistrationConfig as jest.Mock).mockResolvedValue(
+      mockRegistrationConfig,
+    );
 
     (useQuery as jest.Mock).mockReturnValue({
       data: undefined,
@@ -690,7 +705,7 @@ describe('PatientSearchPage', () => {
         'appointment',
       ];
 
-      (getRegistrationConfig as jest.Mock).mockResolvedValue({
+      const appointmentConfig = {
         patientSearch: {
           customAttributes: [],
           appointment: [
@@ -751,7 +766,13 @@ describe('PatientSearchPage', () => {
             },
           ],
         },
+      };
+
+      (useRegistrationConfig as jest.Mock).mockReturnValue({
+        registrationConfig: appointmentConfig,
       });
+
+      (getRegistrationConfig as jest.Mock).mockResolvedValue(appointmentConfig);
     });
 
     afterEach(() => {
@@ -784,10 +805,6 @@ describe('PatientSearchPage', () => {
       });
 
       renderComponent();
-
-      await waitFor(() => {
-        expect(getRegistrationConfig).toHaveBeenCalled();
-      });
 
       const searchInput = screen.getByPlaceholderText(
         'Search by name or patient ID',
@@ -866,10 +883,6 @@ describe('PatientSearchPage', () => {
 
       renderComponent();
 
-      await waitFor(() => {
-        expect(getRegistrationConfig).toHaveBeenCalled();
-      });
-
       const searchInput = screen.getByPlaceholderText(
         'Search by name or patient ID',
       );
@@ -893,10 +906,6 @@ describe('PatientSearchPage', () => {
       });
 
       renderComponent();
-
-      await waitFor(() => {
-        expect(getRegistrationConfig).toHaveBeenCalled();
-      });
 
       const searchInput = screen.getByPlaceholderText(
         'Search by name or patient ID',
@@ -935,10 +944,6 @@ describe('PatientSearchPage', () => {
 
       renderComponent();
 
-      await waitFor(() => {
-        expect(getRegistrationConfig).toHaveBeenCalled();
-      });
-
       const searchInput = screen.getByPlaceholderText(
         'Search by name or patient ID',
       );
@@ -964,10 +969,6 @@ describe('PatientSearchPage', () => {
       });
 
       renderComponent();
-
-      await waitFor(() => {
-        expect(getRegistrationConfig).toHaveBeenCalled();
-      });
 
       const searchInput = screen.getByPlaceholderText(
         'Search by name or patient ID',
@@ -1000,10 +1001,6 @@ describe('PatientSearchPage', () => {
 
       renderComponent();
 
-      await waitFor(() => {
-        expect(getRegistrationConfig).toHaveBeenCalled();
-      });
-
       const searchInput = screen.getByPlaceholderText(
         'Search by name or patient ID',
       );
@@ -1031,10 +1028,6 @@ describe('PatientSearchPage', () => {
 
       renderComponent();
 
-      await waitFor(() => {
-        expect(getRegistrationConfig).toHaveBeenCalled();
-      });
-
       const searchInput = screen.getByPlaceholderText(
         'Search by name or patient ID',
       );
@@ -1051,7 +1044,7 @@ describe('PatientSearchPage', () => {
       delete (window as any).location;
       window.location = { href: '' } as any;
 
-      (getRegistrationConfig as jest.Mock).mockResolvedValue({
+      const hashNavConfig = {
         patientSearch: {
           customAttributes: [],
           appointment: [
@@ -1083,7 +1076,13 @@ describe('PatientSearchPage', () => {
             },
           ],
         },
+      };
+
+      (useRegistrationConfig as jest.Mock).mockReturnValue({
+        registrationConfig: hashNavConfig,
       });
+
+      (getRegistrationConfig as jest.Mock).mockResolvedValue(hashNavConfig);
       (useQuery as jest.Mock).mockReturnValue({
         data: {
           totalCount: 1,
@@ -1094,10 +1093,6 @@ describe('PatientSearchPage', () => {
       });
 
       renderComponent();
-
-      await waitFor(() => {
-        expect(getRegistrationConfig).toHaveBeenCalled();
-      });
 
       const searchInput = screen.getByPlaceholderText(
         'Search by name or patient ID',
@@ -1139,10 +1134,6 @@ describe('PatientSearchPage', () => {
       });
 
       renderComponent();
-
-      await waitFor(() => {
-        expect(getRegistrationConfig).toHaveBeenCalled();
-      });
 
       const searchInput = screen.getByPlaceholderText(
         'Search by name or patient ID',
