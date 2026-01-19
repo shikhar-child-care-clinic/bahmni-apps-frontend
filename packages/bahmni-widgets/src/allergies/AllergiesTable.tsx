@@ -62,8 +62,6 @@ const AllergiesTable: React.FC = () => {
       // Only refetch if:
       // 1. Event is for the same patient
       // 2. Allergies were modified during consultation
-      // eslint-disable-next-line no-console
-      console.log('Received consultation saved event:', payload);
       if (
         payload.patientUUID === patientUUID &&
         payload.updatedResources.allergies

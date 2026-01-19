@@ -4,7 +4,7 @@ import '@bahmni/design-system/styles';
 export { PatientDetails } from './patientDetails';
 export { AllergiesTable } from './allergies';
 export { ConditionsTable, conditionsQueryKeys } from './conditions';
-export { DiagnosesTable } from './diagnoses';
+export { DiagnosesTable, diagnosesQueryKeys } from './diagnoses';
 export { MedicationsTable } from './medications';
 export { RadiologyInvestigationTable } from './radiologyInvestigation';
 export { LabInvestigation } from './labinvestigation';
