@@ -8,6 +8,7 @@ import {
   MEDICATION_ORDERS_METADATA_URL,
   MEDICATIONS_SEARCH_URL,
   PATIENT_MEDICATION_RESOURCE_URL,
+  VACCINES_URL,
 } from './constants';
 import {
   MedicationOrdersMetadataResponse,
@@ -233,4 +234,12 @@ export async function searchMedications(
   return await get<Bundle<Medication>>(
     MEDICATIONS_SEARCH_URL(searchTerm, count),
   );
+}
+
+/**
+ * Fetches vaccines from the FHIR Medication endpoint filtered by CVX code system
+ * @returns Promise resolving to a Bundle containing vaccine medications
+ */
+export async function getVaccinations(): Promise<Bundle<Medication>> {
+  return await get<Bundle<Medication>>(VACCINES_URL);
 }

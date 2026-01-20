@@ -12,4 +12,5 @@ export {
   getPatientMedicationBundle,
   fetchMedicationOrdersMetadata,
   searchMedications,
+  getVaccinations,
 } from './medicationRequestService';

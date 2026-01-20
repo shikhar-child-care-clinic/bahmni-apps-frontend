@@ -1,7 +1,8 @@
 import { searchMedications } from '@bahmni/services';
-import { Bundle, Medication } from 'fhir/r4';
+import { Medication } from 'fhir/r4';
 import { useState, useEffect } from 'react';
 
+import { getMedicationsFromBundle } from '../services/medicationService';
 import useDebounce from './useDebounce';
 
 interface MedicationSearchResult {
@@ -19,18 +20,6 @@ export const useMedicationSearch = (
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const debouncedSearchTerm = useDebounce(searchTerm, debounceDelay);
-
-  const getMedicationsFromBundle = (
-    bundle: Bundle<Medication>,
-  ): Medication[] => {
-    const medications: Medication[] = [];
-    bundle.entry?.map((entry) => {
-      if (entry.resource) {
-        medications.push(entry.resource);
-      }
-    });
-    return medications;
-  };
 
   useEffect(() => {
     if (!debouncedSearchTerm || debouncedSearchTerm.trim() === '') {

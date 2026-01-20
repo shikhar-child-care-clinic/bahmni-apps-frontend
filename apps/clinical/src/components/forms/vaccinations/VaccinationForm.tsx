@@ -5,12 +5,16 @@ import {
   DropdownSkeleton,
   Tile,
 } from '@bahmni/design-system';
-import { useTranslation } from '@bahmni/services';
+import { useTranslation, getVaccinations } from '@bahmni/services';
+import { useQuery } from '@tanstack/react-query';
 import React, { useState, useMemo, useRef } from 'react';
+
 import useMedicationConfig from '../../../hooks/useMedicationConfig';
-import { useMedicationSearch } from '../../../hooks/useMedicationSearch';
 import { MedicationFilterResult } from '../../../models/medication';
-import { getMedicationDisplay } from '../../../services/medicationService';
+import {
+  getMedicationDisplay,
+  getMedicationsFromBundle,
+} from '../../../services/medicationService';
 import { useVaccinationStore } from '../../../stores/vaccinationsStore';
 import SelectedVaccinationItem from './SelectedVaccinationItem';
 import styles from './styles/VaccinationForm.module.scss';
@@ -30,9 +34,21 @@ const VaccinationForm: React.FC = React.memo(() => {
     loading: medicationConfigLoading,
     error: medicationConfigError,
   } = useMedicationConfig();
-  const { searchResults, loading, error } = useMedicationSearch(
-    searchVaccinationTerm,
-  );
+
+  // Fetch vaccinations using useQuery
+  const {
+    data: vaccinationsBundle,
+    isLoading: loading,
+    error,
+  } = useQuery({
+    queryKey: ['vaccinations'],
+    queryFn: getVaccinations,
+  });
+
+  // Extract medications from bundle
+  const searchResults = vaccinationsBundle
+    ? getMedicationsFromBundle(vaccinationsBundle)
+    : [];
 
   // Use Zustand store
   const {
@@ -91,7 +107,7 @@ const VaccinationForm: React.FC = React.memo(() => {
       return [
         {
           displayName: t('ERROR_SEARCHING_VACCINATIONS', {
-            error: error.message,
+            error: (error as Error).message,
           }),
           disabled: true,
         },
@@ -106,7 +122,22 @@ const VaccinationForm: React.FC = React.memo(() => {
       ];
     }
 
-    return searchResults.map((item) => {
+    // Filter vaccines based on search term
+    const filtered = searchResults.filter((item) => {
+      const displayName = getMedicationDisplay(item).toLowerCase();
+      return displayName.includes(searchVaccinationTerm.toLowerCase());
+    });
+
+    if (filtered.length === 0) {
+      return [
+        {
+          displayName: t('NO_MATCHING_VACCINATIONS_FOUND'),
+          disabled: true,
+        },
+      ];
+    }
+
+    return filtered.map((item) => {
       const isAlreadySelected = selectedVaccinations.some(
         (v) => v.id === item.id,
       );

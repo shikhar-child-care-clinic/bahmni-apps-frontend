@@ -1,8 +1,20 @@
-import { Medication } from 'fhir/r4';
+import { Bundle, Medication } from 'fhir/r4';
 import {
   FHIR_MEDICATION_EXTENSION_URL,
   FHIR_MEDICATION_NAME_EXTENSION_URL,
 } from '../constants/fhir';
+
+export function getMedicationsFromBundle(
+  bundle: Bundle<Medication>,
+): Medication[] {
+  const medications: Medication[] = [];
+  bundle.entry?.map((entry) => {
+    if (entry.resource) {
+      medications.push(entry.resource);
+    }
+  });
+  return medications;
+}
 
 export function getMedicationDisplay(medication: Medication): string {
   const medicationExtensions = medication.extension?.find(
