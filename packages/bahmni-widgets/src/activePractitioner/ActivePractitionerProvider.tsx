@@ -26,11 +26,15 @@ export const ActivePractitionerProvider: React.FC<
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchActivePractitioner = useCallback(async () => {
+  const fetchActivePractitioner = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
       // Fetch current user
       const currentUser = await getCurrentUser();
+
+      // Check if request was aborted
+      if (signal?.aborted) return;
+
       if (!currentUser) {
         throw new Error('ERROR_FETCHING_USER_DETAILS');
       }
@@ -38,21 +42,37 @@ export const ActivePractitionerProvider: React.FC<
 
       // Fetch current provider
       const currentProvider = await getCurrentProvider(currentUser.uuid);
+
+      // Check if request was aborted
+      if (signal?.aborted) return;
+
       if (!currentProvider) {
         throw new Error('ERROR_FETCHING_PRACTITIONERS_DETAILS');
       }
       setPractitioner(currentProvider);
       setError(null);
     } catch (err) {
+      // Don't update state if request was aborted
+      if (signal?.aborted) return;
+
       const { message } = getFormattedError(err);
       setError(err instanceof Error ? err : new Error(message));
     } finally {
-      setLoading(false);
+      // Don't update state if request was aborted
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    fetchActivePractitioner();
+    const abortController = new AbortController();
+
+    fetchActivePractitioner(abortController.signal);
+
+    return () => {
+      abortController.abort();
+    };
   }, [fetchActivePractitioner]);
 
   const value = useMemo(
@@ -61,7 +81,7 @@ export const ActivePractitionerProvider: React.FC<
       user,
       loading,
       error,
-      refetch: fetchActivePractitioner,
+      refetch: () => fetchActivePractitioner(),
     }),
     [practitioner, user, loading, error, fetchActivePractitioner],
   );

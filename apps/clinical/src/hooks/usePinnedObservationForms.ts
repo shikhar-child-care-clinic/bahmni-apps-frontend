@@ -8,23 +8,36 @@ import {
 interface UsePinnedObservationFormsOptions {
   /** User UUID required for loading and saving pinned forms */
   userUuid?: string | null;
+  /** Whether available forms are currently loading */
+  isFormsLoading?: boolean;
 }
 export function usePinnedObservationForms(
   availableForms: ObservationForm[],
   options?: UsePinnedObservationFormsOptions,
 ) {
-  const { userUuid } = options ?? {};
+  const { userUuid, isFormsLoading = false } = options ?? {};
   const [pinnedForms, setPinnedForms] = useState<ObservationForm[]>([]);
   const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
   const [error, setError] = useState<{ title: string; message: string } | null>(
     null,
   );
   const availableFormsRef = useRef<ObservationForm[]>([]);
+  const loadedForUserRef = useRef<string | null>(null);
 
   // Keep ref updated with latest forms
   useEffect(() => {
     availableFormsRef.current = availableForms;
   }, [availableForms]);
+
+  // Reset initialization when userUuid changes
+  useEffect(() => {
+    if (userUuid !== loadedForUserRef.current) {
+      setIsInitialLoadComplete(false);
+      setPinnedForms([]);
+      setError(null);
+      loadedForUserRef.current = null;
+    }
+  }, [userUuid]);
 
   // Load pinned forms on mount - single source of truth
   // Only runs ONCE when forms finish loading
@@ -32,6 +45,7 @@ export function usePinnedObservationForms(
     const loadPinnedFormsData = async () => {
       if (!userUuid) {
         setIsInitialLoadComplete(true);
+        loadedForUserRef.current = null;
         return;
       }
 
@@ -53,18 +67,40 @@ export function usePinnedObservationForms(
         setPinnedForms([]);
       } finally {
         setIsInitialLoadComplete(true);
+        loadedForUserRef.current = userUuid;
       }
     };
 
-    // Only load ONCE when forms are available
-    if (availableForms.length > 0 && !isInitialLoadComplete && userUuid) {
-      loadPinnedFormsData();
+    // Skip if already loaded or still loading forms
+    if (isInitialLoadComplete || isFormsLoading) {
+      return;
     }
-  }, [availableForms.length, isInitialLoadComplete, userUuid]);
+
+    // Handle case when forms loading is complete
+    if (!userUuid) {
+      // No user - complete initialization without loading
+      setIsInitialLoadComplete(true);
+      loadedForUserRef.current = null;
+    } else if (availableForms.length > 0) {
+      // Forms available - load pinned forms
+      loadPinnedFormsData();
+    } else {
+      // Forms loaded but empty - complete initialization
+      setIsInitialLoadComplete(true);
+      setPinnedForms([]);
+      loadedForUserRef.current = userUuid;
+    }
+  }, [availableForms.length, isInitialLoadComplete, userUuid, isFormsLoading]);
 
   const updatePinnedForms = useCallback(
     async (newPinnedForms: ObservationForm[]) => {
       if (!userUuid) {
+        const error = {
+          title: 'Unable to save pinned forms',
+          message:
+            'User information is not available. Please try logging in again.',
+        };
+        setError(error);
         return;
       }
 

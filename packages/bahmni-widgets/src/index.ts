@@ -28,10 +28,12 @@ export { useUserPrivilege } from './userPrivileges/useUserPrivilege';
 export { UserPrivilegeProvider } from './userPrivileges/UserPrivilegeProvider';
 
 // Active Practitioner
-export { ActivePractitionerProvider } from './activePractitioner/ActivePractitionerProvider';
-export { useActivePractitioner } from './activePractitioner/useActivePractitioner';
-export { ActivePractitionerContext } from './activePractitioner/ActivePractitionerContext';
-export type { ActivePractitionerContextType } from './activePractitioner/ActivePractitionerContext';
+export {
+  ActivePractitionerProvider,
+  useActivePractitioner,
+  ActivePractitionerContext,
+  type ActivePractitionerContextType,
+} from './activePractitioner';
 
 // Widget Registry
 export {

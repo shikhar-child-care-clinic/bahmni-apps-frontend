@@ -52,12 +52,12 @@ export const savePinnedForms = async (
   formNames: string[],
 ): Promise<void> => {
   try {
-    if (!Array.isArray(formNames)) {
-      throw new Error(PINNED_FORMS_ERROR_MESSAGES.INVALID_DATA);
-    }
-
     if (!userUuid) {
       throw new Error(PINNED_FORMS_ERROR_MESSAGES.USER_NOT_FOUND);
+    }
+
+    if (!Array.isArray(formNames)) {
+      throw new Error(PINNED_FORMS_ERROR_MESSAGES.INVALID_DATA);
     }
 
     // Validate form names are strings

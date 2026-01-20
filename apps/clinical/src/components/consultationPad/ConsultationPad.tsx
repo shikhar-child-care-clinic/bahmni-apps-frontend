@@ -96,6 +96,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     isLoading: isPinnedFormsLoading,
   } = usePinnedObservationForms(allObservationForms, {
     userUuid: currentUser?.uuid,
+    isFormsLoading: isObservationFormsLoading,
   });
 
   // Use the diagnosis store

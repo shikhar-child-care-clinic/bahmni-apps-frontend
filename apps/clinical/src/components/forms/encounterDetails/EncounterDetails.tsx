@@ -11,9 +11,11 @@ import {
   DATE_FORMAT,
   formatDate,
   type Provider,
-  type User,
 } from '@bahmni/services';
-import { usePatientUUID } from '@bahmni/widgets';
+import {
+  usePatientUUID,
+  type ActivePractitionerContextType,
+} from '@bahmni/widgets';
 import React, { useEffect, useMemo } from 'react';
 import { useActiveVisit } from '../../../hooks/useActiveVisit';
 import { useEncounterConcepts } from '../../../hooks/useEncounterConcepts';
@@ -26,20 +28,10 @@ import styles from './styles/EncounterDetails.module.scss';
 // Constants
 const CONSULTATION_ENCOUNTER_NAME = 'Consultation';
 
-interface EncounterDetailsProps {
-  /** Pre-fetched user to avoid redundant API calls */
-  practitionerState: {
-    practitioner: Provider | null;
-    user: User | null;
-    loading: boolean;
-    error: Error | null;
-    refetch: () => void;
-  };
-}
-
-const EncounterDetails: React.FC<EncounterDetailsProps> = ({
-  practitionerState,
-}: EncounterDetailsProps) => {
+const EncounterDetails: React.FC<{
+  /** Pre-fetched practitioner state to avoid redundant API calls */
+  practitionerState: ActivePractitionerContextType;
+}> = ({ practitionerState }) => {
   const { t } = useTranslation();
 
   // Get patient UUID from hook

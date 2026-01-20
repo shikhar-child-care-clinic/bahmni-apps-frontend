@@ -62,6 +62,8 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
     const { getFormData } = useObservationFormsStore();
 
     // Client-side filtering based on search term
+    // Uses OR logic: searching "Vitals History" matches forms containing either "vitals" OR "history"
+    // This provides more flexible and user-friendly search results
     const availableForms = useMemo(() => {
       if (!searchTerm.trim()) return allForms;
 
@@ -70,6 +72,7 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
 
       return allForms.filter((form) => {
         const nameLower = form.name.toLowerCase();
+        // OR logic: match if ANY search word is found in the form name
         return searchWords.some((word) => nameLower.includes(word));
       });
     }, [allForms, searchTerm]);
