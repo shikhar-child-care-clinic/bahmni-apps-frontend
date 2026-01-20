@@ -1,9 +1,12 @@
-import { Medication } from 'fhir/r4';
+import { Bundle, Medication } from 'fhir/r4';
 import {
   FHIR_MEDICATION_EXTENSION_URL,
   FHIR_MEDICATION_NAME_EXTENSION_URL,
 } from '../../constants/fhir';
-import { getMedicationDisplay } from '../medicationService';
+import {
+  getMedicationDisplay,
+  getMedicationsFromBundle,
+} from '../medicationService';
 
 describe('MedicationService', () => {
   beforeEach(() => {
@@ -128,6 +131,53 @@ describe('MedicationService', () => {
       const result = getMedicationDisplay(medication);
 
       expect(result).toBe('Unknown Medication Name');
+    });
+  });
+
+  describe('getMedicationsFromBundle', () => {
+    it('should extract medications from bundle with entries', () => {
+      const mockMedication: Medication = {
+        resourceType: 'Medication',
+        id: 'med-1',
+      };
+
+      const bundle: Bundle<Medication> = {
+        resourceType: 'Bundle',
+        type: 'searchset',
+        entry: [
+          {
+            resource: mockMedication,
+          },
+        ],
+      };
+
+      const result = getMedicationsFromBundle(bundle);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual(mockMedication);
+    });
+
+    it('should return empty array when bundle has no entries', () => {
+      const bundle: Bundle<Medication> = {
+        resourceType: 'Bundle',
+        type: 'searchset',
+      };
+
+      const result = getMedicationsFromBundle(bundle);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should return empty array when bundle entries is empty array', () => {
+      const bundle: Bundle<Medication> = {
+        resourceType: 'Bundle',
+        type: 'searchset',
+        entry: [],
+      };
+
+      const result = getMedicationsFromBundle(bundle);
+
+      expect(result).toEqual([]);
     });
   });
 });
