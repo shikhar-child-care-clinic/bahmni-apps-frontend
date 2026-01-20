@@ -1,6 +1,7 @@
+import { searchMedications } from '@bahmni/services';
 import { Bundle, Medication } from 'fhir/r4';
 import { useState, useEffect } from 'react';
-import { searchMedications } from '../services/medicationService';
+
 import useDebounce from './useDebounce';
 
 interface MedicationSearchResult {

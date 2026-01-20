@@ -1,7 +1,19 @@
-import { Bundle, MedicationRequest as FhirMedicationRequest } from 'fhir/r4';
+import {
+  Bundle,
+  Medication,
+  MedicationRequest as FhirMedicationRequest,
+} from 'fhir/r4';
 import { get } from '../api';
-import { PATIENT_MEDICATION_RESOURCE_URL } from './constants';
-import { MedicationRequest, MedicationStatus } from './models';
+import {
+  MEDICATION_ORDERS_METADATA_URL,
+  MEDICATIONS_SEARCH_URL,
+  PATIENT_MEDICATION_RESOURCE_URL,
+} from './constants';
+import {
+  MedicationOrdersMetadataResponse,
+  MedicationRequest,
+  MedicationStatus,
+} from './models';
 
 /**
  * Maps FHIR medication request statuses to canonical MedicationStatus values
@@ -196,4 +208,29 @@ export async function getPatientMedications(
 ): Promise<MedicationRequest[]> {
   const bundle = await getPatientMedicationBundle(patientUUID);
   return formatMedications(bundle);
+}
+
+/**
+ * Fetches medication orders metadata including dose units, routes, duration units, etc.
+ * @returns Promise resolving to medication orders metadata
+ */
+export async function fetchMedicationOrdersMetadata(): Promise<MedicationOrdersMetadataResponse> {
+  return await get<MedicationOrdersMetadataResponse>(
+    MEDICATION_ORDERS_METADATA_URL,
+  );
+}
+
+/**
+ * Searches for medications by search term
+ * @param searchTerm - The term to search for in medication names
+ * @param count - Maximum number of results to return (default: 20)
+ * @returns Promise resolving to a Bundle containing medications
+ */
+export async function searchMedications(
+  searchTerm: string,
+  count: number = 20,
+): Promise<Bundle<Medication>> {
+  return await get<Bundle<Medication>>(
+    MEDICATIONS_SEARCH_URL(searchTerm, count),
+  );
 }

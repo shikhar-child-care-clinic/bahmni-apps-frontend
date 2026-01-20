@@ -57,3 +57,47 @@ export interface FormattedMedicationRequest {
   readonly asNeeded: boolean;
   readonly isImmediate: boolean;
 }
+
+/**
+ * Interface for concept-based configuration data
+ */
+interface Concept {
+  uuid: string;
+  name: string;
+}
+
+/**
+ * Interface for frequency configuration
+ */
+export interface Frequency extends Concept {
+  frequencyPerDay: number;
+}
+
+/**
+ * Interface for order attributes
+ */
+export interface OrderAttribute {
+  uuid: string;
+  name: string;
+  dataType: string;
+  shortName: string;
+  units: string | null;
+  conceptClass: string;
+  hiNormal: string | null;
+  lowNormal: string | null;
+  set: boolean;
+}
+
+/**
+ * Interface for medication orders metadata response
+ */
+export interface MedicationOrdersMetadataResponse {
+  doseUnits: Concept[];
+  routes: Concept[];
+  durationUnits: Concept[];
+  dispensingUnits: Concept[];
+  dosingRules: string[];
+  dosingInstructions: Concept[];
+  orderAttributes: OrderAttribute[];
+  frequencies: Frequency[];
+}

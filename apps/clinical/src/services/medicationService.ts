@@ -1,29 +1,8 @@
-import { get } from '@bahmni/services';
-import { Bundle, Medication } from 'fhir/r4';
-import {
-  MEDICATION_ORDERS_METADATA_URL,
-  MEDICATIONS_SEARCH_URL,
-} from '../constants/app';
+import { Medication } from 'fhir/r4';
 import {
   FHIR_MEDICATION_EXTENSION_URL,
   FHIR_MEDICATION_NAME_EXTENSION_URL,
 } from '../constants/fhir';
-import { MedicationOrdersMetadataResponse } from '../models/medicationConfig';
-
-export async function fetchMedicationOrdersMetadata(): Promise<MedicationOrdersMetadataResponse> {
-  return await get<MedicationOrdersMetadataResponse>(
-    MEDICATION_ORDERS_METADATA_URL,
-  );
-}
-
-export async function searchMedications(
-  searchTerm: string,
-  count: number = 20,
-): Promise<Bundle<Medication>> {
-  return await get<Bundle<Medication>>(
-    MEDICATIONS_SEARCH_URL(searchTerm, count),
-  );
-}
 
 export function getMedicationDisplay(medication: Medication): string {
   const medicationExtensions = medication.extension?.find(
