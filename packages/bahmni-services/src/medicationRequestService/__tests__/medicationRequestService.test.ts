@@ -604,7 +604,7 @@ describe('medicationRequestService', () => {
       const result = await getPatientMedications(emptyUUID);
 
       expect(get).toHaveBeenCalledWith(
-        '/openmrs/ws/fhir2/R4/MedicationRequest?patient=&_count=100&_sort=-_lastUpdated',
+        '/openmrs/ws/fhir2/R4/MedicationRequest?_sort=-_lastUpdated&_count=100&patient=',
       );
       expect(result).toEqual([]);
     });

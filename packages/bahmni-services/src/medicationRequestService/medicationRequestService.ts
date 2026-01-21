@@ -51,8 +51,19 @@ const mapMedicationStatus = (
  */
 export async function getPatientMedicationBundle(
   patientUUID: string,
+  isVaccinationType?: boolean,
+  encounterUuids?: string[],
 ): Promise<Bundle> {
-  const url = PATIENT_MEDICATION_RESOURCE_URL(patientUUID);
+  let encounterUuidsString: string | undefined;
+
+  if (encounterUuids && encounterUuids.length > 0) {
+    encounterUuidsString = encounterUuids.join(',');
+  }
+  const url = PATIENT_MEDICATION_RESOURCE_URL(
+    patientUUID,
+    isVaccinationType,
+    encounterUuidsString,
+  );
   return await get<Bundle>(url);
 }
 
@@ -206,8 +217,14 @@ const isImmediateMedication = (medication: FhirMedicationRequest): boolean => {
  */
 export async function getPatientMedications(
   patientUUID: string,
+  isVaccinationType?: boolean,
+  encounterUuids?: string[],
 ): Promise<MedicationRequest[]> {
-  const bundle = await getPatientMedicationBundle(patientUUID);
+  const bundle = await getPatientMedicationBundle(
+    patientUUID,
+    isVaccinationType,
+    encounterUuids,
+  );
   return formatMedications(bundle);
 }
 
