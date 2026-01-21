@@ -22,6 +22,7 @@ import {
 } from '@bahmni/services';
 import classNames from 'classnames';
 import React, { useMemo, useState, useCallback } from 'react';
+import { WidgetProps } from '../registry/model';
 import styles from './styles/MedicationsTable.module.scss';
 import { useMedicationRequest } from './useMedicationRequest';
 import {
@@ -72,9 +73,10 @@ const getMedicationStatusKey = (status: string): string => {
   }
 };
 
-const MedicationsTable: React.FC = () => {
+const MedicationsTable: React.FC<WidgetProps> = ({ config }) => {
   const { t } = useTranslation();
-  const { medications, loading, error } = useMedicationRequest();
+  const treatmentType = (config?.treatmentType as string) || '';
+  const { medications, loading, error } = useMedicationRequest(treatmentType);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const handleTabChange = (selectedIndex: number) => {
