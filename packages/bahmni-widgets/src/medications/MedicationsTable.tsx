@@ -19,9 +19,12 @@ import {
   ISO_DATE_FORMAT,
   FormattedMedicationRequest,
   MedicationRequest,
+  useSubscribeConsultationSaved,
+  ConsultationSavedEventPayload,
 } from '@bahmni/services';
 import classNames from 'classnames';
 import React, { useMemo, useState, useCallback } from 'react';
+import { usePatientUUID } from '../hooks/usePatientUUID';
 import styles from './styles/MedicationsTable.module.scss';
 import { useMedicationRequest } from './useMedicationRequest';
 import {
@@ -74,8 +77,25 @@ const getMedicationStatusKey = (status: string): string => {
 
 const MedicationsTable: React.FC = () => {
   const { t } = useTranslation();
-  const { medications, loading, error } = useMedicationRequest();
+  const patientUUID = usePatientUUID();
+  const { medications, loading, error, refetch } = useMedicationRequest();
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  // Listen to consultation saved events and refetch if medications were updated
+  useSubscribeConsultationSaved(
+    (payload: ConsultationSavedEventPayload) => {
+      // Only refetch if:
+      // 1. Event is for the same patient
+      // 2. Medications were modified during consultation
+      if (
+        payload.patientUUID === patientUUID &&
+        payload.updatedResources.medications
+      ) {
+        refetch();
+      }
+    },
+    [patientUUID, refetch],
+  );
 
   const handleTabChange = (selectedIndex: number) => {
     setSelectedIndex(selectedIndex);
@@ -110,7 +130,7 @@ const MedicationsTable: React.FC = () => {
         medications: group.items,
       }));
     },
-    [],
+    [t],
   );
 
   const headers = useMemo(
@@ -181,8 +201,25 @@ const MedicationsTable: React.FC = () => {
             {row.asNeeded && <Tag className={styles.PRN}>PRN</Tag>}
           </>
         );
-      case 'dosage':
-        return <p className={styles.columnDataBold}>{row.dosage}</p>;
+      case 'dosage': {
+        if (typeof row.dosage === 'string') {
+          return <p className={styles.columnDataBold}>{row.dosage}</p>;
+        }
+        if (
+          row.dosage &&
+          typeof row.dosage === 'object' &&
+          'value' in row.dosage &&
+          'unit' in row.dosage
+        ) {
+          const dosage = row.dosage as { value: number; unit: string };
+          return (
+            <p className={styles.columnDataBold}>
+              {dosage.value} {dosage.unit}
+            </p>
+          );
+        }
+        return <p className={styles.columnDataBold} />;
+      }
       case 'instruction':
         return row.instruction;
       case 'startDate':

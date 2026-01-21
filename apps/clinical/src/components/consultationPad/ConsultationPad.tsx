@@ -301,6 +301,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
             conditions:
               selectedDiagnoses.length > 0 || selectedConditions.length > 0,
             allergies: selectedAllergies.length > 0,
+            medications: selectedMedications.length > 0,
           },
         });
 
@@ -313,8 +314,12 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         onClose();
       } catch (error) {
         setIsSubmitting(false);
+
+        // The axios interceptor in bahmni-services already parsed FHIR errors
+        // and converted them to translation keys, so we can use error.message directly
         const errorMessage =
           error instanceof Error ? error.message : 'CONSULTATION_ERROR_GENERIC';
+
         addNotification({
           title: t(ERROR_TITLES.CONSULTATION_ERROR),
           message: t(errorMessage),

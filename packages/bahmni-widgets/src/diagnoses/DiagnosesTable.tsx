@@ -6,7 +6,7 @@ import {
   DATE_FORMAT,
   useTranslation,
   getPatientDiagnoses,
-  useConsultationSaved,
+  useSubscribeConsultationSaved,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import React, { useMemo, useCallback, useEffect } from 'react';
@@ -34,7 +34,7 @@ const DiagnosesTable: React.FC = () => {
   });
 
   // Listen to consultation saved events and refetch if diagnoses were updated
-  useConsultationSaved(
+  useSubscribeConsultationSaved(
     (payload) => {
       // Only refetch if:
       // 1. Event is for the same patient

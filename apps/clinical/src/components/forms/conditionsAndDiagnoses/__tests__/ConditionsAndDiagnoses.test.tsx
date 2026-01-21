@@ -362,7 +362,7 @@ describe('ConditionsAndDiagnoses', () => {
       await user.type(searchInput, 'hyper');
 
       const disabledOption = await screen.findByText(
-        `${mockConcepts[0].conceptName} Diagnosis is already added`,
+        `${mockConcepts[0].conceptName} (Diagnosis is already added)`,
       );
       expect(disabledOption).toBeInTheDocument();
       const disabledListItem = disabledOption.closest('li');
@@ -384,7 +384,7 @@ describe('ConditionsAndDiagnoses', () => {
       await user.type(searchInput, 'hyper');
 
       const disabledOption = await screen.findByText(
-        `${mockConcepts[0].conceptName} Diagnosis is already added`,
+        `${mockConcepts[0].conceptName} (Diagnosis is already added)`,
       );
       expect(disabledOption).toBeInTheDocument();
 
@@ -699,7 +699,7 @@ describe('ConditionsAndDiagnoses', () => {
       await user.type(searchInput, 'hyper');
 
       const disabledOption = await screen.findByText(
-        `${mockConcepts[0].conceptName} Diagnosis is already added`,
+        `${mockConcepts[0].conceptName} (Diagnosis is already added)`,
       );
       expect(disabledOption).toBeInTheDocument();
       const disabledListItem = disabledOption.closest('li');

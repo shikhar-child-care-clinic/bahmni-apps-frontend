@@ -2,7 +2,7 @@ import {
   getPatientDiagnoses,
   getFormattedError,
   useTranslation,
-  useConsultationSaved,
+  useSubscribeConsultationSaved,
   Diagnosis,
 } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -16,7 +16,7 @@ jest.mock('@bahmni/services', () => ({
   getPatientDiagnoses: jest.fn(),
   getFormattedError: jest.fn(),
   useTranslation: jest.fn(),
-  useConsultationSaved: jest.fn(),
+  useSubscribeConsultationSaved: jest.fn(),
 }));
 
 jest.mock('../../hooks/usePatientUUID');
@@ -34,9 +34,10 @@ const mockUseTranslation = useTranslation as jest.MockedFunction<
 const mockUsePatientUUID = usePatientUUID as jest.MockedFunction<
   typeof usePatientUUID
 >;
-const mockUseConsultationSaved = useConsultationSaved as jest.MockedFunction<
-  typeof useConsultationSaved
->;
+const mockuseSubscribeConsultationSaved =
+  useSubscribeConsultationSaved as jest.MockedFunction<
+    typeof useSubscribeConsultationSaved
+  >;
 const mockUseNotification = useNotification as jest.MockedFunction<
   typeof useNotification
 >;
@@ -117,7 +118,7 @@ describe('DiagnosesTable Integration', () => {
       title: 'Error',
       message: error instanceof Error ? error.message : 'Unknown error',
     }));
-    mockUseConsultationSaved.mockImplementation(() => {});
+    mockuseSubscribeConsultationSaved.mockImplementation(() => {});
   });
 
   it('renders diagnoses from service through complete data flow', async () => {
@@ -204,12 +205,12 @@ describe('DiagnosesTable Integration', () => {
       expect(screen.getByText('Hypertension')).toBeInTheDocument();
     });
 
-    expect(mockUseConsultationSaved).toHaveBeenCalled();
+    expect(mockuseSubscribeConsultationSaved).toHaveBeenCalled();
   });
 
   it('refetches data when consultation saved event is triggered', async () => {
     let eventCallback: any;
-    mockUseConsultationSaved.mockImplementation((callback) => {
+    mockuseSubscribeConsultationSaved.mockImplementation((callback) => {
       eventCallback = callback;
     });
 

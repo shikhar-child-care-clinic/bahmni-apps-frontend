@@ -4,7 +4,7 @@ import {
   sortByDate,
   DATE_FORMAT,
   useTranslation,
-  useConsultationSaved,
+  useSubscribeConsultationSaved,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
@@ -21,15 +21,16 @@ jest.mock('@bahmni/services', () => ({
   useTranslation: jest.fn(),
   formatDate: jest.fn(),
   sortByDate: jest.fn(),
-  useConsultationSaved: jest.fn(),
+  useSubscribeConsultationSaved: jest.fn(),
 }));
 jest.mock('../../hooks/usePatientUUID');
 jest.mock('../../notification');
 
 const mockUseQuery = useQuery as jest.MockedFunction<typeof useQuery>;
-const mockUseConsultationSaved = useConsultationSaved as jest.MockedFunction<
-  typeof useConsultationSaved
->;
+const mockuseSubscribeConsultationSaved =
+  useSubscribeConsultationSaved as jest.MockedFunction<
+    typeof useSubscribeConsultationSaved
+  >;
 const mockUsePatientUUID = usePatientUUID as jest.MockedFunction<
   typeof usePatientUUID
 >;
@@ -100,7 +101,7 @@ describe('DiagnosesTable', () => {
 
     mockFormatDate.mockReturnValue({ formattedResult: '15/01/2024' });
     mockSortByDate.mockImplementation((data) => data);
-    mockUseConsultationSaved.mockImplementation(() => {});
+    mockuseSubscribeConsultationSaved.mockImplementation(() => {});
   });
 
   it('renders loading state', () => {
@@ -243,12 +244,12 @@ describe('DiagnosesTable', () => {
     } as any);
 
     render(<DiagnosesTable />);
-    expect(mockUseConsultationSaved).toHaveBeenCalled();
+    expect(mockuseSubscribeConsultationSaved).toHaveBeenCalled();
   });
 
   it('refetches data when consultation saved event is triggered with conditions update', () => {
     let eventCallback: any;
-    mockUseConsultationSaved.mockImplementation((callback) => {
+    mockuseSubscribeConsultationSaved.mockImplementation((callback) => {
       eventCallback = callback;
     });
 
@@ -273,7 +274,7 @@ describe('DiagnosesTable', () => {
 
   it('does not refetch when event is for different patient', () => {
     let eventCallback: any;
-    mockUseConsultationSaved.mockImplementation((callback) => {
+    mockuseSubscribeConsultationSaved.mockImplementation((callback) => {
       eventCallback = callback;
     });
 
@@ -298,7 +299,7 @@ describe('DiagnosesTable', () => {
 
   it('does not refetch when conditions were not updated', () => {
     let eventCallback: any;
-    mockUseConsultationSaved.mockImplementation((callback) => {
+    mockuseSubscribeConsultationSaved.mockImplementation((callback) => {
       eventCallback = callback;
     });
 

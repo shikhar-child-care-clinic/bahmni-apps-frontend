@@ -200,7 +200,7 @@ const ConditionsAndDiagnoses: React.FC = React.memo(() => {
       return {
         ...item,
         conceptName: isAlreadySelected
-          ? `${item.conceptName} ${t('DIAGNOSIS_ALREADY_ADDED')}`
+          ? `${item.conceptName} (${t('DIAGNOSIS_ALREADY_ADDED')})`
           : item.conceptName,
         disabled: isAlreadySelected,
       };

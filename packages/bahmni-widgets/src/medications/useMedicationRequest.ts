@@ -26,19 +26,24 @@ export const useMedicationRequest = (): MedicationRequestResult => {
   const { t } = useTranslation();
 
   const fetchMedications = useCallback(async () => {
+    if (!patientUUID) {
+      setLoading(false);
+      setMedications([]);
+      setError(null);
+      return;
+    }
+
     try {
       setLoading(true);
-      if (!patientUUID) {
-        setError(new Error(t('ERROR_INVALID_PATIENT_UUID')));
-        return;
-      }
       const medicationsData = await getPatientMedications(patientUUID);
       setMedications(medicationsData);
       setError(null);
     } catch (err) {
-      const { message } = getFormattedError(err);
+      const formattedError = getFormattedError(err);
+      const message =
+        formattedError?.message || t('ERROR_FETCHING_MEDICATIONS');
       setError(err instanceof Error ? err : new Error(message));
-      setMedications([]);
+      // Don't clear medications on error - keep previous data if available
     } finally {
       setLoading(false);
     }

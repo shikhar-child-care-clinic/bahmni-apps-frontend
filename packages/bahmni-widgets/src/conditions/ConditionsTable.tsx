@@ -4,7 +4,7 @@ import {
   useTranslation,
   FormatDateResult,
   formatDateDistance,
-  useConsultationSaved,
+  useSubscribeConsultationSaved,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -41,7 +41,7 @@ const ConditionsTable: React.FC = () => {
   });
 
   // Listen to consultation saved events and refetch if conditions were updated
-  useConsultationSaved(
+  useSubscribeConsultationSaved(
     (payload) => {
       // Only refetch if:
       // 1. Event is for the same patient
@@ -64,7 +64,7 @@ const ConditionsTable: React.FC = () => {
         type: 'error',
       });
     if (data) setConditions(data);
-  }, [data, isLoading, isError, error]);
+  }, [data, isLoading, isError, error, addNotification, t]);
 
   const headers = useMemo(
     () => [
