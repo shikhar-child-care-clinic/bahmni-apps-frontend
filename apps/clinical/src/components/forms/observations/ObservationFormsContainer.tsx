@@ -54,6 +54,46 @@ interface ObservationFormsContainerProps {
 }
 
 /**
+ * Transforms raw observations from Container.getValue() to Form2Observation format
+ * This ensures comment, interpretation, and other fields are properly included
+ */
+const transformContainerObservationsToForm2Observations = (
+  containerObservations: any[],
+): Form2Observation[] => {
+  const transform = (obs: any): Form2Observation => {
+    const observation: Form2Observation = {
+      concept: {
+        uuid: obs.concept?.uuid || obs.concept,
+        datatype: obs.concept?.datatype,
+      },
+      value: obs.value ?? null,
+      obsDatetime: obs.observationDateTime || new Date().toISOString(),
+      formNamespace: obs.formNamespace || 'Bahmni',
+      formFieldPath: obs.formFieldPath,
+    };
+
+    // Include comment if present
+    if (obs.comment) {
+      observation.comment = obs.comment;
+    }
+
+    // Include interpretation if present
+    if (obs.interpretation) {
+      observation.interpretation = obs.interpretation;
+    }
+
+    // Handle group members recursively
+    if (obs.groupMembers && Array.isArray(obs.groupMembers)) {
+      observation.groupMembers = obs.groupMembers.map(transform);
+    }
+
+    return observation;
+  };
+
+  return containerObservations.map(transform);
+};
+
+/**
  * ObservationFormsWrapper component
  *
  * Wraps the ObservationForms component with additional functionality that was extracted from ConsultationPad.
@@ -196,12 +236,14 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       // If we reach here, validation passed
       setValidationErrorType(null);
 
+      // Use currentObservations from Container.getValue() as it has the latest form values
+      // including nested tables and sections. Transform it to Form2Observation format
+      // to ensure comments, interpretation, and other fields are properly included
       const observationsToSave: Form2Observation[] =
         currentObservations && currentObservations.length > 0
-          ? (currentObservations as Form2Observation[])
+          ? transformContainerObservationsToForm2Observations(currentObservations)
           : observations;
 
-      // Save with observations from Container
       if (viewingForm && onFormObservationsChange) {
         onFormObservationsChange(viewingForm.uuid, observationsToSave);
       }

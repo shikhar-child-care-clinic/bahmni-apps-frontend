@@ -33,6 +33,7 @@ export interface FormControlData {
   label?: string;
   units?: string;
   interpretation?: string;
+  comment?: string;
   groupMembers?: FormControlData[];
 }
 
@@ -71,17 +72,26 @@ function transformGroupMembers(
 ): Form2Observation[] {
   return groupMembers.map((member) => {
     const datatype = findConceptDatatype(metadata, member.conceptUuid);
-    return {
+    const observation: Form2Observation = {
       concept: { uuid: member.conceptUuid, datatype },
       value: transformControlValue(member),
       obsDatetime: new Date().toISOString(),
       formNamespace: DEFAULT_FORM_NAMESPACE,
       formFieldPath: member.id,
-      interpretation: member.interpretation,
       groupMembers: member.groupMembers
         ? transformGroupMembers(member.groupMembers, metadata)
         : undefined,
     };
+
+    if (member.interpretation) {
+      observation.interpretation = member.interpretation;
+    }
+
+    if (member.comment) {
+      observation.comment = member.comment;
+    }
+
+    return observation;
   });
 }
 
@@ -150,14 +160,20 @@ export function transformFormDataToObservations(
     const datatype = findConceptDatatype(metadata, control.conceptUuid);
 
     if (control.groupMembers?.length) {
-      observations.push({
+      const groupObservation: Form2Observation = {
         concept: { uuid: control.conceptUuid, datatype },
         value: null,
         obsDatetime: timestamp,
         formNamespace: DEFAULT_FORM_NAMESPACE,
         formFieldPath: control.id,
         groupMembers: transformGroupMembers(control.groupMembers, metadata),
-      });
+      };
+
+      if (control.comment) {
+        groupObservation.comment = control.comment;
+      }
+
+      observations.push(groupObservation);
       return;
     }
 
@@ -179,6 +195,10 @@ export function transformFormDataToObservations(
           observation.interpretation = control.interpretation;
         }
 
+        if (control.comment) {
+          observation.comment = control.comment;
+        }
+
         observations.push(observation);
       });
       return;
@@ -194,6 +214,10 @@ export function transformFormDataToObservations(
 
     if (control.interpretation) {
       observation.interpretation = control.interpretation;
+    }
+
+    if (control.comment) {
+      observation.comment = control.comment;
     }
 
     observations.push(observation);
@@ -255,6 +279,10 @@ export function transformObservationsToFormData(
 
       if (obs.interpretation) {
         control.interpretation = obs.interpretation;
+      }
+
+      if (obs.comment) {
+        control.comment = obs.comment;
       }
 
       controlsMap.set(fieldPath, control);
