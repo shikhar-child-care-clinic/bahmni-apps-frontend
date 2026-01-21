@@ -2,15 +2,15 @@ import { OPENMRS_FHIR_R4, OPENMRS_REST_V1 } from '../constants/app';
 
 export const PATIENT_MEDICATION_RESOURCE_URL = (
   patientUUID: string,
-  isVaccinationType?: boolean,
+  code?: string,
   encounterUuids?: string,
 ) => {
   const baseUrl =
     OPENMRS_FHIR_R4 + '/MedicationRequest?_sort=-_lastUpdated&_count=100';
   let url = `${baseUrl}&patient=${patientUUID}`;
 
-  if (isVaccinationType) {
-    url += `&code=http://hl7.org/fhir/sid/cvx|`;
+  if (code) {
+    url += `&code=${code}`;
   }
 
   if (encounterUuids) {

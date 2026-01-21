@@ -19,7 +19,7 @@ interface MedicationRequestResult {
  * @returns Object containing medications, loading state, error state, and refetch function
  */
 export const useMedicationRequest = (
-  treatmentType: string,
+  code: string[],
 ): MedicationRequestResult => {
   const [medications, setMedications] = useState<MedicationRequest[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -34,10 +34,7 @@ export const useMedicationRequest = (
         setError(new Error(t('ERROR_INVALID_PATIENT_UUID')));
         return;
       }
-      const medicationsData = await getPatientMedications(
-        patientUUID,
-        treatmentType ? true : false,
-      );
+      const medicationsData = await getPatientMedications(patientUUID, code);
       setMedications(medicationsData);
       setError(null);
     } catch (err) {

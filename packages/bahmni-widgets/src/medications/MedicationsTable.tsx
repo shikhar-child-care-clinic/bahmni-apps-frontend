@@ -75,8 +75,8 @@ const getMedicationStatusKey = (status: string): string => {
 
 const MedicationsTable: React.FC<WidgetProps> = ({ config }) => {
   const { t } = useTranslation();
-  const treatmentType = (config?.treatmentType as string) || '';
-  const { medications, loading, error } = useMedicationRequest(treatmentType);
+  const code = (config?.code as string[]) || [];
+  const { medications, loading, error } = useMedicationRequest(code);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const handleTabChange = (selectedIndex: number) => {
