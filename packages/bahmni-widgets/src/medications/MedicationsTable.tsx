@@ -21,18 +21,24 @@ import {
   MedicationRequest,
   useSubscribeConsultationSaved,
   ConsultationSavedEventPayload,
+  getPatientMedications,
 } from '@bahmni/services';
+import { useQuery } from '@tanstack/react-query';
 import classNames from 'classnames';
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
+import { useNotification } from '../notification';
 import styles from './styles/MedicationsTable.module.scss';
-import { useMedicationRequest } from './useMedicationRequest';
 import {
   formatMedicationRequest,
   sortMedicationsByStatus,
   sortMedicationsByPriority,
   sortMedicationsByDateDistance,
 } from './utils';
+
+// Query keys for TanStack Query cache management
+export const medicationsQueryKeys = (patientUUID: string) =>
+  ['medications', patientUUID] as const;
 
 // Helper function to get severity CSS class
 const getMedicationStatusClassName = (status: string): string => {
@@ -78,8 +84,26 @@ const getMedicationStatusKey = (status: string): string => {
 const MedicationsTable: React.FC = () => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
-  const { medications, loading, error, refetch } = useMedicationRequest();
+  const { addNotification } = useNotification();
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  // Use TanStack Query for data fetching and caching
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: medicationsQueryKeys(patientUUID!),
+    enabled: !!patientUUID,
+    queryFn: () => getPatientMedications(patientUUID!),
+  });
+
+  // Handle errors with notifications
+  useEffect(() => {
+    if (isError) {
+      addNotification({
+        title: t('ERROR_DEFAULT_TITLE'),
+        message: error.message,
+        type: 'error',
+      });
+    }
+  }, [isError, error, addNotification, t]);
 
   // Listen to consultation saved events and refetch if medications were updated
   useSubscribeConsultationSaved(
@@ -96,6 +120,9 @@ const MedicationsTable: React.FC = () => {
     },
     [patientUUID, refetch],
   );
+
+  const medications = data ?? [];
+  const loading = isLoading;
 
   const handleTabChange = (selectedIndex: number) => {
     setSelectedIndex(selectedIndex);
