@@ -288,6 +288,7 @@
   "VITAL_SIGNS_TEMPERATURE": "Temperature",
   "VACCINATION_ADD_NOTE": "Add Note",
   "VACCINATION_ADD_NOTE_PLACEHOLDER": "Add notes for the vaccination",
+  "VACCINATION_ALREADY_SELECTED": "Already added",
   "VACCINATION_ADDED_VACCINATIONS": "Added vaccinations",
   "VACCINATION_FORM_TITLE": "Vaccinations",
   "VACCINATION_SEARCH_PLACEHOLDER": "Search to add vaccination",
