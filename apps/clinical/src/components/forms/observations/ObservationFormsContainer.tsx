@@ -210,9 +210,23 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       const isEmpty = !observations || observations.length === 0;
       const hasErrors = errors && errors.length > 0;
 
+      // Transform current observations to ensure comments and other fields are included
+      const transformedObservations =
+        currentObservations && currentObservations.length > 0
+          ? transformContainerObservationsToForm2Observations(currentObservations)
+          : observations;
+
       // Check for empty form
       if (isEmpty) {
         setValidationErrorType(VALIDATION_STATE_EMPTY);
+        // Save the current state even with validation errors so data persists
+        if (viewingForm && onFormObservationsChange) {
+          onFormObservationsChange(
+            viewingForm.uuid,
+            transformedObservations,
+            VALIDATION_STATE_EMPTY,
+          );
+        }
         return;
       }
 
@@ -225,27 +239,27 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
               (err.get?.('message') ?? err.message) ===
               VALIDATION_STATE_MANDATORY,
           );
-        setValidationErrorType(
-          hasMandatoryError
-            ? VALIDATION_STATE_MANDATORY
-            : VALIDATION_STATE_INVALID,
-        );
+        const errorType = hasMandatoryError
+          ? VALIDATION_STATE_MANDATORY
+          : VALIDATION_STATE_INVALID;
+        setValidationErrorType(errorType);
+        // Save the current state even with validation errors so data persists
+        if (viewingForm && onFormObservationsChange) {
+          onFormObservationsChange(
+            viewingForm.uuid,
+            transformedObservations,
+            errorType,
+          );
+        }
         return;
       }
 
       // If we reach here, validation passed
       setValidationErrorType(null);
 
-      // Use currentObservations from Container.getValue() as it has the latest form values
-      // including nested tables and sections. Transform it to Form2Observation format
-      // to ensure comments, interpretation, and other fields are properly included
-      const observationsToSave: Form2Observation[] =
-        currentObservations && currentObservations.length > 0
-          ? transformContainerObservationsToForm2Observations(currentObservations)
-          : observations;
-
+      // Save the validated observations (already transformed above)
       if (viewingForm && onFormObservationsChange) {
-        onFormObservationsChange(viewingForm.uuid, observationsToSave);
+        onFormObservationsChange(viewingForm.uuid, transformedObservations);
       }
       onViewingFormChange(null);
     }
