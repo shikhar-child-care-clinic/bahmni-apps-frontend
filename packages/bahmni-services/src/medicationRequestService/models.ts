@@ -1,3 +1,5 @@
+import { ConceptClass } from "../conceptService";
+
 /**
  * Enum representing canonical statuses of a medication request
  */
@@ -59,17 +61,9 @@ export interface FormattedMedicationRequest {
 }
 
 /**
- * Interface for concept-based configuration data
- */
-interface Concept {
-  uuid: string;
-  name: string;
-}
-
-/**
  * Interface for frequency configuration
  */
-export interface Frequency extends Concept {
+export interface Frequency extends ConceptClass {
   frequencyPerDay: number;
 }
 

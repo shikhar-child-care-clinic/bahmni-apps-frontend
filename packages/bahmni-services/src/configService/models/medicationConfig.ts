@@ -1,7 +1,4 @@
-interface Concept {
-  uuid: string;
-  name: string;
-}
+import { ConceptClass } from "../../conceptService";
 
 export interface MedicationConfig
   extends MedicationOrdersMetadataResponse,
@@ -18,7 +15,7 @@ export interface MedicationJSONConfig {
   drugFormDefaults?: Record<string, DrugFormDefault>;
 }
 
-export interface Frequency extends Concept {
+export interface Frequency extends ConceptClass {
   frequencyPerDay: number;
 }
 
