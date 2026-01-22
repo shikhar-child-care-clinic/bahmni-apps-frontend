@@ -36,10 +36,6 @@ import {
   sortMedicationsByDateDistance,
 } from './utils';
 
-// Query keys for TanStack Query cache management
-export const medicationsQueryKeys = (patientUUID: string) =>
-  ['medications', patientUUID] as const;
-
 // Helper function to get severity CSS class
 const getMedicationStatusClassName = (status: string): string => {
   switch (status) {
@@ -89,7 +85,7 @@ const MedicationsTable: React.FC = () => {
 
   // Use TanStack Query for data fetching and caching
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: medicationsQueryKeys(patientUUID!),
+    queryKey: ['medications', patientUUID!],
     enabled: !!patientUUID,
     queryFn: () => getPatientMedications(patientUUID!),
   });

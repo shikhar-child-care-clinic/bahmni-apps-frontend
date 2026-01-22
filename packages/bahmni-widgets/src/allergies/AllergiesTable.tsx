@@ -23,10 +23,6 @@ import {
   sortAllergiesBySeverity,
 } from './utils';
 
-//TODO: Figure out a better place to create Query Keys
-export const allergiesQueryKeys = (patientUUID: string) =>
-  ['allergies', patientUUID] as const;
-
 // Helper function to get severity CSS class
 const getSeverityClassName = (severity: string): string | undefined => {
   switch (severity?.toLowerCase()) {
@@ -51,7 +47,7 @@ const AllergiesTable: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotification();
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: allergiesQueryKeys(patientUUID!),
+    queryKey: ['allergies', patientUUID!],
     enabled: !!patientUUID,
     queryFn: () => getFormattedAllergies(patientUUID!),
   });

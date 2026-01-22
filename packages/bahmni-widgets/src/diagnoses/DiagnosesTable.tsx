@@ -14,10 +14,6 @@ import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
 import styles from './styles/DiagnosesTable.module.scss';
 
-// Query keys for TanStack Query cache management
-export const diagnosesQueryKeys = (patientUUID: string) =>
-  ['diagnoses', patientUUID] as const;
-
 /**
  * Component to display patient diagnoses using SortableDataTable
  */
@@ -28,7 +24,7 @@ const DiagnosesTable: React.FC = () => {
 
   // Use TanStack Query for data fetching and caching
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: diagnosesQueryKeys(patientUUID!),
+    queryKey: ['diagnoses', patientUUID!],
     enabled: !!patientUUID,
     queryFn: () => getPatientDiagnoses(patientUUID!),
   });

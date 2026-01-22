@@ -1,4 +1,1 @@
-export {
-  default as MedicationsTable,
-  medicationsQueryKeys,
-} from './MedicationsTable';
+export { default as MedicationsTable } from './MedicationsTable';

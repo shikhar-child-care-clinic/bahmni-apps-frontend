@@ -11,12 +11,7 @@ import {
   getConditions,
   getPatientDiagnoses,
 } from '@bahmni/services';
-import {
-  conditionsQueryKeys,
-  diagnosesQueryKeys,
-  useNotification,
-  usePatientUUID,
-} from '@bahmni/widgets';
+import { useNotification, usePatientUUID } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useConceptSearch } from '../../../hooks/useConceptSearch';
@@ -63,7 +58,7 @@ const ConditionsAndDiagnoses: React.FC = React.memo(() => {
     isLoading: existingConditionsLoading,
     error: existingConditionsError,
   } = useQuery({
-    queryKey: conditionsQueryKeys(patientUUID!),
+    queryKey: ['conditions', patientUUID!],
     enabled: !!patientUUID,
     queryFn: () => getConditions(patientUUID!),
   });
@@ -74,7 +69,7 @@ const ConditionsAndDiagnoses: React.FC = React.memo(() => {
     isLoading: existingDiagnosesLoading,
     error: existingDiagnosesError,
   } = useQuery({
-    queryKey: diagnosesQueryKeys(patientUUID!),
+    queryKey: ['diagnoses', patientUUID!],
     enabled: !!patientUUID,
     queryFn: () => getPatientDiagnoses(patientUUID!),
   });

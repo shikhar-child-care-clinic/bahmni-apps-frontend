@@ -1,4 +1,1 @@
-export {
-  default as AllergiesTable,
-  allergiesQueryKeys,
-} from './AllergiesTable';
+export { default as AllergiesTable } from './AllergiesTable';
