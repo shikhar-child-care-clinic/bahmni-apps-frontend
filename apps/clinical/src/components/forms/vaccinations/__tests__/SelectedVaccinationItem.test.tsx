@@ -17,38 +17,9 @@ import SelectedVaccinationItem, {
 expect.extend(toHaveNoViolations);
 
 jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
   getTodayDate: jest.fn().mockReturnValue(new Date('2025-01-01')),
   DATE_PICKER_INPUT_FORMAT: 'd/m/Y',
-  useTranslation: () => ({
-    t: (key: string, options?: any) => {
-      const translations: Record<string, string> = {
-        MEDICATION_STAT: 'STAT',
-        MEDICATION_DOSAGE_INPUT_LABEL: 'Dosage',
-        MEDICATION_DOSAGE_UNIT_INPUT_LABEL: 'Dosage unit',
-        MEDICATION_FREQUENCY_INPUT_LABEL: 'Frequency',
-        MEDICATION_DURATION_INPUT_LABEL: 'Duration',
-        MEDICATION_DURATION_UNIT_INPUT_LABEL: 'Duration unit',
-        MEDICATION_INSTRUCTIONS_INPUT_LABEL: 'Instructions',
-        MEDICATION_ROUTE_INPUT_LABEL: 'Route',
-        MEDICATION_START_DATE_INPUT_LABEL: 'Start date',
-        VACCINATION_TOTAL_QUANTITY: 'Total quantity',
-        VACCINATION_ADD_NOTE: 'Add note',
-        VACCINATION_ADD_NOTE_PLACEHOLDER: 'Enter note here',
-        INPUT_VALUE_REQUIRED: 'Please enter a value',
-        DROPDOWN_VALUE_REQUIRED: 'Please select a value',
-        DURATION_UNIT_DAYS: 'Days',
-        DURATION_UNIT_WEEKS: 'Weeks',
-        DURATION_UNIT_MONTHS: 'Months',
-        DURATION_UNIT_YEARS: 'Years',
-        DURATION_UNIT_HOURS: 'Hours',
-        DURATION_UNIT_MINUTES: 'Minutes',
-      };
-      if (options?.defaultValue && !translations[key]) {
-        return options.defaultValue;
-      }
-      return translations[key] || key;
-    },
-  }),
 }));
 
 jest.mock('../../../../services/medicationsValueCalculator', () => ({
@@ -266,7 +237,7 @@ describe('SelectedVaccinationItem', () => {
         }),
       });
       render(<SelectedVaccinationItem {...props} />);
-      expect(screen.getByText('Add note')).toBeInTheDocument();
+      expect(screen.getByText('Add Note')).toBeInTheDocument();
       expect(
         screen.queryByTestId('vaccination-note-entry-1'),
       ).not.toBeInTheDocument();
@@ -279,7 +250,7 @@ describe('SelectedVaccinationItem', () => {
       });
       const user = userEvent.setup();
       render(<SelectedVaccinationItem {...props} />);
-      const addNoteLink = screen.getByText('Add note');
+      const addNoteLink = screen.getByText('Add Note');
       await user.click(addNoteLink);
       await waitFor(() => {
         expect(
@@ -297,7 +268,7 @@ describe('SelectedVaccinationItem', () => {
       });
       const user = userEvent.setup();
       render(<SelectedVaccinationItem {...props} />);
-      const addNoteLink = screen.getByText('Add note');
+      const addNoteLink = screen.getByText('Add Note');
       await user.click(addNoteLink);
       const noteTextarea = await screen.findByTestId(
         'vaccination-note-entry-1',
