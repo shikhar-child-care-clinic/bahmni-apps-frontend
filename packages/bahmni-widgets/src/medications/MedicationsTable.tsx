@@ -19,6 +19,7 @@ import {
   ISO_DATE_FORMAT,
   FormattedMedicationRequest,
   MedicationRequest,
+  shouldEnableEncounterFilter,
 } from '@bahmni/services';
 import classNames from 'classnames';
 import React, { useMemo, useState, useCallback } from 'react';
@@ -73,11 +74,23 @@ const getMedicationStatusKey = (status: string): string => {
   }
 };
 
-const MedicationsTable: React.FC<WidgetProps> = ({ config }) => {
+const MedicationsTable: React.FC<WidgetProps> = ({
+  config,
+  episodeOfCareUuids,
+  encounterUuids,
+}) => {
   const { t } = useTranslation();
   const code = (config?.code as string[]) || [];
-  const { medications, loading, error } = useMedicationRequest(code);
+  const { medications, loading, error } = useMedicationRequest(
+    code,
+    encounterUuids!,
+  );
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const emptyEncounterFilter = shouldEnableEncounterFilter(
+    episodeOfCareUuids,
+    encounterUuids,
+  );
 
   const handleTabChange = (selectedIndex: number) => {
     setSelectedIndex(selectedIndex);
@@ -234,7 +247,7 @@ const MedicationsTable: React.FC<WidgetProps> = ({ config }) => {
             <SortableDataTable
               headers={headers}
               ariaLabel={t('MEDICATIONS_TABLE_ARIA_LABEL')}
-              rows={activeAndScheduledMedications}
+              rows={emptyEncounterFilter ? [] : activeAndScheduledMedications}
               loading={loading}
               errorStateMessage={error}
               sortable={sortable}
@@ -244,7 +257,10 @@ const MedicationsTable: React.FC<WidgetProps> = ({ config }) => {
             />
           </TabPanel>
           <TabPanel className={styles.medicationTabs}>
-            {loading || !!error || processedAllMedications.length === 0 ? (
+            {loading ||
+            !!error ||
+            processedAllMedications.length === 0 ||
+            emptyEncounterFilter ? (
               <SortableDataTable
                 headers={headers}
                 ariaLabel={t('MEDICATIONS_TABLE_ARIA_LABEL')}

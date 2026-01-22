@@ -20,6 +20,7 @@ interface MedicationRequestResult {
  */
 export const useMedicationRequest = (
   code: string[],
+  encounterUuids?: string[],
 ): MedicationRequestResult => {
   const [medications, setMedications] = useState<MedicationRequest[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -34,7 +35,11 @@ export const useMedicationRequest = (
         setError(new Error(t('ERROR_INVALID_PATIENT_UUID')));
         return;
       }
-      const medicationsData = await getPatientMedications(patientUUID, code);
+      const medicationsData = await getPatientMedications(
+        patientUUID,
+        code,
+        encounterUuids,
+      );
       setMedications(medicationsData);
       setError(null);
     } catch (err) {
