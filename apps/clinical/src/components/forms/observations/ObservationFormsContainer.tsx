@@ -172,7 +172,6 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   const validateAndSave = () => {
     if (formContainerRef.current) {
       // If validationErrorType is already set, user clicked "Continue Anyway"
-      // Skip validation and save directly
       if (validationErrorType) {
         setValidationErrorType(null);
         handleSaveForm(observations, validationErrorType);
@@ -227,12 +226,19 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
             ? (validCurrentObservations as Form2Observation[])
             : observations;
 
+        // Extract formData from Container's state.data
+        const containerState = (formContainerRef.current as any).state;
+        const formData = containerState?.data?.toJS
+          ? containerState.data.toJS()
+          : containerState?.data;
+
         // Execute onFormSave event before saving (if defined in form metadata)
         // This allows forms to apply business logic, validations, or transformations
         const processedObservations = executeOnFormSaveEvent(
           formMetadata!,
           observationsToValidate,
           patientUUID!,
+          formData,
         );
 
         // Save with processed observations
@@ -273,22 +279,23 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   // Form view content when a form is selected
   const formViewContent = (
     <div className={styles.formView}>
-      {validationErrorType && (
-        <div className={styles.errorNotificationWrapper}>
-          <InlineNotification
-            kind="error"
-            title={t(
-              `OBSERVATION_FORM_VALIDATION_ERROR_TITLE_${validationErrorType.toUpperCase()}`,
-            )}
-            subtitle={t(
-              `OBSERVATION_FORM_VALIDATION_ERROR_SUBTITLE_${validationErrorType.toUpperCase()}`,
-            )}
-            lowContrast
-            hideCloseButton={false}
-            onClose={() => setValidationErrorType(null)}
-          />
-        </div>
-      )}
+      {validationErrorType &&
+        validationErrorType !== VALIDATION_STATE_SCRIPT_ERROR && (
+          <div className={styles.errorNotificationWrapper}>
+            <InlineNotification
+              kind="error"
+              title={t(
+                `OBSERVATION_FORM_VALIDATION_ERROR_TITLE_${validationErrorType.toUpperCase()}`,
+              )}
+              subtitle={t(
+                `OBSERVATION_FORM_VALIDATION_ERROR_SUBTITLE_${validationErrorType.toUpperCase()}`,
+              )}
+              lowContrast
+              hideCloseButton={false}
+              onClose={() => setValidationErrorType(null)}
+            />
+          </div>
+        )}
 
       {validationErrorType === VALIDATION_STATE_SCRIPT_ERROR &&
         validationErrorMessage && (

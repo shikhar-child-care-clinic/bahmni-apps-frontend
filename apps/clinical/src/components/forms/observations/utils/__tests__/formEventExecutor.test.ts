@@ -29,6 +29,26 @@ describe('formEventExecutor', () => {
       },
     }) as FormMetadata;
 
+  // Mock formData structure that matches Container's state.data format
+  const mockFormData = {
+    children: [
+      {
+        control: {
+          concept: { name: 'Weight', uuid: 'concept-uuid-1' },
+          label: { value: 'Weight' },
+        },
+        value: { value: 70, comment: undefined, interpretation: null },
+      },
+      {
+        control: {
+          concept: { name: 'Height', uuid: 'concept-uuid-2' },
+          label: { value: 'Height' },
+        },
+        value: { value: 170, comment: undefined, interpretation: null },
+      },
+    ],
+  };
+
   describe('executeOnFormSaveEvent', () => {
     it('should return original observations when no onFormSave event exists', () => {
       const metadata = createMockMetadata();
@@ -138,7 +158,9 @@ describe('formEventExecutor', () => {
 
       expect(() =>
         executeOnFormSaveEvent(metadata, mockObservations, mockPatientUuid),
-      ).toThrow('Failed to execute onFormSave event for form "Test Form"');
+      ).toThrow(
+        'Error in onFormSave event for form "Test Form": Validation failed',
+      );
     });
 
     it('should handle script that throws plain object error', () => {
@@ -148,7 +170,9 @@ describe('formEventExecutor', () => {
 
       expect(() =>
         executeOnFormSaveEvent(metadata, mockObservations, mockPatientUuid),
-      ).toThrow('Failed to execute onFormSave event for form "Test Form"');
+      ).toThrow(
+        'Error in onFormSave event for form "Test Form": Custom validation error',
+      );
     });
 
     it('should decode base64-encoded script correctly', () => {
@@ -197,11 +221,11 @@ describe('formEventExecutor', () => {
 
     // Backward compatibility tests for form.get() method
     describe('Backward compatibility - form.get() method', () => {
-      it('should support legacy scripts using form.get() to find observations by concept UUID', () => {
+      it('should support legacy scripts using form.get() to find observations by concept name', () => {
         const script = `function(form) {
-          var weightObs = form.get('concept-uuid-1');
-          if (weightObs) {
-            weightObs.value = weightObs.value + 10;
+          var weightObs = form.get('Weight');
+          if (weightObs && weightObs.getValue() !== undefined) {
+            weightObs.setValue(weightObs.getValue() + 10);
           }
           return form.observations;
         }`;
@@ -212,16 +236,17 @@ describe('formEventExecutor', () => {
           metadata,
           mockObservations,
           mockPatientUuid,
+          mockFormData,
         );
 
-        expect(result[0].value).toBe(80);
+        expect(result[0].value).toBe(70); // Observations remain unchanged (script modifies formData, not observations)
       });
 
       it('should support formContext.get() in new style scripts', () => {
         const script = `function(formContext) {
-          var heightObs = formContext.get('concept-uuid-2');
-          if (heightObs) {
-            heightObs.value = heightObs.value + 5;
+          var heightObs = formContext.get('Height');
+          if (heightObs && heightObs.getValue() !== undefined) {
+            heightObs.setValue(heightObs.getValue() + 5);
           }
           return formContext.observations;
         }`;
@@ -232,15 +257,16 @@ describe('formEventExecutor', () => {
           metadata,
           mockObservations,
           mockPatientUuid,
+          mockFormData,
         );
 
-        expect(result[1].value).toBe(175);
+        expect(result[1].value).toBe(170); // Observations remain unchanged
       });
 
       it('should return wrapper with null currentRecord when form.get() does not find matching concept', () => {
         const script = `function(form) {
-          var missingObs = form.get('non-existent-uuid');
-          // Check using currentRecord property (Docker backward compatibility)
+          var missingObs = form.get('NonExistentConcept');
+          // Check using currentRecord property (backward compatibility)
           if (!missingObs.currentRecord) {
             form.observations = [];
           }
@@ -253,6 +279,7 @@ describe('formEventExecutor', () => {
           metadata,
           mockObservations,
           mockPatientUuid,
+          mockFormData,
         );
 
         expect(result).toEqual([]);
@@ -260,9 +287,9 @@ describe('formEventExecutor', () => {
 
       it('should handle scripts that use both form.get() and direct observations access', () => {
         const script = `function(form) {
-          var weightObs = form.get('concept-uuid-1');
+          var weightObs = form.get('Weight');
           if (weightObs && form.observations.length > 1) {
-            weightObs.value = 100;
+            weightObs.setValue(100);
           }
           return form.observations;
         }`;
@@ -273,17 +300,18 @@ describe('formEventExecutor', () => {
           metadata,
           mockObservations,
           mockPatientUuid,
+          mockFormData,
         );
 
-        expect(result[0].value).toBe(100);
+        expect(result[0].value).toBe(70);
         expect(result).toHaveLength(2);
       });
 
       it('should support form.get() in function body scripts with form variable available', () => {
         const script = `
-          var obs = form.get('concept-uuid-1');
-          if (obs) {
-            obs.value = 999;
+          var obs = form.get('Weight');
+          if (obs && obs.getValue() !== undefined) {
+            obs.setValue(999);
           }
         `;
         const encodedScript = btoa(script);
@@ -293,9 +321,10 @@ describe('formEventExecutor', () => {
           metadata,
           mockObservations,
           mockPatientUuid,
+          mockFormData,
         );
 
-        expect(result[0].value).toBe(999);
+        expect(result[0].value).toBe(70);
       });
 
       it('should handle complex legacy validation script with form.get() and error throwing', () => {
@@ -313,11 +342,30 @@ describe('formEventExecutor', () => {
           } as Form2Observation,
         ];
 
+        const mockFormDataWithHighValue = {
+          children: [
+            {
+              control: {
+                concept: { name: 'Weight', uuid: 'concept-uuid-1' },
+                label: { value: 'Weight' },
+              },
+              value: { value: 70, comment: undefined, interpretation: null },
+            },
+            {
+              control: {
+                concept: { name: 'Height', uuid: 'concept-uuid-2' },
+                label: { value: 'Height' },
+              },
+              value: { value: 250, comment: undefined, interpretation: null },
+            },
+          ],
+        };
+
         const script = `function(form) {
           let today = Date.now();
-          let dateObs = form.get('concept-uuid-2');
+          let heightObs = form.get('Height');
 
-          if (dateObs && dateObs.value > 200) {
+          if (heightObs && heightObs.getValue() > 200) {
             throw new Error('Value too high');
           }
 
@@ -327,8 +375,15 @@ describe('formEventExecutor', () => {
         const metadata = createMockMetadata(encodedScript);
 
         expect(() =>
-          executeOnFormSaveEvent(metadata, observationsWithHighValue, mockPatientUuid),
-        ).toThrow('Value too high');
+          executeOnFormSaveEvent(
+            metadata,
+            observationsWithHighValue,
+            mockPatientUuid,
+            mockFormDataWithHighValue,
+          ),
+        ).toThrow(
+          'Error in onFormSave event for form "Test Form": Value too high',
+        );
       });
     });
   });

@@ -309,6 +309,7 @@ describe('ObservationFormsContainer', () => {
       expect(mockOnFormObservationsChange).toHaveBeenCalledWith(
         mockForm.uuid,
         expect.any(Array),
+        null,
       );
       expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
     });
