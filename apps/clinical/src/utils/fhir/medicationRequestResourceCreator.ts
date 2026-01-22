@@ -38,7 +38,6 @@ export const createMedicationRequestResource = (
   };
   medicationRequest.dispenseRequest = createDispenseRequest(medicationEntry);
 
-  // Add note if present
   if (medicationEntry.note && medicationEntry.note.trim() !== '') {
     medicationRequest.note = [
       {

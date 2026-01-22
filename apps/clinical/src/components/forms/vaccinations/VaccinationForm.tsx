@@ -35,7 +35,6 @@ const VaccinationForm: React.FC = React.memo(() => {
     error: medicationConfigError,
   } = useMedicationConfig();
 
-  // Fetch vaccinations using useQuery
   const {
     data: vaccinationsBundle,
     isLoading: loading,
@@ -50,7 +49,6 @@ const VaccinationForm: React.FC = React.memo(() => {
     ? getMedicationsFromBundle(vaccinationsBundle)
     : [];
 
-  // Use Zustand store
   const {
     selectedVaccinations,
     addVaccination,
@@ -80,10 +78,8 @@ const VaccinationForm: React.FC = React.memo(() => {
     if (!selectedItem) {
       return;
     }
-    // Set flag to prevent search when ComboBox updates its input
     isSelectingRef.current = true;
     addVaccination(selectedItem.medication!, selectedItem.displayName);
-    // Clear the search term after selection
     setSearchVaccinationTerm('');
     // Reset the flag after a short delay to allow ComboBox to update
     setTimeout(() => {
