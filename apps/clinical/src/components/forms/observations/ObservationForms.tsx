@@ -13,6 +13,7 @@ import {
   VALIDATION_STATE_EMPTY,
   VALIDATION_STATE_MANDATORY,
   VALIDATION_STATE_INVALID,
+  VALIDATION_STATE_SCRIPT_ERROR,
 } from '../../../constants/forms';
 import useObservationFormsSearch from '../../../hooks/useObservationFormsSearch';
 import { useObservationFormsStore } from '../../../stores/observationFormsStore';
@@ -235,7 +236,8 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
                 const showError =
                   validationState === VALIDATION_STATE_MANDATORY ||
                   validationState === VALIDATION_STATE_INVALID ||
-                  validationState === VALIDATION_STATE_EMPTY;
+                  validationState === VALIDATION_STATE_EMPTY ||
+                  validationState === VALIDATION_STATE_SCRIPT_ERROR;
                 const errorMessage = showError
                   ? t(
                       `OBSERVATION_ADDED_FORM_VALIDATION_ERROR_TITLE_${validationState.toUpperCase()}`,
