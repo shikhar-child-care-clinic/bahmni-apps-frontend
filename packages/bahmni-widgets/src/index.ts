@@ -2,10 +2,10 @@ import '@bahmni/design-system/styles';
 
 // Widget Components
 export { PatientDetails } from './patientDetails';
-export { AllergiesTable } from './allergies';
+export { AllergiesTable, allergiesQueryKeys } from './allergies';
 export { ConditionsTable, conditionsQueryKeys } from './conditions';
 export { DiagnosesTable, diagnosesQueryKeys } from './diagnoses';
-export { MedicationsTable } from './medications';
+export { MedicationsTable, medicationsQueryKeys } from './medications';
 export { RadiologyInvestigationTable } from './radiologyInvestigation';
 export { LabInvestigation } from './labinvestigation';
 export { SearchPatient } from './searchPatient';

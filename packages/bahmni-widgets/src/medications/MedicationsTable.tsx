@@ -122,7 +122,6 @@ const MedicationsTable: React.FC = () => {
   );
 
   const medications = data ?? [];
-  const loading = isLoading;
 
   const handleTabChange = (selectedIndex: number) => {
     setSelectedIndex(selectedIndex);
@@ -245,7 +244,11 @@ const MedicationsTable: React.FC = () => {
             </p>
           );
         }
-        return <p className={styles.columnDataBold} />;
+        return (
+          <p className={styles.columnDataBold}>
+            {t('MEDICATIONS_TABLE_NOT_AVAILABLE')}
+          </p>
+        );
       }
       case 'instruction':
         return row.instruction;
@@ -297,7 +300,7 @@ const MedicationsTable: React.FC = () => {
               headers={headers}
               ariaLabel={t('MEDICATIONS_TABLE_ARIA_LABEL')}
               rows={activeAndScheduledMedications}
-              loading={loading}
+              loading={isLoading}
               errorStateMessage={error}
               sortable={sortable}
               emptyStateMessage={t('NO_ACTIVE_MEDICATIONS')}
@@ -306,12 +309,12 @@ const MedicationsTable: React.FC = () => {
             />
           </TabPanel>
           <TabPanel className={styles.medicationTabs}>
-            {loading || !!error || processedAllMedications.length === 0 ? (
+            {isLoading || !!error || processedAllMedications.length === 0 ? (
               <SortableDataTable
                 headers={headers}
                 ariaLabel={t('MEDICATIONS_TABLE_ARIA_LABEL')}
                 rows={[]}
-                loading={loading}
+                loading={isLoading}
                 errorStateMessage={error}
                 sortable={sortable}
                 emptyStateMessage={t('NO_MEDICATION_HISTORY')}
@@ -338,7 +341,7 @@ const MedicationsTable: React.FC = () => {
                         headers={headers}
                         ariaLabel={t('MEDICATIONS_DISPLAY_CONTROL_HEADING')}
                         rows={medications}
-                        loading={loading}
+                        loading={isLoading}
                         errorStateMessage={error}
                         sortable={sortable}
                         emptyStateMessage={t('NO_MEDICATION_HISTORY')}
