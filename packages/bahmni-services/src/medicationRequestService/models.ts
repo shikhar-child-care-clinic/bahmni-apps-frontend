@@ -1,4 +1,4 @@
-import { ConceptClass } from "../conceptService";
+import { ConceptClass } from '../conceptService';
 
 /**
  * Enum representing canonical statuses of a medication request
@@ -86,12 +86,12 @@ export interface OrderAttribute {
  * Interface for medication orders metadata response
  */
 export interface MedicationOrdersMetadataResponse {
-  doseUnits: Concept[];
-  routes: Concept[];
-  durationUnits: Concept[];
-  dispensingUnits: Concept[];
+  doseUnits: ConceptClass[];
+  routes: ConceptClass[];
+  durationUnits: ConceptClass[];
+  dispensingUnits: ConceptClass[];
   dosingRules: string[];
-  dosingInstructions: Concept[];
+  dosingInstructions: ConceptClass[];
   orderAttributes: OrderAttribute[];
   frequencies: Frequency[];
 }
