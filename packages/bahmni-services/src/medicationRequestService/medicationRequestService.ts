@@ -167,6 +167,15 @@ function getQuantity(
     unit: quantity?.unit ?? '',
   };
 }
+
+function getNote(note: FhirMedicationRequest['note']): string {
+  if (!note || note.length === 0) return '';
+  // Join all note texts with a space separator
+  return note
+    .map((n) => n.text)
+    .filter(Boolean)
+    .join(' ');
+}
 /**
  * Formats FHIR medication requests into a more user-friendly format
  * @param bundle - The FHIR bundle containing medication requests
@@ -197,13 +206,14 @@ function formatMedications(bundle: Bundle): MedicationRequest[] {
       quantity: getQuantity(medication.dispenseRequest!),
       startDate: isImmediateMedication(medication)
         ? medication.authoredOn!
-        : medication.dosageInstruction?.[0]?.timing?.event?.[0],
+        : (medication.dosageInstruction?.[0]?.timing?.event?.[0] ?? ''),
       orderDate: medication.authoredOn!,
       orderedBy: medicationRequester.display!,
       instructions: getInstructions(medication.dosageInstruction),
       additionalInstructions: getAdditionalInstructions(
         medication.dosageInstruction,
       ),
+      note: getNote(medication.note),
     };
   });
 }

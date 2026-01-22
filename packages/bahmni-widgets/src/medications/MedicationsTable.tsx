@@ -9,6 +9,7 @@ import {
   Tabs,
   Tag,
   StatusTag,
+  TooltipIcon,
 } from '@bahmni/design-system';
 import {
   useTranslation,
@@ -190,7 +191,16 @@ const MedicationsTable: React.FC<WidgetProps> = ({
       case 'name':
         return (
           <>
-            <p className={styles.columnDataBold}>{row.name}</p>
+            <div className={styles.medicationName}>
+              <span>{row.name}</span>
+              {row.note && (
+                <TooltipIcon
+                  iconName="fa-file-lines"
+                  content={row.note}
+                  ariaLabel={row.note}
+                />
+              )}
+            </div>
             <p className={styles.medicineDetails}>{row.quantity}</p>
             {row.isImmediate && <Tag className={styles.STAT}>STAT</Tag>}
             {row.asNeeded && <Tag className={styles.PRN}>PRN</Tag>}

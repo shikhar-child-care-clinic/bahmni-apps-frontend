@@ -43,6 +43,7 @@ export interface MedicationRequest {
   readonly additionalInstructions?: string;
   readonly asNeeded: boolean;
   readonly isImmediate: boolean;
+  readonly note?: string;
 }
 
 export interface FormattedMedicationRequest {
@@ -58,6 +59,7 @@ export interface FormattedMedicationRequest {
   readonly status: MedicationStatus;
   readonly asNeeded: boolean;
   readonly isImmediate: boolean;
+  readonly note?: string;
 }
 
 /**
