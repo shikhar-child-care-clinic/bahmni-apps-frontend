@@ -19,7 +19,7 @@ interface MedicationRequestResult {
  * @returns Object containing medications, loading state, error state, and refetch function
  */
 export const useMedicationRequest = (
-  code: string[],
+  code?: string[],
   encounterUuids?: string[],
 ): MedicationRequestResult => {
   const [medications, setMedications] = useState<MedicationRequest[]>([]);
