@@ -135,8 +135,8 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
       >
         <label
           class="cds--label cds--visually-hidden"
-          for="downshift-«ro5»-toggle-button"
-          id="downshift-«ro5»-label"
+          for="downshift-«rof»-toggle-button"
+          id="downshift-«rof»-label"
         >
           Dosage unit
         </label>
@@ -146,12 +146,12 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
         >
           <button
             aria-activedescendant=""
-            aria-controls="downshift-«ro5»-menu"
+            aria-controls="downshift-«rof»-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
             aria-label="Dosage Unit"
             class="cds--list-box__field"
-            id="downshift-«ro5»-toggle-button"
+            id="downshift-«rof»-toggle-button"
             role="combobox"
             tabindex="0"
             title="Dosage unit"
@@ -187,9 +187,9 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
             </div>
           </button>
           <ul
-            aria-labelledby="downshift-«ro5»-label"
+            aria-labelledby="downshift-«rof»-label"
             class="cds--list-box__menu"
-            id="downshift-«ro5»-menu"
+            id="downshift-«rof»-menu"
             role="listbox"
             style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
           />
@@ -204,8 +204,8 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
       >
         <label
           class="cds--label cds--visually-hidden"
-          for="downshift-«ro8»-toggle-button"
-          id="downshift-«ro8»-label"
+          for="downshift-«roi»-toggle-button"
+          id="downshift-«roi»-label"
         >
           Frequency
         </label>
@@ -215,12 +215,12 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
         >
           <button
             aria-activedescendant=""
-            aria-controls="downshift-«ro8»-menu"
+            aria-controls="downshift-«roi»-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
             aria-label="Frequency"
             class="cds--list-box__field"
-            id="downshift-«ro8»-toggle-button"
+            id="downshift-«roi»-toggle-button"
             role="combobox"
             tabindex="0"
             title="Frequency"
@@ -256,9 +256,9 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
             </div>
           </button>
           <ul
-            aria-labelledby="downshift-«ro8»-label"
+            aria-labelledby="downshift-«roi»-label"
             class="cds--list-box__menu"
-            id="downshift-«ro8»-menu"
+            id="downshift-«roi»-menu"
             role="listbox"
             style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
           />
@@ -359,8 +359,8 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
       >
         <label
           class="cds--label cds--visually-hidden"
-          for="downshift-«rob»-toggle-button"
-          id="downshift-«rob»-label"
+          for="downshift-«rol»-toggle-button"
+          id="downshift-«rol»-label"
         >
           Duration unit
         </label>
@@ -370,12 +370,12 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
         >
           <button
             aria-activedescendant=""
-            aria-controls="downshift-«rob»-menu"
+            aria-controls="downshift-«rol»-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
             aria-label="Duration Unit"
             class="cds--list-box__field"
-            id="downshift-«rob»-toggle-button"
+            id="downshift-«rol»-toggle-button"
             role="combobox"
             tabindex="0"
             title="Duration unit"
@@ -411,9 +411,9 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
             </div>
           </button>
           <ul
-            aria-labelledby="downshift-«rob»-label"
+            aria-labelledby="downshift-«rol»-label"
             class="cds--list-box__menu"
-            id="downshift-«rob»-menu"
+            id="downshift-«rol»-menu"
             role="listbox"
             style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
           />
@@ -428,8 +428,8 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
       >
         <label
           class="cds--label cds--visually-hidden"
-          for="downshift-«roe»-toggle-button"
-          id="downshift-«roe»-label"
+          for="downshift-«roo»-toggle-button"
+          id="downshift-«roo»-label"
         >
           Instructions
         </label>
@@ -439,12 +439,12 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
         >
           <button
             aria-activedescendant=""
-            aria-controls="downshift-«roe»-menu"
+            aria-controls="downshift-«roo»-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
             aria-label="Vaccination Instructions"
             class="cds--list-box__field"
-            id="downshift-«roe»-toggle-button"
+            id="downshift-«roo»-toggle-button"
             role="combobox"
             tabindex="0"
             title="Instructions"
@@ -480,9 +480,9 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
             </div>
           </button>
           <ul
-            aria-labelledby="downshift-«roe»-label"
+            aria-labelledby="downshift-«roo»-label"
             class="cds--list-box__menu"
-            id="downshift-«roe»-menu"
+            id="downshift-«roo»-menu"
             role="listbox"
             style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
           />
@@ -497,8 +497,8 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
       >
         <label
           class="cds--label cds--visually-hidden"
-          for="downshift-«roh»-toggle-button"
-          id="downshift-«roh»-label"
+          for="downshift-«ror»-toggle-button"
+          id="downshift-«ror»-label"
         >
           Route
         </label>
@@ -508,12 +508,12 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
         >
           <button
             aria-activedescendant=""
-            aria-controls="downshift-«roh»-menu"
+            aria-controls="downshift-«ror»-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
             aria-label="Route"
             class="cds--list-box__field"
-            id="downshift-«roh»-toggle-button"
+            id="downshift-«ror»-toggle-button"
             role="combobox"
             tabindex="0"
             title="Route"
@@ -549,9 +549,9 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
             </div>
           </button>
           <ul
-            aria-labelledby="downshift-«roh»-label"
+            aria-labelledby="downshift-«ror»-label"
             class="cds--list-box__menu"
-            id="downshift-«roh»-menu"
+            id="downshift-«ror»-menu"
             role="listbox"
             style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
           />
@@ -796,8 +796,8 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
       >
         <label
           class="cds--label cds--visually-hidden"
-          for="downshift-«rom»-toggle-button"
-          id="downshift-«rom»-label"
+          for="downshift-«rp0»-toggle-button"
+          id="downshift-«rp0»-label"
         >
           Dosage unit
         </label>
@@ -828,12 +828,12 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
           </svg>
           <button
             aria-activedescendant=""
-            aria-controls="downshift-«rom»-menu"
+            aria-controls="downshift-«rp0»-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
             aria-label="Dosage Unit"
             class="cds--list-box__field"
-            id="downshift-«rom»-toggle-button"
+            id="downshift-«rp0»-toggle-button"
             role="combobox"
             tabindex="0"
             title="Dosage unit"
@@ -869,9 +869,9 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
             </div>
           </button>
           <ul
-            aria-labelledby="downshift-«rom»-label"
+            aria-labelledby="downshift-«rp0»-label"
             class="cds--list-box__menu"
-            id="downshift-«rom»-menu"
+            id="downshift-«rp0»-menu"
             role="listbox"
             style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
           />
@@ -891,8 +891,8 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
       >
         <label
           class="cds--label cds--visually-hidden"
-          for="downshift-«rop»-toggle-button"
-          id="downshift-«rop»-label"
+          for="downshift-«rp3»-toggle-button"
+          id="downshift-«rp3»-label"
         >
           Frequency
         </label>
@@ -923,12 +923,12 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
           </svg>
           <button
             aria-activedescendant=""
-            aria-controls="downshift-«rop»-menu"
+            aria-controls="downshift-«rp3»-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
             aria-label="Frequency"
             class="cds--list-box__field"
-            id="downshift-«rop»-toggle-button"
+            id="downshift-«rp3»-toggle-button"
             role="combobox"
             tabindex="0"
             title="Frequency"
@@ -964,9 +964,9 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
             </div>
           </button>
           <ul
-            aria-labelledby="downshift-«rop»-label"
+            aria-labelledby="downshift-«rp3»-label"
             class="cds--list-box__menu"
-            id="downshift-«rop»-menu"
+            id="downshift-«rp3»-menu"
             role="listbox"
             style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
           />
@@ -1102,8 +1102,8 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
       >
         <label
           class="cds--label cds--visually-hidden"
-          for="downshift-«ros»-toggle-button"
-          id="downshift-«ros»-label"
+          for="downshift-«rp6»-toggle-button"
+          id="downshift-«rp6»-label"
         >
           Duration unit
         </label>
@@ -1134,12 +1134,12 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
           </svg>
           <button
             aria-activedescendant=""
-            aria-controls="downshift-«ros»-menu"
+            aria-controls="downshift-«rp6»-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
             aria-label="Duration Unit"
             class="cds--list-box__field"
-            id="downshift-«ros»-toggle-button"
+            id="downshift-«rp6»-toggle-button"
             role="combobox"
             tabindex="0"
             title="Duration unit"
@@ -1175,9 +1175,9 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
             </div>
           </button>
           <ul
-            aria-labelledby="downshift-«ros»-label"
+            aria-labelledby="downshift-«rp6»-label"
             class="cds--list-box__menu"
-            id="downshift-«ros»-menu"
+            id="downshift-«rp6»-menu"
             role="listbox"
             style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
           />
@@ -1197,8 +1197,8 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
       >
         <label
           class="cds--label cds--visually-hidden"
-          for="downshift-«rov»-toggle-button"
-          id="downshift-«rov»-label"
+          for="downshift-«rp9»-toggle-button"
+          id="downshift-«rp9»-label"
         >
           Instructions
         </label>
@@ -1208,12 +1208,12 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
         >
           <button
             aria-activedescendant=""
-            aria-controls="downshift-«rov»-menu"
+            aria-controls="downshift-«rp9»-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
             aria-label="Vaccination Instructions"
             class="cds--list-box__field"
-            id="downshift-«rov»-toggle-button"
+            id="downshift-«rp9»-toggle-button"
             role="combobox"
             tabindex="0"
             title="Instructions"
@@ -1249,9 +1249,9 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
             </div>
           </button>
           <ul
-            aria-labelledby="downshift-«rov»-label"
+            aria-labelledby="downshift-«rp9»-label"
             class="cds--list-box__menu"
-            id="downshift-«rov»-menu"
+            id="downshift-«rp9»-menu"
             role="listbox"
             style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
           />
@@ -1266,8 +1266,8 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
       >
         <label
           class="cds--label cds--visually-hidden"
-          for="downshift-«rp2»-toggle-button"
-          id="downshift-«rp2»-label"
+          for="downshift-«rpc»-toggle-button"
+          id="downshift-«rpc»-label"
         >
           Route
         </label>
@@ -1298,12 +1298,12 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
           </svg>
           <button
             aria-activedescendant=""
-            aria-controls="downshift-«rp2»-menu"
+            aria-controls="downshift-«rpc»-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
             aria-label="Route"
             class="cds--list-box__field"
-            id="downshift-«rp2»-toggle-button"
+            id="downshift-«rpc»-toggle-button"
             role="combobox"
             tabindex="0"
             title="Route"
@@ -1339,9 +1339,9 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
             </div>
           </button>
           <ul
-            aria-labelledby="downshift-«rp2»-label"
+            aria-labelledby="downshift-«rpc»-label"
             class="cds--list-box__menu"
-            id="downshift-«rp2»-menu"
+            id="downshift-«rpc»-menu"
             role="listbox"
             style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
           />
@@ -1561,8 +1561,8 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
       >
         <label
           class="cds--label cds--visually-hidden"
-          for="downshift-«rp7»-toggle-button"
-          id="downshift-«rp7»-label"
+          for="downshift-«rph»-toggle-button"
+          id="downshift-«rph»-label"
         >
           Dosage unit
         </label>
@@ -1572,12 +1572,12 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
         >
           <button
             aria-activedescendant=""
-            aria-controls="downshift-«rp7»-menu"
+            aria-controls="downshift-«rph»-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
             aria-label="Dosage Unit"
             class="cds--list-box__field"
-            id="downshift-«rp7»-toggle-button"
+            id="downshift-«rph»-toggle-button"
             role="combobox"
             tabindex="0"
             title="Dosage unit"
@@ -1613,9 +1613,9 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
             </div>
           </button>
           <ul
-            aria-labelledby="downshift-«rp7»-label"
+            aria-labelledby="downshift-«rph»-label"
             class="cds--list-box__menu"
-            id="downshift-«rp7»-menu"
+            id="downshift-«rph»-menu"
             role="listbox"
             style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
           />
@@ -1630,8 +1630,8 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
       >
         <label
           class="cds--label cds--visually-hidden"
-          for="downshift-«rpa»-toggle-button"
-          id="downshift-«rpa»-label"
+          for="downshift-«rpk»-toggle-button"
+          id="downshift-«rpk»-label"
         >
           Frequency
         </label>
@@ -1641,12 +1641,12 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
         >
           <button
             aria-activedescendant=""
-            aria-controls="downshift-«rpa»-menu"
+            aria-controls="downshift-«rpk»-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
             aria-label="Frequency"
             class="cds--list-box__field"
-            id="downshift-«rpa»-toggle-button"
+            id="downshift-«rpk»-toggle-button"
             role="combobox"
             tabindex="0"
             title="Frequency"
@@ -1682,9 +1682,9 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
             </div>
           </button>
           <ul
-            aria-labelledby="downshift-«rpa»-label"
+            aria-labelledby="downshift-«rpk»-label"
             class="cds--list-box__menu"
-            id="downshift-«rpa»-menu"
+            id="downshift-«rpk»-menu"
             role="listbox"
             style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
           />
@@ -1785,8 +1785,8 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
       >
         <label
           class="cds--label cds--visually-hidden"
-          for="downshift-«rpd»-toggle-button"
-          id="downshift-«rpd»-label"
+          for="downshift-«rpn»-toggle-button"
+          id="downshift-«rpn»-label"
         >
           Duration unit
         </label>
@@ -1796,12 +1796,12 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
         >
           <button
             aria-activedescendant=""
-            aria-controls="downshift-«rpd»-menu"
+            aria-controls="downshift-«rpn»-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
             aria-label="Duration Unit"
             class="cds--list-box__field"
-            id="downshift-«rpd»-toggle-button"
+            id="downshift-«rpn»-toggle-button"
             role="combobox"
             tabindex="0"
             title="Duration unit"
@@ -1837,9 +1837,9 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
             </div>
           </button>
           <ul
-            aria-labelledby="downshift-«rpd»-label"
+            aria-labelledby="downshift-«rpn»-label"
             class="cds--list-box__menu"
-            id="downshift-«rpd»-menu"
+            id="downshift-«rpn»-menu"
             role="listbox"
             style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
           />
@@ -1854,8 +1854,8 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
       >
         <label
           class="cds--label cds--visually-hidden"
-          for="downshift-«rpg»-toggle-button"
-          id="downshift-«rpg»-label"
+          for="downshift-«rpq»-toggle-button"
+          id="downshift-«rpq»-label"
         >
           Instructions
         </label>
@@ -1865,12 +1865,12 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
         >
           <button
             aria-activedescendant=""
-            aria-controls="downshift-«rpg»-menu"
+            aria-controls="downshift-«rpq»-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
             aria-label="Vaccination Instructions"
             class="cds--list-box__field"
-            id="downshift-«rpg»-toggle-button"
+            id="downshift-«rpq»-toggle-button"
             role="combobox"
             tabindex="0"
             title="Instructions"
@@ -1906,9 +1906,9 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
             </div>
           </button>
           <ul
-            aria-labelledby="downshift-«rpg»-label"
+            aria-labelledby="downshift-«rpq»-label"
             class="cds--list-box__menu"
-            id="downshift-«rpg»-menu"
+            id="downshift-«rpq»-menu"
             role="listbox"
             style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
           />
@@ -1923,8 +1923,8 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
       >
         <label
           class="cds--label cds--visually-hidden"
-          for="downshift-«rpj»-toggle-button"
-          id="downshift-«rpj»-label"
+          for="downshift-«rpt»-toggle-button"
+          id="downshift-«rpt»-label"
         >
           Route
         </label>
@@ -1934,12 +1934,12 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
         >
           <button
             aria-activedescendant=""
-            aria-controls="downshift-«rpj»-menu"
+            aria-controls="downshift-«rpt»-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
             aria-label="Route"
             class="cds--list-box__field"
-            id="downshift-«rpj»-toggle-button"
+            id="downshift-«rpt»-toggle-button"
             role="combobox"
             tabindex="0"
             title="Route"
@@ -1975,9 +1975,9 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
             </div>
           </button>
           <ul
-            aria-labelledby="downshift-«rpj»-label"
+            aria-labelledby="downshift-«rpt»-label"
             class="cds--list-box__menu"
-            id="downshift-«rpj»-menu"
+            id="downshift-«rpt»-menu"
             role="listbox"
             style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
           />
@@ -2110,7 +2110,7 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
           >
             <button
               aria-label="Close Selected Item"
-              aria-labelledby="tooltip-«rpn»"
+              aria-labelledby="tooltip-«rq1»"
               class="cds--btn cds--btn--lg cds--layout--size-lg cds--btn--primary cds--btn--icon-only"
               data-testid="vaccination-note-entry-1-close-button"
               id="vaccination-note-entry-1-close-button"
@@ -2135,7 +2135,7 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
           <span
             aria-hidden="true"
             class="cds--popover"
-            id="tooltip-«rpn»"
+            id="tooltip-«rq1»"
             role="tooltip"
           >
             <span
