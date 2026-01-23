@@ -9,6 +9,7 @@ import {
   Tabs,
   Tag,
   StatusTag,
+  TooltipIcon,
 } from '@bahmni/design-system';
 import {
   useTranslation,
@@ -19,6 +20,7 @@ import {
   ISO_DATE_FORMAT,
   FormattedMedicationRequest,
   MedicationRequest,
+  shouldEnableEncounterFilter,
   useSubscribeConsultationSaved,
   ConsultationSavedEventPayload,
   getPatientMedications,
@@ -28,6 +30,7 @@ import classNames from 'classnames';
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
+import { WidgetProps } from '../registry/model';
 import styles from './styles/MedicationsTable.module.scss';
 import {
   formatMedicationRequest,
@@ -77,17 +80,28 @@ const getMedicationStatusKey = (status: string): string => {
   }
 };
 
-const MedicationsTable: React.FC = () => {
+const MedicationsTable: React.FC<WidgetProps> = ({
+  config,
+  episodeOfCareUuids,
+  encounterUuids,
+}) => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
   const { addNotification } = useNotification();
+  const code = (config?.code as string[]) || [];
+
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const emptyEncounterFilter = shouldEnableEncounterFilter(
+    episodeOfCareUuids,
+    encounterUuids,
+  );
 
   // Use TanStack Query for data fetching and caching
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['medications', patientUUID!],
     enabled: !!patientUUID,
-    queryFn: () => getPatientMedications(patientUUID!),
+    queryFn: () => getPatientMedications(patientUUID!, code, encounterUuids!),
   });
 
   // Handle errors with notifications
@@ -217,7 +231,16 @@ const MedicationsTable: React.FC = () => {
       case 'name':
         return (
           <>
-            <p className={styles.columnDataBold}>{row.name}</p>
+            <div className={styles.medicationName}>
+              <span>{row.name}</span>
+              {row.note && (
+                <TooltipIcon
+                  iconName="fa-file-lines"
+                  content={row.note}
+                  ariaLabel={row.note}
+                />
+              )}
+            </div>
             <p className={styles.medicineDetails}>{row.quantity}</p>
             {row.isImmediate && <Tag className={styles.STAT}>STAT</Tag>}
             {row.asNeeded && <Tag className={styles.PRN}>PRN</Tag>}
@@ -295,7 +318,7 @@ const MedicationsTable: React.FC = () => {
             <SortableDataTable
               headers={headers}
               ariaLabel={t('MEDICATIONS_TABLE_ARIA_LABEL')}
-              rows={activeAndScheduledMedications}
+              rows={emptyEncounterFilter ? [] : activeAndScheduledMedications}
               loading={isLoading}
               errorStateMessage={error}
               sortable={sortable}
@@ -305,7 +328,10 @@ const MedicationsTable: React.FC = () => {
             />
           </TabPanel>
           <TabPanel className={styles.medicationTabs}>
-            {isLoading || !!error || processedAllMedications.length === 0 ? (
+            {isLoading ||
+            !!error ||
+            processedAllMedications.length === 0 ||
+            emptyEncounterFilter ? (
               <SortableDataTable
                 headers={headers}
                 ariaLabel={t('MEDICATIONS_TABLE_ARIA_LABEL')}

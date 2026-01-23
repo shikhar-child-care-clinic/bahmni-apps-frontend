@@ -49,6 +49,7 @@ const MedicationsForm: React.FC = React.memo(() => {
     updateisSTAT,
     updateDispenseQuantity,
     updateDispenseUnit,
+    updateNote,
     updateStartDate,
   } = useMedicationStore();
 
@@ -182,6 +183,7 @@ const MedicationsForm: React.FC = React.memo(() => {
                   updateisSTAT={updateisSTAT}
                   updateDispenseQuantity={updateDispenseQuantity}
                   updateDispenseUnit={updateDispenseUnit}
+                  updateNote={updateNote}
                   updateStartDate={updateStartDate}
                 />
               </SelectedItem>
