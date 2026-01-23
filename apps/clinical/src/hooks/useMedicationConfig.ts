@@ -11,6 +11,8 @@ interface UseMedicationConfigResult {
   error: Error | null;
 }
 
+// TODO : Remove custom hook and use tanstack query for concept search
+
 export const useMedicationConfig = (): UseMedicationConfigResult => {
   const [medicationConfig, setMedicationConfig] =
     useState<MedicationConfig | null>(null);

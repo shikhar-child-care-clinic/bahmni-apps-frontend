@@ -241,6 +241,7 @@ export async function getPatientMedications(
     code,
     encounterUuids,
   );
+  // TODO : Move formatting logic to widgets package
   return formatMedications(bundle);
 }
 

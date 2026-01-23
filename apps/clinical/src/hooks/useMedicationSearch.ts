@@ -11,6 +11,8 @@ interface MedicationSearchResult {
   error: Error | null;
 }
 
+// TODO : Remove custom hook and use tanstack query for concept search
+
 export const useMedicationSearch = (
   searchTerm: string,
   count = 20,
