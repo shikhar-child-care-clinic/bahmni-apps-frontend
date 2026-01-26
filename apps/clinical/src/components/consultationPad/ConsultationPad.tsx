@@ -13,7 +13,7 @@ import {
   Form2Observation,
   dispatchConsultationSaved,
 } from '@bahmni/services';
-import { useNotification } from '@bahmni/widgets';
+import { useNotification, useActivePractitioner } from '@bahmni/widgets';
 import React, { useEffect } from 'react';
 import { useEncounterSession } from '../../../src/hooks/useEncounterSession';
 import useAllergyStore from '../../../src/stores/allergyStore';
@@ -22,6 +22,7 @@ import { useEncounterDetailsStore } from '../../../src/stores/encounterDetailsSt
 import { useMedicationStore } from '../../../src/stores/medicationsStore';
 import { useObservationFormsStore } from '../../../src/stores/observationFormsStore';
 import useServiceRequestStore from '../../../src/stores/serviceRequestStore';
+import { useVaccinationStore } from '../../../src/stores/vaccinationsStore';
 import { ERROR_TITLES } from '../../constants/errors';
 import {
   VALIDATION_STATE_EMPTY,
@@ -30,6 +31,7 @@ import {
   VALIDATION_STATE_SCRIPT_ERROR,
 } from '../../constants/forms';
 import { useClinicalAppData } from '../../hooks/useClinicalAppData';
+import useObservationFormsSearch from '../../hooks/useObservationFormsSearch';
 import { usePinnedObservationForms } from '../../hooks/usePinnedObservationForms';
 import { ConsultationBundle } from '../../models/consultationBundle';
 import {
@@ -52,6 +54,7 @@ import InvestigationsForm from '../forms/investigations/InvestigationsForm';
 import MedicationsForm from '../forms/medications/MedicationsForm';
 import ObservationForms from '../forms/observations/ObservationForms';
 import ObservationFormsContainer from '../forms/observations/ObservationFormsContainer';
+import VaccinationForm from '../forms/vaccinations/VaccinationForm';
 import styles from './styles/ConsultationPad.module.scss';
 
 interface ConsultationPadProps {
@@ -76,13 +79,26 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     validate: validateObservationForms,
     reset: resetObservationForms,
   } = useObservationFormsStore();
+  // Fetch user once at this level - shared by pinned forms and encounter details
+  const practitionerState = useActivePractitioner();
+  const { user: currentUser } = practitionerState;
+
+  // Fetch observation forms once at parent level to avoid redundant API calls
+  const {
+    forms: allObservationForms,
+    isLoading: isObservationFormsLoading,
+    error: observationFormsError,
+  } = useObservationFormsSearch();
 
   // Lift pinned forms state to parent - shared by both ObservationForms and ObservationFormsContainer
   const {
     pinnedForms,
     updatePinnedForms,
     isLoading: isPinnedFormsLoading,
-  } = usePinnedObservationForms();
+  } = usePinnedObservationForms(allObservationForms, {
+    userUuid: currentUser?.uuid,
+    isFormsLoading: isObservationFormsLoading,
+  });
 
   // Use the diagnosis store
   const {
@@ -120,8 +136,15 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     reset: resetMedications,
   } = useMedicationStore();
 
-  // Get encounter session state
-  const { activeEncounter } = useEncounterSession();
+  const {
+    selectedVaccinations,
+    validateAllVaccinations,
+    reset: resetVaccinations,
+  } = useVaccinationStore();
+
+  const { activeEncounter } = useEncounterSession({
+    practitioner: practitionerState.practitioner,
+  });
 
   // Clean up on unmount
   useEffect(() => {
@@ -131,6 +154,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       resetDiagnoses();
       resetServiceRequests();
       resetMedications();
+      resetVaccinations();
       resetObservationForms();
     };
   }, [
@@ -139,6 +163,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     resetDiagnoses,
     resetServiceRequests,
     resetMedications,
+    resetVaccinations,
     resetObservationForms,
   ]);
 
@@ -254,6 +279,13 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       practitionerUUID: practitionerUUID,
     });
 
+    const vaccinationEntries = createMedicationRequestEntries({
+      selectedMedications: selectedVaccinations,
+      encounterSubject: encounterResource.subject!,
+      encounterReference,
+      practitionerUUID: practitionerUUID,
+    });
+
     const observationEntries = createObservationBundleEntries({
       observationFormsData: getObservationFormsData(),
       encounterSubject: encounterResource.subject!,
@@ -268,6 +300,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       ...conditionEntries,
       ...serviceRequestEntries,
       ...medicationEntries,
+      ...vaccinationEntries,
       ...observationEntries,
     ]);
 
@@ -290,11 +323,13 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         });
       }
 
+      const isVaccinationsValid = validateAllVaccinations();
       if (
         !isConditionsAndDiagnosesValid ||
         !isAllergiesValid ||
         !isMedicationsValid ||
-        !isObservationFormValid
+        !isObservationFormValid ||
+        !isVaccinationsValid
       ) {
         return;
       }
@@ -319,6 +354,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         resetEncounterDetails();
         resetServiceRequests();
         resetMedications();
+        resetVaccinations();
         // Clear observation forms data after successful save
         resetObservationForms();
 
@@ -326,8 +362,10 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         dispatchConsultationSaved({
           patientUUID: patientUUID!,
           updatedResources: {
-            conditions: selectedConditions.length > 0,
+            conditions:
+              selectedDiagnoses.length > 0 || selectedConditions.length > 0,
             allergies: selectedAllergies.length > 0,
+            medications: selectedMedications.length > 0,
           },
         });
 
@@ -340,8 +378,12 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         onClose();
       } catch (error) {
         setIsSubmitting(false);
+
+        // The axios interceptor in bahmni-services already parsed FHIR errors
+        // and converted them to translation keys, so we can use error.message directly
         const errorMessage =
           error instanceof Error ? error.message : 'CONSULTATION_ERROR_GENERIC';
+
         addNotification({
           title: t(ERROR_TITLES.CONSULTATION_ERROR),
           message: t(errorMessage),
@@ -357,13 +399,14 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     resetAllergies();
     resetServiceRequests();
     resetMedications();
+    resetVaccinations();
     // Clear observation forms data on cancel
     resetObservationForms();
     onClose();
   };
   const consultationContent = (
     <>
-      <BasicForm />
+      <BasicForm practitionerState={practitionerState} />
       <MenuItemDivider />
       <AllergiesForm />
       <MenuItemDivider />
@@ -373,6 +416,8 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       <MenuItemDivider />
       <MedicationsForm />
       <MenuItemDivider />
+      <VaccinationForm />
+      <MenuItemDivider />
       <ObservationForms
         onFormSelect={handleFormSelection}
         selectedForms={selectedForms}
@@ -380,6 +425,9 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         pinnedForms={pinnedForms}
         updatePinnedForms={updatePinnedForms}
         isPinnedFormsLoading={isPinnedFormsLoading}
+        allForms={allObservationForms}
+        isAllFormsLoading={isObservationFormsLoading}
+        observationFormsError={observationFormsError}
       />
       <MenuItemDivider />
     </>

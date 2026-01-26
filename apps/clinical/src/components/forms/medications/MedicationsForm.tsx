@@ -49,6 +49,7 @@ const MedicationsForm: React.FC = React.memo(() => {
     updateisSTAT,
     updateDispenseQuantity,
     updateDispenseUnit,
+    updateNote,
     updateStartDate,
   } = useMedicationStore();
 
@@ -60,12 +61,13 @@ const MedicationsForm: React.FC = React.memo(() => {
   };
 
   const handleOnChange = (selectedItem: MedicationFilterResult) => {
-    if (!selectedItem) {
+    if (!selectedItem?.medication?.id) {
       return;
     }
+
     // Set flag to prevent search when ComboBox updates its input
     isSelectingRef.current = true;
-    addMedication(selectedItem.medication!, selectedItem.displayName);
+    addMedication(selectedItem.medication, selectedItem.displayName);
     // Clear the search term after selection
     setSearchMedicationTerm('');
     // Reset the flag after a short delay to allow ComboBox to update
@@ -106,13 +108,15 @@ const MedicationsForm: React.FC = React.memo(() => {
     }
 
     return searchResults.map((item) => {
+      // Check if this medication is already selected
       const isAlreadySelected = selectedMedications.some(
-        (m) => m.id === item.id,
+        (selected) => selected.id === item.id,
       );
+
       return {
         medication: item,
         displayName: isAlreadySelected
-          ? `${getMedicationDisplay(item)} (${t('MEDICATION_ALREADY_SELECTED')})`
+          ? `${getMedicationDisplay(item)} (${t('MEDICATIONS_ALREADY_ADDED')})`
           : getMedicationDisplay(item),
         disabled: isAlreadySelected,
       };
@@ -179,6 +183,7 @@ const MedicationsForm: React.FC = React.memo(() => {
                   updateisSTAT={updateisSTAT}
                   updateDispenseQuantity={updateDispenseQuantity}
                   updateDispenseUnit={updateDispenseUnit}
+                  updateNote={updateNote}
                   updateStartDate={updateStartDate}
                 />
               </SelectedItem>

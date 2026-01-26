@@ -90,6 +90,7 @@ export {
   refreshQueries,
   parseQueryParams,
   formatUrl,
+  getValueType,
 } from './utils';
 export {
   type FormatDateResult,
@@ -132,15 +133,23 @@ export {
   searchFHIRConcepts,
   searchFHIRConceptsByName,
   getConceptById,
+  searchConceptByName,
   type ConceptSearch,
   type ConceptClass,
+  type ConceptData,
 } from './conceptService';
 export {
   getPatientMedications,
   getPatientMedicationBundle,
+  fetchMedicationOrdersMetadata,
+  searchMedications,
+  getVaccinations,
   type FormattedMedicationRequest,
   type MedicationRequest,
   MedicationStatus,
+  type MedicationOrdersMetadataResponse,
+  type Frequency as MedicationFrequency,
+  type OrderAttribute,
 } from './medicationRequestService';
 export {
   getPatientRadiologyInvestigations,
@@ -188,6 +197,11 @@ export {
 
 export { getCurrentUser, getUserLoginLocation, type User } from './userService';
 export { USER_PINNED_PREFERENCE_URL } from './observationFormsService/constants';
+export {
+  getPatientObservationsBundle,
+  getPatientObservationsWithEncounterBundle,
+  getPatientObservations,
+} from './observationService';
 export {
   getCurrentProvider,
   type Provider,
@@ -279,7 +293,7 @@ export {
 
 export {
   dispatchConsultationSaved,
-  useConsultationSaved,
+  useSubscribeConsultationSaved,
   CONSULTATION_SAVED_EVENT,
   type ConsultationSavedEventPayload,
 } from './events/consultationEvents';
