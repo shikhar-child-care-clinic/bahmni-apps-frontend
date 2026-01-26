@@ -76,7 +76,7 @@ function createDirectoryStructure(appPath) {
 function getPackageJsonTemplate(appNameKebab) {
   return JSON.stringify(
     {
-      name: `@iom-frontend/${appNameKebab}`,
+      name: `@bahmni/${appNameKebab}`,
       version: '0.0.1',
       type: 'module',
       main: './dist/index.js',
@@ -85,7 +85,7 @@ function getPackageJsonTemplate(appNameKebab) {
       exports: {
         './package.json': './package.json',
         '.': {
-          '@iom-frontend/source': './src/index.ts',
+          '@bahmni/source': './src/index.ts',
           types: './dist/index.d.ts',
           import: './dist/index.js',
           default: './dist/index.js',
@@ -134,7 +134,7 @@ export default [
 
 function getJestConfigTemplate(appNameKebab) {
   return `export default {
-  displayName: '@iom-frontend/${appNameKebab}',
+  displayName: '@bahmni/${appNameKebab}',
   preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
   transform: {
@@ -293,7 +293,7 @@ export default defineConfig(() => ({
     },
     lib: {
       entry: 'src/index.ts',
-      name: '@iom-frontend/${appNameKebab}',
+      name: '@bahmni/${appNameKebab}',
       fileName: 'index',
       formats: ['es' as const],
     },
@@ -306,15 +306,15 @@ export default defineConfig(() => ({
 }
 
 function getReadmeTemplate(appNameKebab, appNamePascal) {
-  return `# @iom-frontend/${appNameKebab}
+  return `# @bahmni/${appNameKebab}
 
-${appNamePascal} application for IOM Frontend.
+${appNamePascal} application for Bahmni.
 
 This library was generated with [Nx](https://nx.dev).
 
 ## Running unit tests
 
-Run \`nx test @iom-frontend/${appNameKebab}\` to execute the unit tests via [Jest](https://jestjs.io/).
+Run \`nx test @bahmni/${appNameKebab}\` to execute the unit tests via [Jest](https://jestjs.io/).
 `;
 }
 
@@ -507,7 +507,7 @@ export const IndexPage: React.FC = () => {
   return (
     <div>
       <h1>Welcome to ${appNamePascal}</h1>
-      <p>${appNamePascal} application for IOM Frontend</p>
+      <p>${appNamePascal} application for Bahmni</p>
     </div>
   );
 };
@@ -572,7 +572,7 @@ function createAllFiles(appPath, transforms) {
 }
 
 async function main() {
-  console.log('\nIOM Frontend App Generator\n');
+  console.log('\nBahmni App Generator\n');
 
   const appNameInput = await question('Enter app name: ');
 
@@ -588,7 +588,7 @@ async function main() {
   const appNameKebab = toKebabCase(appNameInput.trim());
   const appNamePascal = toPascalCase(appNameInput.trim());
   const appNameCamel = toCamelCase(appNameInput.trim());
-  const appConstantName = `IOM_${toConstantCase(appNameInput.trim())}_NAMESPACE`;
+  const appConstantName = `BAHMNI_${toConstantCase(appNameInput.trim())}_NAMESPACE`;
   const appNamespace = `${appNameKebab}-extn`;
 
   console.log('\nConfiguration:');
