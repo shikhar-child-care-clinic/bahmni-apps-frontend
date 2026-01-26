@@ -1,8 +1,5 @@
 import { Form2Observation, FormMetadata } from '@bahmni/services';
-import {
-  executeOnFormSaveEvent,
-  hasFormSaveEvent,
-} from '../formEventExecutor';
+import { executeOnFormSaveEvent, hasFormSaveEvent } from '../formEventExecutor';
 
 describe('formEventExecutor', () => {
   const mockPatientUuid = 'patient-uuid-123';

@@ -226,11 +226,9 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
             ? (validCurrentObservations as Form2Observation[])
             : observations;
 
-        // Extract formData from Container's state.data
+        // Extract formData from Container's state.data (keep as Immutable for form2-controls)
         const containerState = (formContainerRef.current as any).state;
-        const formData = containerState?.data?.toJS
-          ? containerState.data.toJS()
-          : containerState?.data;
+        const formData = containerState?.data;
 
         // Execute onFormSave event before saving (if defined in form metadata)
         // This allows forms to apply business logic, validations, or transformations

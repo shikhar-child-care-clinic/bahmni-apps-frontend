@@ -5,6 +5,18 @@ interface FormEventContext {
   patient: { uuid: string };
   formName?: string;
   formUuid?: string;
+  formData?: FormDataRecord;
+}
+
+// Extend Window interface to include form2-controls helpers
+declare global {
+  interface Window {
+    runEventScript?: (
+      formState: FormDataRecord | unknown,
+      script: string,
+      patient: { uuid: string },
+    ) => Form2Observation[] | void;
+  }
 }
 
 type FormDataRecord = Record<string, unknown> & {
@@ -17,6 +29,52 @@ type FormDataRecord = Record<string, unknown> & {
   name?: string;
   value?: unknown;
   children?: FormDataRecord[];
+};
+
+/**
+ * Fallback script execution when helpers.js is not available or fails
+ * Handles base64-encoded and plain text scripts
+ * Supports both function expressions and statement blocks
+ */
+const executeScriptFallback = (
+  onFormSaveScript: string,
+  formContext: FormEventContext,
+): Form2Observation[] | void => {
+  // Try to decode base64 script (same as helpers.js does)
+  let scriptToExecute = onFormSaveScript;
+  try {
+    // Attempt base64 decode
+    scriptToExecute = atob(onFormSaveScript);
+  } catch {
+    // Not base64 encoded, use as-is
+    scriptToExecute = onFormSaveScript;
+  }
+
+  const trimmedScript = scriptToExecute.trim();
+
+  let result;
+
+  if (trimmedScript.startsWith('function')) {
+    // Both 'form' and 'formContext' parameter names work - they get the same object
+    const wrappedScript = `(${scriptToExecute})(formContext)`;
+    const eventFunction = new Function(
+      'formContext',
+      `return ${wrappedScript}`,
+    );
+    result = eventFunction(formContext);
+  } else {
+    const eventFunction = new Function(
+      'formContext',
+      'form',
+      `
+          ${scriptToExecute}
+          return formContext.observations;
+        `,
+    );
+    result = eventFunction(formContext, formContext);
+  }
+
+  return result;
 };
 
 export const executeOnFormSaveEvent = (
@@ -34,100 +92,44 @@ export const executeOnFormSaveEvent = (
   }
 
   try {
-    const decodedScript = atob(onFormSaveScript);
-
-    // Helper function to recursively find controls by name in formData tree
-    const findInFormData = (
-      recordTree: FormDataRecord,
-      name: string,
-    ): FormDataRecord[] => {
-      const records: FormDataRecord[] = [];
-      if (!recordTree) return records;
-
-      // Get name from control structure
-      const nodeName =
-        recordTree.control?.concept?.name ??
-        recordTree.control?.label?.value ??
-        recordTree.concept?.name ??
-        recordTree.label?.value ??
-        recordTree.name;
-
-      if (nodeName === name) {
-        records.push(recordTree);
-      }
-
-      // Recursively search children
-      if (recordTree.children && Array.isArray(recordTree.children)) {
-        for (const child of recordTree.children) {
-          records.push(...findInFormData(child, name));
-        }
-      }
-
-      return records;
-    };
+    // Validate the script
+    if (
+      typeof onFormSaveScript !== 'string' ||
+      onFormSaveScript.trim() === ''
+    ) {
+      throw new Error('Invalid onFormSave script: not a string or empty');
+    }
 
     const formContext: FormEventContext = {
       observations: JSON.parse(JSON.stringify(observations)),
       patient: { uuid: patientUuid },
       formName: metadata.name,
       formUuid: metadata.uuid,
+      formData: formData,
     };
 
-    if (formData) {
-      (formContext as unknown as Record<string, unknown>).get = (
-        name: string,
-        index: number = 0,
-      ) => {
-        const matches = findInFormData(formData, name);
-        const currentRecord = matches[index] ?? null;
+    let result;
+    let useHelpers = false;
 
-        return {
-          currentRecord,
-          getValue: () => {
-            if (!currentRecord) return undefined;
-            const value = currentRecord.value;
-
-            // If value is an object with a 'value' property, extract the inner value
-            if (
-              value &&
-              typeof value === 'object' &&
-              'value' in (value as Record<string, unknown>)
-            ) {
-              return (value as Record<string, unknown>).value;
-            }
-
-            return value;
-          },
-          setValue: (value: unknown) => {
-            if (currentRecord) {
-              currentRecord.value = value;
-            }
-          },
-        };
-      };
+    // Use form2-controls helper's runEventScript if available
+    // It handles base64 decoding and script execution
+    if (window.runEventScript) {
+      try {
+        result = window.runEventScript(
+          formData,
+          onFormSaveScript,
+          formContext.patient,
+        );
+        useHelpers = true;
+      } catch {
+        // If helpers.js fails, fall back to direct execution
+        useHelpers = false;
+      }
     }
 
-    let result;
-    const trimmedScript = decodedScript.trim();
-
-    if (trimmedScript.startsWith('function')) {
-      // Both 'form' and 'formContext' parameter names work - they get the same object
-      const wrappedScript = `(${decodedScript})(formContext)`;
-      const eventFunction = new Function(
-        'formContext',
-        `return ${wrappedScript}`,
-      );
-      result = eventFunction(formContext);
-    } else {
-      const eventFunction = new Function(
-        'formContext',
-        'form',
-        `
-        ${decodedScript}
-        return formContext.observations;
-      `,
-      );
-      result = eventFunction(formContext, formContext);
+    // Fallback to new Function if helpers.js is not loaded or failed
+    if (!useHelpers) {
+      result = executeScriptFallback(onFormSaveScript, formContext);
     }
 
     // Return modified observations if event returns them
@@ -138,11 +140,6 @@ export const executeOnFormSaveEvent = (
     // If event doesn't return anything, use the modified context
     return formContext.observations;
   } catch (error) {
-    console.error(
-      `[FormEvent] Error executing onFormSave for form ${metadata.name}:`,
-      error,
-    );
-
     // Extract error message to show users which form failed
     const errorMessage =
       error instanceof Error
