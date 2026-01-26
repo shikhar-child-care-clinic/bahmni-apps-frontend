@@ -137,11 +137,6 @@ function getJestConfigTemplate(appNameKebab) {
   displayName: '@bahmni/${appNameKebab}',
   preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
-  transform: {
-    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
-    '^.+\\\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/react/babel'] }],
-  },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   transformIgnorePatterns: [
     'node_modules/(?!(@bahmni/design-system|@bahmni/services)/)',
   ],
@@ -150,7 +145,6 @@ function getJestConfigTemplate(appNameKebab) {
     '^react-i18next$': '<rootDir>/../../node_modules/react-i18next',
     '\\\\.(css|scss)$': 'identity-obj-proxy',
   },
-  reporters: ['default', 'jest-junit'],
 };
 `;
 }
