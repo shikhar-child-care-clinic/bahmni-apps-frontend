@@ -7,6 +7,25 @@ const PACKAGES_DIR = path.join(WORKSPACE_ROOT, 'packages');
 const DISTRO_DIR = path.join(WORKSPACE_ROOT, 'distro');
 const OUTPUT_DIR = path.join(WORKSPACE_ROOT, 'test-output', 'jest', 'coverage');
 
+function copyDirectory(src, dest) {
+  if (!fs.existsSync(dest)) {
+    fs.mkdirSync(dest, { recursive: true });
+  }
+
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+
+    if (entry.isDirectory()) {
+      copyDirectory(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
+
 function findCoverageReports() {
   const reports = [];
 
@@ -18,30 +37,38 @@ function findCoverageReports() {
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
 
-      const coveragePath = path.join(baseDir, entry.name, 'test-output', 'jest', 'coverage', 'index.html');
+      const coverageSourcePath = path.join(baseDir, entry.name, 'test-output', 'jest', 'coverage');
+      const coverageIndexPath = path.join(coverageSourcePath, 'index.html');
 
-      if (fs.existsSync(coveragePath)) {
-        const stats = extractCoverageStats(coveragePath);
+      if (fs.existsSync(coverageIndexPath)) {
+        const coverageDestPath = path.join(OUTPUT_DIR, type, entry.name);
+        copyDirectory(coverageSourcePath, coverageDestPath);
+
+        const stats = extractCoverageStats(coverageIndexPath);
         reports.push({
           name: entry.name,
           type: type,
-          relativePath: path.relative(OUTPUT_DIR, coveragePath),
+          relativePath: path.join(type, entry.name, 'index.html'),
           stats: stats
         });
       }
     }
   }
 
-  scanDirectory(APPS_DIR, 'app');
+  scanDirectory(APPS_DIR, 'apps');
   scanDirectory(PACKAGES_DIR, 'packages');
 
-  const distroCoveragePath = path.join(DISTRO_DIR, 'test-output', 'jest', 'coverage', 'index.html');
-  if (fs.existsSync(distroCoveragePath)) {
-    const stats = extractCoverageStats(distroCoveragePath);
+  const distroCoverageSourcePath = path.join(DISTRO_DIR, 'test-output', 'jest', 'coverage');
+  const distroCoverageIndexPath = path.join(distroCoverageSourcePath, 'index.html');
+  if (fs.existsSync(distroCoverageIndexPath)) {
+    const coverageDestPath = path.join(OUTPUT_DIR, 'distro');
+    copyDirectory(distroCoverageSourcePath, coverageDestPath);
+
+    const stats = extractCoverageStats(distroCoverageIndexPath);
     reports.push({
       name: 'distro',
       type: 'distro',
-      relativePath: path.relative(OUTPUT_DIR, distroCoveragePath),
+      relativePath: path.join('distro', 'index.html'),
       stats: stats
     });
   }
@@ -103,7 +130,7 @@ function getCoverageClass(pct) {
 }
 
 function generateIndexHTML(reports) {
-  const appReports = reports.filter(r => r.type === 'app').sort((a, b) => a.name.localeCompare(b.name));
+  const appReports = reports.filter(r => r.type === 'apps').sort((a, b) => a.name.localeCompare(b.name));
   const packageReports = reports.filter(r => r.type === 'packages').sort((a, b) => a.name.localeCompare(b.name));
   const distroReports = reports.filter(r => r.type === 'distro');
 
