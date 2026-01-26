@@ -118,8 +118,8 @@
   ],
   "lint-staged": {
     "*.{ts,tsx}": [
-      "nx run-many --all --target=lint",
-      "nx format:write"
+      "eslint --fix",
+      "nx format:write --uncommitted"
     ]
   }
 }

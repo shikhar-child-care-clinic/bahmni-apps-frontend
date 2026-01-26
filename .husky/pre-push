@@ -1,5 +1,5 @@
 #!/bin/sh
 
-yarn lint
-yarn test
-yarn build
+yarn nx affected --target=lint --parallel --maxParallel=5
+yarn nx affected --target=test --parallel --maxParallel=5
+yarn nx affected --target=build --parallel --maxParallel=5
