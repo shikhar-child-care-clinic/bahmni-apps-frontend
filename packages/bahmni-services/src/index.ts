@@ -1,4 +1,4 @@
-export { get, post, put, del } from './api';
+export { get, post, put, patch, del } from './api';
 export {
   initAppI18n,
   useTranslation,
@@ -90,6 +90,7 @@ export {
   refreshQueries,
   parseQueryParams,
   formatUrl,
+  getValueType,
 } from './utils';
 export {
   type FormatDateResult,
@@ -132,15 +133,23 @@ export {
   searchFHIRConcepts,
   searchFHIRConceptsByName,
   getConceptById,
+  searchConceptByName,
   type ConceptSearch,
   type ConceptClass,
+  type ConceptData,
 } from './conceptService';
 export {
   getPatientMedications,
   getPatientMedicationBundle,
+  fetchMedicationOrdersMetadata,
+  searchMedications,
+  getVaccinations,
   type FormattedMedicationRequest,
   type MedicationRequest,
   MedicationStatus,
+  type MedicationOrdersMetadataResponse,
+  type Frequency as MedicationFrequency,
+  type OrderAttribute,
 } from './medicationRequestService';
 export {
   getPatientRadiologyInvestigations,
@@ -189,6 +198,11 @@ export {
 export { getCurrentUser, getUserLoginLocation, type User } from './userService';
 export { USER_PINNED_PREFERENCE_URL } from './observationFormsService/constants';
 export {
+  getPatientObservationsBundle,
+  getPatientObservationsWithEncounterBundle,
+  getPatientObservations,
+} from './observationService';
+export {
   getCurrentProvider,
   type Provider,
   type Person,
@@ -198,6 +212,8 @@ export { findActiveEncounterInSession } from './encounterSessionService';
 export {
   getActiveVisit,
   shouldEnableEncounterFilter,
+  getFormsDataByEncounterUuid,
+  type FormsEncounter,
 } from './encounterService';
 
 export {
@@ -247,6 +263,7 @@ export {
   fetchFormMetadata,
   transformFormDataToObservations,
   transformObservationsToFormData,
+  getPatientFormData,
   type ObservationForm,
   type FormApiResponse,
   type ApiNameTranslation,
@@ -258,6 +275,7 @@ export {
   type Form2Observation,
   type ConceptValue,
   type ComplexValue,
+  type FormResponseData,
 } from './observationFormsService';
 
 export {
@@ -275,7 +293,7 @@ export {
 
 export {
   dispatchConsultationSaved,
-  useConsultationSaved,
+  useSubscribeConsultationSaved,
   CONSULTATION_SAVED_EVENT,
   type ConsultationSavedEventPayload,
 } from './events/consultationEvents';

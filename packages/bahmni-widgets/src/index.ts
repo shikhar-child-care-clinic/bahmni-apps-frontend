@@ -3,7 +3,7 @@ import '@bahmni/design-system/styles';
 // Widget Components
 export { PatientDetails } from './patientDetails';
 export { AllergiesTable } from './allergies';
-export { ConditionsTable, conditionsQueryKeys } from './conditions';
+export { ConditionsTable } from './conditions';
 export { DiagnosesTable } from './diagnoses';
 export { MedicationsTable } from './medications';
 export { RadiologyInvestigationTable } from './radiologyInvestigation';
@@ -22,11 +22,18 @@ export {
 
 // Hooks
 export { usePatientUUID } from './hooks/usePatientUUID';
-export { useActivePractitioner } from './hooks/useActivePractitioner';
 export { useUserPrivilege } from './userPrivileges/useUserPrivilege';
 
 // User Privileges
 export { UserPrivilegeProvider } from './userPrivileges/UserPrivilegeProvider';
+
+// Active Practitioner
+export {
+  ActivePractitionerProvider,
+  useActivePractitioner,
+  ActivePractitionerContext,
+  type ActivePractitionerContextType,
+} from './activePractitioner';
 
 // Widget Registry
 export {

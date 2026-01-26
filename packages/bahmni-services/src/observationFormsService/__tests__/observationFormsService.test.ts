@@ -1,6 +1,10 @@
+import * as api from '../../api/api';
 import { getUserPreferredLocale } from '../../i18n/translationService';
-import { OBSERVATION_FORMS_URL } from '../constants';
-import { fetchObservationForms } from '../observationFormsService';
+import { OBSERVATION_FORMS_URL, FORM_DATA_URL } from '../constants';
+import {
+  fetchObservationForms,
+  getPatientFormData,
+} from '../observationFormsService';
 
 // Mock fetch globally
 const mockFetch = jest.fn();
@@ -9,6 +13,11 @@ global.fetch = mockFetch;
 // Mock translation service
 jest.mock('../../i18n/translationService', () => ({
   getUserPreferredLocale: jest.fn(),
+}));
+
+// Mock api module
+jest.mock('../../api/api', () => ({
+  get: jest.fn(),
 }));
 
 // Mock console.log to avoid noise in tests
@@ -253,6 +262,99 @@ describe('observationFormsService', () => {
       (getUserPreferredLocale as jest.Mock).mockReturnValue('en');
 
       const result = await fetchObservationForms();
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('getPatientFormData', () => {
+    const mockGet = api.get as jest.MockedFunction<typeof api.get>;
+
+    beforeEach(() => {
+      mockGet.mockClear();
+    });
+
+    it('should fetch patient form data successfully with valid patientUuid', async () => {
+      const patientUuid = 'patient-uuid-123';
+      const mockFormData = [
+        {
+          formType: 'v2',
+          formName: 'Vitals',
+          formVersion: 1,
+          visitUuid: 'visit-uuid-1',
+          visitStartDateTime: 1609459200000,
+          encounterUuid: 'encounter-uuid-1',
+          encounterDateTime: 1609459200000,
+          providers: [
+            {
+              providerName: 'Dr. Smith',
+              uuid: 'provider-uuid-1',
+            },
+          ],
+        },
+        {
+          formType: 'v2',
+          formName: 'History and Examination',
+          formVersion: 2,
+          visitUuid: 'visit-uuid-2',
+          visitStartDateTime: 1609545600000,
+          encounterUuid: 'encounter-uuid-2',
+          encounterDateTime: 1609545600000,
+          providers: [
+            {
+              providerName: 'Dr. Jones',
+              uuid: 'provider-uuid-2',
+            },
+          ],
+        },
+      ];
+
+      mockGet.mockResolvedValueOnce(mockFormData);
+
+      const result = await getPatientFormData(patientUuid);
+
+      expect(mockGet).toHaveBeenCalledWith(
+        FORM_DATA_URL(patientUuid, undefined),
+      );
+      expect(result).toEqual(mockFormData);
+    });
+
+    it('should fetch patient form data with numberOfVisits parameter', async () => {
+      const patientUuid = 'patient-uuid-123';
+      const numberOfVisits = 5;
+      const mockFormData = [
+        {
+          formType: 'v2',
+          formName: 'Vitals',
+          formVersion: 1,
+          visitUuid: 'visit-uuid-1',
+          visitStartDateTime: 1609459200000,
+          encounterUuid: 'encounter-uuid-1',
+          encounterDateTime: 1609459200000,
+          providers: [],
+        },
+      ];
+
+      mockGet.mockResolvedValueOnce(mockFormData);
+
+      const result = await getPatientFormData(
+        patientUuid,
+        undefined,
+        numberOfVisits,
+      );
+
+      expect(mockGet).toHaveBeenCalledWith(
+        FORM_DATA_URL(patientUuid, numberOfVisits, undefined),
+      );
+      expect(result).toEqual(mockFormData);
+    });
+
+    it('should return empty array when API returns non-array data', async () => {
+      const patientUuid = 'patient-uuid-123';
+
+      mockGet.mockResolvedValueOnce({ message: 'No data' } as any);
+
+      const result = await getPatientFormData(patientUuid);
 
       expect(result).toEqual([]);
     });

@@ -62,8 +62,9 @@ jest.mock('@bahmni/design-system', () => ({
     tertiaryButtonText,
     onTertiaryButtonClick,
     content,
+    hidden,
   }: any) => (
-    <div data-testid="mock-action-area">
+    <div data-testid="mock-action-area" data-hidden={hidden}>
       <div data-testid="action-area-title">{title}</div>
       <div data-testid="action-area-content">{content}</div>
       <button
@@ -127,6 +128,13 @@ jest.mock('../../../components/forms/medications/MedicationsForm', () => ({
   __esModule: true,
   default: () => (
     <div data-testid="mock-medications-form">Medications Form</div>
+  ),
+}));
+
+jest.mock('../../../components/forms/vaccinations/VaccinationForm', () => ({
+  __esModule: true,
+  default: () => (
+    <div data-testid="mock-vaccination-forms">Vaccination Form</div>
   ),
 }));
 
@@ -200,6 +208,13 @@ jest.mock('@bahmni/widgets', () => ({
   })),
   useUserPrivilege: jest.fn(() => ({
     userPrivileges: ['VIEW_PATIENTS', 'EDIT_ENCOUNTERS'],
+  })),
+  useActivePractitioner: jest.fn(() => ({
+    user: { uuid: 'user-123', username: 'testuser' },
+    practitioner: { uuid: 'practitioner-123' },
+    loading: false,
+    error: null,
+    refetch: jest.fn(),
   })),
   conditionsQueryKeys: jest.fn((patientUUID: string) => [
     'conditions',
@@ -604,7 +619,7 @@ describe('ConsultationPad', () => {
     it('should render dividers between forms', () => {
       renderWithProvider();
       const dividers = screen.getAllByTestId('mock-divider');
-      expect(dividers).toHaveLength(6);
+      expect(dividers).toHaveLength(7);
     });
 
     it('should render forms and dividers in the correct sequence', () => {
@@ -614,7 +629,7 @@ describe('ConsultationPad', () => {
       const children = Array.from(content.children);
 
       // Verify the exact sequence of forms and dividers
-      expect(children).toHaveLength(12); // 6 forms + 6 dividers
+      expect(children).toHaveLength(14); // 7 forms + 7 dividers
 
       // Check each element in order
       expect(children[0]).toHaveAttribute(
@@ -640,6 +655,11 @@ describe('ConsultationPad', () => {
       );
       expect(children[9]).toHaveAttribute('data-testid', 'mock-divider');
       expect(children[10]).toHaveAttribute(
+        'data-testid',
+        'mock-vaccination-forms',
+      );
+      expect(children[11]).toHaveAttribute('data-testid', 'mock-divider');
+      expect(children[12]).toHaveAttribute(
         'data-testid',
         'mock-observation-forms',
       );
@@ -719,7 +739,7 @@ describe('ConsultationPad', () => {
       expect(screen.getByTestId('wrapper-viewing-form')).toHaveTextContent(
         'Test Form',
       );
-      expect(screen.queryByTestId('mock-action-area')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('mock-action-area')).toBeInTheDocument();
     });
 
     it('should manage selectedForms state correctly', async () => {
@@ -932,6 +952,48 @@ describe('ConsultationPad', () => {
       expect(
         screen.queryByTestId('selected-form-form-1'),
       ).not.toBeInTheDocument();
+    });
+
+    it('should hide ActionArea when viewing a form', async () => {
+      const { rerender } = renderWithProvider();
+
+      // Initially, ActionArea should not be hidden
+      const actionArea = screen.getByTestId('mock-action-area');
+      expect(actionArea).toHaveAttribute('data-hidden', 'false');
+
+      // Select a form to view
+      const selectButton = screen.getByTestId('select-form-button');
+      await userEvent.click(selectButton);
+
+      // Force re-render to pick up the store changes
+      rerender(
+        <ClinicalAppProvider episodeUuids={[]}>
+          <ConsultationPad onClose={mockOnClose} />
+        </ClinicalAppProvider>,
+      );
+
+      // ActionArea should now be hidden
+      await waitFor(() => {
+        const hiddenActionArea = screen.getByTestId('mock-action-area');
+        expect(hiddenActionArea).toHaveAttribute('data-hidden', 'true');
+      });
+
+      // Go back from viewing form
+      const backButton = screen.getByTestId('wrapper-back-button');
+      await userEvent.click(backButton);
+
+      // Force re-render
+      rerender(
+        <ClinicalAppProvider episodeUuids={[]}>
+          <ConsultationPad onClose={mockOnClose} />
+        </ClinicalAppProvider>,
+      );
+
+      // ActionArea should be visible again
+      await waitFor(() => {
+        const visibleActionArea = screen.getByTestId('mock-action-area');
+        expect(visibleActionArea).toHaveAttribute('data-hidden', 'false');
+      });
     });
   });
   describe('Snapshot Tests', () => {
@@ -1497,8 +1559,8 @@ describe('ConsultationPad', () => {
         expect(bundleArg.entry[0].resource.resourceType).toBe('Encounter');
         expect(bundleArg.entry[0].fullUrl).toMatch(/^urn:uuid:/);
 
-        // Verify total number of entries (1 encounter + 5 from bundle creation functions)
-        expect(bundleArg.entry).toHaveLength(6);
+        // Verify total number of entries (1 encounter + 6 from bundle creation functions)
+        expect(bundleArg.entry).toHaveLength(7);
       });
     });
 
