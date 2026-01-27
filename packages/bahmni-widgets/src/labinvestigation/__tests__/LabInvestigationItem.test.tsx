@@ -1,10 +1,8 @@
-import {
-  FormattedLabTest,
-  LabTestPriority,
-  useTranslation,
-} from '@bahmni/services';
+import { useTranslation } from '@bahmni/services';
 import { render, screen } from '@testing-library/react';
+
 import LabInvestigationItem from '../LabInvestigationItem';
+import { FormattedLabTest, LabTestPriority } from '../models';
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),

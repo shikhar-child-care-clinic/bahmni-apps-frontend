@@ -1,10 +1,7 @@
 import { Tag, TooltipIcon } from '@bahmni/design-system';
-import {
-  useTranslation,
-  FormattedLabTest,
-  LabTestPriority,
-} from '@bahmni/services';
+import { useTranslation } from '@bahmni/services';
 import React from 'react';
+import { FormattedLabTest, LabTestPriority } from './models';
 import styles from './styles/LabInvestigation.module.scss';
 
 interface LabInvestigationItemProps {
