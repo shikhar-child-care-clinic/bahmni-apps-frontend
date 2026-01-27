@@ -19,6 +19,7 @@ import {
   dispatchAuditEvent,
   AUDIT_LOG_EVENT_DETAILS,
   AuditEventType,
+  useSubscribeConsultationSaved,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import React, { useMemo, useEffect } from 'react';
@@ -84,7 +85,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     enabled: !!categoryName,
   });
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: radiologyInvestigationQueryKeys(patientUUID!),
     enabled: !!patientUUID && !!categoryUuid && !emptyEncounterFilter,
     queryFn: () =>
@@ -95,6 +96,20 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
         numberOfVisits,
       ),
   });
+
+  // Subscribe to consultation saved events and refetch if this category was updated
+  useSubscribeConsultationSaved(
+    (payload) => {
+      if (
+        payload.patientUUID === patientUUID &&
+        categoryName &&
+        payload.updatedResources.serviceRequests?.[categoryName]
+      ) {
+        refetch();
+      }
+    },
+    [patientUUID, categoryName, refetch],
+  );
 
   const headers = useMemo(
     () => [
@@ -130,7 +145,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
         message: errorMessage,
         type: 'error',
       });
-  }, [hasError, errorMessage]);
+  }, [hasError, errorMessage, addNotification, t]);
 
   const processedInvestigations = useMemo(() => {
     const filteredInvestigations = filterRadiologyInvestionsReplacementEntries(
@@ -153,7 +168,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
         investigationsByDate.investigations,
       ),
     }));
-  }, [data]);
+  }, [data, t]);
 
   const handleRadiologyResultClick = () => {
     dispatchAuditEvent({

@@ -356,6 +356,12 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         // Clear observation forms data after successful save
         resetObservationForms();
 
+        // Build service request flags from selected categories
+        const serviceRequestFlags: Record<string, boolean> = {};
+        selectedServiceRequests.forEach((_, category) => {
+          serviceRequestFlags[category] = true;
+        });
+
         // Dispatch consultation saved event
         dispatchConsultationSaved({
           patientUUID: patientUUID!,
@@ -364,6 +370,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
               selectedDiagnoses.length > 0 || selectedConditions.length > 0,
             allergies: selectedAllergies.length > 0,
             medications: selectedMedications.length > 0,
+            serviceRequests: serviceRequestFlags,
           },
         });
 

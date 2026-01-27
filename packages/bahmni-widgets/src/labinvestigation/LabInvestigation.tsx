@@ -8,6 +8,7 @@ import {
   getCategoryUuidFromOrderTypes,
   getFormattedError,
   getPatientLabInvestigations,
+  useSubscribeConsultationSaved,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import React, { useMemo, useEffect } from 'react';
@@ -49,6 +50,7 @@ const LabInvestigation: React.FC<WidgetProps> = ({
     isLoading: isLoadingLabInvestigations,
     isError: isLabInvestigationsError,
     error: labInvestigationsError,
+    refetch: refetchLabInvestigations,
   } = useQuery<FormattedLabTest[]>({
     queryKey: [
       'labInvestigations',
@@ -67,6 +69,20 @@ const LabInvestigation: React.FC<WidgetProps> = ({
         numberOfVisits,
       ),
   });
+
+  // Subscribe to consultation saved events and refetch if this category was updated
+  useSubscribeConsultationSaved(
+    (payload) => {
+      if (
+        payload.patientUUID === patientUUID &&
+        categoryName &&
+        payload.updatedResources.serviceRequests?.[categoryName]
+      ) {
+        refetchLabInvestigations();
+      }
+    },
+    [patientUUID, categoryName, refetchLabInvestigations],
+  );
 
   useEffect(() => {
     if (isOrderTypesError) {
