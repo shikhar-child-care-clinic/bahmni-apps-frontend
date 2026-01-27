@@ -1,4 +1,7 @@
-import { FHIR_LAB_ORDER_CONCEPT_TYPE_EXTENSION_URL, formatDate } from '@bahmni/services';
+import {
+  FHIR_LAB_ORDER_CONCEPT_TYPE_EXTENSION_URL,
+  formatDate,
+} from '@bahmni/services';
 import { Bundle, ServiceRequest } from 'fhir/r4';
 import { FormattedLabTest, LabTestPriority, LabTestsByDate } from './models';
 

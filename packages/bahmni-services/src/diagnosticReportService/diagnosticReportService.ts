@@ -6,7 +6,6 @@ import {
 } from './constants';
 import { DiagnosticReportBundleResult } from './models';
 
-
 export async function getDiagnosticReportsByOrders(
   patientUuid: string,
   serviceRequestIds: string[],
@@ -27,7 +26,6 @@ export async function getDiagnosticReportsByOrders(
   const url = DIAGNOSTIC_REPORTS_BY_ORDERS_URL(patientUuid, formattedIds);
   return await get<Bundle<DiagnosticReport>>(url);
 }
-
 
 export async function getDiagnosticReportBundle(
   diagnosticReportId: string,

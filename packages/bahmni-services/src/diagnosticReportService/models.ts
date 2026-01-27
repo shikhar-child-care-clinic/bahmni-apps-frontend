@@ -1,6 +1,5 @@
 import { DiagnosticReport, Observation } from 'fhir/r4';
 
-
 export const COMPLETED_REPORT_STATUSES = [
   'preliminary',
   'final',
@@ -9,13 +8,11 @@ export const COMPLETED_REPORT_STATUSES = [
   'appended',
 ] as const;
 
-
 export const PENDING_REPORT_STATUSES = [
   'registered',
   'unknown',
   'partial',
 ] as const;
-
 
 export interface ObservationResult {
   readonly id: string;
@@ -23,11 +20,10 @@ export interface ObservationResult {
   readonly result: string;
   readonly unit?: string;
   readonly referenceRange?: string;
-  readonly interpretation?: string; 
+  readonly interpretation?: string;
   readonly reportedOn?: string;
   readonly status: string;
 }
-
 
 export interface FormattedDiagnosticReport {
   readonly id: string;
@@ -38,7 +34,6 @@ export interface FormattedDiagnosticReport {
   readonly issued?: string;
   readonly conclusion?: string;
 }
-
 
 export interface DiagnosticReportBundleResult {
   readonly diagnosticReport: DiagnosticReport;
