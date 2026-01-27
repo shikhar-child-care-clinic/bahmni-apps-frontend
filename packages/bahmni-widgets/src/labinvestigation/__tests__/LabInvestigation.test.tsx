@@ -369,7 +369,7 @@ describe('LabInvestigation', () => {
           conditions: false,
           allergies: false,
           medications: false,
-          serviceRequests: { 'Lab Order': true },
+          serviceRequests: { 'lab order': true },
         },
       });
 
@@ -403,7 +403,7 @@ describe('LabInvestigation', () => {
           conditions: false,
           allergies: false,
           medications: false,
-          serviceRequests: { 'Lab Order': true },
+          serviceRequests: { 'lab order': true },
         },
       });
 
@@ -438,7 +438,7 @@ describe('LabInvestigation', () => {
           conditions: false,
           allergies: false,
           medications: false,
-          serviceRequests: { 'Radiology Order': true },
+          serviceRequests: { 'radiology order': true },
         },
       });
 

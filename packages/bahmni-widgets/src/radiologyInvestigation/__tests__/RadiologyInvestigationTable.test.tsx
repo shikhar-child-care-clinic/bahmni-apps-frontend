@@ -352,7 +352,7 @@ describe('RadiologyInvestigationTable', () => {
           conditions: false,
           allergies: false,
           medications: false,
-          serviceRequests: { 'Radiology Order': true },
+          serviceRequests: { 'radiology order': true },
         },
       });
 
@@ -401,7 +401,7 @@ describe('RadiologyInvestigationTable', () => {
           conditions: false,
           allergies: false,
           medications: false,
-          serviceRequests: { 'Radiology Order': true },
+          serviceRequests: { 'radiology order': true },
         },
       });
 
@@ -450,7 +450,7 @@ describe('RadiologyInvestigationTable', () => {
           conditions: false,
           allergies: false,
           medications: false,
-          serviceRequests: { 'Lab Order': true },
+          serviceRequests: { 'lab order': true },
         },
       });
 
