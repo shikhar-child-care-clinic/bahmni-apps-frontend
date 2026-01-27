@@ -158,6 +158,15 @@ export {
 } from './radiologyInvestigationService';
 export { getLabTestBundle } from './labInvestigationService';
 export {
+  getDiagnosticReportsByOrders,
+  getDiagnosticReportBundle,
+  COMPLETED_REPORT_STATUSES,
+  PENDING_REPORT_STATUSES,
+  type ObservationResult,
+  type FormattedDiagnosticReport,
+  type DiagnosticReportBundleResult,
+} from './diagnosticReportService';
+export {
   getFlattenedInvestigations,
   getOrderTypes,
   getCategoryUuidFromOrderTypes,
