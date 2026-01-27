@@ -1,6 +1,6 @@
 import { OPENMRS_FHIR_R4 } from '../constants/app';
 
-export const DIAGNOSTIC_REPORTS_BY_ORDERS_URL = (
+export const DIAGNOSTIC_REPORTS_BY_SERVICE_URL = (
   patientUuid: string,
   serviceRequestIds: string,
 ) => {
