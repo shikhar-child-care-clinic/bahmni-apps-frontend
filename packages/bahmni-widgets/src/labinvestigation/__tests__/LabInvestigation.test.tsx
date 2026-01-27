@@ -1,31 +1,32 @@
 import {
-  FormattedLabTest,
-  LabTestsByDate,
-  LabTestPriority,
-  groupLabTestsByDate,
   useTranslation,
   getCategoryUuidFromOrderTypes,
-  getPatientLabInvestigations,
+  getLabTestBundle,
 } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
+import { Bundle, ServiceRequest } from 'fhir/r4';
+
 import { usePatientUUID } from '../../hooks/usePatientUUID';
 import { useNotification } from '../../notification';
 import LabInvestigation from '../LabInvestigation';
+import { FormattedLabTest, LabTestPriority } from '../models';
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
-  groupLabTestsByDate: jest.fn(),
   useTranslation: jest.fn(),
   getCategoryUuidFromOrderTypes: jest.fn(),
-  getPatientLabInvestigations: jest.fn(),
+  getLabTestBundle: jest.fn(),
 }));
+
 jest.mock('react-router-dom', () => ({
   useParams: jest.fn(),
 }));
+
 jest.mock('../../notification', () => ({
   useNotification: jest.fn(),
 }));
+
 jest.mock('../../hooks/usePatientUUID', () => ({
   usePatientUUID: jest.fn(),
 }));
@@ -48,10 +49,9 @@ const mockGetCategoryUuidFromOrderTypes =
   getCategoryUuidFromOrderTypes as jest.MockedFunction<
     typeof getCategoryUuidFromOrderTypes
   >;
-const mockGetPatientLabInvestigations =
-  getPatientLabInvestigations as jest.MockedFunction<
-    typeof getPatientLabInvestigations
-  >;
+const mockGetLabTestBundle = getLabTestBundle as jest.MockedFunction<
+  typeof getLabTestBundle
+>;
 const mockUseNotification = useNotification as jest.MockedFunction<
   typeof useNotification
 >;
@@ -88,55 +88,66 @@ const renderLabInvestigations = (
 describe('LabInvestigation', () => {
   const mockAddNotification = jest.fn();
 
-  const mockFormattedLabTests: FormattedLabTest[] = [
-    {
-      id: 'test-1',
-      testName: 'Complete Blood Count',
-      priority: LabTestPriority.routine,
-      orderedBy: 'Dr. Smith',
-      orderedDate: '2025-05-08T12:44:24+00:00',
-      formattedDate: '05/08/2025',
-      result: undefined,
-      testType: 'Panel',
-    },
-    {
-      id: 'test-2',
-      testName: 'Lipid Panel',
-      priority: LabTestPriority.stat,
-      orderedBy: 'Dr. Johnson',
-      orderedDate: '2025-04-09T13:21:22+00:00',
-      formattedDate: '04/09/2025',
-      result: undefined,
-      testType: 'Panel',
-    },
-    {
-      id: 'test-3',
-      testName: 'Liver Function',
-      priority: LabTestPriority.routine,
-      orderedBy: 'Dr. Williams',
-      orderedDate: '2025-04-09T13:21:22+00:00',
-      formattedDate: '04/09/2025',
-      result: undefined,
-      testType: 'Individual',
-    },
-  ];
+  const createMockBundle = (
+    resources: ServiceRequest[],
+  ): Bundle<ServiceRequest> => ({
+    resourceType: 'Bundle',
+    type: 'searchset',
+    entry: resources.map((resource) => ({
+      resource,
+    })),
+  });
 
-  const mockLabTestsByDate: LabTestsByDate[] = [
+  const mockServiceRequests: ServiceRequest[] = [
     {
-      date: '05/08/2025',
-      rawDate: '2025-05-08T12:44:24+00:00',
-      tests: [mockFormattedLabTests[0]],
+      resourceType: 'ServiceRequest',
+      id: 'test-1',
+      status: 'active',
+      intent: 'order',
+      subject: { reference: 'Patient/patient-123' },
+      code: { text: 'Complete Blood Count' },
+      priority: 'routine',
+      requester: { display: 'Dr. Smith' },
+      occurrencePeriod: { start: '2025-05-08T12:44:24+00:00' },
+      extension: [
+        {
+          url: 'http://fhir.bahmni.org/ext/lab-order-concept-type',
+          valueString: 'Panel',
+        },
+      ],
     },
     {
-      date: '04/09/2025',
-      rawDate: '2025-04-09T13:21:22+00:00',
-      tests: [mockFormattedLabTests[1], mockFormattedLabTests[2]],
+      resourceType: 'ServiceRequest',
+      id: 'test-2',
+      status: 'active',
+      intent: 'order',
+      subject: { reference: 'Patient/patient-123' },
+      code: { text: 'Lipid Panel' },
+      priority: 'stat',
+      requester: { display: 'Dr. Johnson' },
+      occurrencePeriod: { start: '2025-04-09T13:21:22+00:00' },
+      extension: [
+        {
+          url: 'http://fhir.bahmni.org/ext/lab-order-concept-type',
+          valueString: 'Panel',
+        },
+      ],
+    },
+    {
+      resourceType: 'ServiceRequest',
+      id: 'test-3',
+      status: 'active',
+      intent: 'order',
+      subject: { reference: 'Patient/patient-123' },
+      code: { text: 'Liver Function' },
+      priority: 'routine',
+      requester: { display: 'Dr. Williams' },
+      occurrencePeriod: { start: '2025-04-09T13:21:22+00:00' },
     },
   ];
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (groupLabTestsByDate as jest.Mock).mockReturnValue(mockLabTestsByDate);
 
     mockUseTranslation.mockReturnValue({
       t: (key: string) => {
@@ -158,10 +169,13 @@ describe('LabInvestigation', () => {
     });
 
     mockGetCategoryUuidFromOrderTypes.mockResolvedValue('lab-order-type-uuid');
+    mockGetLabTestBundle.mockResolvedValue(
+      createMockBundle(mockServiceRequests),
+    );
   });
 
   it('renders loading state with message', async () => {
-    mockGetPatientLabInvestigations.mockImplementation(
+    mockGetLabTestBundle.mockImplementation(
       () => new Promise(() => {}), // Never resolves
     );
 
@@ -171,23 +185,19 @@ describe('LabInvestigation', () => {
   });
 
   it('renders lab tests grouped by date', async () => {
-    mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
-
     render(renderLabInvestigations());
 
     await waitFor(() => {
-      expect(groupLabTestsByDate).toHaveBeenCalledWith(mockFormattedLabTests);
+      expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
+      expect(screen.getByText(/April 9, 2025/i)).toBeInTheDocument();
     });
-
-    expect(screen.getByText('05/08/2025')).toBeInTheDocument();
-    expect(screen.getByText('04/09/2025')).toBeInTheDocument();
 
     const labItems = screen.getAllByTestId('lab-investigation-item');
     expect(labItems).toHaveLength(3);
   });
 
   it('renders empty state message when no lab tests', async () => {
-    mockGetPatientLabInvestigations.mockResolvedValue([]);
+    mockGetLabTestBundle.mockResolvedValue(createMockBundle([]));
 
     render(renderLabInvestigations());
 
@@ -199,9 +209,7 @@ describe('LabInvestigation', () => {
   });
 
   it('renders error message when hasError is true', async () => {
-    mockGetPatientLabInvestigations.mockRejectedValue(
-      new Error('Failed to fetch'),
-    );
+    mockGetLabTestBundle.mockRejectedValue(new Error('Failed to fetch'));
 
     render(renderLabInvestigations());
 
@@ -211,8 +219,6 @@ describe('LabInvestigation', () => {
   });
 
   it('renders urgent tests before non-urgent tests within each date group', async () => {
-    mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
-
     render(renderLabInvestigations());
 
     await waitFor(() => {
@@ -234,19 +240,17 @@ describe('LabInvestigation', () => {
   });
 
   it('opens first accordion item by default', async () => {
-    mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
-
     render(renderLabInvestigations());
 
     await waitFor(() => {
-      expect(screen.getByText('05/08/2025')).toBeInTheDocument();
+      expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
     });
 
     const firstAccordionButton = screen.getByRole('button', {
-      name: /05\/08\/2025/,
+      name: /May 8, 2025/i,
     });
     const secondAccordionButton = screen.getByRole('button', {
-      name: /04\/09\/2025/,
+      name: /April 9, 2025/i,
     });
 
     expect(firstAccordionButton).toHaveAttribute('aria-expanded', 'true');
@@ -255,8 +259,6 @@ describe('LabInvestigation', () => {
 
   describe('emptyEncounterFilter condition', () => {
     it('should not fetch lab investigations when emptyEncounterFilter is true (episodeOfCareUuids has values and encounterUuids is empty)', async () => {
-      mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
-
       render(
         renderLabInvestigations(
           { orderType: 'Lab Order' },
@@ -271,13 +273,11 @@ describe('LabInvestigation', () => {
         ).toBeInTheDocument();
       });
 
-      // Verify that getPatientLabInvestigations was NOT called
-      expect(mockGetPatientLabInvestigations).not.toHaveBeenCalled();
+      // Verify that getLabTestBundle was NOT called
+      expect(mockGetLabTestBundle).not.toHaveBeenCalled();
     });
 
     it('should fetch lab investigations when emptyEncounterFilter is false (episodeOfCareUuids is empty)', async () => {
-      mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
-
       render(
         renderLabInvestigations(
           { orderType: 'Lab Order' },
@@ -287,16 +287,14 @@ describe('LabInvestigation', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('05/08/2025')).toBeInTheDocument();
+        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
       });
 
-      // Verify that getPatientLabInvestigations WAS called
-      expect(mockGetPatientLabInvestigations).toHaveBeenCalled();
+      // Verify that getLabTestBundle WAS called
+      expect(mockGetLabTestBundle).toHaveBeenCalled();
     });
 
     it('should fetch lab investigations when emptyEncounterFilter is false (both have values)', async () => {
-      mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
-
       render(
         renderLabInvestigations(
           { orderType: 'Lab Order' },
@@ -306,24 +304,22 @@ describe('LabInvestigation', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('05/08/2025')).toBeInTheDocument();
+        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
       });
 
-      // Verify that getPatientLabInvestigations WAS called
-      expect(mockGetPatientLabInvestigations).toHaveBeenCalled();
+      // Verify that getLabTestBundle WAS called
+      expect(mockGetLabTestBundle).toHaveBeenCalled();
     });
 
     it('should fetch lab investigations when emptyEncounterFilter is false (no episode provided)', async () => {
-      mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
-
       render(renderLabInvestigations({ orderType: 'Lab Order' }));
 
       await waitFor(() => {
-        expect(screen.getByText('05/08/2025')).toBeInTheDocument();
+        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
       });
 
-      // Verify that getPatientLabInvestigations WAS called
-      expect(mockGetPatientLabInvestigations).toHaveBeenCalled();
+      // Verify that getLabTestBundle WAS called
+      expect(mockGetLabTestBundle).toHaveBeenCalled();
     });
   });
 });

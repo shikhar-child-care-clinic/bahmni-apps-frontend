@@ -156,14 +156,7 @@ export {
   getPatientRadiologyInvestigationBundle,
   getPatientRadiologyInvestigationBundleWithImagingStudy,
 } from './radiologyInvestigationService';
-export {
-  getPatientLabInvestigations,
-  groupLabTestsByDate,
-  formatLabTests,
-  type FormattedLabTest,
-  LabTestPriority,
-  type LabTestsByDate,
-} from './labInvestigationService';
+export { getLabTestBundle } from './labInvestigationService';
 export {
   getFlattenedInvestigations,
   getOrderTypes,
@@ -246,6 +239,7 @@ export {
   DATE_REGEX_PATTERN,
   DATETIME_REGEX_PATTERN,
   INTERPRETATION_TO_CODE,
+  FHIR_LAB_ORDER_CONCEPT_TYPE_EXTENSION_URL,
 } from './constants/fhir';
 
 export {

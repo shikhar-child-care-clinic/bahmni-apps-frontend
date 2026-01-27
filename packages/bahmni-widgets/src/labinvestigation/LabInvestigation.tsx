@@ -1,21 +1,42 @@
 import { Accordion, AccordionItem, SkeletonText } from '@bahmni/design-system';
 import {
-  groupLabTestsByDate,
   shouldEnableEncounterFilter,
   useTranslation,
-  LabTestsByDate,
-  FormattedLabTest,
   getCategoryUuidFromOrderTypes,
   getFormattedError,
-  getPatientLabInvestigations,
+  getLabTestBundle,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import React, { useMemo, useEffect } from 'react';
+
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
 import LabInvestigationItem from './LabInvestigationItem';
+import { FormattedLabTest, LabTestsByDate } from './models';
 import styles from './styles/LabInvestigation.module.scss';
+import {
+  filterLabTestEntries,
+  formatLabTests,
+  groupLabTestsByDate,
+} from './utils';
+
+const fetchLabInvestigations = async (
+  patientUUID: string,
+  category: string,
+  t: (key: string) => string,
+  encounterUuids?: string[],
+  numberOfVisits?: number,
+): Promise<FormattedLabTest[]> => {
+  const bundle = await getLabTestBundle(
+    patientUUID,
+    category,
+    encounterUuids,
+    numberOfVisits,
+  );
+  const filteredEntries = filterLabTestEntries(bundle);
+  return formatLabTests(filteredEntries, t);
+};
 
 const LabInvestigation: React.FC<WidgetProps> = ({
   config,
@@ -59,9 +80,9 @@ const LabInvestigation: React.FC<WidgetProps> = ({
     ],
     enabled: !!patientUUID && !!categoryUuid && !emptyEncounterFilter,
     queryFn: () =>
-      getPatientLabInvestigations(
+      fetchLabInvestigations(
         patientUUID!,
-        categoryUuid,
+        categoryUuid!,
         t,
         encounterUuids,
         numberOfVisits,
