@@ -162,9 +162,6 @@ export {
   getDiagnosticReportBundle,
   COMPLETED_REPORT_STATUSES,
   PENDING_REPORT_STATUSES,
-  type ObservationResult,
-  type FormattedDiagnosticReport,
-  type DiagnosticReportBundleResult,
 } from './diagnosticReportService';
 export {
   getFlattenedInvestigations,

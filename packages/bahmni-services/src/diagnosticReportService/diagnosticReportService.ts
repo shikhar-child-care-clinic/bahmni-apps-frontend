@@ -1,10 +1,9 @@
-import { Bundle, DiagnosticReport, Observation } from 'fhir/r4';
+import { Bundle, DiagnosticReport } from 'fhir/r4';
 import { get } from '../api';
 import {
   DIAGNOSTIC_REPORTS_BY_ORDERS_URL,
   DIAGNOSTIC_REPORT_BUNDLE_URL,
 } from './constants';
-import { DiagnosticReportBundleResult } from './models';
 
 export async function getDiagnosticReportsByOrders(
   patientUuid: string,
@@ -29,33 +28,11 @@ export async function getDiagnosticReportsByOrders(
 
 export async function getDiagnosticReportBundle(
   diagnosticReportId: string,
-): Promise<DiagnosticReportBundleResult> {
+): Promise<Bundle> {
   if (!diagnosticReportId) {
     throw new Error('DiagnosticReport ID is required');
   }
 
   const url = DIAGNOSTIC_REPORT_BUNDLE_URL(diagnosticReportId);
-  const bundle = await get<Bundle>(url);
-
-  // Extract DiagnosticReport and Observations from the bundle
-  const diagnosticReport = bundle.entry?.find(
-    (entry) => entry.resource?.resourceType === 'DiagnosticReport',
-  )?.resource as DiagnosticReport;
-
-  const observations =
-    bundle.entry
-      ?.filter((entry) => entry.resource?.resourceType === 'Observation')
-      .map((entry) => entry.resource as Observation)
-      .filter((resource): resource is Observation => !!resource) ?? [];
-
-  if (!diagnosticReport) {
-    throw new Error(
-      `DiagnosticReport not found in bundle for ID: ${diagnosticReportId}`,
-    );
-  }
-
-  return {
-    diagnosticReport,
-    observations,
-  };
+  return await get<Bundle>(url);
 }
