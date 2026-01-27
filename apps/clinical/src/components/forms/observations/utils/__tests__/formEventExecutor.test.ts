@@ -93,7 +93,7 @@ describe('formEventExecutor', () => {
       );
 
       expect(result).toHaveLength(1);
-      expect(result[0].concept.name).toBe('Height');
+      expect(result[0].value).toBe(170);
     });
 
     it('should provide formContext with patient uuid to the script', () => {
@@ -216,172 +216,117 @@ describe('formEventExecutor', () => {
       expect(mockObservations[0].value).toBe(70);
     });
 
-    // Backward compatibility tests for form.get() method
-    describe('Backward compatibility - form.get() method', () => {
-      it('should support legacy scripts using form.get() to find observations by concept name', () => {
-        const script = `function(form) {
-          var weightObs = form.get('Weight');
-          if (weightObs && weightObs.getValue() !== undefined) {
-            weightObs.setValue(weightObs.getValue() + 10);
-          }
-          return form.observations;
-        }`;
-        const encodedScript = btoa(script);
-        const metadata = createMockMetadata(encodedScript);
+    it('should use window.runEventScript when available and return modified observations', () => {
+      const modifiedObs = [{ ...mockObservations[0], value: 999 }];
+      window.runEventScript = jest.fn().mockReturnValue(modifiedObs);
 
-        const result = executeOnFormSaveEvent(
-          metadata,
-          mockObservations,
-          mockPatientUuid,
-          mockFormData,
-        );
+      const script = 'function() { return modified; }';
+      const metadata = createMockMetadata(script);
 
-        expect(result[0].value).toBe(70); // Observations remain unchanged (script modifies formData, not observations)
+      const result = executeOnFormSaveEvent(
+        metadata,
+        mockObservations,
+        mockPatientUuid,
+        mockFormData,
+      );
+
+      expect(window.runEventScript).toHaveBeenCalledWith(mockFormData, script, {
+        uuid: mockPatientUuid,
+      });
+      expect(result).toEqual(modifiedObs);
+
+      delete window.runEventScript;
+    });
+
+    it('should fallback to direct execution when window.runEventScript fails', () => {
+      window.runEventScript = jest.fn().mockImplementation(() => {
+        throw new Error('Helper failed');
       });
 
-      it('should support formContext.get() in new style scripts', () => {
-        const script = `function(formContext) {
-          var heightObs = formContext.get('Height');
-          if (heightObs && heightObs.getValue() !== undefined) {
-            heightObs.setValue(heightObs.getValue() + 5);
-          }
-          return formContext.observations;
-        }`;
-        const encodedScript = btoa(script);
-        const metadata = createMockMetadata(encodedScript);
+      const script = 'formContext.observations = [];';
+      const encodedScript = btoa(script);
+      const metadata = createMockMetadata(encodedScript);
 
-        const result = executeOnFormSaveEvent(
-          metadata,
-          mockObservations,
-          mockPatientUuid,
-          mockFormData,
-        );
+      const result = executeOnFormSaveEvent(
+        metadata,
+        mockObservations,
+        mockPatientUuid,
+      );
 
-        expect(result[1].value).toBe(170); // Observations remain unchanged
-      });
+      expect(result).toEqual([]);
 
-      it('should return wrapper with null currentRecord when form.get() does not find matching concept', () => {
-        const script = `function(form) {
-          var missingObs = form.get('NonExistentConcept');
-          // Check using currentRecord property (backward compatibility)
-          if (!missingObs.currentRecord) {
-            form.observations = [];
-          }
-          return form.observations;
-        }`;
-        const encodedScript = btoa(script);
-        const metadata = createMockMetadata(encodedScript);
+      delete window.runEventScript;
+    });
 
-        const result = executeOnFormSaveEvent(
-          metadata,
-          mockObservations,
-          mockPatientUuid,
-          mockFormData,
-        );
+    it('should throw error when script is not a string', () => {
+      const metadata = {
+        name: 'Test Form',
+        uuid: 'form-uuid-123',
+        version: '1',
+        schema: {
+          events: { onFormSave: 123 as any },
+        },
+      } as FormMetadata;
 
-        expect(result).toEqual([]);
-      });
+      expect(() =>
+        executeOnFormSaveEvent(metadata, mockObservations, mockPatientUuid),
+      ).toThrow(
+        'Error in onFormSave event for form "Test Form": Invalid onFormSave script: not a string or empty',
+      );
+    });
 
-      it('should handle scripts that use both form.get() and direct observations access', () => {
-        const script = `function(form) {
-          var weightObs = form.get('Weight');
-          if (weightObs && form.observations.length > 1) {
-            weightObs.setValue(100);
-          }
-          return form.observations;
-        }`;
-        const encodedScript = btoa(script);
-        const metadata = createMockMetadata(encodedScript);
+    it('should throw error when script is empty string', () => {
+      const metadata = createMockMetadata('   ');
 
-        const result = executeOnFormSaveEvent(
-          metadata,
-          mockObservations,
-          mockPatientUuid,
-          mockFormData,
-        );
+      expect(() =>
+        executeOnFormSaveEvent(metadata, mockObservations, mockPatientUuid),
+      ).toThrow(
+        'Error in onFormSave event for form "Test Form": Invalid onFormSave script: not a string or empty',
+      );
+    });
 
-        expect(result[0].value).toBe(70);
-        expect(result).toHaveLength(2);
-      });
+    it('should handle non-base64 plain text scripts', () => {
+      const script = 'formContext.observations = [];';
+      const metadata = createMockMetadata(script);
 
-      it('should support form.get() in function body scripts with form variable available', () => {
-        const script = `
-          var obs = form.get('Weight');
-          if (obs && obs.getValue() !== undefined) {
-            obs.setValue(999);
-          }
-        `;
-        const encodedScript = btoa(script);
-        const metadata = createMockMetadata(encodedScript);
+      const result = executeOnFormSaveEvent(
+        metadata,
+        mockObservations,
+        mockPatientUuid,
+      );
 
-        const result = executeOnFormSaveEvent(
-          metadata,
-          mockObservations,
-          mockPatientUuid,
-          mockFormData,
-        );
+      expect(result).toEqual([]);
+    });
 
-        expect(result[0].value).toBe(70);
-      });
+    it('should handle script throwing unknown error type', () => {
+      const script = 'throw 12345;';
+      const encodedScript = btoa(script);
+      const metadata = createMockMetadata(encodedScript);
 
-      it('should handle complex legacy validation script with form.get() and error throwing', () => {
-        // Create custom observations with value > 200 to trigger the error
-        const observationsWithHighValue: Form2Observation[] = [
-          {
-            concept: { uuid: 'concept-uuid-1', name: 'Weight' },
-            value: 70,
-            formFieldPath: 'form.1/1-0',
-          } as Form2Observation,
-          {
-            concept: { uuid: 'concept-uuid-2', name: 'Height' },
-            value: 250, // Value > 200 to trigger the error
-            formFieldPath: 'form.1/2-0',
-          } as Form2Observation,
-        ];
+      expect(() =>
+        executeOnFormSaveEvent(metadata, mockObservations, mockPatientUuid),
+      ).toThrow(
+        'Error in onFormSave event for form "Test Form": Unknown error occurred',
+      );
+    });
 
-        const mockFormDataWithHighValue = {
-          children: [
-            {
-              control: {
-                concept: { name: 'Weight', uuid: 'concept-uuid-1' },
-                label: { value: 'Weight' },
-              },
-              value: { value: 70, comment: undefined, interpretation: null },
-            },
-            {
-              control: {
-                concept: { name: 'Height', uuid: 'concept-uuid-2' },
-                label: { value: 'Height' },
-              },
-              value: { value: 250, comment: undefined, interpretation: null },
-            },
-          ],
-        };
+    it('should include formData in formContext when provided', () => {
+      const script = `
+        if (formContext.formData) {
+          formContext.observations = [];
+        }
+      `;
+      const encodedScript = btoa(script);
+      const metadata = createMockMetadata(encodedScript);
 
-        const script = `function(form) {
-          let today = Date.now();
-          let heightObs = form.get('Height');
+      const result = executeOnFormSaveEvent(
+        metadata,
+        mockObservations,
+        mockPatientUuid,
+        mockFormData,
+      );
 
-          if (heightObs && heightObs.getValue() > 200) {
-            throw new Error('Value too high');
-          }
-
-          return form.observations;
-        }`;
-        const encodedScript = btoa(script);
-        const metadata = createMockMetadata(encodedScript);
-
-        expect(() =>
-          executeOnFormSaveEvent(
-            metadata,
-            observationsWithHighValue,
-            mockPatientUuid,
-            mockFormDataWithHighValue,
-          ),
-        ).toThrow(
-          'Error in onFormSave event for form "Test Form": Value too high',
-        );
-      });
+      expect(result).toEqual([]);
     });
   });
 

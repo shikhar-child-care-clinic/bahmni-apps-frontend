@@ -6,7 +6,7 @@ import {
   SkeletonText,
 } from '@bahmni/design-system';
 import {
-  Container,
+  Container as Form2ContainerOriginal,
   FormMetadata as Form2FormMetadata,
 } from '@bahmni/form2-controls';
 import '@bahmni/form2-controls/dist/bundle.css';
@@ -30,6 +30,8 @@ import {
 import { useObservationFormData } from '../../../hooks/useObservationFormData';
 import styles from './styles/ObservationFormsContainer.module.scss';
 import { executeOnFormSaveEvent } from './utils/formEventExecutor';
+
+const Form2Container: any = Form2ContainerOriginal;
 
 interface ObservationFormsContainerProps {
   // Callback to notify parent when form viewing starts/ends
@@ -87,7 +89,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   const [validationErrorMessage, setValidationErrorMessage] = useState<
     string | null
   >(null);
-  const formContainerRef = useRef<Container>(null);
+  const formContainerRef = useRef<any>(null);
 
   const {
     observations,
@@ -195,7 +197,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
         const hasMandatoryError = errors
           .flat()
           .some(
-            (err) =>
+            (err: any) =>
               (err.get?.('message') ?? err.message) ===
               VALIDATION_STATE_MANDATORY,
           );
@@ -318,7 +320,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
         ) : error ? (
           <div>{error.message}</div>
         ) : formMetadata && patientUUID ? (
-          <Container
+          <Form2Container
             ref={formContainerRef}
             metadata={{
               ...(formMetadata.schema as Form2FormMetadata),
