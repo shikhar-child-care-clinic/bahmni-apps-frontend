@@ -3,8 +3,13 @@ import {
   formatDate,
   PROCESSED_REPORT_STATUSES,
 } from '@bahmni/services';
-import { Bundle, ServiceRequest, DiagnosticReport } from 'fhir/r4';
-import { FormattedLabTest, LabTestPriority, LabTestsByDate } from './models';
+import { Bundle, ServiceRequest, DiagnosticReport, Observation } from 'fhir/r4';
+import {
+  FormattedLabTest,
+  LabTestPriority,
+  LabTestsByDate,
+  LabTestResult,
+} from './models';
 
 /**
  * Filters out lab test entries that have been replaced or are replacing other entries
@@ -178,4 +183,139 @@ export function getProcessedReportIds(
     })
     .map((entry) => entry.resource?.id)
     .filter((id): id is string => !!id);
+}
+
+/**
+ * Extracts observations from a diagnostic report bundle
+ * @param bundle - The FHIR bundle containing diagnostic report and related resources
+ * @returns An array of Observation resources
+ */
+export function extractObservationsFromBundle(
+  bundle: Bundle | undefined,
+): Observation[] {
+  if (!bundle?.entry) return [];
+
+  return bundle.entry
+    .filter((entry) => entry.resource?.resourceType === 'Observation')
+    .map((entry) => entry.resource as Observation)
+    .filter((obs): obs is Observation => !!obs);
+}
+
+/**
+ * Formats FHIR observations into LabTestResult format
+ * @param observations - Array of FHIR Observation resources
+ * @param t - Translation function for date formatting
+ * @returns Array of formatted lab test results
+ */
+export function formatObservationsAsLabTestResults(
+  observations: Observation[],
+  t: (key: string) => string,
+): LabTestResult[] {
+  return observations.map((obs) => {
+    const testName = obs.code?.text ?? obs.code?.coding?.[0]?.display ?? '';
+    const resultValue =
+      obs.valueQuantity?.value?.toString() ??
+      obs.valueString ??
+      obs.valueCodeableConcept?.text ??
+      '';
+    const unit = obs.valueQuantity?.unit ?? '';
+    const result = unit ? `${resultValue} ${unit}` : resultValue;
+
+    const referenceRange =
+      obs.referenceRange
+        ?.map((range) => {
+          const low = range.low?.value;
+          const high = range.high?.value;
+          const rangeUnit = range.low?.unit ?? range.high?.unit ?? '';
+          if (low !== undefined && high !== undefined) {
+            return `${low} - ${high} ${rangeUnit}`.trim();
+          } else if (low !== undefined) {
+            return `> ${low} ${rangeUnit}`.trim();
+          } else if (high !== undefined) {
+            return `< ${high} ${rangeUnit}`.trim();
+          }
+          return range.text ?? '';
+        })
+        .join(', ') ?? '';
+
+    const reportedOn = obs.issued
+      ? formatDate(obs.issued, t, 'MMMM d, yyyy').formattedResult || obs.issued
+      : '';
+
+    return {
+      status: obs.status || '',
+      TestName: testName,
+      Result: result,
+      referenceRange,
+      reportedOn,
+      actions: '', // Actions are typically not part of the observation resource
+    };
+  });
+}
+
+/**
+ * Maps diagnostic report bundles to test results by test ID
+ * @param bundles - Array of diagnostic report bundles
+ * @param t - Translation function for date formatting
+ * @returns A Map where keys are test IDs (ServiceRequest IDs) and values are LabTestResult arrays
+ */
+export function mapDiagnosticReportBundlesToTestResults(
+  bundles: (Bundle | undefined)[],
+  t: (key: string) => string,
+): Map<string, LabTestResult[]> {
+  const resultsMap = new Map<string, LabTestResult[]>();
+
+  bundles.forEach((bundle) => {
+    if (!bundle?.entry) return;
+
+    // Find the DiagnosticReport resource in the bundle
+    const diagnosticReportEntry = bundle.entry.find(
+      (entry) => entry.resource?.resourceType === 'DiagnosticReport',
+    );
+    const diagnosticReport = diagnosticReportEntry?.resource as
+      | DiagnosticReport
+      | undefined;
+
+    if (!diagnosticReport?.basedOn) return;
+
+    // Extract the test/ServiceRequest ID from the basedOn reference
+    diagnosticReport.basedOn.forEach((ref) => {
+      const testId = ref.reference?.split('/').pop();
+      if (!testId) return;
+
+      // Extract observations from the bundle
+      const observations = extractObservationsFromBundle(bundle);
+
+      // Format observations as LabTestResult[]
+      const results = formatObservationsAsLabTestResults(observations, t);
+
+      if (results.length > 0) {
+        resultsMap.set(testId, results);
+      }
+    });
+  });
+
+  return resultsMap;
+}
+
+/**
+ * Updates tests with results from diagnostic report bundles
+ * @param tests - Array of formatted lab tests
+ * @param resultsMap - Map of test ID to LabTestResult arrays
+ * @returns Updated array of tests with results
+ */
+export function updateTestsWithResults(
+  tests: FormattedLabTest[],
+  resultsMap: Map<string, LabTestResult[]>,
+): FormattedLabTest[] {
+  return tests.map((test) => {
+    const results = resultsMap.get(test.id);
+    if (results) {
+      return {
+        ...test,
+        result: results,
+      };
+    }
+    return test;
+  });
 }

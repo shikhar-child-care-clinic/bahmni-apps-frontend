@@ -22,6 +22,8 @@ import {
   formatLabTests,
   groupLabTestsByDate,
   getProcessedReportIds,
+  mapDiagnosticReportBundlesToTestResults,
+  updateTestsWithResults,
 } from './utils';
 
 const fetchLabInvestigations = async (
@@ -156,7 +158,7 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   }, [diagnosticReports]);
 
   // Fetch diagnostic report bundles for all processed reports
-  const diagnosticReportBundleQueries = useQueries({
+  const diagnosticReportBundles = useQueries({
     queries: processedReportIds.map((reportId) => ({
       queryKey: ['diagnosticReportBundle', reportId],
       queryFn: () => getDiagnosticReportBundle(reportId),
@@ -164,7 +166,26 @@ const LabInvestigation: React.FC<WidgetProps> = ({
     })),
   });
 
-  console.log({ diagnosticReportBundleQueries });
+  // Map diagnostic report bundles to test results
+  const testResultsMap = useMemo(() => {
+    const bundles = diagnosticReportBundles.map((query) => query.data);
+    return mapDiagnosticReportBundlesToTestResults(bundles, t);
+  }, [diagnosticReportBundles, t]);
+
+  // Update labTestsByDate with results for the open accordion
+  const labTestsByDateWithResults = useMemo(() => {
+    if (openAccordionIndex === null) return labTestsByDate;
+
+    return labTestsByDate.map((group, index) => {
+      if (index === openAccordionIndex) {
+        return {
+          ...group,
+          tests: updateTestsWithResults(group.tests, testResultsMap),
+        };
+      }
+      return group;
+    });
+  }, [labTestsByDate, openAccordionIndex, testResultsMap]);
 
   if (hasError) {
     return (
@@ -194,7 +215,7 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   return (
     <section>
       <Accordion align="start" size="lg" className={styles.accordianHeader}>
-        {labTestsByDate.map((group: LabTestsByDate, index) => (
+        {labTestsByDateWithResults.map((group: LabTestsByDate, index) => (
           <AccordionItem
             key={group.date}
             className={styles.accordionItem}
