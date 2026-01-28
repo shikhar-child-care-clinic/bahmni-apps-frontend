@@ -357,9 +357,10 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         resetObservationForms();
 
         // Build service request flags from selected categories
+        // Normalize keys to lowercase for case-insensitive matching
         const serviceRequestFlags: Record<string, boolean> = {};
         selectedServiceRequests.forEach((_, category) => {
-          serviceRequestFlags[category] = true;
+          serviceRequestFlags[category.toLowerCase()] = true;
         });
 
         // Dispatch consultation saved event

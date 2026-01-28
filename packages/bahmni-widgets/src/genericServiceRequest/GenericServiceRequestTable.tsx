@@ -101,12 +101,12 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
       if (
         payload.patientUUID === patientUUID &&
         categoryName &&
-        payload.updatedResources.serviceRequests?.[categoryName]
+        payload.updatedResources.serviceRequests?.[categoryName.toLowerCase()]
       ) {
         refetch();
       }
     },
-    [patientUUID, categoryName, refetch],
+    [patientUUID, categoryName],
   );
 
   useEffect(() => {

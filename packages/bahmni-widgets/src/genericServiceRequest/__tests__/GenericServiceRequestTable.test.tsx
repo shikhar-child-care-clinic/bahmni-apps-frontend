@@ -1395,7 +1395,7 @@ describe('GenericServiceRequestTable', () => {
           conditions: false,
           allergies: false,
           medications: false,
-          serviceRequests: { 'Procedure Order': true },
+          serviceRequests: { 'procedure order': true },
         },
       });
 
@@ -1438,7 +1438,7 @@ describe('GenericServiceRequestTable', () => {
           conditions: false,
           allergies: false,
           medications: false,
-          serviceRequests: { 'Procedure Order': true },
+          serviceRequests: { 'procedure order': true },
         },
       });
 
@@ -1482,7 +1482,7 @@ describe('GenericServiceRequestTable', () => {
           conditions: false,
           allergies: false,
           medications: false,
-          serviceRequests: { 'Lab Order': true },
+          serviceRequests: { 'lab order': true },
         },
       });
 

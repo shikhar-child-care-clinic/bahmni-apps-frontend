@@ -76,12 +76,12 @@ const LabInvestigation: React.FC<WidgetProps> = ({
       if (
         payload.patientUUID === patientUUID &&
         categoryName &&
-        payload.updatedResources.serviceRequests?.[categoryName]
+        payload.updatedResources.serviceRequests?.[categoryName.toLowerCase()]
       ) {
         refetchLabInvestigations();
       }
     },
-    [patientUUID, categoryName, refetchLabInvestigations],
+    [patientUUID, categoryName],
   );
 
   useEffect(() => {
