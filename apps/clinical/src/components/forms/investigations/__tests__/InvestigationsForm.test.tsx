@@ -1,6 +1,8 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
+import React from 'react';
 import useInvestigationsSearch from '../../../../hooks/useInvestigationsSearch';
 import type { FlattenedInvestigations } from '../../../../models/investigations';
 import useServiceRequestStore from '../../../../stores/serviceRequestStore';
@@ -19,6 +21,17 @@ jest.mock('../styles/InvestigationsForm.module.scss', () => ({
 
 jest.mock('../../../../hooks/useInvestigationsSearch');
 jest.mock('../../../../stores/serviceRequestStore');
+
+jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
+  getServiceRequests: jest.fn().mockResolvedValue({ entry: [] }),
+  getCategoryUuidFromOrderTypes: jest.fn().mockResolvedValue('mock-uuid'),
+}));
+
+jest.mock('@bahmni/widgets', () => ({
+  ...jest.requireActual('@bahmni/widgets'),
+  usePatientUUID: jest.fn().mockReturnValue('mock-patient-uuid'),
+}));
 
 jest.mock('@bahmni/design-system', () => ({
   ...jest.requireActual('@bahmni/design-system'),
@@ -93,6 +106,21 @@ const mockStore = {
   })),
 };
 
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+  Wrapper.displayName = 'QueryClientWrapper';
+  return Wrapper;
+};
+
 describe('InvestigationsForm', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -108,7 +136,7 @@ describe('InvestigationsForm', () => {
 
   describe('Component Rendering', () => {
     test('renders form with title and search combobox', () => {
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       expect(
         screen.getByText('Order Investigations/Procedures'),
@@ -134,7 +162,7 @@ describe('InvestigationsForm', () => {
     test('updates search term on input change', async () => {
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'blood');
@@ -151,7 +179,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'test');
@@ -170,7 +198,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'test');
@@ -191,7 +219,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'nonexistent');
@@ -211,7 +239,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'test');
@@ -258,7 +286,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'test');
@@ -286,7 +314,7 @@ describe('InvestigationsForm', () => {
         error: null,
       });
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       // Simulate selecting an investigation by calling the onChange handler
       const combobox = screen.getByRole('combobox');
@@ -351,7 +379,7 @@ describe('InvestigationsForm', () => {
         selectedServiceRequests: selectedMap,
       });
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       // Check category headers
       expect(screen.getByText('Added Laboratory')).toBeInTheDocument();
@@ -384,7 +412,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const removeButton = screen.getByLabelText('Remove');
       await user.click(removeButton);
@@ -416,7 +444,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const urgentCheckbox = screen.getByLabelText('Set as urgent');
       await user.click(urgentCheckbox);
@@ -449,7 +477,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const noteInput = screen.getByLabelText('Add note');
       await user.type(noteInput, 'Patient has low hemoglobin');
@@ -487,7 +515,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const noteInputs = screen.getAllByLabelText('Add note');
       expect(noteInputs).toHaveLength(2);
@@ -538,7 +566,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const noteInputs = screen.getAllByLabelText('Add note');
       expect(noteInputs).toHaveLength(2);
@@ -587,7 +615,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'blood');
@@ -632,7 +660,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'complete');
@@ -681,7 +709,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'glucose');
@@ -748,7 +776,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'test');
@@ -824,7 +852,9 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      const { rerender } = render(<InvestigationsForm />);
+      const { rerender } = render(<InvestigationsForm />, {
+        wrapper: createWrapper(),
+      });
 
       // First search - CBC should be marked as already selected
       const combobox = screen.getByRole('combobox');
@@ -865,7 +895,7 @@ describe('InvestigationsForm', () => {
 
   describe('Edge Cases', () => {
     test('handles empty search term correctly', () => {
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       expect(combobox).toHaveValue('');
@@ -884,7 +914,7 @@ describe('InvestigationsForm', () => {
         error: null,
       });
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       const user = userEvent.setup();
@@ -902,7 +932,9 @@ describe('InvestigationsForm', () => {
       let container: HTMLElement;
 
       await act(async () => {
-        const rendered = render(<InvestigationsForm />);
+        const rendered = render(<InvestigationsForm />, {
+          wrapper: createWrapper(),
+        });
         container = rendered.container;
       });
 

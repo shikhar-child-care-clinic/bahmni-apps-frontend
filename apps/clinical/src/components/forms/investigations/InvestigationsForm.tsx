@@ -3,9 +3,16 @@ import {
   Tile,
   BoxWHeader,
   SelectedItem,
+  InlineNotification,
 } from '@bahmni/design-system';
-import { useTranslation } from '@bahmni/services';
-import React, { useMemo, useCallback } from 'react';
+import {
+  useTranslation,
+  getServiceRequests,
+  getCategoryUuidFromOrderTypes,
+} from '@bahmni/services';
+import { usePatientUUID } from '@bahmni/widgets';
+import { useQuery } from '@tanstack/react-query';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import useInvestigationsSearch from '../../../hooks/useInvestigationsSearch';
 import type { FlattenedInvestigations } from '../../../models/investigations';
 import useServiceRequestStore from '../../../stores/serviceRequestStore';
@@ -14,7 +21,17 @@ import styles from './styles/InvestigationsForm.module.scss';
 
 const InvestigationsForm: React.FC = React.memo(() => {
   const { t } = useTranslation();
-  const [searchTerm, setSearchTerm] = React.useState<string>('');
+  const patientUUID = usePatientUUID();
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [showDuplicateNotification, setShowDuplicateNotification] =
+    useState(false);
+  const [duplicateInvestigationId, setDuplicateInvestigationId] = useState<
+    string | null
+  >(null);
+  const [duplicateCategory, setDuplicateCategory] = useState<string | null>(
+    null,
+  );
+
   const { investigations, isLoading, error } =
     useInvestigationsSearch(searchTerm);
   const {
@@ -25,6 +42,37 @@ const InvestigationsForm: React.FC = React.memo(() => {
     removeServiceRequest,
   } = useServiceRequestStore();
 
+  // Fetch existing service requests from backend for duplicate detection
+  const { data: existingServiceRequests } = useQuery({
+    queryKey: ['existingServiceRequests', patientUUID],
+    queryFn: async () => {
+      const categories = ['Lab Order', 'Radiology Order', 'Procedure Order'];
+      const results: Array<{
+        conceptCode: string;
+        category: string;
+        display: string;
+      }> = [];
+
+      for (const categoryName of categories) {
+        const categoryUuid = await getCategoryUuidFromOrderTypes(categoryName);
+        if (categoryUuid && patientUUID) {
+          const bundle = await getServiceRequests(categoryUuid, patientUUID);
+          const items =
+            bundle.entry
+              ?.map((entry) => ({
+                conceptCode: entry.resource?.code?.coding?.[0]?.code ?? '',
+                category: categoryName,
+                display: entry.resource?.code?.text ?? '',
+              }))
+              .filter((item) => item.conceptCode) ?? [];
+          results.push(...items);
+        }
+      }
+      return results;
+    },
+    enabled: !!patientUUID,
+  });
+
   const translateOrderType = useCallback(
     (category: string): string => {
       return t(`ORDER_TYPE_${category.toUpperCase().replace(/\s/g, '_')}`, {
@@ -33,6 +81,56 @@ const InvestigationsForm: React.FC = React.memo(() => {
     },
     [t],
   );
+
+  // Check if an investigation is a duplicate (exists in backend or already selected in form)
+  const isDuplicateInvestigation = useCallback(
+    (investigationCode: string, category: string): boolean => {
+      // Check against existing service requests from backend (by concept code & category)
+      const isExistingInvestigation = existingServiceRequests?.some(
+        (sr) =>
+          sr.conceptCode === investigationCode && sr.category === category,
+      );
+
+      // Check against currently selected investigations in the form
+      const selectedInCategory = selectedServiceRequests.get(category);
+      const isSelectedInvestigation =
+        selectedInCategory?.some((si) => si.id === investigationCode) ?? false;
+
+      return (isExistingInvestigation ?? false) || isSelectedInvestigation;
+    },
+    [existingServiceRequests, selectedServiceRequests],
+  );
+
+  // Auto-clear duplicate notification when search is cleared or duplicate item is removed
+  useEffect(() => {
+    if (showDuplicateNotification) {
+      // If search is cleared, hide notification
+      if (searchTerm === '') {
+        setShowDuplicateNotification(false);
+        setDuplicateInvestigationId(null);
+        setDuplicateCategory(null);
+        return;
+      }
+
+      // If the duplicate investigation was removed, hide notification
+      if (
+        duplicateInvestigationId &&
+        duplicateCategory &&
+        !isDuplicateInvestigation(duplicateInvestigationId, duplicateCategory)
+      ) {
+        setShowDuplicateNotification(false);
+        setDuplicateInvestigationId(null);
+        setDuplicateCategory(null);
+      }
+    }
+  }, [
+    searchTerm,
+    selectedServiceRequests,
+    showDuplicateNotification,
+    duplicateInvestigationId,
+    duplicateCategory,
+    isDuplicateInvestigation,
+  ]);
 
   const arrangeFilteredInvestigationsByCategory = useCallback(
     (investigations: FlattenedInvestigations[]): FlattenedInvestigations[] => {
@@ -134,13 +232,31 @@ const InvestigationsForm: React.FC = React.memo(() => {
   const handleChange = (
     selectedItem: FlattenedInvestigations | null | undefined,
   ) => {
-    if (selectedItem) {
-      addServiceRequest(
-        selectedItem.category,
-        selectedItem.code,
-        selectedItem.display,
-      );
+    if (
+      !selectedItem?.code ||
+      !selectedItem.display ||
+      !selectedItem.category
+    ) {
+      return;
     }
+
+    // Check for duplicate BEFORE adding
+    if (isDuplicateInvestigation(selectedItem.code, selectedItem.category)) {
+      setDuplicateInvestigationId(selectedItem.code);
+      setDuplicateCategory(selectedItem.category);
+      setShowDuplicateNotification(true);
+      return; // Don't add duplicate!
+    }
+
+    // Successfully added, clear any previous duplicate notification
+    setShowDuplicateNotification(false);
+    setDuplicateInvestigationId(null);
+    setDuplicateCategory(null);
+    addServiceRequest(
+      selectedItem.category,
+      selectedItem.code,
+      selectedItem.display,
+    );
   };
 
   return (
@@ -159,6 +275,17 @@ const InvestigationsForm: React.FC = React.memo(() => {
         aria-label={t('INVESTIGATIONS_SEARCH_ARIA_LABEL')}
         size="md"
       />
+
+      {showDuplicateNotification && (
+        <InlineNotification
+          kind="error"
+          lowContrast
+          subtitle={t('INVESTIGATION_ALREADY_ADDED')}
+          onClose={() => setShowDuplicateNotification(false)}
+          hideCloseButton={false}
+          className={styles.duplicateNotification}
+        />
+      )}
 
       {selectedServiceRequests &&
         selectedServiceRequests.size > 0 &&
