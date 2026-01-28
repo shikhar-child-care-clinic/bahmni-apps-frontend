@@ -5,9 +5,10 @@ import {
   getCategoryUuidFromOrderTypes,
   getFormattedError,
   getLabTestBundle,
+  getDiagnosticReportsByOrders,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
@@ -48,6 +49,7 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   const { addNotification } = useNotification();
   const categoryName = config?.orderType as string;
   const numberOfVisits = config?.numberOfVisits as number;
+  const [openAccordionIndex, setOpenAccordionIndex] = useState<number | null>(0);
 
   const emptyEncounterFilter = shouldEnableEncounterFilter(
     episodeOfCareUuids,
@@ -124,6 +126,25 @@ const LabInvestigation: React.FC<WidgetProps> = ({
     return groupLabTestsByDate(labTests);
   }, [labTests]);
 
+  // Get test IDs for the currently open accordion
+  const openAccordionTestIds = useMemo(() => {
+    if (openAccordionIndex !== null && labTestsByDate[openAccordionIndex]) {
+      return labTestsByDate[openAccordionIndex].tests.map((test) => test.id);
+    }
+    return [];
+  }, [openAccordionIndex, labTestsByDate]);
+
+  // Fetch diagnostic reports for the open accordion
+  const { data: diagnosticReports } = useQuery({
+    queryKey: ['diagnosticReports', patientUUID, openAccordionTestIds],
+    queryFn: () =>
+      getDiagnosticReportsByOrders(patientUUID!, openAccordionTestIds),
+    enabled:
+      !!patientUUID &&
+      openAccordionTestIds.length > 0 &&
+      openAccordionIndex !== null,
+  });
+
   if (hasError) {
     return (
       <div className={styles.labInvestigationTableBodyError}>
@@ -156,7 +177,12 @@ const LabInvestigation: React.FC<WidgetProps> = ({
           <AccordionItem
             key={group.date}
             className={styles.accordionItem}
-            open={index === 0}
+            open={index === openAccordionIndex}
+            onHeadingClick={() => {
+              setOpenAccordionIndex(
+                openAccordionIndex === index ? null : index,
+              );
+            }}
             title={
               <span className={styles.accordionTitle}>
                 <strong>{group.date}</strong>
