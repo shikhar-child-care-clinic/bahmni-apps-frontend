@@ -160,7 +160,7 @@ export { getLabTestBundle } from './labInvestigationService';
 export {
   getDiagnosticReportsByOrders,
   getDiagnosticReportBundle,
-  COMPLETED_REPORT_STATUSES,
+  PROCESSED_REPORT_STATUSES,
   PENDING_REPORT_STATUSES,
 } from './diagnosticReportService';
 export {

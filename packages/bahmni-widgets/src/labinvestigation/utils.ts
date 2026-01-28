@@ -1,8 +1,9 @@
 import {
   FHIR_LAB_ORDER_CONCEPT_TYPE_EXTENSION_URL,
   formatDate,
+  PROCESSED_REPORT_STATUSES,
 } from '@bahmni/services';
-import { Bundle, ServiceRequest } from 'fhir/r4';
+import { Bundle, ServiceRequest, DiagnosticReport } from 'fhir/r4';
 import { FormattedLabTest, LabTestPriority, LabTestsByDate } from './models';
 
 /**
@@ -153,4 +154,28 @@ export function groupLabTestsByDate(
   return Array.from(dateMap.values()).sort(
     (a, b) => new Date(b.rawDate).getTime() - new Date(a.rawDate).getTime(),
   );
+}
+
+/**
+ * Extracts processed (completed) diagnostic report IDs from a bundle
+ * @param diagnosticReportsBundle - The FHIR bundle containing diagnostic reports
+ * @returns An array of report IDs that have a processed status
+ */
+export function getProcessedReportIds(
+  diagnosticReportsBundle: Bundle<DiagnosticReport> | undefined,
+): string[] {
+  if (!diagnosticReportsBundle?.entry) return [];
+
+  return diagnosticReportsBundle.entry
+    .filter((entry) => {
+      const report = entry.resource;
+      return (
+        report?.status &&
+        PROCESSED_REPORT_STATUSES.includes(
+          report.status as (typeof PROCESSED_REPORT_STATUSES)[number],
+        )
+      );
+    })
+    .map((entry) => entry.resource?.id)
+    .filter((id): id is string => !!id);
 }

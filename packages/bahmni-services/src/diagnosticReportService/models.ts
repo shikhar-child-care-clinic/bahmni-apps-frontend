@@ -1,4 +1,4 @@
-export const COMPLETED_REPORT_STATUSES = [
+export const PROCESSED_REPORT_STATUSES = [
   'preliminary',
   'final',
   'amended',

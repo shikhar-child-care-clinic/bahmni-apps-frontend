@@ -6,8 +6,9 @@ import {
   getFormattedError,
   getLabTestBundle,
   getDiagnosticReportsByOrders,
+  getDiagnosticReportBundle,
 } from '@bahmni/services';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import React, { useMemo, useEffect, useState } from 'react';
 
 import { usePatientUUID } from '../hooks/usePatientUUID';
@@ -20,6 +21,7 @@ import {
   filterLabTestEntries,
   formatLabTests,
   groupLabTestsByDate,
+  getProcessedReportIds,
 } from './utils';
 
 const fetchLabInvestigations = async (
@@ -117,7 +119,10 @@ const LabInvestigation: React.FC<WidgetProps> = ({
     t,
   ]);
 
-  const labTests: FormattedLabTest[] = labTestsData ?? [];
+  const labTests: FormattedLabTest[] = useMemo(
+    () => labTestsData ?? [],
+    [labTestsData],
+  );
   const isLoading = isLoadingOrderTypes || isLoadingLabInvestigations;
   const hasError = isOrderTypesError || isLabInvestigationsError;
 
@@ -144,6 +149,22 @@ const LabInvestigation: React.FC<WidgetProps> = ({
       openAccordionTestIds.length > 0 &&
       openAccordionIndex !== null,
   });
+
+  // Filter completed diagnostic reports and extract their IDs
+  const processedReportIds = useMemo(() => {
+    return getProcessedReportIds(diagnosticReports);
+  }, [diagnosticReports]);
+
+  // Fetch diagnostic report bundles for all processed reports
+  const diagnosticReportBundleQueries = useQueries({
+    queries: processedReportIds.map((reportId) => ({
+      queryKey: ['diagnosticReportBundle', reportId],
+      queryFn: () => getDiagnosticReportBundle(reportId),
+      enabled: !!reportId,
+    })),
+  });
+
+  console.log({ diagnosticReportBundleQueries });
 
   if (hasError) {
     return (
