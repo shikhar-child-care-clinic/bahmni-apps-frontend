@@ -931,6 +931,108 @@ describe('ObservationFormsContainer', () => {
     });
   });
 
+  describe('Script Modification of Observations', () => {
+    it('should save modified observations returned by form script, not original observations', () => {
+      const mockOnFormObservationsChange = jest.fn();
+      const mockOnViewingFormChange = jest.fn();
+
+      const originalObservations = [
+        {
+          concept: { uuid: 'weight-uuid', name: 'Weight' },
+          value: 70,
+          formFieldPath: 'form.1/1-0',
+        },
+        {
+          concept: { uuid: 'height-uuid', name: 'Height' },
+          value: 170,
+          formFieldPath: 'form.1/2-0',
+        },
+      ];
+
+      const modifiedObservations = [
+        {
+          concept: { uuid: 'weight-uuid', name: 'Weight' },
+          value: 70,
+          formFieldPath: 'form.1/1-0',
+        },
+        {
+          concept: { uuid: 'height-uuid', name: 'Height' },
+          value: 170,
+          formFieldPath: 'form.1/2-0',
+        },
+        {
+          concept: { uuid: 'bmi-uuid', name: 'BMI' },
+          value: 24.2, // Calculated by script
+          formFieldPath: 'form.1/calculated-0',
+        },
+      ];
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: originalObservations,
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: {
+          name: 'Vitals Form',
+          uuid: 'vitals-form-uuid',
+          schema: {
+            name: 'Vitals Schema',
+            controls: [],
+            events: {
+              onFormSave: btoa('function(form) { /* calculate BMI */ }'),
+            },
+          },
+        },
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
+      mockGetValue.mockReturnValue({
+        errors: [],
+        observations: originalObservations,
+      });
+
+      mockExecuteOnFormSaveEvent.mockReturnValue(modifiedObservations);
+
+      render(
+        <ObservationFormsContainer
+          {...defaultProps}
+          viewingForm={mockForm}
+          onFormObservationsChange={mockOnFormObservationsChange}
+          onViewingFormChange={mockOnViewingFormChange}
+        />,
+      );
+
+      const saveButton = screen.getByTestId('primary-button');
+      fireEvent.click(saveButton);
+
+      expect(mockOnFormObservationsChange).toHaveBeenCalledWith(
+        mockForm.uuid,
+        modifiedObservations,
+        null,
+      );
+
+      expect(mockOnFormObservationsChange).not.toHaveBeenCalledWith(
+        mockForm.uuid,
+        originalObservations,
+        null,
+      );
+
+      // Verify executeOnFormSaveEvent was called
+      expect(mockExecuteOnFormSaveEvent).toHaveBeenCalled();
+      
+      // Check call arguments
+      const callArgs = mockExecuteOnFormSaveEvent.mock.calls[0];
+      expect(callArgs[0]).toMatchObject({
+        name: 'Vitals Form',
+        uuid: 'vitals-form-uuid',
+      });
+      expect(callArgs[1]).toEqual(expect.any(Array));
+      expect(callArgs[2]).toBe('test-patient-uuid');
+
+      expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
+    });
+  });
+
   describe('Script Execution Error Handling', () => {
     it('should display error notification when onFormSave event script throws Error', () => {
       const mockOnFormObservationsChange = jest.fn();
