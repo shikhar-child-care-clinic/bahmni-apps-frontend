@@ -112,23 +112,17 @@ export const executeOnFormSaveEvent = (
     let useHelpers = false;
 
     // Use form2-controls helper's runEventScript if available
-    // It handles base64 decoding and script execution
+    // It handles base64 decoding, script execution, and provides form.get() support
+    // IMPORTANT: Pass formData directly - it's in Immutable.js format from Container
     if (window.runEventScript) {
-      try {
-        result = window.runEventScript(
-          formData,
-          onFormSaveScript,
-          formContext.patient,
-        );
-        useHelpers = true;
-      } catch {
-        // If helpers.js fails, fall back to direct execution
-        useHelpers = false;
-      }
-    }
+      result = window.runEventScript(
+        formData, 
+        onFormSaveScript,
+        formContext.patient,
+      );
+      useHelpers = true;
+    } else {
 
-    // Fallback to new Function if helpers.js is not loaded or failed
-    if (!useHelpers) {
       result = executeScriptFallback(onFormSaveScript, formContext);
     }
 
@@ -150,9 +144,9 @@ export const executeOnFormSaveEvent = (
             ? String(error.message)
             : 'Unknown error occurred';
 
-    throw new Error(
-      `Error in onFormSave event for form "${metadata.name}": ${errorMessage}`,
-    );
+    const formattedError = `Error in onFormSave event for form "${metadata.name}": ${errorMessage}`;
+    
+    throw new Error(formattedError);
   }
 };
 

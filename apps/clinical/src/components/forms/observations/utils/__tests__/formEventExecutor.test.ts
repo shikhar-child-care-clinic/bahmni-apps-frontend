@@ -47,6 +47,15 @@ describe('formEventExecutor', () => {
   };
 
   describe('executeOnFormSaveEvent', () => {
+    beforeEach(() => {
+      delete window.runEventScript;
+    });
+
+    afterEach(() => {
+     
+      delete window.runEventScript;
+    });
+
     it('should return original observations when no onFormSave event exists', () => {
       const metadata = createMockMetadata();
 
@@ -238,7 +247,7 @@ describe('formEventExecutor', () => {
       delete window.runEventScript;
     });
 
-    it('should fallback to direct execution when window.runEventScript fails', () => {
+    it('should propagate errors from window.runEventScript', () => {
       window.runEventScript = jest.fn().mockImplementation(() => {
         throw new Error('Helper failed');
       });
@@ -247,13 +256,11 @@ describe('formEventExecutor', () => {
       const encodedScript = btoa(script);
       const metadata = createMockMetadata(encodedScript);
 
-      const result = executeOnFormSaveEvent(
-        metadata,
-        mockObservations,
-        mockPatientUuid,
+      expect(() =>
+        executeOnFormSaveEvent(metadata, mockObservations, mockPatientUuid),
+      ).toThrow(
+        'Error in onFormSave event for form "Test Form": Helper failed',
       );
-
-      expect(result).toEqual([]);
 
       delete window.runEventScript;
     });
