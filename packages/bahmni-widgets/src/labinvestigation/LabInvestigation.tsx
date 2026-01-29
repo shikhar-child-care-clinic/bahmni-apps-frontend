@@ -53,7 +53,9 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   const { addNotification } = useNotification();
   const categoryName = config?.orderType as string;
   const numberOfVisits = config?.numberOfVisits as number;
-  const [openAccordionIndex, setOpenAccordionIndex] = useState<number | null>(0);
+  const [openAccordionIndex, setOpenAccordionIndex] = useState<number | null>(
+    0,
+  );
 
   const emptyEncounterFilter = shouldEnableEncounterFilter(
     episodeOfCareUuids,
@@ -196,12 +198,7 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   }
 
   if (isLoading) {
-    return (
-      <>
-        <SkeletonText lineCount={3} width="100%" />
-        <div>{t('LAB_TEST_LOADING')}</div>
-      </>
-    );
+    return <SkeletonText lineCount={5} width="100%" />;
   }
 
   if (!isLoading && (labTests.length === 0 || emptyEncounterFilter)) {
@@ -213,47 +210,39 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   }
 
   return (
-    <section>
-      <Accordion align="start" size="lg" className={styles.accordianHeader}>
-        {labTestsByDateWithResults.map((group: LabTestsByDate, index) => (
-          <AccordionItem
-            key={group.date}
-            className={styles.accordionItem}
-            open={index === openAccordionIndex}
-            onHeadingClick={() => {
-              setOpenAccordionIndex(
-                openAccordionIndex === index ? null : index,
-              );
-            }}
-            title={
-              <span className={styles.accordionTitle}>
-                <strong>{group.date}</strong>
-              </span>
-            }
-          >
-            {/* Render 'urgent' tests first */}
-            {group.tests
-              ?.filter((test) => test.priority === 'Urgent')
-              .map((test) => (
-                <LabInvestigationItem
-                  key={`urgent-${group.date}-${test.testName}-${test.id || test.testName}`}
-                  test={test}
-                />
-              ))}
+    <Accordion align="start">
+      {labTestsByDateWithResults.map((group: LabTestsByDate, index) => (
+        <AccordionItem
+          key={group.date}
+          className={styles.accordionItem}
+          open={index === openAccordionIndex}
+          onHeadingClick={() => {
+            setOpenAccordionIndex(openAccordionIndex === index ? null : index);
+          }}
+          title={group.date}
+        >
+          {/* Render 'urgent' tests first */}
+          {group.tests
+            ?.filter((test) => test.priority === 'Urgent')
+            .map((test) => (
+              <LabInvestigationItem
+                key={`urgent-${group.date}-${test.testName}-${test.id || test.testName}`}
+                test={test}
+              />
+            ))}
 
-            {/* Then render non-urgent tests */}
-            {group.tests
-              ?.filter((test) => test.priority !== 'Urgent')
-              .map((test) => (
-                <LabInvestigationItem
-                  key={`nonurgent-${group.date}-${test.testName}-${test.id || test.testName}`}
-                  test={test}
-                />
-              ))}
-          </AccordionItem>
-        ))}
-      </Accordion>
-    </section>
+          {/* Then render non-urgent tests */}
+          {group.tests
+            ?.filter((test) => test.priority !== 'Urgent')
+            .map((test) => (
+              <LabInvestigationItem
+                key={`nonurgent-${group.date}-${test.testName}-${test.id || test.testName}`}
+                test={test}
+              />
+            ))}
+        </AccordionItem>
+      ))}
+    </Accordion>
   );
 };
 

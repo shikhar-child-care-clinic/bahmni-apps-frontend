@@ -1,4 +1,9 @@
-import { Tag, TooltipIcon, SortableDataTable } from '@bahmni/design-system';
+import {
+  Tag,
+  TooltipIcon,
+  SortableDataTable,
+  Link,
+} from '@bahmni/design-system';
 import { useTranslation } from '@bahmni/services';
 import React, { useMemo } from 'react';
 import { FormattedLabTest, LabTestPriority, LabTestResult } from './models';
@@ -40,13 +45,38 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
     [t],
   );
 
+  const renderCell = (row: (typeof tableRows)[0], cellId: string) => {
+    switch (cellId) {
+      case 'testName':
+        return <span className={styles.testName}>{row.testName || '--'}</span>;
+      case 'result':
+        return row.result || '--';
+      case 'referenceRange':
+        return row.referenceRange || '--';
+      case 'reportedOn':
+        return row.reportedOn || '--';
+      case 'actions':
+        return (
+          <Link
+            onClick={() => {
+              // TODO: Implement attachment view logic
+            }}
+          >
+            {t('LAB_TEST_VIEW_ATTACHMENT')}
+          </Link>
+        );
+      default:
+        return undefined;
+    }
+  };
+
   return (
-    <div className={styles.labBox}>
-      <div className={styles.labHeaderWrapper}>
-        <div className={styles.labTestNameWrapper}>
+    <div className={styles.labTest}>
+      <div className={styles.labTestHeader}>
+        <div className={styles.labTestInfo}>
           <span>{test.testName}</span>
           {test.testType === 'Panel' && (
-            <span className={styles.testInfo}>
+            <span className={styles.testDetails}>
               {t(`LAB_TEST_${test.testType.toUpperCase()}`)}
             </span>
           )}
@@ -63,7 +93,7 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
             </Tag>
           )}
         </div>
-        <span className={styles.testInfo}>
+        <span className={styles.testDetails}>
           {t('LAB_TEST_ORDERED_BY')}: {test.orderedBy}
         </span>
       </div>
@@ -73,9 +103,11 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
           rows={tableRows}
           ariaLabel={`${test.testName} results`}
           data-testid={`lab-test-results-table-${test.testName}`}
+          renderCell={renderCell}
+          className={styles.labTestResultsTable}
         />
       ) : (
-        <div className={styles.testInfo}>
+        <div className={styles.testResultsPending}>
           {t('LAB_TEST_RESULTS_PENDING') + ' ....'}
         </div>
       )}
