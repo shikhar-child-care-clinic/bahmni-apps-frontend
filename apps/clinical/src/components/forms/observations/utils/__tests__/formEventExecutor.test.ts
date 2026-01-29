@@ -1,5 +1,15 @@
+// Import the mocked module to access the mock function
+import { runEventScript } from '@bahmni/form2-controls';
 import { Form2Observation, FormMetadata } from '@bahmni/services';
 import { executeOnFormSaveEvent, hasFormSaveEvent } from '../formEventExecutor';
+
+// Mock @bahmni/form2-controls runEventScript
+jest.mock('@bahmni/form2-controls', () => ({
+  runEventScript: jest.fn(),
+}));
+const mockRunEventScript = runEventScript as jest.MockedFunction<
+  typeof runEventScript
+>;
 
 describe('formEventExecutor', () => {
   const mockPatientUuid = 'patient-uuid-123';
@@ -48,12 +58,11 @@ describe('formEventExecutor', () => {
 
   describe('executeOnFormSaveEvent', () => {
     beforeEach(() => {
-      delete window.runEventScript;
+      mockRunEventScript.mockClear();
     });
 
     afterEach(() => {
-     
-      delete window.runEventScript;
+      mockRunEventScript.mockReset();
     });
 
     it('should return original observations when no onFormSave event exists', () => {
@@ -68,13 +77,14 @@ describe('formEventExecutor', () => {
       expect(result).toEqual(mockObservations);
     });
 
-    it('should execute function body format script and return modified observations', () => {
-      const script = `
-        formContext.observations = formContext.observations.map(obs => ({
-          ...obs,
-          value: obs.value * 2
-        }));
-      `;
+    it('should call runEventScript and return modified observations', () => {
+      const modifiedObs = [
+        { ...mockObservations[0], value: 140 },
+        { ...mockObservations[1], value: 340 },
+      ];
+      mockRunEventScript.mockReturnValue(modifiedObs);
+
+      const script = 'some script';
       const encodedScript = btoa(script);
       const metadata = createMockMetadata(encodedScript);
 
@@ -84,14 +94,19 @@ describe('formEventExecutor', () => {
         mockPatientUuid,
       );
 
-      expect(result[0].value).toBe(140);
-      expect(result[1].value).toBe(340);
+      expect(mockRunEventScript).toHaveBeenCalledWith(
+        undefined,
+        encodedScript,
+        { uuid: mockPatientUuid },
+      );
+      expect(result).toEqual(modifiedObs);
     });
 
-    it('should execute anonymous function format script and return result', () => {
-      const script = `function(formContext) {
-        return formContext.observations.filter(obs => obs.value > 100);
-      }`;
+    it('should call runEventScript with formData when provided', () => {
+      const filteredObs = [mockObservations[1]];
+      mockRunEventScript.mockReturnValue(filteredObs);
+
+      const script = 'filter script';
       const encodedScript = btoa(script);
       const metadata = createMockMetadata(encodedScript);
 
@@ -99,18 +114,22 @@ describe('formEventExecutor', () => {
         metadata,
         mockObservations,
         mockPatientUuid,
+        mockFormData,
       );
 
-      expect(result).toHaveLength(1);
-      expect(result[0].value).toBe(170);
+      expect(mockRunEventScript).toHaveBeenCalledWith(
+        mockFormData,
+        encodedScript,
+        { uuid: mockPatientUuid },
+      );
+      expect(result).toEqual(filteredObs);
     });
 
-    it('should provide formContext with patient uuid to the script', () => {
-      const script = `
-        if (formContext.patient.uuid === '${mockPatientUuid}') {
-          formContext.observations = [];
-        }
-      `;
+    it('should return modified context observations when script returns undefined', () => {
+      // Mock runEventScript to return undefined, simulating scripts that modify context but don't return
+      mockRunEventScript.mockReturnValue(undefined);
+
+      const script = 'modify script';
       const encodedScript = btoa(script);
       const metadata = createMockMetadata(encodedScript);
 
@@ -120,45 +139,16 @@ describe('formEventExecutor', () => {
         mockPatientUuid,
       );
 
-      expect(result).toEqual([]);
-    });
-
-    it('should provide formContext with form metadata to the script', () => {
-      const script = `
-        if (formContext.formName === 'Test Form' && formContext.formUuid === 'form-uuid-123') {
-          formContext.observations = [];
-        }
-      `;
-      const encodedScript = btoa(script);
-      const metadata = createMockMetadata(encodedScript);
-
-      const result = executeOnFormSaveEvent(
-        metadata,
-        mockObservations,
-        mockPatientUuid,
-      );
-
-      expect(result).toEqual([]);
-    });
-
-    it('should return modified context observations when script does not return anything', () => {
-      const script = `
-        formContext.observations[0].value = 999;
-      `;
-      const encodedScript = btoa(script);
-      const metadata = createMockMetadata(encodedScript);
-
-      const result = executeOnFormSaveEvent(
-        metadata,
-        mockObservations,
-        mockPatientUuid,
-      );
-
-      expect(result[0].value).toBe(999);
+      // When runEventScript returns undefined, we return formContext.observations
+      expect(result).toEqual(mockObservations);
     });
 
     it('should throw error with form name context when script execution fails', () => {
-      const script = `throw new Error('Validation failed');`;
+      mockRunEventScript.mockImplementation(() => {
+        throw new Error('Validation failed');
+      });
+
+      const script = 'failing script';
       const encodedScript = btoa(script);
       const metadata = createMockMetadata(encodedScript);
 
@@ -170,7 +160,11 @@ describe('formEventExecutor', () => {
     });
 
     it('should handle script that throws plain object error', () => {
-      const script = `throw { message: 'Custom validation error' };`;
+      mockRunEventScript.mockImplementation(() => {
+        throw { message: 'Custom validation error' };
+      });
+
+      const script = 'error script';
       const encodedScript = btoa(script);
       const metadata = createMockMetadata(encodedScript);
 
@@ -181,74 +175,8 @@ describe('formEventExecutor', () => {
       );
     });
 
-    it('should decode base64-encoded script correctly', () => {
-      const script = 'formContext.observations = [];';
-      const encodedScript = btoa(script);
-      const metadata = createMockMetadata(encodedScript);
-
-      const result = executeOnFormSaveEvent(
-        metadata,
-        mockObservations,
-        mockPatientUuid,
-      );
-
-      expect(result).toEqual([]);
-    });
-
-    it('should handle script with whitespace correctly', () => {
-      const script = `
-
-        function(formContext) {
-          return formContext.observations;
-        }
-
-      `;
-      const encodedScript = btoa(script);
-      const metadata = createMockMetadata(encodedScript);
-
-      const result = executeOnFormSaveEvent(
-        metadata,
-        mockObservations,
-        mockPatientUuid,
-      );
-
-      expect(result).toEqual(mockObservations);
-    });
-
-    it('should deep clone observations to prevent mutation of original array', () => {
-      const script = `formContext.observations[0].value = 999;`;
-      const encodedScript = btoa(script);
-      const metadata = createMockMetadata(encodedScript);
-
-      executeOnFormSaveEvent(metadata, mockObservations, mockPatientUuid);
-
-      expect(mockObservations[0].value).toBe(70);
-    });
-
-    it('should use window.runEventScript when available and return modified observations', () => {
-      const modifiedObs = [{ ...mockObservations[0], value: 999 }];
-      window.runEventScript = jest.fn().mockReturnValue(modifiedObs);
-
-      const script = 'function() { return modified; }';
-      const metadata = createMockMetadata(script);
-
-      const result = executeOnFormSaveEvent(
-        metadata,
-        mockObservations,
-        mockPatientUuid,
-        mockFormData,
-      );
-
-      expect(window.runEventScript).toHaveBeenCalledWith(mockFormData, script, {
-        uuid: mockPatientUuid,
-      });
-      expect(result).toEqual(modifiedObs);
-
-      delete window.runEventScript;
-    });
-
-    it('should propagate errors from window.runEventScript', () => {
-      window.runEventScript = jest.fn().mockImplementation(() => {
+    it('should propagate errors from runEventScript', () => {
+      mockRunEventScript.mockImplementation(() => {
         throw new Error('Helper failed');
       });
 
@@ -261,8 +189,6 @@ describe('formEventExecutor', () => {
       ).toThrow(
         'Error in onFormSave event for form "Test Form": Helper failed',
       );
-
-      delete window.runEventScript;
     });
 
     it('should throw error when script is not a string', () => {
@@ -292,8 +218,10 @@ describe('formEventExecutor', () => {
       );
     });
 
-    it('should handle non-base64 plain text scripts', () => {
-      const script = 'formContext.observations = [];';
+    it('should call runEventScript with the provided script', () => {
+      mockRunEventScript.mockReturnValue([]);
+
+      const script = 'plain text script';
       const metadata = createMockMetadata(script);
 
       const result = executeOnFormSaveEvent(
@@ -302,11 +230,18 @@ describe('formEventExecutor', () => {
         mockPatientUuid,
       );
 
+      expect(mockRunEventScript).toHaveBeenCalledWith(undefined, script, {
+        uuid: mockPatientUuid,
+      });
       expect(result).toEqual([]);
     });
 
     it('should handle script throwing unknown error type', () => {
-      const script = 'throw 12345;';
+      mockRunEventScript.mockImplementation(() => {
+        throw 12345;
+      });
+
+      const script = 'error script';
       const encodedScript = btoa(script);
       const metadata = createMockMetadata(encodedScript);
 
@@ -315,25 +250,6 @@ describe('formEventExecutor', () => {
       ).toThrow(
         'Error in onFormSave event for form "Test Form": Unknown error occurred',
       );
-    });
-
-    it('should include formData in formContext when provided', () => {
-      const script = `
-        if (formContext.formData) {
-          formContext.observations = [];
-        }
-      `;
-      const encodedScript = btoa(script);
-      const metadata = createMockMetadata(encodedScript);
-
-      const result = executeOnFormSaveEvent(
-        metadata,
-        mockObservations,
-        mockPatientUuid,
-        mockFormData,
-      );
-
-      expect(result).toEqual([]);
     });
   });
 

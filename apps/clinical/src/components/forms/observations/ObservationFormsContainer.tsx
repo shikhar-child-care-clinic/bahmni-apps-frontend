@@ -31,7 +31,7 @@ import { useObservationFormData } from '../../../hooks/useObservationFormData';
 import styles from './styles/ObservationFormsContainer.module.scss';
 import { executeOnFormSaveEvent } from './utils/formEventExecutor';
 
-const Form2Container: any = Form2ContainerOriginal;
+const Form2Container: typeof Form2ContainerOriginal = Form2ContainerOriginal;
 
 interface ObservationFormsContainerProps {
   // Callback to notify parent when form viewing starts/ends
@@ -89,7 +89,9 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   const [validationErrorMessage, setValidationErrorMessage] = useState<
     string | null
   >(null);
-  const formContainerRef = useRef<any>(null);
+  const formContainerRef = useRef<React.ComponentRef<
+    typeof Form2ContainerOriginal
+  > | null>(null);
 
   const {
     observations,
@@ -197,7 +199,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
         const hasMandatoryError = errors
           .flat()
           .some(
-            (err: any) =>
+            (err: { get?: (key: string) => string; message?: string }) =>
               (err.get?.('message') ?? err.message) ===
               VALIDATION_STATE_MANDATORY,
           );
@@ -229,8 +231,14 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
             : observations;
 
         // Extract formData from Container's state.data (keep as Immutable for form2-controls)
-        const containerState = (formContainerRef.current as any).state;
-        const formData = containerState?.data;
+        const containerState = (
+          formContainerRef.current as {
+            state?: { data?: Record<string, unknown> };
+          } | null
+        )?.state;
+        const formData = containerState?.data as
+          | Record<string, unknown>
+          | undefined;
 
         // Execute onFormSave event before saving (if defined in form metadata)
         // This allows forms to apply business logic, validations, or transformations

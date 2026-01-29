@@ -1,3 +1,4 @@
+import { runEventScript } from '@bahmni/form2-controls';
 import { Form2Observation, FormMetadata } from '@bahmni/services';
 
 interface FormEventContext {
@@ -6,17 +7,6 @@ interface FormEventContext {
   formName?: string;
   formUuid?: string;
   formData?: FormDataRecord;
-}
-
-// Extend Window interface to include form2-controls helpers
-declare global {
-  interface Window {
-    runEventScript?: (
-      formState: FormDataRecord | unknown,
-      script: string,
-      patient: { uuid: string },
-    ) => Form2Observation[] | void;
-  }
 }
 
 type FormDataRecord = Record<string, unknown> & {
@@ -29,52 +19,6 @@ type FormDataRecord = Record<string, unknown> & {
   name?: string;
   value?: unknown;
   children?: FormDataRecord[];
-};
-
-/**
- * Fallback script execution when helpers.js is not available or fails
- * Handles base64-encoded and plain text scripts
- * Supports both function expressions and statement blocks
- */
-const executeScriptFallback = (
-  onFormSaveScript: string,
-  formContext: FormEventContext,
-): Form2Observation[] | void => {
-  // Try to decode base64 script (same as helpers.js does)
-  let scriptToExecute = onFormSaveScript;
-  try {
-    // Attempt base64 decode
-    scriptToExecute = atob(onFormSaveScript);
-  } catch {
-    // Not base64 encoded, use as-is
-    scriptToExecute = onFormSaveScript;
-  }
-
-  const trimmedScript = scriptToExecute.trim();
-
-  let result;
-
-  if (trimmedScript.startsWith('function')) {
-    // Both 'form' and 'formContext' parameter names work - they get the same object
-    const wrappedScript = `(${scriptToExecute})(formContext)`;
-    const eventFunction = new Function(
-      'formContext',
-      `return ${wrappedScript}`,
-    );
-    result = eventFunction(formContext);
-  } else {
-    const eventFunction = new Function(
-      'formContext',
-      'form',
-      `
-          ${scriptToExecute}
-          return formContext.observations;
-        `,
-    );
-    result = eventFunction(formContext, formContext);
-  }
-
-  return result;
 };
 
 export const executeOnFormSaveEvent = (
@@ -108,23 +52,13 @@ export const executeOnFormSaveEvent = (
       formData: formData,
     };
 
-    let result;
-    let useHelpers = false;
-
-    // Use form2-controls helper's runEventScript if available
+    // Use form2-controls runEventScript function
     // It handles base64 decoding, script execution, and provides form.get() support
-    // IMPORTANT: Pass formData directly - it's in Immutable.js format from Container
-    if (window.runEventScript) {
-      result = window.runEventScript(
-        formData, 
-        onFormSaveScript,
-        formContext.patient,
-      );
-      useHelpers = true;
-    } else {
-
-      result = executeScriptFallback(onFormSaveScript, formContext);
-    }
+    const result = runEventScript(
+      formData,
+      onFormSaveScript,
+      formContext.patient,
+    );
 
     // Return modified observations if event returns them
     if (Array.isArray(result)) {
@@ -145,7 +79,7 @@ export const executeOnFormSaveEvent = (
             : 'Unknown error occurred';
 
     const formattedError = `Error in onFormSave event for form "${metadata.name}": ${errorMessage}`;
-    
+
     throw new Error(formattedError);
   }
 };

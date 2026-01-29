@@ -1019,7 +1019,7 @@ describe('ObservationFormsContainer', () => {
 
       // Verify executeOnFormSaveEvent was called
       expect(mockExecuteOnFormSaveEvent).toHaveBeenCalled();
-      
+
       // Check call arguments
       const callArgs = mockExecuteOnFormSaveEvent.mock.calls[0];
       expect(callArgs[0]).toMatchObject({
