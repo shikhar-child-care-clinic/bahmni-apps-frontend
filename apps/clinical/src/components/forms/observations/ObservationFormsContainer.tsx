@@ -58,17 +58,17 @@ interface ObservationFormsContainerProps {
  * This ensures comment, interpretation, and other fields are properly included
  */
 const transformContainerObservationsToForm2Observations = (
-  containerObservations: any[],
+  containerObservations: Record<string, unknown>[],
 ): Form2Observation[] => {
-  const transform = (obs: any): Form2Observation => {
+  const transform = (obs: Record<string, unknown>): Form2Observation => {
     const observation: Form2Observation = {
       concept: {
-        uuid: obs.concept?.uuid || obs.concept,
-        datatype: obs.concept?.datatype,
+        uuid: (obs.concept as Record<string, unknown>)?.uuid ?? obs.concept,
+        datatype: (obs.concept as Record<string, unknown>)?.datatype,
       },
       value: obs.value ?? null,
-      obsDatetime: obs.observationDateTime || new Date().toISOString(),
-      formNamespace: obs.formNamespace || 'Bahmni',
+      obsDatetime: (obs.observationDateTime as string) ?? new Date().toISOString(),
+      formNamespace: (obs.formNamespace as string) ?? 'Bahmni',
       formFieldPath: obs.formFieldPath,
     };
 
@@ -213,20 +213,14 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       // Transform current observations to ensure comments and other fields are included
       const transformedObservations =
         currentObservations && currentObservations.length > 0
-          ? transformContainerObservationsToForm2Observations(currentObservations)
+          ? transformContainerObservationsToForm2Observations(
+              currentObservations,
+            )
           : observations;
 
       // Check for empty form
       if (isEmpty) {
         setValidationErrorType(VALIDATION_STATE_EMPTY);
-        // Save the current state even with validation errors so data persists
-        if (viewingForm && onFormObservationsChange) {
-          onFormObservationsChange(
-            viewingForm.uuid,
-            transformedObservations,
-            VALIDATION_STATE_EMPTY,
-          );
-        }
         return;
       }
 
@@ -243,14 +237,6 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
           ? VALIDATION_STATE_MANDATORY
           : VALIDATION_STATE_INVALID;
         setValidationErrorType(errorType);
-        // Save the current state even with validation errors so data persists
-        if (viewingForm && onFormObservationsChange) {
-          onFormObservationsChange(
-            viewingForm.uuid,
-            transformedObservations,
-            errorType,
-          );
-        }
         return;
       }
 

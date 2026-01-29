@@ -320,6 +320,59 @@ describe('ObservationFormsContainer', () => {
       expect(mockOnRemoveForm).toHaveBeenCalledWith(mockForm.uuid);
       expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
     });
+
+    it('should preserve notes (comment and interpretation) from Container.getValue when saving', () => {
+      const mockOnFormObservationsChange = jest.fn();
+      const mockOnViewingFormChange = jest.fn();
+
+      // Ensure hook reports existing observations (not empty)
+      mockUseObservationFormData.mockReturnValue({
+        observations: [{ concept: { uuid: 'c1' }, value: 'v1' }],
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: {
+          schema: { name: 'Test Form Schema', controls: [] },
+        },
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
+      // Container.getValue should return observations with comment and interpretation
+      mockGetValue.mockReturnValue({
+        observations: [
+          {
+            concept: { uuid: 'c1' },
+            value: 'v1',
+            comment: 'patient note',
+            interpretation: 'high',
+          },
+        ],
+        errors: [],
+      });
+
+      render(
+        <ObservationFormsContainer
+          {...defaultProps}
+          viewingForm={mockForm}
+          onFormObservationsChange={mockOnFormObservationsChange}
+          onViewingFormChange={mockOnViewingFormChange}
+        />,
+      );
+
+      const saveButton = screen.getByTestId('primary-button');
+      fireEvent.click(saveButton);
+
+      expect(mockOnFormObservationsChange).toHaveBeenCalledWith(
+        mockForm.uuid,
+        expect.arrayContaining([
+          expect.objectContaining({
+            comment: 'patient note',
+            interpretation: 'high',
+          }),
+        ]),
+      );
+      expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
+    });
   });
 
   describe('Form Display', () => {
