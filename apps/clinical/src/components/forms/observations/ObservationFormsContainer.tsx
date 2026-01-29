@@ -163,10 +163,22 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       | typeof VALIDATION_STATE_SCRIPT_ERROR = null,
   ) => {
     if (viewingForm && onFormObservationsChange) {
+      // Get current observations from form container if available
+      // This ensures we save the latest values, not stale state
+      let observationsToSave = observations;
+      if (formContainerRef.current) {
+        const { observations: currentObservations } =
+          formContainerRef.current.getValue();
+        if (currentObservations && currentObservations.length > 0) {
+          observationsToSave = currentObservations as Form2Observation[];
+        }
+      }
+
       onFormObservationsChange(
         viewingForm.uuid,
         observationsToSave,
         validationState,
+        validationErrorType,
       );
     }
     onViewingFormChange(null);
@@ -185,7 +197,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       const { observations: currentObservations, errors } =
         formContainerRef.current.getValue();
 
-      const isEmpty = !observations || observations.length === 0;
+      const isEmpty = !currentObservations || currentObservations.length === 0;
       const hasErrors = errors && errors.length > 0;
 
       // Check for empty form
