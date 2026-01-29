@@ -213,14 +213,33 @@ export function formatObservationsAsLabTestResults(
 ): LabTestResult[] {
   return observations.map((obs) => {
     const testName = obs.code?.text ?? obs.code?.coding?.[0]?.display ?? '';
-    const resultValue =
-      obs.valueQuantity?.value?.toString() ??
-      obs.valueString ??
-      obs.valueCodeableConcept?.text ??
-      '';
-    const unit = obs.valueQuantity?.unit ?? '';
-    const result = unit ? `${resultValue} ${unit}` : resultValue;
 
+    // Determine result value with unit
+    // FHIR Observation.value[x] handled types: valueQuantity, valueCodeableConcept,valueString, valueBoolean, valueInteger
+    let result = '';
+    if (obs.valueQuantity?.value !== undefined) {
+      // Quantitative result with optional unit (e.g., "5.8 mmol/L")
+      const value = obs.valueQuantity.value.toString();
+      const unit = obs.valueQuantity.unit ?? '';
+      result = unit ? `${value} ${unit}` : value;
+    } else if (obs.valueBoolean !== undefined) {
+      // Boolean result (e.g., true/false for presence tests)
+      result = obs.valueBoolean ? 'Positive' : 'Negative';
+    } else if (obs.valueInteger !== undefined) {
+      // Integer result (e.g., count values)
+      result = obs.valueInteger.toString();
+    } else if (obs.valueString) {
+      // String result (e.g., "Positive", "Negative", descriptive text)
+      result = obs.valueString;
+    } else if (obs.valueCodeableConcept?.text) {
+      // Coded result (e.g., predefined coded values)
+      result = obs.valueCodeableConcept.text;
+    } else if (obs.valueCodeableConcept?.coding?.[0]?.display) {
+      // Fallback to coding display if text is not available
+      result = obs.valueCodeableConcept.coding[0].display;
+    }
+
+    //TODO: test when api returns referenceRange.
     const referenceRange =
       obs.referenceRange
         ?.map((range) => {
