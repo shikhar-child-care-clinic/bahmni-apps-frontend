@@ -232,26 +232,16 @@ const InvestigationsForm: React.FC = React.memo(() => {
   const handleChange = (
     selectedItem: FlattenedInvestigations | null | undefined,
   ) => {
-    if (
-      !selectedItem?.code ||
-      !selectedItem.display ||
-      !selectedItem.category
-    ) {
-      return;
-    }
+    if (!selectedItem) return;
 
     // Check for duplicate BEFORE adding
     if (isDuplicateInvestigation(selectedItem.code, selectedItem.category)) {
-      setDuplicateInvestigationId(selectedItem.code);
-      setDuplicateCategory(selectedItem.category);
       setShowDuplicateNotification(true);
-      return; // Don't add duplicate!
+      return; // Don't add duplicate
     }
 
     // Successfully added, clear any previous duplicate notification
     setShowDuplicateNotification(false);
-    setDuplicateInvestigationId(null);
-    setDuplicateCategory(null);
     addServiceRequest(
       selectedItem.category,
       selectedItem.code,
@@ -275,12 +265,11 @@ const InvestigationsForm: React.FC = React.memo(() => {
         aria-label={t('INVESTIGATIONS_SEARCH_ARIA_LABEL')}
         size="md"
       />
-
       {showDuplicateNotification && (
         <InlineNotification
           kind="error"
           lowContrast
-          subtitle={t('INVESTIGATION_ALREADY_ADDED')}
+          subtitle={t('INVESTIGATION_ALREADY_SELECTED')}
           onClose={() => setShowDuplicateNotification(false)}
           hideCloseButton={false}
           className={styles.duplicateNotification}
