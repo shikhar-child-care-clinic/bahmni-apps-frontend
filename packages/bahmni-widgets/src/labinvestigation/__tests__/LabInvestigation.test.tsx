@@ -2,10 +2,13 @@ import {
   useTranslation,
   getCategoryUuidFromOrderTypes,
   getLabTestBundle,
+  getDiagnosticReportsByOrders,
+  getDiagnosticReportBundle,
 } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import { Bundle, ServiceRequest } from 'fhir/r4';
+import userEvent from '@testing-library/user-event';
+import { Bundle, ServiceRequest, DiagnosticReport } from 'fhir/r4';
 
 import { usePatientUUID } from '../../hooks/usePatientUUID';
 import { useNotification } from '../../notification';
@@ -17,6 +20,8 @@ jest.mock('@bahmni/services', () => ({
   useTranslation: jest.fn(),
   getCategoryUuidFromOrderTypes: jest.fn(),
   getLabTestBundle: jest.fn(),
+  getDiagnosticReportsByOrders: jest.fn(),
+  getDiagnosticReportBundle: jest.fn(),
 }));
 
 jest.mock('react-router-dom', () => ({
@@ -52,6 +57,14 @@ const mockGetCategoryUuidFromOrderTypes =
 const mockGetLabTestBundle = getLabTestBundle as jest.MockedFunction<
   typeof getLabTestBundle
 >;
+const mockGetDiagnosticReportsByOrders =
+  getDiagnosticReportsByOrders as jest.MockedFunction<
+    typeof getDiagnosticReportsByOrders
+  >;
+const mockGetDiagnosticReportBundle =
+  getDiagnosticReportBundle as jest.MockedFunction<
+    typeof getDiagnosticReportBundle
+  >;
 const mockUseNotification = useNotification as jest.MockedFunction<
   typeof useNotification
 >;
@@ -60,7 +73,7 @@ const mockUsePatientUUID = usePatientUUID as jest.MockedFunction<
 >;
 
 const renderLabInvestigations = (
-  config = { orderType: 'Lab Order' },
+  config: Record<string, unknown> = { orderType: 'Lab Order' },
   encounterUuids?: string[],
   episodeOfCareUuids?: string[],
 ) => {
@@ -172,6 +185,16 @@ describe('LabInvestigation', () => {
     mockGetLabTestBundle.mockResolvedValue(
       createMockBundle(mockServiceRequests),
     );
+    mockGetDiagnosticReportsByOrders.mockResolvedValue({
+      resourceType: 'Bundle',
+      type: 'searchset',
+      entry: [],
+    });
+    mockGetDiagnosticReportBundle.mockResolvedValue({
+      resourceType: 'Bundle',
+      type: 'searchset',
+      entry: [],
+    });
   });
 
   it('renders loading state with message', async () => {
@@ -322,4 +345,124 @@ describe('LabInvestigation', () => {
       expect(mockGetLabTestBundle).toHaveBeenCalled();
     });
   });
+
+ 
+  describe('Accordion interactions', () => {
+    it('should close first accordion and open second accordion when clicking second accordion', async () => {
+      const user = userEvent.setup();
+      render(renderLabInvestigations());
+
+      await waitFor(() => {
+        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
+      });
+
+      const secondAccordionButton = screen.getByRole('button', {
+        name: /April 9, 2025/i,
+      });
+
+      await user.click(secondAccordionButton);
+
+      await waitFor(() => {
+        expect(secondAccordionButton).toHaveAttribute('aria-expanded', 'true');
+      });
+
+      const firstAccordionButton = screen.getByRole('button', {
+        name: /May 8, 2025/i,
+      });
+      expect(firstAccordionButton).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('should close accordion when clicking on open accordion', async () => {
+      const user = userEvent.setup();
+      render(renderLabInvestigations());
+
+      await waitFor(() => {
+        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
+      });
+
+      const firstAccordionButton = screen.getByRole('button', {
+        name: /May 8, 2025/i,
+      });
+
+      expect(firstAccordionButton).toHaveAttribute('aria-expanded', 'true');
+
+      await user.click(firstAccordionButton);
+
+      await waitFor(() => {
+        expect(firstAccordionButton).toHaveAttribute('aria-expanded', 'false');
+      });
+    });
+  });
+
+  describe('Diagnostic reports fetching', () => {
+    it('should fetch diagnostic reports when accordion is opened', async () => {
+      const user = userEvent.setup();
+      
+      const mockDiagnosticReports: Bundle<DiagnosticReport> = {
+        resourceType: 'Bundle',
+        type: 'searchset',
+        entry: [
+          {
+            resource: {
+              resourceType: 'DiagnosticReport',
+              id: 'report-1',
+              status: 'final',
+              code: { text: 'Complete Blood Count' },
+              basedOn: [{ reference: 'ServiceRequest/test-1' }],
+            } as DiagnosticReport,
+          },
+        ],
+      };
+
+      mockGetDiagnosticReportsByOrders.mockResolvedValue(
+        mockDiagnosticReports,
+      );
+
+      render(renderLabInvestigations());
+
+      await waitFor(() => {
+        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        expect(mockGetDiagnosticReportsByOrders).toHaveBeenCalledWith(
+          'patient-123',
+          ['test-1'],
+        );
+      });
+    });
+
+    it('should fetch diagnostic report bundle for processed reports', async () => {
+      const mockDiagnosticReports: Bundle<DiagnosticReport> = {
+        resourceType: 'Bundle',
+        type: 'searchset',
+        entry: [
+          {
+            resource: {
+              resourceType: 'DiagnosticReport',
+              id: 'report-1',
+              status: 'final',
+              code: { text: 'Complete Blood Count' },
+              basedOn: [{ reference: 'ServiceRequest/test-1' }],
+            } as DiagnosticReport,
+          },
+        ],
+      };
+
+      mockGetDiagnosticReportsByOrders.mockResolvedValue(
+        mockDiagnosticReports,
+      );
+
+      render(renderLabInvestigations());
+
+      await waitFor(() => {
+        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        expect(mockGetDiagnosticReportBundle).toHaveBeenCalledWith('report-1');
+      });
+    });
+  });
+
 });
