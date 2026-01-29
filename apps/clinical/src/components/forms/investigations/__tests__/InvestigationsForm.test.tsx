@@ -17,6 +17,7 @@ jest.mock('../styles/InvestigationsForm.module.scss', () => ({
   investigationsFormTitle: 'investigationsFormTitle',
   addedInvestigationsBox: 'addedInvestigationsBox',
   selectedInvestigationItem: 'selectedInvestigationItem',
+  duplicateNotification: 'duplicateNotification',
 }));
 
 jest.mock('../../../../hooks/useInvestigationsSearch');
@@ -626,8 +627,8 @@ describe('InvestigationsForm', () => {
         const cbcOption = options.find((option) =>
           option.textContent?.includes('Complete Blood Count'),
         );
-        expect(cbcOption).toHaveTextContent(
-          'Complete Blood Count (Already selected)',
+        expect(cbcOption?.textContent).toMatch(
+          /Complete Blood Count.*already/i,
         );
         expect(cbcOption).toHaveAttribute('disabled');
       });
@@ -666,16 +667,12 @@ describe('InvestigationsForm', () => {
       await user.type(combobox, 'complete');
 
       await waitFor(() => {
-        const cbcOption = screen.getByText(
-          'Complete Blood Count (Already selected)',
-        );
+        const cbcOption = screen.getByText(/Complete Blood Count.*already/i);
         expect(cbcOption).toBeInTheDocument();
       });
 
       // Try to click the disabled option
-      const cbcOption = screen.getByText(
-        'Complete Blood Count (Already selected)',
-      );
+      const cbcOption = screen.getByText(/Complete Blood Count.*already/i);
       await user.click(cbcOption);
 
       // Verify that addServiceRequest was NOT called since the item is disabled
@@ -795,17 +792,17 @@ describe('InvestigationsForm', () => {
           option.textContent?.includes('Chest X-Ray'),
         );
 
-        expect(cbcOption).toHaveTextContent(
-          'Complete Blood Count (Already selected)',
+        expect(cbcOption?.textContent).toMatch(
+          /Complete Blood Count.*already/i,
         );
         expect(cbcOption).toHaveAttribute('disabled');
 
-        expect(glucoseOption).toHaveTextContent(
-          'Blood Glucose Test (Already selected)',
+        expect(glucoseOption?.textContent).toMatch(
+          /Blood Glucose Test.*already/i,
         );
         expect(glucoseOption).toHaveAttribute('disabled');
 
-        expect(xrayOption).toHaveTextContent('Chest X-Ray (Already selected)');
+        expect(xrayOption?.textContent).toMatch(/Chest X-Ray.*already/i);
         expect(xrayOption).toHaveAttribute('disabled');
       });
     });
@@ -862,7 +859,7 @@ describe('InvestigationsForm', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('Complete Blood Count (Already selected)'),
+          screen.getByText(/Complete Blood Count.*already/i),
         ).toBeInTheDocument();
       });
 

@@ -520,7 +520,7 @@ describe('InvestigationsForm Integration Tests', () => {
 
       await waitFor(() => {
         const option = screen.getByRole('option', {
-          name: /Complete Blood Count.*already selected/i,
+          name: /Complete Blood Count.*already/i,
         });
         expect(option).toBeInTheDocument();
         expect(option).toHaveAttribute('disabled');

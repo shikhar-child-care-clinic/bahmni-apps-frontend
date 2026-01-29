@@ -269,7 +269,7 @@ const InvestigationsForm: React.FC = React.memo(() => {
         <InlineNotification
           kind="error"
           lowContrast
-          subtitle={t('INVESTIGATION_ALREADY_SELECTED')}
+          subtitle={t('INVESTIGATION_ALREADY_ADDED')}
           onClose={() => setShowDuplicateNotification(false)}
           hideCloseButton={false}
           className={styles.duplicateNotification}
