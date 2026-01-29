@@ -23,6 +23,15 @@ jest.mock('@bahmni/services', () => ({
 jest.mock('@bahmni/widgets', () => ({
   ...jest.requireActual('@bahmni/widgets'),
   usePatientUUID: jest.fn().mockReturnValue('mock-patient-uuid'),
+  useActivePractitioner: jest.fn().mockReturnValue({
+    practitioner: { uuid: 'mock-practitioner-uuid' },
+  }),
+}));
+
+jest.mock('../../../../hooks/useEncounterSession', () => ({
+  useEncounterSession: jest.fn().mockReturnValue({
+    activeEncounter: { id: 'mock-encounter-id' },
+  }),
 }));
 
 jest.mock('../../../../stores/serviceRequestStore');

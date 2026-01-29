@@ -10,9 +10,10 @@ import {
   getServiceRequests,
   getCategoryUuidFromOrderTypes,
 } from '@bahmni/services';
-import { usePatientUUID } from '@bahmni/widgets';
+import { usePatientUUID, useActivePractitioner } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
 import React, { useMemo, useCallback, useState, useEffect } from 'react';
+import { useEncounterSession } from '../../../hooks/useEncounterSession';
 import useInvestigationsSearch from '../../../hooks/useInvestigationsSearch';
 import type { FlattenedInvestigations } from '../../../models/investigations';
 import useServiceRequestStore from '../../../stores/serviceRequestStore';
@@ -22,6 +23,12 @@ import styles from './styles/InvestigationsForm.module.scss';
 const InvestigationsForm: React.FC = React.memo(() => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
+  const { practitioner } = useActivePractitioner();
+  const { activeEncounter } = useEncounterSession({ practitioner });
+
+  // Get current encounter ID - duplicates only within same encounter context
+  const currentEncounterId = activeEncounter?.id;
+
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showDuplicateNotification, setShowDuplicateNotification] =
     useState(false);
@@ -42,9 +49,10 @@ const InvestigationsForm: React.FC = React.memo(() => {
     removeServiceRequest,
   } = useServiceRequestStore();
 
-  // Fetch existing service requests from backend for duplicate detection
+  // Fetch existing service requests from backend for duplicate detection (filtered by current encounter)
+  // Only checks duplicates within the SAME encounter context (same visit/location/provider session)
   const { data: existingServiceRequests } = useQuery({
-    queryKey: ['existingServiceRequests', patientUUID],
+    queryKey: ['existingServiceRequests', patientUUID, currentEncounterId],
     queryFn: async () => {
       const categories = ['Lab Order', 'Radiology Order', 'Procedure Order'];
       const results: Array<{
@@ -53,10 +61,19 @@ const InvestigationsForm: React.FC = React.memo(() => {
         display: string;
       }> = [];
 
+      // Only fetch for current encounter to check duplicates in same context
+      const encounterUuids = currentEncounterId
+        ? [currentEncounterId]
+        : undefined;
+
       for (const categoryName of categories) {
         const categoryUuid = await getCategoryUuidFromOrderTypes(categoryName);
         if (categoryUuid && patientUUID) {
-          const bundle = await getServiceRequests(categoryUuid, patientUUID);
+          const bundle = await getServiceRequests(
+            categoryUuid,
+            patientUUID,
+            encounterUuids,
+          );
           const items =
             bundle.entry
               ?.map((entry) => ({
