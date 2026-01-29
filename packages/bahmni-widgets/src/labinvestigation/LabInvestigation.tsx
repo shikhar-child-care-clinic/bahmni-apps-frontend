@@ -81,6 +81,8 @@ const LabInvestigation: React.FC<WidgetProps> = ({
         refetchLabInvestigations();
       }
     },
+    // Note: refetchLabInvestigations is excluded from deps as it has a stable reference from TanStack Query
+    // useSubscribeConsultationSaved uses useRef to store the callback, preventing stale closures
     [patientUUID, categoryName],
   );
 

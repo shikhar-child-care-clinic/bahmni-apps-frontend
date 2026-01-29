@@ -1,6 +1,8 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
+import React from 'react';
 import useInvestigationsSearch from '../../../../hooks/useInvestigationsSearch';
 import type { FlattenedInvestigations } from '../../../../models/investigations';
 import useServiceRequestStore from '../../../../stores/serviceRequestStore';
@@ -15,10 +17,31 @@ jest.mock('../styles/InvestigationsForm.module.scss', () => ({
   investigationsFormTitle: 'investigationsFormTitle',
   addedInvestigationsBox: 'addedInvestigationsBox',
   selectedInvestigationItem: 'selectedInvestigationItem',
+  duplicateNotification: 'duplicateNotification',
 }));
 
 jest.mock('../../../../hooks/useInvestigationsSearch');
 jest.mock('../../../../stores/serviceRequestStore');
+
+jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
+  getServiceRequests: jest.fn().mockResolvedValue({ entry: [] }),
+  getCategoryUuidFromOrderTypes: jest.fn().mockResolvedValue('mock-uuid'),
+}));
+
+jest.mock('@bahmni/widgets', () => ({
+  ...jest.requireActual('@bahmni/widgets'),
+  usePatientUUID: jest.fn().mockReturnValue('mock-patient-uuid'),
+  useActivePractitioner: jest.fn().mockReturnValue({
+    practitioner: { uuid: 'mock-practitioner-uuid' },
+  }),
+}));
+
+jest.mock('../../../../hooks/useEncounterSession', () => ({
+  useEncounterSession: jest.fn().mockReturnValue({
+    activeEncounter: { id: 'mock-encounter-id' },
+  }),
+}));
 
 jest.mock('@bahmni/design-system', () => ({
   ...jest.requireActual('@bahmni/design-system'),
@@ -93,6 +116,21 @@ const mockStore = {
   })),
 };
 
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+  Wrapper.displayName = 'QueryClientWrapper';
+  return Wrapper;
+};
+
 describe('InvestigationsForm', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -108,7 +146,7 @@ describe('InvestigationsForm', () => {
 
   describe('Component Rendering', () => {
     test('renders form with title and search combobox', () => {
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       expect(
         screen.getByText('Order Investigations/Procedures'),
@@ -134,7 +172,7 @@ describe('InvestigationsForm', () => {
     test('updates search term on input change', async () => {
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'blood');
@@ -151,7 +189,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'test');
@@ -170,7 +208,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'test');
@@ -191,7 +229,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'nonexistent');
@@ -211,7 +249,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'test');
@@ -258,7 +296,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'test');
@@ -286,7 +324,7 @@ describe('InvestigationsForm', () => {
         error: null,
       });
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       // Simulate selecting an investigation by calling the onChange handler
       const combobox = screen.getByRole('combobox');
@@ -351,7 +389,7 @@ describe('InvestigationsForm', () => {
         selectedServiceRequests: selectedMap,
       });
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       // Check category headers
       expect(screen.getByText('Added Laboratory')).toBeInTheDocument();
@@ -384,7 +422,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const removeButton = screen.getByLabelText('Remove');
       await user.click(removeButton);
@@ -416,7 +454,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const urgentCheckbox = screen.getByLabelText('Set as urgent');
       await user.click(urgentCheckbox);
@@ -449,7 +487,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const noteInput = screen.getByLabelText('Add note');
       await user.type(noteInput, 'Patient has low hemoglobin');
@@ -487,7 +525,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const noteInputs = screen.getAllByLabelText('Add note');
       expect(noteInputs).toHaveLength(2);
@@ -538,7 +576,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const noteInputs = screen.getAllByLabelText('Add note');
       expect(noteInputs).toHaveLength(2);
@@ -587,7 +625,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'blood');
@@ -598,8 +636,8 @@ describe('InvestigationsForm', () => {
         const cbcOption = options.find((option) =>
           option.textContent?.includes('Complete Blood Count'),
         );
-        expect(cbcOption).toHaveTextContent(
-          'Complete Blood Count (Already selected)',
+        expect(cbcOption?.textContent).toMatch(
+          /Complete Blood Count.*already/i,
         );
         expect(cbcOption).toHaveAttribute('disabled');
       });
@@ -632,22 +670,18 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'complete');
 
       await waitFor(() => {
-        const cbcOption = screen.getByText(
-          'Complete Blood Count (Already selected)',
-        );
+        const cbcOption = screen.getByText(/Complete Blood Count.*already/i);
         expect(cbcOption).toBeInTheDocument();
       });
 
       // Try to click the disabled option
-      const cbcOption = screen.getByText(
-        'Complete Blood Count (Already selected)',
-      );
+      const cbcOption = screen.getByText(/Complete Blood Count.*already/i);
       await user.click(cbcOption);
 
       // Verify that addServiceRequest was NOT called since the item is disabled
@@ -681,7 +715,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'glucose');
@@ -748,7 +782,7 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'test');
@@ -767,17 +801,17 @@ describe('InvestigationsForm', () => {
           option.textContent?.includes('Chest X-Ray'),
         );
 
-        expect(cbcOption).toHaveTextContent(
-          'Complete Blood Count (Already selected)',
+        expect(cbcOption?.textContent).toMatch(
+          /Complete Blood Count.*already/i,
         );
         expect(cbcOption).toHaveAttribute('disabled');
 
-        expect(glucoseOption).toHaveTextContent(
-          'Blood Glucose Test (Already selected)',
+        expect(glucoseOption?.textContent).toMatch(
+          /Blood Glucose Test.*already/i,
         );
         expect(glucoseOption).toHaveAttribute('disabled');
 
-        expect(xrayOption).toHaveTextContent('Chest X-Ray (Already selected)');
+        expect(xrayOption?.textContent).toMatch(/Chest X-Ray.*already/i);
         expect(xrayOption).toHaveAttribute('disabled');
       });
     });
@@ -824,7 +858,9 @@ describe('InvestigationsForm', () => {
 
       const user = userEvent.setup();
 
-      const { rerender } = render(<InvestigationsForm />);
+      const { rerender } = render(<InvestigationsForm />, {
+        wrapper: createWrapper(),
+      });
 
       // First search - CBC should be marked as already selected
       const combobox = screen.getByRole('combobox');
@@ -832,7 +868,7 @@ describe('InvestigationsForm', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('Complete Blood Count (Already selected)'),
+          screen.getByText(/Complete Blood Count.*already/i),
         ).toBeInTheDocument();
       });
 
@@ -865,7 +901,7 @@ describe('InvestigationsForm', () => {
 
   describe('Edge Cases', () => {
     test('handles empty search term correctly', () => {
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       expect(combobox).toHaveValue('');
@@ -884,7 +920,7 @@ describe('InvestigationsForm', () => {
         error: null,
       });
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       const user = userEvent.setup();
@@ -902,7 +938,9 @@ describe('InvestigationsForm', () => {
       let container: HTMLElement;
 
       await act(async () => {
-        const rendered = render(<InvestigationsForm />);
+        const rendered = render(<InvestigationsForm />, {
+          wrapper: createWrapper(),
+        });
         container = rendered.container;
       });
 

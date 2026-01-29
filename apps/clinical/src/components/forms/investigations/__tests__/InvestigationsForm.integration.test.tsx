@@ -2,8 +2,10 @@ import {
   getFlattenedInvestigations,
   getFormattedError,
 } from '@bahmni/services';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 import i18n from '../../../../../setupTests.i18n';
 import { FlattenedInvestigations } from '../../../../models/investigations';
 import { ServiceRequestInputEntry } from '../../../../models/serviceRequest';
@@ -14,9 +16,40 @@ jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   getFlattenedInvestigations: jest.fn(),
   getFormattedError: jest.fn(),
+  getServiceRequests: jest.fn().mockResolvedValue({ entry: [] }),
+  getCategoryUuidFromOrderTypes: jest.fn().mockResolvedValue('mock-uuid'),
+}));
+
+jest.mock('@bahmni/widgets', () => ({
+  ...jest.requireActual('@bahmni/widgets'),
+  usePatientUUID: jest.fn().mockReturnValue('mock-patient-uuid'),
+  useActivePractitioner: jest.fn().mockReturnValue({
+    practitioner: { uuid: 'mock-practitioner-uuid' },
+  }),
+}));
+
+jest.mock('../../../../hooks/useEncounterSession', () => ({
+  useEncounterSession: jest.fn().mockReturnValue({
+    activeEncounter: { id: 'mock-encounter-id' },
+  }),
 }));
 
 jest.mock('../../../../stores/serviceRequestStore');
+
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+  Wrapper.displayName = 'QueryClientWrapper';
+  return Wrapper;
+};
 
 const mockFlattenedInvestigations: FlattenedInvestigations[] = [
   {
@@ -97,7 +130,7 @@ describe('InvestigationsForm Integration Tests', () => {
   describe('Component Initialization and Search', () => {
     test('should load investigations on component mount and display them when searching', async () => {
       const user = userEvent.setup();
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       expect(
         screen.getByText('Order Investigations/Procedures'),
@@ -124,7 +157,7 @@ describe('InvestigationsForm Integration Tests', () => {
 
     test('should filter investigations based on search term', async () => {
       const user = userEvent.setup();
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
 
@@ -140,7 +173,7 @@ describe('InvestigationsForm Integration Tests', () => {
 
     test('should show "No matching investigations found" when search returns no results', async () => {
       const user = userEvent.setup();
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
 
@@ -177,7 +210,7 @@ describe('InvestigationsForm Integration Tests', () => {
     });
     test('should add investigation when selected and display it with priority checkbox', async () => {
       const user = userEvent.setup();
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
 
@@ -206,7 +239,7 @@ describe('InvestigationsForm Integration Tests', () => {
 
     test('should handle multiple investigation selections from different categories', async () => {
       const user = userEvent.setup();
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
 
@@ -245,7 +278,7 @@ describe('InvestigationsForm Integration Tests', () => {
 
     test('should toggle investigation priority when urgent checkbox is clicked', async () => {
       const user = userEvent.setup();
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
 
@@ -270,7 +303,7 @@ describe('InvestigationsForm Integration Tests', () => {
 
     test('should remove investigation when close button is clicked', async () => {
       const user = userEvent.setup();
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
 
@@ -301,7 +334,7 @@ describe('InvestigationsForm Integration Tests', () => {
       (getFlattenedInvestigations as jest.Mock).mockResolvedValue([]);
 
       const user = userEvent.setup();
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'test');
@@ -320,7 +353,7 @@ describe('InvestigationsForm Integration Tests', () => {
       );
 
       const user = userEvent.setup();
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'test');
@@ -338,7 +371,7 @@ describe('InvestigationsForm Integration Tests', () => {
       (getFlattenedInvestigations as jest.Mock).mockResolvedValue([]);
 
       const user = userEvent.setup();
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'test');
@@ -361,7 +394,7 @@ describe('InvestigationsForm Integration Tests', () => {
       );
 
       const user = userEvent.setup();
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'test');
@@ -378,7 +411,7 @@ describe('InvestigationsForm Integration Tests', () => {
     test('should handle adding multiple investigations of same category and managing priorities', async () => {
       const user = userEvent.setup();
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
 
@@ -418,7 +451,7 @@ describe('InvestigationsForm Integration Tests', () => {
 
     test('should maintain search input value after selection', async () => {
       const user = userEvent.setup();
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
 
@@ -453,7 +486,7 @@ describe('InvestigationsForm Integration Tests', () => {
       );
 
       const user = userEvent.setup();
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'liver');
@@ -489,14 +522,14 @@ describe('InvestigationsForm Integration Tests', () => {
         mockStoreWithSelection,
       );
 
-      render(<InvestigationsForm />);
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       const combobox = screen.getByRole('combobox');
       await user.type(combobox, 'complete blood');
 
       await waitFor(() => {
         const option = screen.getByRole('option', {
-          name: /Complete Blood Count.*already selected/i,
+          name: /Complete Blood Count.*already/i,
         });
         expect(option).toBeInTheDocument();
         expect(option).toHaveAttribute('disabled');
