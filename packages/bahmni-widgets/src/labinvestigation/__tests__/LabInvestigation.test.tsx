@@ -204,7 +204,7 @@ describe('LabInvestigation', () => {
 
     render(renderLabInvestigations());
 
-    expect(screen.getByText('Loading lab tests...')).toBeInTheDocument();
+    expect(screen.getByTestId('lab-test-loading')).toBeInTheDocument();
   });
 
   it('renders lab tests grouped by date', async () => {

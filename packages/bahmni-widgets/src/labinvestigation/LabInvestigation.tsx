@@ -198,7 +198,9 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   }
 
   if (isLoading) {
-    return <SkeletonText lineCount={5} width="100%" />;
+    return (
+      <SkeletonText lineCount={5} width="100%" testId="lab-test-loading" />
+    );
   }
 
   if (!isLoading && (labTests.length === 0 || emptyEncounterFilter)) {

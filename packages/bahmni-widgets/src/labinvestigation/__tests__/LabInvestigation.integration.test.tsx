@@ -187,7 +187,7 @@ describe('LabInvestigation Integration Tests', () => {
 
     renderLabInvestigations();
 
-    expect(screen.getByText('Loading lab tests...')).toBeInTheDocument();
+    expect(screen.getByTestId('lab-test-loading')).toBeInTheDocument();
   });
 
   it('displays error message when API call fails', async () => {
@@ -300,6 +300,6 @@ describe('LabInvestigation Integration Tests', () => {
     renderLabInvestigations();
 
     // Should show loading state for new patient
-    expect(screen.getByText('Loading lab tests...')).toBeInTheDocument();
+    expect(screen.getByTestId('lab-test-loading')).toBeInTheDocument();
   });
 });
