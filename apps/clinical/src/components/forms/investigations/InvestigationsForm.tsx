@@ -26,8 +26,9 @@ const InvestigationsForm: React.FC = React.memo(() => {
   const { practitioner } = useActivePractitioner();
   const { activeEncounter } = useEncounterSession({ practitioner });
 
-  // Get current encounter ID - duplicates only within same encounter context
+  // Get current encounter ID and practitioner UUID for duplicate detection
   const currentEncounterId = activeEncounter?.id;
+  const currentPractitionerUuid = practitioner?.uuid;
 
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showDuplicateNotification, setShowDuplicateNotification] =
@@ -50,7 +51,7 @@ const InvestigationsForm: React.FC = React.memo(() => {
   } = useServiceRequestStore();
 
   // Fetch existing service requests from backend for duplicate detection (filtered by current encounter)
-  // Only checks duplicates within the SAME encounter context (same visit/location/provider session)
+  // Only checks duplicates for SAME provider within SAME encounter (same user can't add same test twice)
   const { data: existingServiceRequests } = useQuery({
     queryKey: ['existingServiceRequests', patientUUID, currentEncounterId],
     queryFn: async () => {
@@ -59,6 +60,7 @@ const InvestigationsForm: React.FC = React.memo(() => {
         conceptCode: string;
         category: string;
         display: string;
+        requesterUuid: string;
       }> = [];
 
       // Only fetch for current encounter to check duplicates in same context
@@ -80,6 +82,8 @@ const InvestigationsForm: React.FC = React.memo(() => {
                 conceptCode: entry.resource?.code?.coding?.[0]?.code ?? '',
                 category: categoryName,
                 display: entry.resource?.code?.text ?? '',
+                requesterUuid:
+                  entry.resource?.requester?.reference?.split('/')[1] ?? '',
               }))
               .filter((item) => item.conceptCode) ?? [];
           results.push(...items);
@@ -99,13 +103,48 @@ const InvestigationsForm: React.FC = React.memo(() => {
     [t],
   );
 
+  // Normalize category name to match backend format
+  const normalizeCategoryName = useCallback((category: string): string => {
+    // Handle various category name formats
+    const normalizedCategory = category.trim().toLowerCase();
+
+    if (
+      normalizedCategory.includes('lab') ||
+      normalizedCategory === 'laboratory'
+    ) {
+      return 'Lab Order';
+    }
+    if (
+      normalizedCategory.includes('rad') ||
+      normalizedCategory === 'radiology'
+    ) {
+      return 'Radiology Order';
+    }
+    if (
+      normalizedCategory.includes('proc') ||
+      normalizedCategory === 'procedure'
+    ) {
+      return 'Procedure Order';
+    }
+
+    // Fallback to original if no match
+    return category;
+  }, []);
+
   // Check if an investigation is a duplicate (exists in backend or already selected in form)
+  // Only duplicates if SAME provider + SAME encounter + SAME test
   const isDuplicateInvestigation = useCallback(
     (investigationCode: string, category: string): boolean => {
-      // Check against existing service requests from backend (by concept code & category)
+      // Normalize category for comparison
+      const normalizedCategory = normalizeCategoryName(category);
+
+      // Check against existing service requests from backend
+      // Duplicate only if: same concept code + same category + same requester (provider)
       const isExistingInvestigation = existingServiceRequests?.some(
         (sr) =>
-          sr.conceptCode === investigationCode && sr.category === category,
+          sr.conceptCode === investigationCode &&
+          sr.category === normalizedCategory &&
+          sr.requesterUuid === currentPractitionerUuid,
       );
 
       // Check against currently selected investigations in the form
@@ -115,7 +154,12 @@ const InvestigationsForm: React.FC = React.memo(() => {
 
       return (isExistingInvestigation ?? false) || isSelectedInvestigation;
     },
-    [existingServiceRequests, selectedServiceRequests],
+    [
+      existingServiceRequests,
+      selectedServiceRequests,
+      normalizeCategoryName,
+      currentPractitionerUuid,
+    ],
   );
 
   // Auto-clear duplicate notification when search is cleared or duplicate item is removed
