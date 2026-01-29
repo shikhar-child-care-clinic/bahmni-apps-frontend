@@ -67,7 +67,8 @@ const transformContainerObservationsToForm2Observations = (
         datatype: (obs.concept as Record<string, unknown>)?.datatype,
       },
       value: obs.value ?? null,
-      obsDatetime: (obs.observationDateTime as string) ?? new Date().toISOString(),
+      obsDatetime:
+        (obs.observationDateTime as string) ?? new Date().toISOString(),
       formNamespace: (obs.formNamespace as string) ?? 'Bahmni',
       formFieldPath: obs.formFieldPath,
     };
