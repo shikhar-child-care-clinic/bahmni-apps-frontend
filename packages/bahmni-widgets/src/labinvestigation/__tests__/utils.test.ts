@@ -8,6 +8,11 @@ import {
   determineTestType,
   formatLabTests,
   groupLabTestsByDate,
+  getProcessedReportIds,
+  extractObservationsFromBundle,
+  formatObservationsAsLabTestResults,
+  mapDiagnosticReportBundlesToTestResults,
+  updateTestsWithResults,
 } from '../utils';
 
 jest.mock('@bahmni/services', () => ({
@@ -353,6 +358,353 @@ describe('Lab Investigation Utils', () => {
     it('should handle empty array', () => {
       const result = groupLabTestsByDate([]);
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('getProcessedReportIds', () => {
+    it('should extract IDs from reports with final status', () => {
+      const mockBundle = {
+        resourceType: 'Bundle' as const,
+        type: 'searchset' as const,
+        entry: [
+          {
+            resource: {
+              resourceType: 'DiagnosticReport' as const,
+              id: 'report-1',
+              status: 'final' as const,
+              code: { text: 'Test' },
+            },
+          },
+          {
+            resource: {
+              resourceType: 'DiagnosticReport' as const,
+              id: 'report-2',
+              status: 'amended' as const,
+              code: { text: 'Test' },
+            },
+          },
+        ],
+      };
+
+      const result = getProcessedReportIds(mockBundle);
+
+      expect(result).toHaveLength(2);
+      expect(result).toContain('report-1');
+      expect(result).toContain('report-2');
+    });
+
+    it('should return empty array for undefined bundle', () => {
+      const result = getProcessedReportIds(undefined);
+      expect(result).toEqual([]);
+    });
+
+    it('should filter out non-processed statuses', () => {
+      const mockBundle = {
+        resourceType: 'Bundle' as const,
+        type: 'searchset' as const,
+        entry: [
+          {
+            resource: {
+              resourceType: 'DiagnosticReport' as const,
+              id: 'report-1',
+              status: 'registered' as const,
+              code: { text: 'Test' },
+            },
+          },
+        ],
+      };
+
+      const result = getProcessedReportIds(mockBundle);
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('extractObservationsFromBundle', () => {
+    it('should extract observation resources from bundle', () => {
+      const mockBundle = {
+        resourceType: 'Bundle' as const,
+        type: 'collection' as const,
+        entry: [
+          {
+            resource: {
+              resourceType: 'Observation' as const,
+              id: 'obs-1',
+              status: 'final' as const,
+              code: { text: 'Hemoglobin' },
+            },
+          },
+          {
+            resource: {
+              resourceType: 'DiagnosticReport' as const,
+              id: 'report-1',
+              status: 'final' as const,
+              code: { text: 'Test' },
+            },
+          },
+        ],
+      };
+
+      const result = extractObservationsFromBundle(mockBundle);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('obs-1');
+    });
+
+    it('should return empty array for undefined bundle', () => {
+      const result = extractObservationsFromBundle(undefined);
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('formatObservationsAsLabTestResults', () => {
+    it('should format observations with quantity values', () => {
+      const mockObservations = [
+        {
+          resourceType: 'Observation' as const,
+          id: 'obs-1',
+          status: 'final' as const,
+          code: { text: 'Hemoglobin' },
+          valueQuantity: {
+            value: 14.5,
+            unit: 'g/dL',
+          },
+          referenceRange: [
+            {
+              low: { value: 12, unit: 'g/dL' },
+              high: { value: 16, unit: 'g/dL' },
+            },
+          ],
+          issued: '2025-05-08T12:44:24+00:00',
+        },
+      ];
+
+      const result = formatObservationsAsLabTestResults(
+        mockObservations,
+        mockTranslate,
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].TestName).toBe('Hemoglobin');
+      expect(result[0].Result).toBe('14.5 g/dL');
+      expect(result[0].referenceRange).toBe('12 - 16 g/dL');
+    });
+
+    it('should handle string values', () => {
+      const mockObservations = [
+        {
+          resourceType: 'Observation' as const,
+          id: 'obs-1',
+          status: 'final' as const,
+          code: { text: 'Blood Type' },
+          valueString: 'O+',
+        },
+      ];
+
+      const result = formatObservationsAsLabTestResults(
+        mockObservations,
+        mockTranslate,
+      );
+
+      expect(result[0].Result).toBe('O+');
+    });
+
+    it('should handle boolean values - true as Positive', () => {
+      const mockObservations = [
+        {
+          resourceType: 'Observation' as const,
+          id: 'obs-1',
+          status: 'final' as const,
+          code: { text: 'COVID-19 Test' },
+          valueBoolean: true,
+        },
+      ];
+
+      const result = formatObservationsAsLabTestResults(
+        mockObservations,
+        mockTranslate,
+      );
+
+      expect(result[0].Result).toBe('Positive');
+    });
+
+    it('should handle boolean values - false as Negative', () => {
+      const mockObservations = [
+        {
+          resourceType: 'Observation' as const,
+          id: 'obs-1',
+          status: 'final' as const,
+          code: { text: 'COVID-19 Test' },
+          valueBoolean: false,
+        },
+      ];
+
+      const result = formatObservationsAsLabTestResults(
+        mockObservations,
+        mockTranslate,
+      );
+
+      expect(result[0].Result).toBe('Negative');
+    });
+
+    it('should handle integer values', () => {
+      const mockObservations = [
+        {
+          resourceType: 'Observation' as const,
+          id: 'obs-1',
+          status: 'final' as const,
+          code: { text: 'White Blood Cell Count' },
+          valueInteger: 8500,
+        },
+      ];
+
+      const result = formatObservationsAsLabTestResults(
+        mockObservations,
+        mockTranslate,
+      );
+
+      expect(result[0].Result).toBe('8500');
+    });
+
+    it('should handle CodeableConcept text values', () => {
+      const mockObservations = [
+        {
+          resourceType: 'Observation' as const,
+          id: 'obs-1',
+          status: 'final' as const,
+          code: { text: 'Test Result' },
+          valueCodeableConcept: {
+            text: 'Abnormal',
+          },
+        },
+      ];
+
+      const result = formatObservationsAsLabTestResults(
+        mockObservations,
+        mockTranslate,
+      );
+
+      expect(result[0].Result).toBe('Abnormal');
+    });
+  });
+
+  describe('mapDiagnosticReportBundlesToTestResults', () => {
+    it('should map diagnostic report bundles to test results', () => {
+      const bundles = [
+        {
+          resourceType: 'Bundle' as const,
+          type: 'collection' as const,
+          entry: [
+            {
+              resource: {
+                resourceType: 'DiagnosticReport' as const,
+                id: 'report-1',
+                status: 'final' as const,
+                code: { text: 'CBC' },
+                basedOn: [{ reference: 'ServiceRequest/test-1' }],
+              },
+            },
+            {
+              resource: {
+                resourceType: 'Observation' as const,
+                id: 'obs-1',
+                status: 'final' as const,
+                code: { text: 'Hemoglobin' },
+                valueQuantity: { value: 14.5, unit: 'g/dL' },
+              },
+            },
+          ],
+        },
+      ];
+
+      const result = mapDiagnosticReportBundlesToTestResults(
+        bundles,
+        mockTranslate,
+      );
+
+      expect(result.size).toBe(1);
+      expect(result.has('test-1')).toBe(true);
+    });
+
+    it('should handle bundles without basedOn references', () => {
+      const bundles = [
+        {
+          resourceType: 'Bundle' as const,
+          type: 'collection' as const,
+          entry: [
+            {
+              resource: {
+                resourceType: 'DiagnosticReport' as const,
+                id: 'report-1',
+                status: 'final' as const,
+                code: { text: 'CBC' },
+              },
+            },
+          ],
+        },
+      ];
+
+      const result = mapDiagnosticReportBundlesToTestResults(
+        bundles,
+        mockTranslate,
+      );
+
+      expect(result.size).toBe(0);
+    });
+  });
+
+  describe('updateTestsWithResults', () => {
+    it('should update tests with results from map', () => {
+      const tests: FormattedLabTest[] = [
+        {
+          id: 'test-1',
+          testName: 'Blood Test',
+          priority: LabTestPriority.routine,
+          orderedBy: 'Dr. Smith',
+          orderedDate: '2025-05-08T12:44:24+00:00',
+          formattedDate: 'May 8, 2025',
+          result: undefined,
+          testType: 'Single Test',
+        },
+      ];
+
+      const resultsMap = new Map();
+      resultsMap.set('test-1', [
+        {
+          status: 'final',
+          TestName: 'Hemoglobin',
+          Result: '14.5 g/dL',
+          referenceRange: '12-16 g/dL',
+          reportedOn: 'May 8, 2025',
+          actions: '',
+        },
+      ]);
+
+      const result = updateTestsWithResults(tests, resultsMap);
+
+      expect(result[0].result).toBeDefined();
+      expect(Array.isArray(result[0].result)).toBe(true);
+    });
+
+    it('should not modify tests without results', () => {
+      const tests: FormattedLabTest[] = [
+        {
+          id: 'test-1',
+          testName: 'Blood Test',
+          priority: LabTestPriority.routine,
+          orderedBy: 'Dr. Smith',
+          orderedDate: '2025-05-08T12:44:24+00:00',
+          formattedDate: 'May 8, 2025',
+          result: undefined,
+          testType: 'Single Test',
+        },
+      ];
+
+      const resultsMap = new Map();
+
+      const result = updateTestsWithResults(tests, resultsMap);
+
+      expect(result[0].result).toBeUndefined();
     });
   });
 });

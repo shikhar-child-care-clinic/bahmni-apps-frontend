@@ -346,7 +346,6 @@ describe('LabInvestigation', () => {
     });
   });
 
- 
   describe('Accordion interactions', () => {
     it('should close first accordion and open second accordion when clicking second accordion', async () => {
       const user = userEvent.setup();
@@ -397,7 +396,7 @@ describe('LabInvestigation', () => {
   describe('Diagnostic reports fetching', () => {
     it('should fetch diagnostic reports when accordion is opened', async () => {
       const user = userEvent.setup();
-      
+
       const mockDiagnosticReports: Bundle<DiagnosticReport> = {
         resourceType: 'Bundle',
         type: 'searchset',
@@ -414,9 +413,7 @@ describe('LabInvestigation', () => {
         ],
       };
 
-      mockGetDiagnosticReportsByOrders.mockResolvedValue(
-        mockDiagnosticReports,
-      );
+      mockGetDiagnosticReportsByOrders.mockResolvedValue(mockDiagnosticReports);
 
       render(renderLabInvestigations());
 
@@ -449,9 +446,7 @@ describe('LabInvestigation', () => {
         ],
       };
 
-      mockGetDiagnosticReportsByOrders.mockResolvedValue(
-        mockDiagnosticReports,
-      );
+      mockGetDiagnosticReportsByOrders.mockResolvedValue(mockDiagnosticReports);
 
       render(renderLabInvestigations());
 
@@ -464,5 +459,4 @@ describe('LabInvestigation', () => {
       });
     });
   });
-
 });

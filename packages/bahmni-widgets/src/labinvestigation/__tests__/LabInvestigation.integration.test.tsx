@@ -187,7 +187,8 @@ describe('LabInvestigation Integration Tests', () => {
 
     renderLabInvestigations();
 
-    expect(screen.getByTestId('lab-test-loading')).toBeInTheDocument();
+    const skeletonElement = document.querySelector('.cds--skeleton__text');
+    expect(skeletonElement).toBeInTheDocument();
   });
 
   it('displays error message when API call fails', async () => {
@@ -299,7 +300,11 @@ describe('LabInvestigation Integration Tests', () => {
 
     renderLabInvestigations();
 
-    // Should show loading state for new patient
-    expect(screen.getByTestId('lab-test-loading')).toBeInTheDocument();
+    // Should show empty state for new patient with no tests
+    await waitFor(() => {
+      expect(
+        screen.getByText('No lab investigations recorded'),
+      ).toBeInTheDocument();
+    });
   });
 });
