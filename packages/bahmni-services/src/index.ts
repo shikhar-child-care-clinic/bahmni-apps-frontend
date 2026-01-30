@@ -168,7 +168,7 @@ export {
   getFlattenedInvestigations,
   getOrderTypes,
   getCategoryUuidFromOrderTypes,
-  normalizeCategoryName,
+  getOrderTypeNames,
   type FlattenedInvestigations,
   type OrderType,
   type OrderTypeResponse,

@@ -26,7 +26,17 @@ jest.mock('../../../../stores/serviceRequestStore');
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   getServiceRequests: jest.fn().mockResolvedValue({ entry: [] }),
-  getCategoryUuidFromOrderTypes: jest.fn().mockResolvedValue('mock-uuid'),
+  getCategoryUuidFromOrderTypes: jest
+    .fn()
+    .mockImplementation((categoryName: string) => {
+      if (categoryName === 'Lab Order') return Promise.resolve('lab');
+      if (categoryName === 'Radiology Order') return Promise.resolve('rad');
+      if (categoryName === 'Procedure Order') return Promise.resolve('proc');
+      return Promise.resolve('mock-uuid');
+    }),
+  getOrderTypeNames: jest
+    .fn()
+    .mockResolvedValue(['Lab Order', 'Radiology Order', 'Procedure Order']),
 }));
 
 jest.mock('@bahmni/widgets', () => ({
@@ -88,19 +98,19 @@ const mockInvestigations: FlattenedInvestigations[] = [
   {
     code: 'cbc-001',
     display: 'Complete Blood Count',
-    category: 'Laboratory',
+    category: 'Lab Order',
     categoryCode: 'lab',
   },
   {
     code: 'glucose-001',
     display: 'Blood Glucose Test',
-    category: 'Laboratory',
+    category: 'Lab Order',
     categoryCode: 'lab',
   },
   {
     code: 'xray-001',
     display: 'Chest X-Ray',
-    category: 'Radiology',
+    category: 'Radiology Order',
     categoryCode: 'rad',
   },
 ];
@@ -260,10 +270,10 @@ describe('InvestigationsForm', () => {
       await waitFor(() => {
         const options = screen.getAllByRole('option');
         expect(options).toHaveLength(5);
-        expect(options[0]).toHaveTextContent('LABORATORY');
+        expect(options[0]).toHaveTextContent('LAB ORDER');
         expect(options[1]).toHaveTextContent('Complete Blood Count');
         expect(options[2]).toHaveTextContent('Blood Glucose Test');
-        expect(options[3]).toHaveTextContent('RADIOLOGY');
+        expect(options[3]).toHaveTextContent('RADIOLOGY ORDER');
         expect(options[4]).toHaveTextContent('Chest X-Ray');
       });
     });
@@ -273,19 +283,19 @@ describe('InvestigationsForm', () => {
         {
           code: 'cd8',
           display: 'CD8%',
-          category: 'Laboratory',
+          category: 'Lab Order',
           categoryCode: 'lab',
         },
         {
           code: 'chest-xray-002',
           display: 'Chest X-Ray AP',
-          category: 'Radiology',
+          category: 'Radiology Order',
           categoryCode: 'rad',
         },
         {
           code: 'cd3',
           display: 'CD3%',
-          category: 'Laboratory',
+          category: 'Lab Order',
           categoryCode: 'lab',
         },
       ];
@@ -307,10 +317,10 @@ describe('InvestigationsForm', () => {
       await waitFor(() => {
         const options = screen.getAllByRole('option');
         expect(options).toHaveLength(5);
-        expect(options[0]).toHaveTextContent('LABORATORY');
+        expect(options[0]).toHaveTextContent('LAB ORDER');
         expect(options[1]).toHaveTextContent('CD8%');
         expect(options[2]).toHaveTextContent('CD3%');
-        expect(options[3]).toHaveTextContent('RADIOLOGY');
+        expect(options[3]).toHaveTextContent('RADIOLOGY ORDER');
         expect(options[4]).toHaveTextContent('Chest X-Ray AP');
       });
     });
@@ -347,7 +357,7 @@ describe('InvestigationsForm', () => {
       // Verify the store was called correctly
       await waitFor(() => {
         expect(mockStore.addServiceRequest).toHaveBeenCalledWith(
-          'Laboratory',
+          'Lab Order',
           'cbc-001',
           'Complete Blood Count',
         );
@@ -359,7 +369,7 @@ describe('InvestigationsForm', () => {
     test('displays selected investigations grouped by category', () => {
       const selectedMap = new Map([
         [
-          'Laboratory',
+          'Lab Order',
           [
             {
               id: 'cbc-001',
@@ -374,7 +384,7 @@ describe('InvestigationsForm', () => {
           ],
         ],
         [
-          'Radiology',
+          'Radiology Order',
           [
             {
               id: 'xray-001',
@@ -393,8 +403,8 @@ describe('InvestigationsForm', () => {
       render(<InvestigationsForm />, { wrapper: createWrapper() });
 
       // Check category headers
-      expect(screen.getByText('Added Laboratory')).toBeInTheDocument();
-      expect(screen.getByText('Added Radiology')).toBeInTheDocument();
+      expect(screen.getByText('Added Lab Order')).toBeInTheDocument();
+      expect(screen.getByText('Added Radiology Order')).toBeInTheDocument();
 
       // Check investigations
       expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
@@ -405,7 +415,7 @@ describe('InvestigationsForm', () => {
     test('removes investigation when close button is clicked', async () => {
       const selectedMap = new Map([
         [
-          'Laboratory',
+          'Lab Order',
           [
             {
               id: 'cbc-001',
@@ -429,7 +439,7 @@ describe('InvestigationsForm', () => {
       await user.click(removeButton);
 
       expect(mockStore.removeServiceRequest).toHaveBeenCalledWith(
-        'Laboratory',
+        'Lab Order',
         'cbc-001',
       );
     });
@@ -437,7 +447,7 @@ describe('InvestigationsForm', () => {
     test('updates priority when urgent checkbox is toggled', async () => {
       const selectedMap = new Map([
         [
-          'Laboratory',
+          'Lab Order',
           [
             {
               id: 'cbc-001',
@@ -461,7 +471,7 @@ describe('InvestigationsForm', () => {
       await user.click(urgentCheckbox);
 
       expect(mockStore.updatePriority).toHaveBeenCalledWith(
-        'Laboratory',
+        'Lab Order',
         'cbc-001',
         'stat',
       );
@@ -470,7 +480,7 @@ describe('InvestigationsForm', () => {
     test('updates note when note input is changed', async () => {
       const selectedMap = new Map([
         [
-          'Laboratory',
+          'Lab Order',
           [
             {
               id: 'cbc-001',
@@ -494,7 +504,7 @@ describe('InvestigationsForm', () => {
       await user.type(noteInput, 'Patient has low hemoglobin');
 
       expect(mockStore.updateNote).toHaveBeenCalledWith(
-        'Laboratory',
+        'Lab Order',
         'cbc-001',
         'Patient has low hemoglobin',
       );
@@ -503,7 +513,7 @@ describe('InvestigationsForm', () => {
     test('updates note for multiple investigations independently', async () => {
       const selectedMap = new Map([
         [
-          'Laboratory',
+          'Lab Order',
           [
             {
               id: 'cbc-001',
@@ -533,14 +543,14 @@ describe('InvestigationsForm', () => {
 
       await user.type(noteInputs[0], 'Note for CBC');
       expect(mockStore.updateNote).toHaveBeenCalledWith(
-        'Laboratory',
+        'Lab Order',
         'cbc-001',
         'Note for CBC',
       );
 
       await user.type(noteInputs[1], 'Note for Glucose');
       expect(mockStore.updateNote).toHaveBeenCalledWith(
-        'Laboratory',
+        'Lab Order',
         'glucose-001',
         'Note for Glucose',
       );
@@ -549,7 +559,7 @@ describe('InvestigationsForm', () => {
     test('updates note for investigations across different categories', async () => {
       const selectedMap = new Map([
         [
-          'Laboratory',
+          'Lab Order',
           [
             {
               id: 'cbc-001',
@@ -559,7 +569,7 @@ describe('InvestigationsForm', () => {
           ],
         ],
         [
-          'Radiology',
+          'Radiology Order',
           [
             {
               id: 'xray-001',
@@ -584,14 +594,14 @@ describe('InvestigationsForm', () => {
 
       await user.type(noteInputs[0], 'CBC note');
       expect(mockStore.updateNote).toHaveBeenCalledWith(
-        'Laboratory',
+        'Lab Order',
         'cbc-001',
         'CBC note',
       );
 
       await user.type(noteInputs[1], 'X-Ray note');
       expect(mockStore.updateNote).toHaveBeenCalledWith(
-        'Radiology',
+        'Radiology Order',
         'xray-001',
         'X-Ray note',
       );
@@ -602,7 +612,7 @@ describe('InvestigationsForm', () => {
     test('displays already selected items as disabled with appropriate text', async () => {
       const selectedMap = new Map([
         [
-          'Laboratory',
+          'Lab Order',
           [
             {
               id: 'cbc-001',
@@ -647,7 +657,7 @@ describe('InvestigationsForm', () => {
     test('prevents selection of already selected items', async () => {
       const selectedMap = new Map([
         [
-          'Laboratory',
+          'Lab Order',
           [
             {
               id: 'cbc-001',
@@ -692,7 +702,7 @@ describe('InvestigationsForm', () => {
     test('allows selection of non-selected items when some items are already selected', async () => {
       const selectedMap = new Map([
         [
-          'Laboratory',
+          'Lab Order',
           [
             {
               id: 'cbc-001',
@@ -734,7 +744,7 @@ describe('InvestigationsForm', () => {
       // Verify the store was called correctly
       await waitFor(() => {
         expect(mockStore.addServiceRequest).toHaveBeenCalledWith(
-          'Laboratory',
+          'Lab Order',
           'glucose-001',
           'Blood Glucose Test',
         );
@@ -744,7 +754,7 @@ describe('InvestigationsForm', () => {
     test('handles multiple already selected items across different categories', async () => {
       const selectedMap = new Map([
         [
-          'Laboratory',
+          'Lab Order',
           [
             {
               id: 'cbc-001',
@@ -759,7 +769,7 @@ describe('InvestigationsForm', () => {
           ],
         ],
         [
-          'Radiology',
+          'Radiology Order',
           [
             {
               id: 'xray-001',
@@ -820,7 +830,7 @@ describe('InvestigationsForm', () => {
     test('updates already selected status when item is removed and search is performed again', async () => {
       let selectedMap = new Map([
         [
-          'Laboratory',
+          'Lab Order',
           [
             {
               id: 'cbc-001',
@@ -873,7 +883,6 @@ describe('InvestigationsForm', () => {
         ).toBeInTheDocument();
       });
 
-      // Clear the search
       await user.clear(combobox);
 
       // Remove the CBC from selected items
@@ -916,7 +925,6 @@ describe('InvestigationsForm', () => {
     });
 
     test('blocks duplicate when same provider tries to add same test in same encounter', async () => {
-      // Mock existing service request from backend with same provider
       getServiceRequests.mockResolvedValue({
         entry: [
           {
@@ -943,10 +951,8 @@ describe('InvestigationsForm', () => {
         expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
       });
 
-      // Try to select the duplicate investigation
       await user.click(screen.getByText('Complete Blood Count'));
 
-      // Should show duplicate notification and NOT add to store
       await waitFor(() => {
         expect(
           screen.getByText('Investigation is already ordered'),
@@ -956,7 +962,6 @@ describe('InvestigationsForm', () => {
     });
 
     test('allows same test when different provider added it in same encounter', async () => {
-      // Mock existing service request from backend with DIFFERENT provider
       getServiceRequests.mockResolvedValue({
         entry: [
           {
@@ -983,13 +988,11 @@ describe('InvestigationsForm', () => {
         expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
       });
 
-      // Select the investigation - should be allowed since different provider
       await user.click(screen.getByText('Complete Blood Count'));
 
-      // Should successfully add to store
       await waitFor(() => {
         expect(mockStore.addServiceRequest).toHaveBeenCalledWith(
-          'Laboratory',
+          'Lab Order',
           'cbc-001',
           'Complete Blood Count',
         );
@@ -997,8 +1000,6 @@ describe('InvestigationsForm', () => {
     });
 
     test('allows same test when it exists in different encounter', async () => {
-      // Mock: getServiceRequests returns empty for current encounter
-      // (the existing test was added in a different encounter)
       getServiceRequests.mockResolvedValue({ entry: [] });
 
       const user = userEvent.setup();
@@ -1015,7 +1016,7 @@ describe('InvestigationsForm', () => {
 
       await waitFor(() => {
         expect(mockStore.addServiceRequest).toHaveBeenCalledWith(
-          'Laboratory',
+          'Lab Order',
           'cbc-001',
           'Complete Blood Count',
         );
@@ -1049,7 +1050,6 @@ describe('InvestigationsForm', () => {
         expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
       });
 
-      // Try to select duplicate
       await user.click(screen.getByText('Complete Blood Count'));
 
       await waitFor(() => {
@@ -1058,10 +1058,8 @@ describe('InvestigationsForm', () => {
         ).toBeInTheDocument();
       });
 
-      // Clear the search
       await user.clear(combobox);
 
-      // Notification should be cleared
       await waitFor(() => {
         expect(
           screen.queryByText('Investigation is already ordered'),
@@ -1104,7 +1102,6 @@ describe('InvestigationsForm', () => {
         ).toBeInTheDocument();
       });
 
-      // Click close button on notification
       const closeButton = screen.getByRole('button', { name: /close/i });
       await user.click(closeButton);
 
@@ -1129,7 +1126,7 @@ describe('InvestigationsForm', () => {
           {
             code: 'empty-001',
             display: '',
-            category: 'Laboratory',
+            category: 'Lab Order',
             categoryCode: 'lab',
           },
         ],
@@ -1145,7 +1142,7 @@ describe('InvestigationsForm', () => {
       expect(combobox).toHaveValue('test');
       expect(screen.getByRole('option', { name: '' })).toBeInTheDocument();
       expect(
-        screen.getByRole('option', { name: 'LABORATORY' }),
+        screen.getByRole('option', { name: 'LAB ORDER' }),
       ).toBeInTheDocument();
     });
   });

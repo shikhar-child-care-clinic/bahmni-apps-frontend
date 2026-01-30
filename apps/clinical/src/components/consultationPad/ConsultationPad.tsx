@@ -353,17 +353,13 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         resetServiceRequests();
         resetMedications();
         resetVaccinations();
-        // Clear observation forms data after successful save
         resetObservationForms();
 
-        // Build service request flags from selected categories
-        // Normalize keys to lowercase for case-insensitive matching
-        const serviceRequestFlags: Record<string, boolean> = {};
+        const selectedServiceRequest: Record<string, boolean> = {};
         selectedServiceRequests.forEach((_, category) => {
-          serviceRequestFlags[category.toLowerCase()] = true;
+          selectedServiceRequest[category.toLowerCase()] = true;
         });
 
-        // Dispatch consultation saved event
         dispatchConsultationSaved({
           patientUUID: patientUUID!,
           updatedResources: {
@@ -371,7 +367,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
               selectedDiagnoses.length > 0 || selectedConditions.length > 0,
             allergies: selectedAllergies.length > 0,
             medications: selectedMedications.length > 0,
-            serviceRequests: serviceRequestFlags,
+            serviceRequests: selectedServiceRequest,
           },
         });
 

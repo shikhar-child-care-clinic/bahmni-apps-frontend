@@ -95,7 +95,6 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
       fetchServiceRequests(categoryUuid, patientUUID!, encounterUuids),
   });
 
-  // Subscribe to consultation saved events and refetch if this category was updated
   useSubscribeConsultationSaved(
     (payload) => {
       if (
@@ -106,8 +105,6 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
         refetch();
       }
     },
-    // Note: refetch is excluded from deps as it has a stable reference from TanStack Query
-    // useSubscribeConsultationSaved uses useRef to store the callback, preventing stale closures
     [patientUUID, categoryName],
   );
 

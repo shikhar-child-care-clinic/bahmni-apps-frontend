@@ -9,7 +9,7 @@ import {
   useTranslation,
   getServiceRequests,
   getCategoryUuidFromOrderTypes,
-  normalizeCategoryName,
+  getOrderTypeNames,
 } from '@bahmni/services';
 import { usePatientUUID, useActivePractitioner } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
@@ -27,7 +27,6 @@ const InvestigationsForm: React.FC = React.memo(() => {
   const { practitioner } = useActivePractitioner();
   const { activeEncounter } = useEncounterSession({ practitioner });
 
-  // Get current encounter ID and practitioner UUID for duplicate detection
   const currentEncounterId = activeEncounter?.id;
   const currentPractitionerUuid = practitioner?.uuid;
 
@@ -40,6 +39,9 @@ const InvestigationsForm: React.FC = React.memo(() => {
   const [duplicateCategory, setDuplicateCategory] = useState<string | null>(
     null,
   );
+  const [duplicateCategoryCode, setDuplicateCategoryCode] = useState<
+    string | null
+  >(null);
 
   const { investigations, isLoading, error } =
     useInvestigationsSearch(searchTerm);
@@ -52,20 +54,17 @@ const InvestigationsForm: React.FC = React.memo(() => {
     isSelectedInCategory,
   } = useServiceRequestStore();
 
-  // Fetch existing service requests from backend for duplicate detection (filtered by current encounter)
-  // Only checks duplicates for SAME provider within SAME encounter (same user can't add same test twice)
   const { data: existingServiceRequests } = useQuery({
     queryKey: ['existingServiceRequests', patientUUID, currentEncounterId],
     queryFn: async () => {
-      const categories = ['Lab Order', 'Radiology Order', 'Procedure Order'];
+      const categories = await getOrderTypeNames();
       const results: Array<{
         conceptCode: string;
-        category: string;
+        categoryUuid: string;
         display: string;
         requesterUuid: string;
       }> = [];
 
-      // Only fetch for current encounter to check duplicates in same context
       const encounterUuids = currentEncounterId
         ? [currentEncounterId]
         : undefined;
@@ -82,7 +81,7 @@ const InvestigationsForm: React.FC = React.memo(() => {
             bundle.entry
               ?.map((entry) => ({
                 conceptCode: entry.resource?.code?.coding?.[0]?.code ?? '',
-                category: categoryName,
+                categoryUuid: categoryUuid,
                 display: entry.resource?.code?.text ?? '',
                 requesterUuid:
                   entry.resource?.requester?.reference?.split('/')[1] ?? '',
@@ -105,24 +104,19 @@ const InvestigationsForm: React.FC = React.memo(() => {
     [t],
   );
 
-  // Check if an investigation is a duplicate (exists in backend or already selected in form)
-  // Only duplicates if SAME provider + SAME encounter + SAME test
   const isDuplicateInvestigation = useCallback(
-    (investigationCode: string, category: string): boolean => {
-      // Normalize category for comparison with backend data
-      // normalizeCategoryName is imported from @bahmni/services
-      const normalizedCategory = normalizeCategoryName(category);
-
-      // Check against existing service requests from backend
-      // Duplicate only if: same concept code + same category + same requester (provider)
+    (
+      investigationCode: string,
+      category: string,
+      categoryCode: string,
+    ): boolean => {
       const isExistingInvestigation = existingServiceRequests?.some(
         (sr) =>
           sr.conceptCode === investigationCode &&
-          sr.category === normalizedCategory &&
+          sr.categoryUuid === categoryCode &&
           sr.requesterUuid === currentPractitionerUuid,
       );
 
-      // Check against currently selected investigations in the form using store helper
       const isSelectedInvestigation = isSelectedInCategory(
         category,
         investigationCode,
@@ -133,26 +127,30 @@ const InvestigationsForm: React.FC = React.memo(() => {
     [existingServiceRequests, isSelectedInCategory, currentPractitionerUuid],
   );
 
-  // Auto-clear duplicate notification when search is cleared or duplicate item is removed
   useEffect(() => {
     if (showDuplicateNotification) {
-      // If search is cleared, hide notification
       if (searchTerm === '') {
         setShowDuplicateNotification(false);
         setDuplicateInvestigationId(null);
         setDuplicateCategory(null);
+        setDuplicateCategoryCode(null);
         return;
       }
 
-      // If the duplicate investigation was removed, hide notification
       if (
         duplicateInvestigationId &&
         duplicateCategory &&
-        !isDuplicateInvestigation(duplicateInvestigationId, duplicateCategory)
+        duplicateCategoryCode &&
+        !isDuplicateInvestigation(
+          duplicateInvestigationId,
+          duplicateCategory,
+          duplicateCategoryCode,
+        )
       ) {
         setShowDuplicateNotification(false);
         setDuplicateInvestigationId(null);
         setDuplicateCategory(null);
+        setDuplicateCategoryCode(null);
       }
     }
   }, [
@@ -161,6 +159,7 @@ const InvestigationsForm: React.FC = React.memo(() => {
     showDuplicateNotification,
     duplicateInvestigationId,
     duplicateCategory,
+    duplicateCategoryCode,
     isDuplicateInvestigation,
   ]);
 
@@ -266,13 +265,20 @@ const InvestigationsForm: React.FC = React.memo(() => {
   ) => {
     if (!selectedItem) return;
 
-    // Check for duplicate BEFORE adding
-    if (isDuplicateInvestigation(selectedItem.code, selectedItem.category)) {
+    if (
+      isDuplicateInvestigation(
+        selectedItem.code,
+        selectedItem.category,
+        selectedItem.categoryCode,
+      )
+    ) {
       setShowDuplicateNotification(true);
-      return; // Don't add duplicate
+      setDuplicateInvestigationId(selectedItem.code);
+      setDuplicateCategory(selectedItem.category);
+      setDuplicateCategoryCode(selectedItem.categoryCode);
+      return;
     }
 
-    // Successfully added, clear any previous duplicate notification
     setShowDuplicateNotification(false);
     addServiceRequest(
       selectedItem.category,

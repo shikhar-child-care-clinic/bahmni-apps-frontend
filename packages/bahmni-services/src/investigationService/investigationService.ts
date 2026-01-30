@@ -116,34 +116,12 @@ export const getCategoryUuidFromOrderTypes = async (
 };
 
 /**
- * Normalizes category names from investigation search results to match backend order type format.
- * Maps display names (e.g., 'Laboratory', 'Radiology') to order type names (e.g., 'Lab Order', 'Radiology Order').
+ * Gets all order type names (categories) from the backend.
+ * Returns an array of category display names (e.g., ['Lab Order', 'Radiology Order', 'Procedure Order']).
  *
- * @param category - The category name from investigation search results
- * @returns The normalized category name matching backend order type format
+ * @returns Array of order type display names
  */
-export const normalizeCategoryName = (category: string): string => {
-  const normalizedCategory = category.trim().toLowerCase();
-
-  if (
-    normalizedCategory.includes('lab') ||
-    normalizedCategory === 'laboratory'
-  ) {
-    return 'Lab Order';
-  }
-  if (
-    normalizedCategory.includes('rad') ||
-    normalizedCategory === 'radiology'
-  ) {
-    return 'Radiology Order';
-  }
-  if (
-    normalizedCategory.includes('proc') ||
-    normalizedCategory === 'procedure'
-  ) {
-    return 'Procedure Order';
-  }
-
-  // Fallback to original if no match
-  return category;
+export const getOrderTypeNames = async (): Promise<string[]> => {
+  const orderTypesData = await getOrderTypes();
+  return orderTypesData.results.map((orderType) => orderType.display);
 };

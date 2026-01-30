@@ -17,7 +17,17 @@ jest.mock('@bahmni/services', () => ({
   getFlattenedInvestigations: jest.fn(),
   getFormattedError: jest.fn(),
   getServiceRequests: jest.fn().mockResolvedValue({ entry: [] }),
-  getCategoryUuidFromOrderTypes: jest.fn().mockResolvedValue('mock-uuid'),
+  getCategoryUuidFromOrderTypes: jest
+    .fn()
+    .mockImplementation((categoryName: string) => {
+      if (categoryName === 'Lab Order') return Promise.resolve('LAB');
+      if (categoryName === 'Radiology Order') return Promise.resolve('RAD');
+      if (categoryName === 'Procedure Order') return Promise.resolve('PROC');
+      return Promise.resolve('mock-uuid');
+    }),
+  getOrderTypeNames: jest
+    .fn()
+    .mockResolvedValue(['Lab Order', 'Radiology Order', 'Procedure Order']),
 }));
 
 jest.mock('@bahmni/widgets', () => ({
@@ -55,43 +65,43 @@ const mockFlattenedInvestigations: FlattenedInvestigations[] = [
   {
     code: 'cbc-001',
     display: 'Complete Blood Count',
-    category: 'Laboratory',
+    category: 'Lab Order',
     categoryCode: 'LAB',
   },
   {
     code: 'hb-001',
     display: 'Hemoglobin',
-    category: 'Laboratory',
+    category: 'Lab Order',
     categoryCode: 'LAB',
   },
   {
     code: 'glucose-001',
     display: 'Blood Glucose Test',
-    category: 'Laboratory',
+    category: 'Lab Order',
     categoryCode: 'LAB',
   },
   {
     code: 'lipid-001',
     display: 'Lipid Profile',
-    category: 'Laboratory',
+    category: 'Lab Order',
     categoryCode: 'LAB',
   },
   {
     code: 'xray-chest-001',
     display: 'Chest X-Ray',
-    category: 'Radiology',
+    category: 'Radiology Order',
     categoryCode: 'RAD',
   },
   {
     code: 'xray-abdomen-001',
     display: 'Abdomen X-Ray',
-    category: 'Radiology',
+    category: 'Radiology Order',
     categoryCode: 'RAD',
   },
   {
     code: 'ct-head-001',
     display: 'CT Head',
-    category: 'Radiology',
+    category: 'Radiology Order',
     categoryCode: 'RAD',
   },
 ];
@@ -151,7 +161,7 @@ describe('InvestigationsForm Integration Tests', () => {
         const options = screen.getAllByRole('option');
         expect(options.length).toBeGreaterThan(0);
 
-        expect(screen.getByText(/laboratory/i)).toBeInTheDocument();
+        expect(screen.getByText(/lab order/i)).toBeInTheDocument();
         expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
         expect(screen.getByText('Blood Glucose Test')).toBeInTheDocument();
       });
@@ -231,7 +241,7 @@ describe('InvestigationsForm Integration Tests', () => {
       await user.click(option);
 
       await waitFor(() => {
-        expect(screen.getByText('Added Laboratory')).toBeInTheDocument();
+        expect(screen.getByText('Added Lab Order')).toBeInTheDocument();
 
         expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
 
@@ -265,11 +275,11 @@ describe('InvestigationsForm Integration Tests', () => {
       await user.click(screen.getByRole('option', { name: 'Chest X-Ray' }));
 
       await waitFor(() => {
-        expect(screen.getByText('Added Laboratory')).toBeInTheDocument();
-        expect(screen.getByText('Added Radiology')).toBeInTheDocument();
+        expect(screen.getByText('Added Lab Order')).toBeInTheDocument();
+        expect(screen.getByText('Added Radiology Order')).toBeInTheDocument();
 
-        const labBox = screen.getByLabelText('Added Laboratory');
-        const radBox = screen.getByLabelText('Added Radiology');
+        const labBox = screen.getByLabelText('Added Lab Order');
+        const radBox = screen.getByLabelText('Added Radiology Order');
 
         expect(
           within(labBox).getByText('Blood Glucose Test'),
@@ -317,8 +327,8 @@ describe('InvestigationsForm Integration Tests', () => {
       await user.click(screen.getByRole('option', { name: 'Lipid Profile' }));
 
       await waitFor(() => {
-        expect(screen.getByText('Added Laboratory')).toBeInTheDocument();
-        const labBox = screen.getByLabelText('Added Laboratory');
+        expect(screen.getByText('Added Lab Order')).toBeInTheDocument();
+        const labBox = screen.getByLabelText('Added Lab Order');
         expect(within(labBox).getByText('Lipid Profile')).toBeInTheDocument();
       });
 
@@ -429,7 +439,7 @@ describe('InvestigationsForm Integration Tests', () => {
       );
 
       expect(mockStore.addServiceRequest).toHaveBeenCalledWith(
-        'Laboratory',
+        'Lab Order',
         'cbc-001',
         'Complete Blood Count',
       );
@@ -443,7 +453,7 @@ describe('InvestigationsForm Integration Tests', () => {
       await user.click(screen.getByRole('option', { name: 'Hemoglobin' }));
 
       expect(mockStore.addServiceRequest).toHaveBeenCalledWith(
-        'Laboratory',
+        'Lab Order',
         'hb-001',
         'Hemoglobin',
       );
@@ -478,7 +488,7 @@ describe('InvestigationsForm Integration Tests', () => {
         {
           code: 'panel-001',
           display: 'Liver Function Test (Panel)',
-          category: 'Laboratory',
+          category: 'Lab Order',
           categoryCode: 'LAB',
         },
       ];
@@ -508,7 +518,7 @@ describe('InvestigationsForm Integration Tests', () => {
         ...mockStore,
         selectedServiceRequests: new Map([
           [
-            'Laboratory',
+            'Lab Order',
             [
               {
                 id: 'cbc-001',
