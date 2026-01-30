@@ -34,7 +34,6 @@ const fetchAndNormalizeFormsData = async (): Promise<FormApiResponse[]> => {
   return Array.isArray(data) ? data : [];
 };
 
-
 const getTranslatedFormName = (
   form: FormApiResponse,
   currentLocale: string,
@@ -54,7 +53,6 @@ const getTranslatedFormName = (
   return form.name;
 };
 
-
 const transformToObservationForm = (
   form: FormApiResponse,
   currentLocale: string,
@@ -71,7 +69,6 @@ const transformToObservationForm = (
     })),
   };
 };
-
 
 export const fetchObservationForms = async (): Promise<ObservationForm[]> => {
   const formsArray = await fetchAndNormalizeFormsData();
@@ -107,12 +104,10 @@ export const fetchFormMetadata = async (
   const formSchema = JSON.parse(data.resources[0].value);
   const currentLocale = getUserPreferredLocale();
 
-  
   const formName = data.name ?? formSchema.name;
   const formUuidValue = data.uuid ?? formSchema.uuid;
   const formVersion = data.version ?? formSchema.version ?? '1';
   const formPublished = data.published ?? false;
-
 
   let translations: ObservationFormTranslations = { labels: {}, concepts: {} };
 
@@ -138,7 +133,7 @@ export const fetchFormMetadata = async (
           currentLocale,
         );
       }
-    } catch (error) {
+    } catch {
       
     }
   }
