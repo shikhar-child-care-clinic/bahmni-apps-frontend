@@ -16,6 +16,7 @@ import {
   Form2Observation,
   getFormattedError,
   getUserPreferredLocale,
+  transformContainerObservationsToForm2Observations,
 } from '@bahmni/services';
 import { usePatientUUID } from '@bahmni/widgets';
 import React, { useState, useRef } from 'react';
@@ -52,47 +53,6 @@ interface ObservationFormsContainerProps {
   // Existing saved observations for the current form (for edit mode)
   existingObservations?: Form2Observation[];
 }
-
-/**
- * Transforms raw observations from Container.getValue() to Form2Observation format
- * This ensures comment, interpretation, and other fields are properly included
- */
-const transformContainerObservationsToForm2Observations = (
-  containerObservations: Record<string, unknown>[],
-): Form2Observation[] => {
-  const transform = (obs: Record<string, unknown>): Form2Observation => {
-    const observation: Form2Observation = {
-      concept: {
-        uuid: (obs.concept as Record<string, unknown>)?.uuid ?? obs.concept,
-        datatype: (obs.concept as Record<string, unknown>)?.datatype,
-      },
-      value: obs.value ?? null,
-      obsDatetime:
-        (obs.observationDateTime as string) ?? new Date().toISOString(),
-      formNamespace: (obs.formNamespace as string) ?? 'Bahmni',
-      formFieldPath: obs.formFieldPath,
-    };
-
-    // Include comment if present
-    if (obs.comment) {
-      observation.comment = obs.comment;
-    }
-
-    // Include interpretation if present
-    if (obs.interpretation) {
-      observation.interpretation = obs.interpretation;
-    }
-
-    // Handle group members recursively
-    if (obs.groupMembers && Array.isArray(obs.groupMembers)) {
-      observation.groupMembers = obs.groupMembers.map(transform);
-    }
-
-    return observation;
-  };
-
-  return containerObservations.map(transform);
-};
 
 /**
  * ObservationFormsWrapper component
@@ -184,10 +144,20 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
 
   // Handle form save - lift observations to parent and exit view mode
   const handleSaveForm = () => {
-    if (viewingForm && onFormObservationsChange) {
+    if (viewingForm && onFormObservationsChange && formContainerRef.current) {
+      const { observations: currentObservations } =
+        formContainerRef.current.getValue();
+      
+      const transformedObservations =
+        currentObservations && currentObservations.length > 0
+          ? transformContainerObservationsToForm2Observations(
+              currentObservations,
+            )
+          : [];
+      
       onFormObservationsChange(
         viewingForm.uuid,
-        observations,
+        transformedObservations,
         validationErrorType,
       );
     }
@@ -208,24 +178,28 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       const { observations: currentObservations, errors } =
         formContainerRef.current.getValue();
 
-      const isEmpty = !observations || observations.length === 0;
-      const hasErrors = errors && errors.length > 0;
-
       // Transform current observations to ensure comments and other fields are included
       const transformedObservations =
         currentObservations && currentObservations.length > 0
           ? transformContainerObservationsToForm2Observations(
               currentObservations,
             )
-          : observations;
+          : [];
 
-      // Check for empty form
+     
+      const hasNotesOnly = transformedObservations.some(
+        (obs) => (obs.comment || obs.interpretation) && !obs.value
+      );
+      const isEmpty = transformedObservations.length === 0 && !hasNotesOnly;
+      const hasErrors = errors && errors.length > 0;
+
+      
       if (isEmpty) {
         setValidationErrorType(VALIDATION_STATE_EMPTY);
         return;
       }
 
-      // Check for validation errors
+      
       if (hasErrors) {
         const hasMandatoryError = errors
           .flat()
@@ -241,10 +215,10 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
         return;
       }
 
-      // If we reach here, validation passed
+      
       setValidationErrorType(null);
 
-      // Save the validated observations (already transformed above)
+     
       if (viewingForm && onFormObservationsChange) {
         onFormObservationsChange(viewingForm.uuid, transformedObservations);
       }
@@ -252,20 +226,20 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
     }
   };
 
-  // Continue anyway - save form even with validation errors
+  
   const continueAnyway = () => {
     setValidationErrorType(null);
     handleSaveForm();
   };
 
-  // Discard form and clear validation errors
+  
   const discard = () => {
     setValidationErrorType(null);
     resetForm();
     handleDiscardForm();
   };
 
-  // Format error for display
+  
   const error = metadataError
     ? new Error(
         getFormattedError(metadataError).message ??
@@ -338,7 +312,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
     </div>
   );
 
-  // If viewing a form, render the form with its own ActionArea
+ 
   if (viewingForm) {
     return (
       <ActionArea

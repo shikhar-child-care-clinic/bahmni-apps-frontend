@@ -20,6 +20,7 @@ export {
 export {
   transformFormDataToObservations,
   transformObservationsToFormData,
+  transformContainerObservationsToForm2Observations,
   type FormData,
   type FormControlData,
   type Form2Observation,

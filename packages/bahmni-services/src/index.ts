@@ -263,6 +263,7 @@ export {
   fetchFormMetadata,
   transformFormDataToObservations,
   transformObservationsToFormData,
+  transformContainerObservationsToForm2Observations,
   getPatientFormData,
   type ObservationForm,
   type FormApiResponse,
