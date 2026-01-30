@@ -256,14 +256,15 @@ describe('Widget Registry', () => {
       const types = getAllWidgetTypes();
       const expectedTypes = [
         'allergies',
+        'programs',
         'conditions',
         'diagnoses',
         'labOrders',
         'pacsOrders',
         'treatment',
+        'appointments',
         'flowSheet',
         'ordersControl',
-        'programs',
         'observations',
         'forms',
       ];
@@ -395,7 +396,7 @@ describe('Widget Registry', () => {
       resetWidgetRegistry();
       const countAfterReset = getAllWidgetTypes().length;
 
-      expect(countAfterReset).toBe(11); // Only built-in widgets
+      expect(countAfterReset).toBe(12); // Only built-in widgets
       expect(countWithCustom).toBeGreaterThan(countAfterReset);
     });
   });

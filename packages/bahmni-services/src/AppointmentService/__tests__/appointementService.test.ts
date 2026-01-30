@@ -2,8 +2,14 @@ import { post, get } from '../../api';
 import {
   searchAppointmentsByAttribute,
   getAppointmentById,
+  getUpcomingAppointments,
+  getPastAppointments,
 } from '../appointmmetService';
-import { APPOINTMENTS_SEARCH_URL, APPOINTMENTS_URL } from '../constatns';
+import {
+  APPOINTMENTS_SEARCH_URL,
+  APPOINTMENTS_URL,
+  BAHMNI_SQL_URL,
+} from '../constants';
 import { Appointment } from '../models';
 
 jest.mock('../../api');
@@ -262,6 +268,223 @@ describe('Appointment Service', () => {
       expect(result.reasons).toHaveLength(1);
       expect(result.reasons[0].conceptUuid).toBe('reason-uuid');
       expect(result.reasons[0].name).toBe('Consultation');
+    });
+  });
+
+  describe('getUpcomingAppointments', () => {
+    const patientUUID = 'patient-uuid-123';
+    const mockSqlResponse = {
+      uuid: 'appt-uuid-1',
+      DASHBOARD_APPOINTMENTS_START_DATE_IN_UTC_KEY: [2025, 2, 15, 10, 30],
+      DASHBOARD_APPOINTMENTS_SLOT_KEY: '10:30 AM - 10:46 AM',
+      DASHBOARD_APPOINTMENTS_APPOINTMENT_NUMBER_KEY: 'APT-001',
+      DASHBOARD_APPOINTMENTS_REASON_KEY: 'Follow-up',
+      DASHBOARD_APPOINTMENTS_SERVICE_KEY: 'Consultation',
+      DASHBOARD_APPOINTMENTS_SERVICE_TYPE_KEY: 'General',
+      DASHBOARD_APPOINTMENTS_PROVIDER_KEY: 'Dr. Smith',
+      DASHBOARD_APPOINTMENTS_LOCATION_KEY: 'OPD-1',
+      DASHBOARD_APPOINTMENTS_STATUS_KEY: 'Scheduled',
+    };
+
+    it('should call GET with correct SQL endpoint for upcoming appointments', async () => {
+      const mockAppointments = [mockSqlResponse];
+      mockedGet.mockResolvedValue(mockAppointments);
+
+      await getUpcomingAppointments(patientUUID);
+
+      const expectedUrl = `${BAHMNI_SQL_URL}?patientUuid=${patientUUID}&q=bahmni.sqlGet.upComingAppointments&v=full`;
+      expect(mockedGet).toHaveBeenCalledWith(expectedUrl);
+      expect(mockedGet).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return array of upcoming appointments from SQL response', async () => {
+      const mockAppointments = [mockSqlResponse];
+      mockedGet.mockResolvedValue(mockAppointments);
+
+      const result = await getUpcomingAppointments(patientUUID);
+
+      expect(result).toEqual(mockAppointments);
+      expect(result).toHaveLength(1);
+    });
+
+    it('should handle multiple upcoming appointments', async () => {
+      const mockAppointment2 = {
+        ...mockSqlResponse,
+        uuid: 'appt-uuid-2',
+        DASHBOARD_APPOINTMENTS_APPOINTMENT_NUMBER_KEY: 'APT-002',
+        DASHBOARD_APPOINTMENTS_START_DATE_IN_UTC_KEY: [2025, 2, 20, 14, 0],
+      };
+      const mockAppointments = [mockSqlResponse, mockAppointment2];
+      mockedGet.mockResolvedValue(mockAppointments);
+
+      const result = await getUpcomingAppointments(patientUUID);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].uuid).toBe('appt-uuid-1');
+      expect(result[1].uuid).toBe('appt-uuid-2');
+    });
+
+    it('should return empty array when no upcoming appointments', async () => {
+      mockedGet.mockResolvedValue([]);
+
+      const result = await getUpcomingAppointments(patientUUID);
+
+      expect(result).toEqual([]);
+      expect(result).toHaveLength(0);
+    });
+
+    it('should propagate API errors', async () => {
+      const mockError = new Error('SQL Query Error');
+      mockedGet.mockRejectedValue(mockError);
+
+      await expect(getUpcomingAppointments(patientUUID)).rejects.toThrow(
+        'SQL Query Error',
+      );
+      expect(mockedGet).toHaveBeenCalledWith(
+        expect.stringContaining('upComingAppointments'),
+      );
+    });
+
+    it('should include patientUuid in query string', async () => {
+      mockedGet.mockResolvedValue([]);
+
+      await getUpcomingAppointments(patientUUID);
+
+      const callArg = mockedGet.mock.calls[0][0];
+      expect(callArg).toContain(`patientUuid=${patientUUID}`);
+      expect(callArg).toContain('q=bahmni.sqlGet.upComingAppointments');
+      expect(callArg).toContain('v=full');
+    });
+
+    it('should handle different patient UUIDs', async () => {
+      const differentUUID = 'patient-uuid-456';
+      mockedGet.mockResolvedValue([]);
+
+      await getUpcomingAppointments(differentUUID);
+
+      const callArg = mockedGet.mock.calls[0][0];
+      expect(callArg).toContain(`patientUuid=${differentUUID}`);
+    });
+  });
+
+  describe('getPastAppointments', () => {
+    const patientUUID = 'patient-uuid-123';
+    const mockSqlResponse = {
+      uuid: 'appt-uuid-past-1',
+      DASHBOARD_APPOINTMENTS_START_DATE_IN_UTC_KEY: [2025, 1, 10, 10, 30],
+      DASHBOARD_APPOINTMENTS_SLOT_KEY: '10:30 AM - 10:46 AM',
+      DASHBOARD_APPOINTMENTS_APPOINTMENT_NUMBER_KEY: 'APT-OLD-001',
+      DASHBOARD_APPOINTMENTS_REASON_KEY: 'Consultation',
+      DASHBOARD_APPOINTMENTS_SERVICE_KEY: 'Consultation',
+      DASHBOARD_APPOINTMENTS_SERVICE_TYPE_KEY: 'General',
+      DASHBOARD_APPOINTMENTS_PROVIDER_KEY: 'Dr. Johnson',
+      DASHBOARD_APPOINTMENTS_LOCATION_KEY: 'OPD-2',
+      DASHBOARD_APPOINTMENTS_STATUS_KEY: 'Completed',
+    };
+
+    it('should call GET with correct SQL endpoint for past appointments', async () => {
+      const mockAppointments = [mockSqlResponse];
+      mockedGet.mockResolvedValue(mockAppointments);
+
+      await getPastAppointments(patientUUID);
+
+      const expectedUrl = `${BAHMNI_SQL_URL}?patientUuid=${patientUUID}&q=bahmni.sqlGet.pastAppointments&v=full`;
+      expect(mockedGet).toHaveBeenCalledWith(expectedUrl);
+      expect(mockedGet).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return array of past appointments from SQL response', async () => {
+      const mockAppointments = [mockSqlResponse];
+      mockedGet.mockResolvedValue(mockAppointments);
+
+      const result = await getPastAppointments(patientUUID);
+
+      expect(result).toEqual(mockAppointments);
+      expect(result).toHaveLength(1);
+    });
+
+    it('should handle multiple past appointments', async () => {
+      const mockAppointment2 = {
+        ...mockSqlResponse,
+        uuid: 'appt-uuid-past-2',
+        DASHBOARD_APPOINTMENTS_APPOINTMENT_NUMBER_KEY: 'APT-OLD-002',
+        DASHBOARD_APPOINTMENTS_START_DATE_IN_UTC_KEY: [2025, 1, 5, 11, 0],
+      };
+      const mockAppointments = [mockSqlResponse, mockAppointment2];
+      mockedGet.mockResolvedValue(mockAppointments);
+
+      const result = await getPastAppointments(patientUUID);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].uuid).toBe('appt-uuid-past-1');
+      expect(result[1].uuid).toBe('appt-uuid-past-2');
+    });
+
+    it('should return empty array when no past appointments', async () => {
+      mockedGet.mockResolvedValue([]);
+
+      const result = await getPastAppointments(patientUUID);
+
+      expect(result).toEqual([]);
+      expect(result).toHaveLength(0);
+    });
+
+    it('should propagate API errors', async () => {
+      const mockError = new Error('SQL Query Error');
+      mockedGet.mockRejectedValue(mockError);
+
+      await expect(getPastAppointments(patientUUID)).rejects.toThrow(
+        'SQL Query Error',
+      );
+      expect(mockedGet).toHaveBeenCalledWith(
+        expect.stringContaining('pastAppointments'),
+      );
+    });
+
+    it('should include patientUuid in query string', async () => {
+      mockedGet.mockResolvedValue([]);
+
+      await getPastAppointments(patientUUID);
+
+      const callArg = mockedGet.mock.calls[0][0];
+      expect(callArg).toContain(`patientUuid=${patientUUID}`);
+      expect(callArg).toContain('q=bahmni.sqlGet.pastAppointments');
+      expect(callArg).toContain('v=full');
+    });
+
+    it('should handle network errors', async () => {
+      const networkError = new Error('Network timeout');
+      mockedGet.mockRejectedValue(networkError);
+
+      await expect(getPastAppointments(patientUUID)).rejects.toThrow(
+        'Network timeout',
+      );
+    });
+
+    it('should work with different patient UUIDs', async () => {
+      const differentUUID = 'patient-uuid-789';
+      mockedGet.mockResolvedValue([]);
+
+      await getPastAppointments(differentUUID);
+
+      const callArg = mockedGet.mock.calls[0][0];
+      expect(callArg).toContain(`patientUuid=${differentUUID}`);
+    });
+
+    it('should return appointment with all SQL response fields', async () => {
+      mockedGet.mockResolvedValue([mockSqlResponse]);
+
+      const result = await getPastAppointments(patientUUID);
+
+      expect(result[0]).toHaveProperty('uuid', 'appt-uuid-past-1');
+      expect(result[0]).toHaveProperty(
+        'DASHBOARD_APPOINTMENTS_STATUS_KEY',
+        'Completed',
+      );
+      expect(result[0]).toHaveProperty(
+        'DASHBOARD_APPOINTMENTS_PROVIDER_KEY',
+        'Dr. Johnson',
+      );
     });
   });
 });
