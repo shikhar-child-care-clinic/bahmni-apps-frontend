@@ -1,10 +1,11 @@
 import { OPENMRS_FHIR_R4 } from '../constants/app';
 
-export const DIAGNOSTIC_REPORTS_BY_SERVICE_URL = (
+export const DIAGNOSTIC_REPORTS_URL = (
   patientUuid: string,
-  serviceRequestIds: string,
+  basedOnIds?: string,
 ) => {
-  return `${OPENMRS_FHIR_R4}/DiagnosticReport?patient=${patientUuid}&based-on=${serviceRequestIds}`;
+  const baseUrl = `${OPENMRS_FHIR_R4}/DiagnosticReport?patient=${patientUuid}`;
+  return basedOnIds ? `${baseUrl}&based-on=${basedOnIds}` : baseUrl;
 };
 
 export const DIAGNOSTIC_REPORT_BUNDLE_URL = (diagnosticReportId: string) => {

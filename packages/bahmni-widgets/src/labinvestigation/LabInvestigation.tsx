@@ -5,7 +5,7 @@ import {
   getCategoryUuidFromOrderTypes,
   getFormattedError,
   getLabInvestigationsBundle,
-  getDiagnosticReportsByOrders,
+  getDiagnosticReports,
   getDiagnosticReportBundle,
 } from '@bahmni/services';
 import { useQuery, useQueries } from '@tanstack/react-query';
@@ -145,8 +145,7 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   // Fetch diagnostic reports for the open accordion
   const { data: diagnosticReports } = useQuery({
     queryKey: ['diagnosticReports', patientUUID, openAccordionTestIds],
-    queryFn: () =>
-      getDiagnosticReportsByOrders(patientUUID!, openAccordionTestIds),
+    queryFn: () => getDiagnosticReports(patientUUID!, openAccordionTestIds),
     enabled:
       !!patientUUID &&
       openAccordionTestIds.length > 0 &&

@@ -2,7 +2,7 @@ import {
   useTranslation,
   getCategoryUuidFromOrderTypes,
   getLabInvestigationsBundle,
-  getDiagnosticReportsByOrders,
+  getDiagnosticReports,
   getDiagnosticReportBundle,
 } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -20,7 +20,7 @@ jest.mock('@bahmni/services', () => ({
   useTranslation: jest.fn(),
   getCategoryUuidFromOrderTypes: jest.fn(),
   getLabInvestigationsBundle: jest.fn(),
-  getDiagnosticReportsByOrders: jest.fn(),
+  getDiagnosticReports: jest.fn(),
   getDiagnosticReportBundle: jest.fn(),
 }));
 
@@ -58,10 +58,9 @@ const mockGetLabInvestigationsBundle =
   getLabInvestigationsBundle as jest.MockedFunction<
     typeof getLabInvestigationsBundle
   >;
-const mockGetDiagnosticReportsByOrders =
-  getDiagnosticReportsByOrders as jest.MockedFunction<
-    typeof getDiagnosticReportsByOrders
-  >;
+const mockGetDiagnosticReports = getDiagnosticReports as jest.MockedFunction<
+  typeof getDiagnosticReports
+>;
 const mockGetDiagnosticReportBundle =
   getDiagnosticReportBundle as jest.MockedFunction<
     typeof getDiagnosticReportBundle
@@ -186,7 +185,7 @@ describe('LabInvestigation', () => {
     mockGetLabInvestigationsBundle.mockResolvedValue(
       createMockBundle(mockServiceRequests),
     );
-    mockGetDiagnosticReportsByOrders.mockResolvedValue({
+    mockGetDiagnosticReports.mockResolvedValue({
       resourceType: 'Bundle',
       type: 'searchset',
       entry: [],
@@ -412,7 +411,7 @@ describe('LabInvestigation', () => {
         ],
       };
 
-      mockGetDiagnosticReportsByOrders.mockResolvedValue(mockDiagnosticReports);
+      mockGetDiagnosticReports.mockResolvedValue(mockDiagnosticReports);
 
       render(renderLabInvestigations());
 
@@ -421,10 +420,9 @@ describe('LabInvestigation', () => {
       });
 
       await waitFor(() => {
-        expect(mockGetDiagnosticReportsByOrders).toHaveBeenCalledWith(
-          'patient-123',
-          ['test-1'],
-        );
+        expect(mockGetDiagnosticReports).toHaveBeenCalledWith('patient-123', [
+          'test-1',
+        ]);
       });
     });
 
@@ -445,7 +443,7 @@ describe('LabInvestigation', () => {
         ],
       };
 
-      mockGetDiagnosticReportsByOrders.mockResolvedValue(mockDiagnosticReports);
+      mockGetDiagnosticReports.mockResolvedValue(mockDiagnosticReports);
 
       render(renderLabInvestigations());
 

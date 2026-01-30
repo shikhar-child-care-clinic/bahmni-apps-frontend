@@ -158,7 +158,7 @@ export {
 } from './radiologyInvestigationService';
 export { getLabInvestigationsBundle } from './labInvestigationService';
 export {
-  getDiagnosticReportsByOrders,
+  getDiagnosticReports,
   getDiagnosticReportBundle,
   PROCESSED_REPORT_STATUSES,
   PENDING_REPORT_STATUSES,

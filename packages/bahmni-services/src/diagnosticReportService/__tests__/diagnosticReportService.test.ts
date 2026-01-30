@@ -1,11 +1,11 @@
 import { Bundle, DiagnosticReport } from 'fhir/r4';
 import { get } from '../../api';
 import {
-  DIAGNOSTIC_REPORTS_BY_SERVICE_URL,
+  DIAGNOSTIC_REPORTS_URL,
   DIAGNOSTIC_REPORT_BUNDLE_URL,
 } from '../constants';
 import {
-  getDiagnosticReportsByOrders,
+  getDiagnosticReports,
   getDiagnosticReportBundle,
 } from '../diagnosticReportService';
 
@@ -17,7 +17,7 @@ describe('diagnosticReportService', () => {
     jest.spyOn(console, 'error').mockImplementation();
   });
 
-  describe('getDiagnosticReportsByOrders', () => {
+  describe('getDiagnosticReports', () => {
     const patientUuid = '02f47490-d657-48ee-98e7-4c9133ea168b';
 
     const createMockDiagnosticReport = (
@@ -73,10 +73,7 @@ describe('diagnosticReportService', () => {
       (get as jest.Mock).mockResolvedValueOnce(mockBundle);
 
       const serviceRequestIds = ['service-1', 'service-2'];
-      const result = await getDiagnosticReportsByOrders(
-        patientUuid,
-        serviceRequestIds,
-      );
+      const result = await getDiagnosticReports(patientUuid, serviceRequestIds);
 
       expect(result).toEqual(mockBundle);
       expect(result.entry).toHaveLength(2);
@@ -89,12 +86,9 @@ describe('diagnosticReportService', () => {
       (get as jest.Mock).mockResolvedValueOnce(mockBundle);
 
       const serviceRequestIds = ['service-123'];
-      await getDiagnosticReportsByOrders(patientUuid, serviceRequestIds);
+      await getDiagnosticReports(patientUuid, serviceRequestIds);
 
-      const expectedUrl = DIAGNOSTIC_REPORTS_BY_SERVICE_URL(
-        patientUuid,
-        'service-123',
-      );
+      const expectedUrl = DIAGNOSTIC_REPORTS_URL(patientUuid, 'service-123');
       expect(get).toHaveBeenCalledWith(expectedUrl);
     });
 
@@ -103,9 +97,9 @@ describe('diagnosticReportService', () => {
       (get as jest.Mock).mockResolvedValueOnce(mockBundle);
 
       const serviceRequestIds = ['service-1', 'service-2', 'service-3'];
-      await getDiagnosticReportsByOrders(patientUuid, serviceRequestIds);
+      await getDiagnosticReports(patientUuid, serviceRequestIds);
 
-      const expectedUrl = DIAGNOSTIC_REPORTS_BY_SERVICE_URL(
+      const expectedUrl = DIAGNOSTIC_REPORTS_URL(
         patientUuid,
         'service-1,service-2,service-3',
       );
@@ -119,10 +113,10 @@ describe('diagnosticReportService', () => {
       const testPatientUuid = 'patient-uuid-123';
       const serviceRequestIds = ['order-1', 'order-2'];
 
-      await getDiagnosticReportsByOrders(testPatientUuid, serviceRequestIds);
+      await getDiagnosticReports(testPatientUuid, serviceRequestIds);
 
       expect(get).toHaveBeenCalledTimes(1);
-      const expectedUrl = DIAGNOSTIC_REPORTS_BY_SERVICE_URL(
+      const expectedUrl = DIAGNOSTIC_REPORTS_URL(
         testPatientUuid,
         'order-1,order-2',
       );
@@ -139,9 +133,7 @@ describe('diagnosticReportService', () => {
 
       (get as jest.Mock).mockResolvedValueOnce(mockBundle);
 
-      const result = await getDiagnosticReportsByOrders(patientUuid, [
-        'service-1',
-      ]);
+      const result = await getDiagnosticReports(patientUuid, ['service-1']);
 
       expect(result.entry).toBeDefined();
       expect(result.entry).toHaveLength(3);
@@ -158,12 +150,32 @@ describe('diagnosticReportService', () => {
 
       (get as jest.Mock).mockResolvedValueOnce(bundleWithoutEntries);
 
-      const result = await getDiagnosticReportsByOrders(patientUuid, [
-        'service-1',
-      ]);
+      const result = await getDiagnosticReports(patientUuid, ['service-1']);
 
       expect(result.entry).toBeUndefined();
       expect(result.total).toBe(0);
+    });
+
+    it('should fetch all diagnostic reports when called without serviceRequestIds', async () => {
+      const mockBundle = createMockBundle([createMockDiagnosticReport()]);
+      (get as jest.Mock).mockResolvedValueOnce(mockBundle);
+
+      await getDiagnosticReports(patientUuid);
+
+      const expectedUrl = DIAGNOSTIC_REPORTS_URL(patientUuid);
+      expect(get).toHaveBeenCalledWith(expectedUrl);
+      expect(expectedUrl).not.toContain('based-on');
+    });
+
+    it('should fetch all diagnostic reports when called with empty array', async () => {
+      const mockBundle = createMockBundle([createMockDiagnosticReport()]);
+      (get as jest.Mock).mockResolvedValueOnce(mockBundle);
+
+      await getDiagnosticReports(patientUuid, []);
+
+      const expectedUrl = DIAGNOSTIC_REPORTS_URL(patientUuid);
+      expect(get).toHaveBeenCalledWith(expectedUrl);
+      expect(expectedUrl).not.toContain('based-on');
     });
   });
 
