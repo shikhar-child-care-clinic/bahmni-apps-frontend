@@ -908,6 +908,68 @@ describe('ObservationFormsContainer', () => {
       });
     });
 
+    it('should preserve notes (comment and interpretation) when using Continue Anyway path', async () => {
+      const mockOnFormObservationsChange = jest.fn();
+      const mockOnViewingFormChange = jest.fn();
+
+      mockUseObservationFormData.mockReturnValue({
+        observations: [{ concept: { uuid: 'c1' }, value: 'v1' }],
+        handleFormDataChange: jest.fn(),
+        resetForm: jest.fn(),
+        formMetadata: mockMetadata,
+        isLoadingMetadata: false,
+        metadataError: null,
+      });
+
+      mockGetValue.mockReturnValue({
+        observations: [
+          {
+            concept: { uuid: 'c1' },
+            value: 'incomplete',
+            comment: 'patient note about symptoms',
+            interpretation: 'abnormal',
+          },
+        ],
+        errors: [{ message: 'mandatory' }],
+      });
+
+      render(
+        <ObservationFormsContainer
+          {...defaultProps}
+          viewingForm={mockForm}
+          onFormObservationsChange={mockOnFormObservationsChange}
+          onViewingFormChange={mockOnViewingFormChange}
+        />,
+      );
+
+      const saveButton = screen.getByTestId('primary-button');
+
+      
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
+      });
+
+      
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(mockOnFormObservationsChange).toHaveBeenCalledWith(
+          mockForm.uuid,
+          expect.arrayContaining([
+            expect.objectContaining({
+              comment: 'patient note about symptoms',
+              interpretation: 'abnormal',
+              value: 'incomplete',
+            }),
+          ]),
+          'mandatory',
+        );
+        expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
+      });
+    });
+
     it('should display correct subtitle for each validation error type', async () => {
       // Setup with formMetadata for mandatory error test
       mockUseObservationFormData.mockReturnValue({
