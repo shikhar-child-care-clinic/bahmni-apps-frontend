@@ -102,10 +102,12 @@ describe('InvestigationsForm Integration Tests', () => {
     addServiceRequest: jest.fn(),
     removeServiceRequest: jest.fn(),
     updatePriority: jest.fn(),
+    updateNote: jest.fn(),
     reset: jest.fn(),
     getState: jest.fn(() => ({
       selectedServiceRequests: new Map<string, ServiceRequestInputEntry[]>(),
     })),
+    isSelectedInCategory: jest.fn(() => false),
   };
 
   beforeEach(() => {

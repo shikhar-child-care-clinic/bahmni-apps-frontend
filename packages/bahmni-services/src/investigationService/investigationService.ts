@@ -114,3 +114,36 @@ export const getCategoryUuidFromOrderTypes = async (
   );
   return orderType?.uuid;
 };
+
+/**
+ * Normalizes category names from investigation search results to match backend order type format.
+ * Maps display names (e.g., 'Laboratory', 'Radiology') to order type names (e.g., 'Lab Order', 'Radiology Order').
+ *
+ * @param category - The category name from investigation search results
+ * @returns The normalized category name matching backend order type format
+ */
+export const normalizeCategoryName = (category: string): string => {
+  const normalizedCategory = category.trim().toLowerCase();
+
+  if (
+    normalizedCategory.includes('lab') ||
+    normalizedCategory === 'laboratory'
+  ) {
+    return 'Lab Order';
+  }
+  if (
+    normalizedCategory.includes('rad') ||
+    normalizedCategory === 'radiology'
+  ) {
+    return 'Radiology Order';
+  }
+  if (
+    normalizedCategory.includes('proc') ||
+    normalizedCategory === 'procedure'
+  ) {
+    return 'Procedure Order';
+  }
+
+  // Fallback to original if no match
+  return category;
+};

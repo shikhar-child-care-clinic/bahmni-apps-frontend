@@ -2,6 +2,7 @@ export {
   getFlattenedInvestigations,
   getOrderTypes,
   getCategoryUuidFromOrderTypes,
+  normalizeCategoryName,
 } from './investigationService';
 export {
   type FlattenedInvestigations,

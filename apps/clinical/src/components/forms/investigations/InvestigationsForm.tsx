@@ -9,6 +9,7 @@ import {
   useTranslation,
   getServiceRequests,
   getCategoryUuidFromOrderTypes,
+  normalizeCategoryName,
 } from '@bahmni/services';
 import { usePatientUUID, useActivePractitioner } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
@@ -48,6 +49,7 @@ const InvestigationsForm: React.FC = React.memo(() => {
     updatePriority,
     updateNote,
     removeServiceRequest,
+    isSelectedInCategory,
   } = useServiceRequestStore();
 
   // Fetch existing service requests from backend for duplicate detection (filtered by current encounter)
@@ -103,39 +105,12 @@ const InvestigationsForm: React.FC = React.memo(() => {
     [t],
   );
 
-  // Normalize category name to match backend format
-  const normalizeCategoryName = useCallback((category: string): string => {
-    // Handle various category name formats
-    const normalizedCategory = category.trim().toLowerCase();
-
-    if (
-      normalizedCategory.includes('lab') ||
-      normalizedCategory === 'laboratory'
-    ) {
-      return 'Lab Order';
-    }
-    if (
-      normalizedCategory.includes('rad') ||
-      normalizedCategory === 'radiology'
-    ) {
-      return 'Radiology Order';
-    }
-    if (
-      normalizedCategory.includes('proc') ||
-      normalizedCategory === 'procedure'
-    ) {
-      return 'Procedure Order';
-    }
-
-    // Fallback to original if no match
-    return category;
-  }, []);
-
   // Check if an investigation is a duplicate (exists in backend or already selected in form)
   // Only duplicates if SAME provider + SAME encounter + SAME test
   const isDuplicateInvestigation = useCallback(
     (investigationCode: string, category: string): boolean => {
-      // Normalize category for comparison
+      // Normalize category for comparison with backend data
+      // normalizeCategoryName is imported from @bahmni/services
       const normalizedCategory = normalizeCategoryName(category);
 
       // Check against existing service requests from backend
@@ -147,19 +122,15 @@ const InvestigationsForm: React.FC = React.memo(() => {
           sr.requesterUuid === currentPractitionerUuid,
       );
 
-      // Check against currently selected investigations in the form
-      const selectedInCategory = selectedServiceRequests.get(category);
-      const isSelectedInvestigation =
-        selectedInCategory?.some((si) => si.id === investigationCode) ?? false;
+      // Check against currently selected investigations in the form using store helper
+      const isSelectedInvestigation = isSelectedInCategory(
+        category,
+        investigationCode,
+      );
 
       return (isExistingInvestigation ?? false) || isSelectedInvestigation;
     },
-    [
-      existingServiceRequests,
-      selectedServiceRequests,
-      normalizeCategoryName,
-      currentPractitionerUuid,
-    ],
+    [existingServiceRequests, isSelectedInCategory, currentPractitionerUuid],
   );
 
   // Auto-clear duplicate notification when search is cleared or duplicate item is removed

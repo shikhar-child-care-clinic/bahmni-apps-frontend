@@ -114,6 +114,7 @@ const mockStore = {
   getState: jest.fn(() => ({
     selectedServiceRequests: new Map(),
   })),
+  isSelectedInCategory: jest.fn(() => false),
 };
 
 const createWrapper = () => {
@@ -895,6 +896,222 @@ describe('InvestigationsForm', () => {
         expect(cbcOption.closest('[role="option"]')).not.toHaveAttribute(
           'disabled',
         );
+      });
+    });
+  });
+
+  describe('Backend Duplicate Detection', () => {
+    const { getServiceRequests } = jest.requireMock('@bahmni/services');
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      (useInvestigationsSearch as jest.Mock).mockReturnValue({
+        investigations: mockInvestigations,
+        isLoading: false,
+        error: null,
+      });
+      (useServiceRequestStore as unknown as jest.Mock).mockReturnValue(
+        mockStore,
+      );
+    });
+
+    test('blocks duplicate when same provider tries to add same test in same encounter', async () => {
+      // Mock existing service request from backend with same provider
+      getServiceRequests.mockResolvedValue({
+        entry: [
+          {
+            resource: {
+              code: {
+                coding: [{ code: 'cbc-001' }],
+                text: 'Complete Blood Count',
+              },
+              requester: {
+                reference: 'Practitioner/mock-practitioner-uuid',
+              },
+            },
+          },
+        ],
+      });
+
+      const user = userEvent.setup();
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
+
+      const combobox = screen.getByRole('combobox');
+      await user.type(combobox, 'complete');
+
+      await waitFor(() => {
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
+      });
+
+      // Try to select the duplicate investigation
+      await user.click(screen.getByText('Complete Blood Count'));
+
+      // Should show duplicate notification and NOT add to store
+      await waitFor(() => {
+        expect(
+          screen.getByText('Investigation is already ordered'),
+        ).toBeInTheDocument();
+      });
+      expect(mockStore.addServiceRequest).not.toHaveBeenCalled();
+    });
+
+    test('allows same test when different provider added it in same encounter', async () => {
+      // Mock existing service request from backend with DIFFERENT provider
+      getServiceRequests.mockResolvedValue({
+        entry: [
+          {
+            resource: {
+              code: {
+                coding: [{ code: 'cbc-001' }],
+                text: 'Complete Blood Count',
+              },
+              requester: {
+                reference: 'Practitioner/different-practitioner-uuid',
+              },
+            },
+          },
+        ],
+      });
+
+      const user = userEvent.setup();
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
+
+      const combobox = screen.getByRole('combobox');
+      await user.type(combobox, 'complete');
+
+      await waitFor(() => {
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
+      });
+
+      // Select the investigation - should be allowed since different provider
+      await user.click(screen.getByText('Complete Blood Count'));
+
+      // Should successfully add to store
+      await waitFor(() => {
+        expect(mockStore.addServiceRequest).toHaveBeenCalledWith(
+          'Laboratory',
+          'cbc-001',
+          'Complete Blood Count',
+        );
+      });
+    });
+
+    test('allows same test when it exists in different encounter', async () => {
+      // Mock: getServiceRequests returns empty for current encounter
+      // (the existing test was added in a different encounter)
+      getServiceRequests.mockResolvedValue({ entry: [] });
+
+      const user = userEvent.setup();
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
+
+      const combobox = screen.getByRole('combobox');
+      await user.type(combobox, 'complete');
+
+      await waitFor(() => {
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Complete Blood Count'));
+
+      await waitFor(() => {
+        expect(mockStore.addServiceRequest).toHaveBeenCalledWith(
+          'Laboratory',
+          'cbc-001',
+          'Complete Blood Count',
+        );
+      });
+    });
+
+    test('clears duplicate notification when search is cleared', async () => {
+      getServiceRequests.mockResolvedValue({
+        entry: [
+          {
+            resource: {
+              code: {
+                coding: [{ code: 'cbc-001' }],
+                text: 'Complete Blood Count',
+              },
+              requester: {
+                reference: 'Practitioner/mock-practitioner-uuid',
+              },
+            },
+          },
+        ],
+      });
+
+      const user = userEvent.setup();
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
+
+      const combobox = screen.getByRole('combobox');
+      await user.type(combobox, 'complete');
+
+      await waitFor(() => {
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
+      });
+
+      // Try to select duplicate
+      await user.click(screen.getByText('Complete Blood Count'));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Investigation is already ordered'),
+        ).toBeInTheDocument();
+      });
+
+      // Clear the search
+      await user.clear(combobox);
+
+      // Notification should be cleared
+      await waitFor(() => {
+        expect(
+          screen.queryByText('Investigation is already ordered'),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    test('closes duplicate notification when close button is clicked', async () => {
+      getServiceRequests.mockResolvedValue({
+        entry: [
+          {
+            resource: {
+              code: {
+                coding: [{ code: 'cbc-001' }],
+                text: 'Complete Blood Count',
+              },
+              requester: {
+                reference: 'Practitioner/mock-practitioner-uuid',
+              },
+            },
+          },
+        ],
+      });
+
+      const user = userEvent.setup();
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
+
+      const combobox = screen.getByRole('combobox');
+      await user.type(combobox, 'complete');
+
+      await waitFor(() => {
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Complete Blood Count'));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Investigation is already ordered'),
+        ).toBeInTheDocument();
+      });
+
+      // Click close button on notification
+      const closeButton = screen.getByRole('button', { name: /close/i });
+      await user.click(closeButton);
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText('Investigation is already ordered'),
+        ).not.toBeInTheDocument();
       });
     });
   });

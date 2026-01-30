@@ -25,6 +25,7 @@ export interface ServiceRequestState {
   ) => void;
   reset: () => void;
   getState: () => ServiceRequestState;
+  isSelectedInCategory: (category: string, conceptCode: string) => boolean;
 }
 
 export const useServiceRequestStore = create<ServiceRequestState>(
@@ -131,6 +132,11 @@ export const useServiceRequestStore = create<ServiceRequestState>(
     },
 
     getState: () => get(),
+
+    isSelectedInCategory: (category: string, conceptCode: string): boolean => {
+      const selectedInCategory = get().selectedServiceRequests.get(category);
+      return selectedInCategory?.some((si) => si.id === conceptCode) ?? false;
+    },
   }),
 );
 
