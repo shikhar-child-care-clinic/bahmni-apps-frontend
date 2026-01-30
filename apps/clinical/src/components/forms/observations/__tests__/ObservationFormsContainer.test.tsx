@@ -310,6 +310,7 @@ describe('ObservationFormsContainer', () => {
         mockForm.uuid,
         expect.any(Array),
         null,
+        null,
       );
       expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
     });
@@ -863,6 +864,7 @@ describe('ObservationFormsContainer', () => {
           mockForm.uuid,
           expect.any(Array),
           'mandatory', // validationState is passed with the error type
+          'mandatory', // validationErrorType is also passed
         );
         expect(mockOnViewingFormChange).toHaveBeenCalledWith(null);
       });
@@ -925,6 +927,7 @@ describe('ObservationFormsContainer', () => {
           mockForm.uuid,
           containerObservations, // Form container observations, not hookObservations
           'invalid',
+          'invalid', // validationErrorType is also passed
         );
       });
     });
@@ -1070,6 +1073,7 @@ describe('ObservationFormsContainer', () => {
         mockForm.uuid,
         modifiedObservations,
         null,
+        null,
       );
 
       expect(mockOnFormObservationsChange).not.toHaveBeenCalledWith(
@@ -1112,11 +1116,14 @@ describe('ObservationFormsContainer', () => {
 
       mockGetValue.mockReturnValue({
         errors: [],
+        observations: [{ concept: { uuid: 'test' }, value: 'test value' }],
       });
 
-      // Mock executeOnFormSaveEvent to throw an Error
+      // Mock executeOnFormSaveEvent to throw an Error with form name wrapper
       mockExecuteOnFormSaveEvent.mockImplementation(() => {
-        throw new Error('Validation failed: Date must be in the future');
+        throw new Error(
+          'Error in onFormSave event for form "Test Form Schema": Validation failed: Date must be in the future',
+        );
       });
 
       render(
@@ -1131,10 +1138,12 @@ describe('ObservationFormsContainer', () => {
       const saveButton = screen.getByTestId('primary-button');
       fireEvent.click(saveButton);
 
-      // Error notification should be displayed with the error message
+      // Error notification should be displayed with the error message including form name
       expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
       expect(
-        screen.getByText(/Validation failed: Date must be in the future/),
+        screen.getByText(
+          /Error in onFormSave event for form "Test Form Schema": Validation failed: Date must be in the future/,
+        ),
       ).toBeInTheDocument();
 
       // Should NOT call onFormObservationsChange when script fails
@@ -1158,11 +1167,15 @@ describe('ObservationFormsContainer', () => {
 
       mockGetValue.mockReturnValue({
         errors: [],
+        observations: [{ concept: { uuid: 'test' }, value: 'test value' }],
       });
 
-      // Mock executeOnFormSaveEvent to throw a non-Error object
+      // Mock executeOnFormSaveEvent to throw an Error with form name wrapper
+      // (simulating how the real function wraps errors from non-Error objects)
       mockExecuteOnFormSaveEvent.mockImplementation(() => {
-        throw { message: 'Custom error object' };
+        throw new Error(
+          'Error in onFormSave event for form "Test Form Schema": Custom error object',
+        );
       });
 
       render(
@@ -1176,10 +1189,12 @@ describe('ObservationFormsContainer', () => {
       const saveButton = screen.getByTestId('primary-button');
       fireEvent.click(saveButton);
 
-      // Should display fallback error message
+      // Should display error message with form name
       expect(screen.getByTestId('inline-notification')).toBeInTheDocument();
       expect(
-        screen.getByText(/translated_OBSERVATION_FORM_SCRIPT_ERROR_MESSAGE/),
+        screen.getByText(
+          /Error in onFormSave event for form "Test Form Schema": Custom error object/,
+        ),
       ).toBeInTheDocument();
 
       // Should NOT call onFormObservationsChange when script fails

@@ -139,6 +139,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   };
 
   const handleSaveForm = (
+    observationsToSave: Form2Observation[],
     validationState:
       | null
       | typeof VALIDATION_STATE_EMPTY
@@ -147,15 +148,6 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       | typeof VALIDATION_STATE_SCRIPT_ERROR = null,
   ) => {
     if (viewingForm && onFormObservationsChange) {
-      let observationsToSave = observations;
-      if (formContainerRef.current) {
-        const { observations: currentObservations } =
-          formContainerRef.current.getValue();
-        if (currentObservations && currentObservations.length > 0) {
-          observationsToSave = currentObservations as Form2Observation[];
-        }
-      }
-
       onFormObservationsChange(
         viewingForm.uuid,
         observationsToSave,
@@ -170,7 +162,12 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
     if (formContainerRef.current) {
       if (validationErrorType) {
         setValidationErrorType(null);
-        handleSaveForm(validationErrorType);
+        const { observations: currentObservations } =
+          formContainerRef.current.getValue();
+        handleSaveForm(
+          currentObservations as Form2Observation[],
+          validationErrorType,
+        );
         return;
       }
 
@@ -233,7 +230,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
           formData,
         );
 
-        handleSaveForm(processedObservations);
+        handleSaveForm(processedObservations, null);
       } catch (error) {
         const errorMessage =
           error instanceof Error
@@ -247,7 +244,14 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
 
   const continueAnyway = () => {
     setValidationErrorType(null);
-    handleSaveForm(validationErrorType);
+    if (formContainerRef.current) {
+      const { observations: currentObservations } =
+        formContainerRef.current.getValue();
+      handleSaveForm(
+        currentObservations as Form2Observation[],
+        validationErrorType,
+      );
+    }
   };
 
   const discard = () => {
