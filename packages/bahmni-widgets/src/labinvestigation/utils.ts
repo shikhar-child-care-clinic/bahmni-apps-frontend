@@ -5,32 +5,26 @@ import {
 } from '@bahmni/services';
 import { Bundle, ServiceRequest, DiagnosticReport, Observation } from 'fhir/r4';
 import {
-  FormattedLabTest,
+  FormattedLabInvestigations,
   LabTestPriority,
   LabTestsByDate,
   LabTestResult,
 } from './models';
 
-/**
- * Filters out lab test entries that have been replaced or are replacing other entries
- * @param labTestBundle - The FHIR bundle containing lab test service requests
- * @returns An array of filtered ServiceRequest resources
- */
-export function filterLabTestEntries(
-  labTestBundle: Bundle<ServiceRequest>,
+export function filterLabInvestigationEntries(
+  labInvestigationBundle: Bundle<ServiceRequest>,
 ): ServiceRequest[] {
-  if (!labTestBundle.entry) return [];
+  if (!labInvestigationBundle.entry) return [];
 
-  // Collect all IDs that are being replaced
   const replacedIds = new Set(
-    labTestBundle.entry
+    labInvestigationBundle.entry
       .flatMap((entry) => entry.resource?.replaces ?? [])
       .map((ref) => ref.reference?.split('/').pop()) // extract ID from reference like "ServiceRequest/xyz"
       .filter(Boolean), // remove undefined/null
   );
 
   // Filter out entries that either have a "replaces" field or are being replaced
-  const filteredEntries = labTestBundle.entry.filter((entry) => {
+  const filteredEntries = labInvestigationBundle.entry.filter((entry) => {
     const entryId = entry.resource?.id;
     const isReplacer = entry.resource?.replaces;
     const isReplaced = replacedIds.has(entryId);
@@ -38,23 +32,21 @@ export function filterLabTestEntries(
   });
 
   const filteredBundle: Bundle<ServiceRequest> = {
-    ...labTestBundle,
+    ...labInvestigationBundle,
     entry: filteredEntries,
   };
 
-  const labTests =
+  const labInvestigations =
     filteredBundle.entry
       ?.map((entry) => entry.resource)
       .filter((r): r is ServiceRequest => r !== undefined) ?? [];
 
-  return labTests;
+  return labInvestigations;
 }
 
 /**
  * Maps a FHIR priority code to LabTestPriority enum
- * @param labTest - The FHIR ServiceRequest to extract priority from
- * @returns The mapped LabTestPriority enum value
- */
+ **/
 export const mapLabTestPriority = (
   labTest: ServiceRequest,
 ): LabTestPriority => {
@@ -68,11 +60,6 @@ export const mapLabTestPriority = (
   }
 };
 
-/**
- * Determines if a lab test is a panel based on its extension
- * @param labTest - The FHIR ServiceRequest to check
- * @returns A string indicating the test type: "Panel" or "Single Test"
- */
 export const determineTestType = (labTest: ServiceRequest): string => {
   // Check if the test has an extension that indicates it's a panel
   const panelExtension = labTest.extension?.find(
@@ -89,17 +76,11 @@ export const determineTestType = (labTest: ServiceRequest): string => {
   return 'Single Test';
 };
 
-/**
- * Formats FHIR lab tests into a more user-friendly format
- * @param labTests - The FHIR ServiceRequest array to format
- * @param t - Translation function for date formatting
- * @returns An array of formatted lab test objects
- */
-export function formatLabTests(
-  labTests: ServiceRequest[],
+export function formatLabInvestigations(
+  labInvestigations: ServiceRequest[],
   t: (key: string) => string,
-): FormattedLabTest[] {
-  return labTests
+): FormattedLabInvestigations[] {
+  return labInvestigations
     .filter(
       (labTest): labTest is ServiceRequest & { id: string } => !!labTest.id,
     )
@@ -131,13 +112,8 @@ export function formatLabTests(
     });
 }
 
-/**
- * Groups lab tests by date
- * @param labTests - The formatted lab tests to group
- * @returns An array of lab tests grouped by date, sorted by newest first
- */
-export function groupLabTestsByDate(
-  labTests: FormattedLabTest[],
+export function groupLabInvestigationsByDate(
+  labTests: FormattedLabInvestigations[],
 ): LabTestsByDate[] {
   const dateMap = new Map<string, LabTestsByDate>();
 
@@ -161,11 +137,6 @@ export function groupLabTestsByDate(
   );
 }
 
-/**
- * Extracts processed (completed) diagnostic report IDs from a bundle
- * @param diagnosticReportsBundle - The FHIR bundle containing diagnostic reports
- * @returns An array of report IDs that have a processed status
- */
 export function getProcessedReportIds(
   diagnosticReportsBundle: Bundle<DiagnosticReport> | undefined,
 ): string[] {
@@ -185,11 +156,6 @@ export function getProcessedReportIds(
     .filter((id): id is string => !!id);
 }
 
-/**
- * Extracts observations from a diagnostic report bundle
- * @param bundle - The FHIR bundle containing diagnostic report and related resources
- * @returns An array of Observation resources
- */
 export function extractObservationsFromBundle(
   bundle: Bundle | undefined,
 ): Observation[] {
@@ -201,12 +167,6 @@ export function extractObservationsFromBundle(
     .filter((obs): obs is Observation => !!obs);
 }
 
-/**
- * Formats FHIR observations into LabTestResult format
- * @param observations - Array of FHIR Observation resources
- * @param t - Translation function for date formatting
- * @returns Array of formatted lab test results
- */
 export function formatObservationsAsLabTestResults(
   observations: Observation[],
   t: (key: string) => string,
@@ -223,19 +183,14 @@ export function formatObservationsAsLabTestResults(
       const unit = obs.valueQuantity.unit ?? '';
       result = unit ? `${value} ${unit}` : value;
     } else if (obs.valueBoolean !== undefined) {
-      // Boolean result (e.g., true/false for presence tests)
       result = obs.valueBoolean ? 'Positive' : 'Negative';
     } else if (obs.valueInteger !== undefined) {
-      // Integer result (e.g., count values)
       result = obs.valueInteger.toString();
     } else if (obs.valueString) {
-      // String result (e.g., "Positive", "Negative", descriptive text)
       result = obs.valueString;
     } else if (obs.valueCodeableConcept?.text) {
-      // Coded result (e.g., predefined coded values)
       result = obs.valueCodeableConcept.text;
     } else if (obs.valueCodeableConcept?.coding?.[0]?.display) {
-      // Fallback to coding display if text is not available
       result = obs.valueCodeableConcept.coding[0].display;
     }
 
@@ -272,12 +227,6 @@ export function formatObservationsAsLabTestResults(
   });
 }
 
-/**
- * Maps diagnostic report bundles to test results by test ID
- * @param bundles - Array of diagnostic report bundles
- * @param t - Translation function for date formatting
- * @returns A Map where keys are test IDs (ServiceRequest IDs) and values are LabTestResult arrays
- */
 export function mapDiagnosticReportBundlesToTestResults(
   bundles: (Bundle | undefined)[],
   t: (key: string) => string,
@@ -302,12 +251,8 @@ export function mapDiagnosticReportBundlesToTestResults(
       const testId = ref.reference?.split('/').pop();
       if (!testId) return;
 
-      // Extract observations from the bundle
       const observations = extractObservationsFromBundle(bundle);
-
-      // Format observations as LabTestResult[]
       const results = formatObservationsAsLabTestResults(observations, t);
-
       if (results.length > 0) {
         resultsMap.set(testId, results);
       }
@@ -324,9 +269,9 @@ export function mapDiagnosticReportBundlesToTestResults(
  * @returns Updated array of tests with results
  */
 export function updateTestsWithResults(
-  tests: FormattedLabTest[],
+  tests: FormattedLabInvestigations[],
   resultsMap: Map<string, LabTestResult[]>,
-): FormattedLabTest[] {
+): FormattedLabInvestigations[] {
   return tests.map((test) => {
     const results = resultsMap.get(test.id);
     if (results) {

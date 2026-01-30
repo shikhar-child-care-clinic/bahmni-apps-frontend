@@ -57,115 +57,113 @@ describe('diagnosticReportService', () => {
       })),
     });
 
-    describe('Happy Path Cases', () => {
-      it('should return diagnostic reports bundle for valid inputs', async () => {
-        const mockReports = [
-          createMockDiagnosticReport({
-            id: 'report-1',
-            code: { text: 'Blood Test' },
-          }),
-          createMockDiagnosticReport({
-            id: 'report-2',
-            code: { text: 'Urine Test' },
-          }),
-        ];
-        const mockBundle = createMockBundle(mockReports);
+    it('should return diagnostic reports bundle for valid inputs', async () => {
+      const mockReports = [
+        createMockDiagnosticReport({
+          id: 'report-1',
+          code: { text: 'Blood Test' },
+        }),
+        createMockDiagnosticReport({
+          id: 'report-2',
+          code: { text: 'Urine Test' },
+        }),
+      ];
+      const mockBundle = createMockBundle(mockReports);
 
-        (get as jest.Mock).mockResolvedValueOnce(mockBundle);
+      (get as jest.Mock).mockResolvedValueOnce(mockBundle);
 
-        const serviceRequestIds = ['service-1', 'service-2'];
-        const result = await getDiagnosticReportsByOrders(
-          patientUuid,
-          serviceRequestIds,
-        );
+      const serviceRequestIds = ['service-1', 'service-2'];
+      const result = await getDiagnosticReportsByOrders(
+        patientUuid,
+        serviceRequestIds,
+      );
 
-        expect(result).toEqual(mockBundle);
-        expect(result.entry).toHaveLength(2);
-        expect(result.entry?.[0].resource?.id).toBe('report-1');
-        expect(result.entry?.[1].resource?.id).toBe('report-2');
-      });
+      expect(result).toEqual(mockBundle);
+      expect(result.entry).toHaveLength(2);
+      expect(result.entry?.[0].resource?.id).toBe('report-1');
+      expect(result.entry?.[1].resource?.id).toBe('report-2');
+    });
 
-      it('should format single service request ID correctly', async () => {
-        const mockBundle = createMockBundle([createMockDiagnosticReport()]);
-        (get as jest.Mock).mockResolvedValueOnce(mockBundle);
+    it('should format single service request ID correctly', async () => {
+      const mockBundle = createMockBundle([createMockDiagnosticReport()]);
+      (get as jest.Mock).mockResolvedValueOnce(mockBundle);
 
-        const serviceRequestIds = ['service-123'];
-        await getDiagnosticReportsByOrders(patientUuid, serviceRequestIds);
+      const serviceRequestIds = ['service-123'];
+      await getDiagnosticReportsByOrders(patientUuid, serviceRequestIds);
 
-        const expectedUrl = DIAGNOSTIC_REPORTS_BY_SERVICE_URL(
-          patientUuid,
-          'service-123',
-        );
-        expect(get).toHaveBeenCalledWith(expectedUrl);
-      });
+      const expectedUrl = DIAGNOSTIC_REPORTS_BY_SERVICE_URL(
+        patientUuid,
+        'service-123',
+      );
+      expect(get).toHaveBeenCalledWith(expectedUrl);
+    });
 
-      it('should format multiple service request IDs correctly (comma-separated)', async () => {
-        const mockBundle = createMockBundle([createMockDiagnosticReport()]);
-        (get as jest.Mock).mockResolvedValueOnce(mockBundle);
+    it('should format multiple service request IDs correctly (comma-separated)', async () => {
+      const mockBundle = createMockBundle([createMockDiagnosticReport()]);
+      (get as jest.Mock).mockResolvedValueOnce(mockBundle);
 
-        const serviceRequestIds = ['service-1', 'service-2', 'service-3'];
-        await getDiagnosticReportsByOrders(patientUuid, serviceRequestIds);
+      const serviceRequestIds = ['service-1', 'service-2', 'service-3'];
+      await getDiagnosticReportsByOrders(patientUuid, serviceRequestIds);
 
-        const expectedUrl = DIAGNOSTIC_REPORTS_BY_SERVICE_URL(
-          patientUuid,
-          'service-1,service-2,service-3',
-        );
-        expect(get).toHaveBeenCalledWith(expectedUrl);
-      });
+      const expectedUrl = DIAGNOSTIC_REPORTS_BY_SERVICE_URL(
+        patientUuid,
+        'service-1,service-2,service-3',
+      );
+      expect(get).toHaveBeenCalledWith(expectedUrl);
+    });
 
-      it('should call API with correct URL parameters', async () => {
-        const mockBundle = createMockBundle([createMockDiagnosticReport()]);
-        (get as jest.Mock).mockResolvedValueOnce(mockBundle);
+    it('should call API with correct URL parameters', async () => {
+      const mockBundle = createMockBundle([createMockDiagnosticReport()]);
+      (get as jest.Mock).mockResolvedValueOnce(mockBundle);
 
-        const testPatientUuid = 'patient-uuid-123';
-        const serviceRequestIds = ['order-1', 'order-2'];
+      const testPatientUuid = 'patient-uuid-123';
+      const serviceRequestIds = ['order-1', 'order-2'];
 
-        await getDiagnosticReportsByOrders(testPatientUuid, serviceRequestIds);
+      await getDiagnosticReportsByOrders(testPatientUuid, serviceRequestIds);
 
-        expect(get).toHaveBeenCalledTimes(1);
-        const expectedUrl = DIAGNOSTIC_REPORTS_BY_SERVICE_URL(
-          testPatientUuid,
-          'order-1,order-2',
-        );
-        expect(get).toHaveBeenCalledWith(expectedUrl);
-      });
+      expect(get).toHaveBeenCalledTimes(1);
+      const expectedUrl = DIAGNOSTIC_REPORTS_BY_SERVICE_URL(
+        testPatientUuid,
+        'order-1,order-2',
+      );
+      expect(get).toHaveBeenCalledWith(expectedUrl);
+    });
 
-      it('should handle bundle with entries', async () => {
-        const mockReports = [
-          createMockDiagnosticReport({ id: 'report-1' }),
-          createMockDiagnosticReport({ id: 'report-2' }),
-          createMockDiagnosticReport({ id: 'report-3' }),
-        ];
-        const mockBundle = createMockBundle(mockReports);
+    it('should handle bundle with entries', async () => {
+      const mockReports = [
+        createMockDiagnosticReport({ id: 'report-1' }),
+        createMockDiagnosticReport({ id: 'report-2' }),
+        createMockDiagnosticReport({ id: 'report-3' }),
+      ];
+      const mockBundle = createMockBundle(mockReports);
 
-        (get as jest.Mock).mockResolvedValueOnce(mockBundle);
+      (get as jest.Mock).mockResolvedValueOnce(mockBundle);
 
-        const result = await getDiagnosticReportsByOrders(patientUuid, [
-          'service-1',
-        ]);
+      const result = await getDiagnosticReportsByOrders(patientUuid, [
+        'service-1',
+      ]);
 
-        expect(result.entry).toBeDefined();
-        expect(result.entry).toHaveLength(3);
-        expect(result.total).toBe(3);
-      });
+      expect(result.entry).toBeDefined();
+      expect(result.entry).toHaveLength(3);
+      expect(result.total).toBe(3);
+    });
 
-      it('should handle bundle without entry field', async () => {
-        const bundleWithoutEntries: Bundle<DiagnosticReport> = {
-          resourceType: 'Bundle',
-          id: 'bundle-id',
-          type: 'searchset',
-          total: 0,
-        };
+    it('should handle bundle without entry field', async () => {
+      const bundleWithoutEntries: Bundle<DiagnosticReport> = {
+        resourceType: 'Bundle',
+        id: 'bundle-id',
+        type: 'searchset',
+        total: 0,
+      };
 
-        (get as jest.Mock).mockResolvedValueOnce(bundleWithoutEntries);
+      (get as jest.Mock).mockResolvedValueOnce(bundleWithoutEntries);
 
-        const result = await getDiagnosticReportsByOrders(patientUuid, [
-          'service-1',
-        ]);
+      const result = await getDiagnosticReportsByOrders(patientUuid, [
+        'service-1',
+      ]);
 
-        expect(result.entry).toBeUndefined();
-        expect(result.total).toBe(0);
-      });
+      expect(result.entry).toBeUndefined();
+      expect(result.total).toBe(0);
     });
   });
 
@@ -186,31 +184,29 @@ describe('diagnosticReportService', () => {
       ],
     });
 
-    describe('Happy Path Cases', () => {
-      it('should return diagnostic report bundle for valid ID', async () => {
-        const mockBundle = createMockBundle();
-        (get as jest.Mock).mockResolvedValueOnce(mockBundle);
+    it('should return diagnostic report bundle for valid ID', async () => {
+      const mockBundle = createMockBundle();
+      (get as jest.Mock).mockResolvedValueOnce(mockBundle);
 
-        const diagnosticReportId = 'report-123';
-        const result = await getDiagnosticReportBundle(diagnosticReportId);
+      const diagnosticReportId = 'report-123';
+      const result = await getDiagnosticReportBundle(diagnosticReportId);
 
-        expect(result).toEqual(mockBundle);
-        expect(result.resourceType).toBe('Bundle');
-        expect(result.entry).toBeDefined();
-        expect(result.entry).toHaveLength(1);
-      });
+      expect(result).toEqual(mockBundle);
+      expect(result.resourceType).toBe('Bundle');
+      expect(result.entry).toBeDefined();
+      expect(result.entry).toHaveLength(1);
+    });
 
-      it('should call API with correct URL', async () => {
-        const mockBundle = createMockBundle();
-        (get as jest.Mock).mockResolvedValueOnce(mockBundle);
+    it('should call API with correct URL', async () => {
+      const mockBundle = createMockBundle();
+      (get as jest.Mock).mockResolvedValueOnce(mockBundle);
 
-        const diagnosticReportId = 'report-456';
-        await getDiagnosticReportBundle(diagnosticReportId);
+      const diagnosticReportId = 'report-456';
+      await getDiagnosticReportBundle(diagnosticReportId);
 
-        const expectedUrl = DIAGNOSTIC_REPORT_BUNDLE_URL(diagnosticReportId);
-        expect(get).toHaveBeenCalledTimes(1);
-        expect(get).toHaveBeenCalledWith(expectedUrl);
-      });
+      const expectedUrl = DIAGNOSTIC_REPORT_BUNDLE_URL(diagnosticReportId);
+      expect(get).toHaveBeenCalledTimes(1);
+      expect(get).toHaveBeenCalledWith(expectedUrl);
     });
   });
 });

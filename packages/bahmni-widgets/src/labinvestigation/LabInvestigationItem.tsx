@@ -6,22 +6,24 @@ import {
 } from '@bahmni/design-system';
 import { useTranslation } from '@bahmni/services';
 import React, { useMemo } from 'react';
-import { FormattedLabTest, LabTestPriority, LabTestResult } from './models';
+import {
+  FormattedLabInvestigations,
+  LabTestPriority,
+  LabTestResult,
+} from './models';
 import styles from './styles/LabInvestigation.module.scss';
 
 interface LabInvestigationItemProps {
-  test: FormattedLabTest;
+  test: FormattedLabInvestigations;
 }
 const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
   test,
 }) => {
   const { t } = useTranslation();
 
-  // Check if results are available
   const hasResults =
     Array.isArray(test.result) && (test.result as LabTestResult[]).length > 0;
 
-  // Prepare table data
   const tableRows = useMemo(() => {
     if (!hasResults) return [];
     return (test.result as LabTestResult[]).map((result, index) => ({

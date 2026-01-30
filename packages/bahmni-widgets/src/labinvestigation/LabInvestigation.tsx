@@ -4,7 +4,7 @@ import {
   useTranslation,
   getCategoryUuidFromOrderTypes,
   getFormattedError,
-  getLabTestBundle,
+  getLabInvestigationsBundle,
   getDiagnosticReportsByOrders,
   getDiagnosticReportBundle,
 } from '@bahmni/services';
@@ -15,12 +15,12 @@ import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
 import LabInvestigationItem from './LabInvestigationItem';
-import { FormattedLabTest, LabTestsByDate } from './models';
+import { FormattedLabInvestigations, LabTestsByDate } from './models';
 import styles from './styles/LabInvestigation.module.scss';
 import {
-  filterLabTestEntries,
-  formatLabTests,
-  groupLabTestsByDate,
+  filterLabInvestigationEntries,
+  formatLabInvestigations,
+  groupLabInvestigationsByDate,
   getProcessedReportIds,
   mapDiagnosticReportBundlesToTestResults,
   updateTestsWithResults,
@@ -32,15 +32,15 @@ const fetchLabInvestigations = async (
   t: (key: string) => string,
   encounterUuids?: string[],
   numberOfVisits?: number,
-): Promise<FormattedLabTest[]> => {
-  const bundle = await getLabTestBundle(
+): Promise<FormattedLabInvestigations[]> => {
+  const bundle = await getLabInvestigationsBundle(
     patientUUID,
     category,
     encounterUuids,
     numberOfVisits,
   );
-  const filteredEntries = filterLabTestEntries(bundle);
-  return formatLabTests(filteredEntries, t);
+  const filteredEntries = filterLabInvestigationEntries(bundle);
+  return formatLabInvestigations(filteredEntries, t);
 };
 
 const LabInvestigation: React.FC<WidgetProps> = ({
@@ -78,7 +78,7 @@ const LabInvestigation: React.FC<WidgetProps> = ({
     isLoading: isLoadingLabInvestigations,
     isError: isLabInvestigationsError,
     error: labInvestigationsError,
-  } = useQuery<FormattedLabTest[]>({
+  } = useQuery<FormattedLabInvestigations[]>({
     queryKey: [
       'labInvestigations',
       categoryUuid,
@@ -123,16 +123,15 @@ const LabInvestigation: React.FC<WidgetProps> = ({
     t,
   ]);
 
-  const labTests: FormattedLabTest[] = useMemo(
+  const labTests: FormattedLabInvestigations[] = useMemo(
     () => labTestsData ?? [],
     [labTestsData],
   );
   const isLoading = isLoadingOrderTypes || isLoadingLabInvestigations;
   const hasError = isOrderTypesError || isLabInvestigationsError;
 
-  // Group the lab tests by date
   const labTestsByDate = useMemo<LabTestsByDate[]>(() => {
-    return groupLabTestsByDate(labTests);
+    return groupLabInvestigationsByDate(labTests);
   }, [labTests]);
 
   // Get test IDs for the currently open accordion
@@ -154,7 +153,6 @@ const LabInvestigation: React.FC<WidgetProps> = ({
       openAccordionIndex !== null,
   });
 
-  // Filter completed diagnostic reports and extract their IDs
   const processedReportIds = useMemo(() => {
     return getProcessedReportIds(diagnosticReports);
   }, [diagnosticReports]);

@@ -156,7 +156,7 @@ export {
   getPatientRadiologyInvestigationBundle,
   getPatientRadiologyInvestigationBundleWithImagingStudy,
 } from './radiologyInvestigationService';
-export { getLabTestBundle } from './labInvestigationService';
+export { getLabInvestigationsBundle } from './labInvestigationService';
 export {
   getDiagnosticReportsByOrders,
   getDiagnosticReportBundle,

@@ -1,7 +1,7 @@
 import {
   useTranslation,
   getCategoryUuidFromOrderTypes,
-  getLabTestBundle,
+  getLabInvestigationsBundle,
 } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -15,7 +15,7 @@ jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   useTranslation: jest.fn(),
   getCategoryUuidFromOrderTypes: jest.fn(),
-  getLabTestBundle: jest.fn(),
+  getLabInvestigationsBundle: jest.fn(),
 }));
 
 jest.mock('react-router-dom', () => ({
@@ -38,8 +38,8 @@ const mockGetCategoryUuidFromOrderTypes =
   getCategoryUuidFromOrderTypes as jest.MockedFunction<
     typeof getCategoryUuidFromOrderTypes
   >;
-const mockGetLabTestBundle = getLabTestBundle as jest.MockedFunction<
-  typeof getLabTestBundle
+const mockGetLabTestBundle = getLabInvestigationsBundle as jest.MockedFunction<
+  typeof getLabInvestigationsBundle
 >;
 const mockUseNotification = useNotification as jest.MockedFunction<
   typeof useNotification
@@ -295,12 +295,10 @@ describe('LabInvestigation Integration Tests', () => {
 
     mockGetLabTestBundle.mockResolvedValue(createMockBundle([]));
 
-    // Change patient UUID
     mockUsePatientUUID.mockReturnValue('different-patient-uuid');
 
     renderLabInvestigations();
 
-    // Should show empty state for new patient with no tests
     await waitFor(() => {
       expect(
         screen.getByText('No lab investigations recorded'),

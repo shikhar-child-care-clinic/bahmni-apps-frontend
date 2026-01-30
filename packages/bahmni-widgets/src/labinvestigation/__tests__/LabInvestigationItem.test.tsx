@@ -2,7 +2,7 @@ import { useTranslation } from '@bahmni/services';
 import { render, screen } from '@testing-library/react';
 
 import LabInvestigationItem from '../LabInvestigationItem';
-import { FormattedLabTest, LabTestPriority } from '../models';
+import { FormattedLabInvestigations, LabTestPriority } from '../models';
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
@@ -17,7 +17,7 @@ const mockUseTranslation = useTranslation as jest.MockedFunction<
   typeof useTranslation
 >;
 describe('LabInvestigationItem', () => {
-  const baseLabTest: FormattedLabTest = {
+  const baseLabTest: FormattedLabInvestigations = {
     id: 'test-123',
     testName: 'Complete Blood Count',
     priority: LabTestPriority.routine,

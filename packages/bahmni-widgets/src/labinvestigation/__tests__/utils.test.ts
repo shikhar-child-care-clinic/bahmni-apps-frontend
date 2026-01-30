@@ -1,13 +1,13 @@
 import { formatDate } from '@bahmni/services';
 import { ServiceRequest, Bundle } from 'fhir/r4';
 
-import { LabTestPriority, FormattedLabTest } from '../models';
+import { LabTestPriority, FormattedLabInvestigations } from '../models';
 import {
-  filterLabTestEntries,
+  filterLabInvestigationEntries,
   mapLabTestPriority,
   determineTestType,
-  formatLabTests,
-  groupLabTestsByDate,
+  formatLabInvestigations,
+  groupLabInvestigationsByDate,
   getProcessedReportIds,
   extractObservationsFromBundle,
   formatObservationsAsLabTestResults,
@@ -144,7 +144,7 @@ describe('Lab Investigation Utils', () => {
   describe('filterLabTestEntries', () => {
     it('should return empty array when bundle has no entries', () => {
       const emptyBundle = createMockBundle([]);
-      const result = filterLabTestEntries(emptyBundle);
+      const result = filterLabInvestigationEntries(emptyBundle);
       expect(result).toEqual([]);
     });
 
@@ -155,7 +155,7 @@ describe('Lab Investigation Utils', () => {
         createMockServiceRequest({ id: 'test-3' }),
       ]);
 
-      const result = filterLabTestEntries(mockBundle);
+      const result = filterLabInvestigationEntries(mockBundle);
 
       expect(result).toHaveLength(3);
       expect(result.map((r) => r.id)).toEqual(['test-1', 'test-2', 'test-3']);
@@ -171,7 +171,7 @@ describe('Lab Investigation Utils', () => {
         createMockServiceRequest({ id: 'test-3' }),
       ]);
 
-      const result = filterLabTestEntries(mockBundle);
+      const result = filterLabInvestigationEntries(mockBundle);
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('test-3');
@@ -187,7 +187,7 @@ describe('Lab Investigation Utils', () => {
         }),
       ]);
 
-      const result = filterLabTestEntries(mockBundle);
+      const result = filterLabInvestigationEntries(mockBundle);
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('test-2');
@@ -207,7 +207,7 @@ describe('Lab Investigation Utils', () => {
         }),
       ]);
 
-      const result = filterLabTestEntries(mockBundle);
+      const result = filterLabInvestigationEntries(mockBundle);
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('test-3');
@@ -232,7 +232,7 @@ describe('Lab Investigation Utils', () => {
         }),
       ];
 
-      const result = formatLabTests(mockTests, mockTranslate);
+      const result = formatLabInvestigations(mockTests, mockTranslate);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
@@ -258,7 +258,7 @@ describe('Lab Investigation Utils', () => {
         }),
       ];
 
-      const result = formatLabTests(mockTests, mockTranslate);
+      const result = formatLabInvestigations(mockTests, mockTranslate);
 
       expect(result[0].testName).toBe('');
       expect(result[0].orderedBy).toBe('');
@@ -272,7 +272,7 @@ describe('Lab Investigation Utils', () => {
         createMockServiceRequest({ id: 'test-1' }),
       ];
 
-      const result = formatLabTests(mockTests, mockTranslate);
+      const result = formatLabInvestigations(mockTests, mockTranslate);
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('test-1');
@@ -286,7 +286,7 @@ describe('Lab Investigation Utils', () => {
         }),
       ];
 
-      const result = formatLabTests(mockTests, mockTranslate);
+      const result = formatLabInvestigations(mockTests, mockTranslate);
 
       expect(result[0].note).toBe('Patient should be fasting');
     });
@@ -294,7 +294,7 @@ describe('Lab Investigation Utils', () => {
 
   describe('groupLabTestsByDate', () => {
     it('should group tests by date', () => {
-      const mockFormattedTests: FormattedLabTest[] = [
+      const mockFormattedTests: FormattedLabInvestigations[] = [
         {
           id: 'test-1',
           testName: 'Test 1',
@@ -317,7 +317,7 @@ describe('Lab Investigation Utils', () => {
         },
       ];
 
-      const result = groupLabTestsByDate(mockFormattedTests);
+      const result = groupLabInvestigationsByDate(mockFormattedTests);
 
       expect(result).toHaveLength(1);
       expect(result[0].date).toBe('May 8, 2025');
@@ -325,7 +325,7 @@ describe('Lab Investigation Utils', () => {
     });
 
     it('should sort dates newest first', () => {
-      const mockFormattedTests: FormattedLabTest[] = [
+      const mockFormattedTests: FormattedLabInvestigations[] = [
         {
           id: 'test-1',
           testName: 'Old Test',
@@ -348,7 +348,7 @@ describe('Lab Investigation Utils', () => {
         },
       ];
 
-      const result = groupLabTestsByDate(mockFormattedTests);
+      const result = groupLabInvestigationsByDate(mockFormattedTests);
 
       expect(result).toHaveLength(2);
       expect(result[0].date).toBe('Dec 31, 2025');
@@ -356,7 +356,7 @@ describe('Lab Investigation Utils', () => {
     });
 
     it('should handle empty array', () => {
-      const result = groupLabTestsByDate([]);
+      const result = groupLabInvestigationsByDate([]);
       expect(result).toEqual([]);
     });
   });
@@ -655,7 +655,7 @@ describe('Lab Investigation Utils', () => {
 
   describe('updateTestsWithResults', () => {
     it('should update tests with results from map', () => {
-      const tests: FormattedLabTest[] = [
+      const tests: FormattedLabInvestigations[] = [
         {
           id: 'test-1',
           testName: 'Blood Test',
@@ -687,7 +687,7 @@ describe('Lab Investigation Utils', () => {
     });
 
     it('should not modify tests without results', () => {
-      const tests: FormattedLabTest[] = [
+      const tests: FormattedLabInvestigations[] = [
         {
           id: 'test-1',
           testName: 'Blood Test',

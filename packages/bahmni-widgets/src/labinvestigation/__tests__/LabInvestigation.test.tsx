@@ -1,7 +1,7 @@
 import {
   useTranslation,
   getCategoryUuidFromOrderTypes,
-  getLabTestBundle,
+  getLabInvestigationsBundle,
   getDiagnosticReportsByOrders,
   getDiagnosticReportBundle,
 } from '@bahmni/services';
@@ -13,13 +13,13 @@ import { Bundle, ServiceRequest, DiagnosticReport } from 'fhir/r4';
 import { usePatientUUID } from '../../hooks/usePatientUUID';
 import { useNotification } from '../../notification';
 import LabInvestigation from '../LabInvestigation';
-import { FormattedLabTest, LabTestPriority } from '../models';
+import { FormattedLabInvestigations, LabTestPriority } from '../models';
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   useTranslation: jest.fn(),
   getCategoryUuidFromOrderTypes: jest.fn(),
-  getLabTestBundle: jest.fn(),
+  getLabInvestigationsBundle: jest.fn(),
   getDiagnosticReportsByOrders: jest.fn(),
   getDiagnosticReportBundle: jest.fn(),
 }));
@@ -38,7 +38,7 @@ jest.mock('../../hooks/usePatientUUID', () => ({
 
 jest.mock('../LabInvestigationItem', () => ({
   __esModule: true,
-  default: ({ test }: { test: FormattedLabTest }) => (
+  default: ({ test }: { test: FormattedLabInvestigations }) => (
     <div data-testid="lab-investigation-item">
       <span data-testid="test-name">{test.testName}</span>
       <span data-testid="test-priority">{test.priority}</span>
@@ -54,9 +54,10 @@ const mockGetCategoryUuidFromOrderTypes =
   getCategoryUuidFromOrderTypes as jest.MockedFunction<
     typeof getCategoryUuidFromOrderTypes
   >;
-const mockGetLabTestBundle = getLabTestBundle as jest.MockedFunction<
-  typeof getLabTestBundle
->;
+const mockGetLabInvestigationsBundle =
+  getLabInvestigationsBundle as jest.MockedFunction<
+    typeof getLabInvestigationsBundle
+  >;
 const mockGetDiagnosticReportsByOrders =
   getDiagnosticReportsByOrders as jest.MockedFunction<
     typeof getDiagnosticReportsByOrders
@@ -182,7 +183,7 @@ describe('LabInvestigation', () => {
     });
 
     mockGetCategoryUuidFromOrderTypes.mockResolvedValue('lab-order-type-uuid');
-    mockGetLabTestBundle.mockResolvedValue(
+    mockGetLabInvestigationsBundle.mockResolvedValue(
       createMockBundle(mockServiceRequests),
     );
     mockGetDiagnosticReportsByOrders.mockResolvedValue({
@@ -198,7 +199,7 @@ describe('LabInvestigation', () => {
   });
 
   it('renders loading state with message', async () => {
-    mockGetLabTestBundle.mockImplementation(
+    mockGetLabInvestigationsBundle.mockImplementation(
       () => new Promise(() => {}), // Never resolves
     );
 
@@ -220,7 +221,7 @@ describe('LabInvestigation', () => {
   });
 
   it('renders empty state message when no lab tests', async () => {
-    mockGetLabTestBundle.mockResolvedValue(createMockBundle([]));
+    mockGetLabInvestigationsBundle.mockResolvedValue(createMockBundle([]));
 
     render(renderLabInvestigations());
 
@@ -232,7 +233,9 @@ describe('LabInvestigation', () => {
   });
 
   it('renders error message when hasError is true', async () => {
-    mockGetLabTestBundle.mockRejectedValue(new Error('Failed to fetch'));
+    mockGetLabInvestigationsBundle.mockRejectedValue(
+      new Error('Failed to fetch'),
+    );
 
     render(renderLabInvestigations());
 
@@ -296,8 +299,7 @@ describe('LabInvestigation', () => {
         ).toBeInTheDocument();
       });
 
-      // Verify that getLabTestBundle was NOT called
-      expect(mockGetLabTestBundle).not.toHaveBeenCalled();
+      expect(mockGetLabInvestigationsBundle).not.toHaveBeenCalled();
     });
 
     it('should fetch lab investigations when emptyEncounterFilter is false (episodeOfCareUuids is empty)', async () => {
@@ -313,8 +315,7 @@ describe('LabInvestigation', () => {
         expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
       });
 
-      // Verify that getLabTestBundle WAS called
-      expect(mockGetLabTestBundle).toHaveBeenCalled();
+      expect(mockGetLabInvestigationsBundle).toHaveBeenCalled();
     });
 
     it('should fetch lab investigations when emptyEncounterFilter is false (both have values)', async () => {
@@ -330,8 +331,7 @@ describe('LabInvestigation', () => {
         expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
       });
 
-      // Verify that getLabTestBundle WAS called
-      expect(mockGetLabTestBundle).toHaveBeenCalled();
+      expect(mockGetLabInvestigationsBundle).toHaveBeenCalled();
     });
 
     it('should fetch lab investigations when emptyEncounterFilter is false (no episode provided)', async () => {
@@ -341,8 +341,7 @@ describe('LabInvestigation', () => {
         expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
       });
 
-      // Verify that getLabTestBundle WAS called
-      expect(mockGetLabTestBundle).toHaveBeenCalled();
+      expect(mockGetLabInvestigationsBundle).toHaveBeenCalled();
     });
   });
 

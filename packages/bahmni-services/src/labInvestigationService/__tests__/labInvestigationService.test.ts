@@ -1,7 +1,7 @@
 import { ServiceRequest, Bundle } from 'fhir/r4';
 
 import { get } from '../../api';
-import { getLabTestBundle } from '../labInvestigationService';
+import { getLabInvestigationsBundle } from '../labInvestigationService';
 
 jest.mock('../../api');
 
@@ -49,7 +49,7 @@ describe('labInvestigationService', () => {
     })),
   });
 
-  describe('getLabTestBundle', () => {
+  describe('getLabInvestigationsBundle', () => {
     it('should fetch and return lab test bundle', async () => {
       const mockBundle = createMockBundle([
         createMockServiceRequest({ id: 'test-1' }),
@@ -58,7 +58,10 @@ describe('labInvestigationService', () => {
 
       (get as jest.Mock).mockResolvedValue(mockBundle);
 
-      const result = await getLabTestBundle(patientUUID, categoryUuid);
+      const result = await getLabInvestigationsBundle(
+        patientUUID,
+        categoryUuid,
+      );
 
       expect(get).toHaveBeenCalledWith(
         '/openmrs/ws/fhir2/R4/ServiceRequest?_sort=-_lastUpdated&category=category-uuid-123&patient=58493859-63f7-48b6-bd0b-698d5a119a21',
@@ -71,7 +74,10 @@ describe('labInvestigationService', () => {
       const emptyBundle = createMockBundle([]);
       (get as jest.Mock).mockResolvedValue(emptyBundle);
 
-      const result = await getLabTestBundle(patientUUID, categoryUuid);
+      const result = await getLabInvestigationsBundle(
+        patientUUID,
+        categoryUuid,
+      );
 
       expect(result).toEqual(emptyBundle);
       expect(result.entry).toHaveLength(0);
@@ -83,7 +89,7 @@ describe('labInvestigationService', () => {
 
       (get as jest.Mock).mockResolvedValue(mockBundle);
 
-      await getLabTestBundle(
+      await getLabInvestigationsBundle(
         patientUUID,
         categoryUuid,
         encounterUuids,
@@ -101,7 +107,7 @@ describe('labInvestigationService', () => {
 
       (get as jest.Mock).mockResolvedValue(mockBundle);
 
-      await getLabTestBundle(
+      await getLabInvestigationsBundle(
         patientUUID,
         categoryUuid,
         undefined,
@@ -117,9 +123,9 @@ describe('labInvestigationService', () => {
       const error = new Error('API Error');
       (get as jest.Mock).mockRejectedValue(error);
 
-      await expect(getLabTestBundle(patientUUID, categoryUuid)).rejects.toThrow(
-        'API Error',
-      );
+      await expect(
+        getLabInvestigationsBundle(patientUUID, categoryUuid),
+      ).rejects.toThrow('API Error');
     });
   });
 });

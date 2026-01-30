@@ -9,7 +9,7 @@ import { getServiceRequests } from '../orderRequestService';
  * @param numberOfVisits - Optional number of visits to filter by
  * @returns Promise resolving to ServiceRequest Bundle
  */
-export async function getLabTestBundle(
+export async function getLabInvestigationsBundle(
   patientUUID: string,
   category: string,
   encounterUuids?: string[],

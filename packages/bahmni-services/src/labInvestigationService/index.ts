@@ -1,2 +1,2 @@
 // Service functions - returns raw FHIR bundles
-export { getLabTestBundle } from './labInvestigationService';
+export { getLabInvestigationsBundle } from './labInvestigationService';
