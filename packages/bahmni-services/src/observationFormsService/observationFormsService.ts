@@ -117,24 +117,20 @@ export const fetchFormMetadata = async (
     'translationsUrl' in formSchema &&
     typeof formSchema.translationsUrl === 'string'
   ) {
-    try {
-      const translationsUrl = FORM_TRANSLATIONS_URL(
-        formName,
-        formUuidValue,
-        formVersion,
+    const translationsUrl = FORM_TRANSLATIONS_URL(
+      formName,
+      formUuidValue,
+      formVersion,
+      currentLocale,
+    );
+
+    const translationsResponse = await fetch(translationsUrl);
+    if (translationsResponse.ok) {
+      const translationsData = await translationsResponse.json();
+      translations = extractObservationFormTranslations(
+        translationsData,
         currentLocale,
       );
-
-      const translationsResponse = await fetch(translationsUrl);
-      if (translationsResponse.ok) {
-        const translationsData = await translationsResponse.json();
-        translations = extractObservationFormTranslations(
-          translationsData,
-          currentLocale,
-        );
-      }
-    } catch {
-      
     }
   }
 
