@@ -303,7 +303,6 @@ export function transformContainerObservationsToForm2Observations(
   containerObservations: Record<string, unknown>[],
 ): Form2Observation[] {
   const transform = (obs: Record<string, unknown>): Form2Observation => {
-  
     const getValue = (
       value: unknown,
     ): string | number | boolean | ConceptValue | ComplexValue | null => {
@@ -317,7 +316,7 @@ export function transformContainerObservationsToForm2Observations(
       ) {
         return value;
       }
-    
+
       if (typeof value === 'object') {
         return value as ConceptValue | ComplexValue;
       }
@@ -325,7 +324,7 @@ export function transformContainerObservationsToForm2Observations(
     };
 
     const concept = obs.concept as Record<string, unknown> | string | undefined;
-    const conceptUuid: string = 
+    const conceptUuid: string =
       typeof concept === 'object' && concept !== null && 'uuid' in concept
         ? (concept.uuid as string)
         : (concept as string);
@@ -341,17 +340,13 @@ export function transformContainerObservationsToForm2Observations(
       },
       value: getValue(obs.value),
       obsDatetime:
-        typeof obs.observationDateTime === 'string' 
-          ? obs.observationDateTime 
+        typeof obs.observationDateTime === 'string'
+          ? obs.observationDateTime
           : new Date().toISOString(),
-      formNamespace: 
-        typeof obs.formNamespace === 'string' 
-          ? obs.formNamespace 
-          : 'Bahmni',
-      formFieldPath: 
-        typeof obs.formFieldPath === 'string' 
-          ? obs.formFieldPath 
-          : undefined,
+      formNamespace:
+        typeof obs.formNamespace === 'string' ? obs.formNamespace : 'Bahmni',
+      formFieldPath:
+        typeof obs.formFieldPath === 'string' ? obs.formFieldPath : undefined,
     };
 
     if (obs.comment && typeof obs.comment === 'string') {
@@ -362,7 +357,6 @@ export function transformContainerObservationsToForm2Observations(
       observation.interpretation = obs.interpretation;
     }
 
-    
     if (obs.groupMembers && Array.isArray(obs.groupMembers)) {
       observation.groupMembers = obs.groupMembers.map(transform);
     }
