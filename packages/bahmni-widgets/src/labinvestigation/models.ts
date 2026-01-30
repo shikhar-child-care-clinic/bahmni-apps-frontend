@@ -28,4 +28,5 @@ export interface LabTestResult {
   referenceRange: string;
   reportedOn: string;
   actions: string;
+  interpretation?: string;
 }

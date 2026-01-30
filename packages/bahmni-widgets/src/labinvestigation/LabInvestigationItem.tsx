@@ -33,6 +33,7 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
       referenceRange: result.referenceRange,
       reportedOn: result.reportedOn,
       status: result.status,
+      interpretation: result.interpretation,
     }));
   }, [hasResults, test.result, test.id]);
 
@@ -48,11 +49,17 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
   );
 
   const renderCell = (row: (typeof tableRows)[0], cellId: string) => {
+    const isAbnormal = row.interpretation === 'A';
+
     switch (cellId) {
       case 'testName':
         return <span className={styles.testName}>{row.testName || '--'}</span>;
       case 'result':
-        return row.result || '--';
+        return (
+          <span className={isAbnormal ? styles.abnormalResult : undefined}>
+            {row.result || '--'}
+          </span>
+        );
       case 'referenceRange':
         return row.referenceRange || '--';
       case 'reportedOn':

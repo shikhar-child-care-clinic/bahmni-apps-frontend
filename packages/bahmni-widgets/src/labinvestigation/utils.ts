@@ -216,6 +216,10 @@ export function formatObservationsAsLabTestResults(
       ? formatDate(obs.issued, t, 'MMMM d, yyyy').formattedResult || obs.issued
       : '';
 
+    // Extract interpretation code (e.g., "A" for abnormal, "N" for normal, "H" for high, "L" for low)
+    // FHIR interpretation is an array of CodeableConcept
+    const interpretation = obs.interpretation?.[0]?.coding?.[0]?.code;
+
     return {
       status: obs.status || '',
       TestName: testName,
@@ -223,6 +227,7 @@ export function formatObservationsAsLabTestResults(
       referenceRange,
       reportedOn,
       actions: '', // Actions are typically not part of the observation resource
+      interpretation,
     };
   });
 }

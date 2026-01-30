@@ -32,6 +32,12 @@
   text-transform: capitalize;
 }
 
+.abnormalResult {
+  @include type-style("body-compact-01");
+  color: $text-error;
+  font-weight: 700;
+}
+
 .testDetails {
   @include type-style("body-compact-01");
   color: $text-secondary;
