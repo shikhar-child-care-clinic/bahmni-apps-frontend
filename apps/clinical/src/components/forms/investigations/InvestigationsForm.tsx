@@ -91,7 +91,7 @@ const InvestigationsForm: React.FC = React.memo(() => {
       }
       return results;
     },
-    enabled: !!patientUUID,
+    enabled: !!patientUUID && !!currentEncounterId,
   });
 
   const translateOrderType = useCallback(
