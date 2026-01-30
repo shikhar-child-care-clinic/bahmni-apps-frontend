@@ -20,9 +20,6 @@ import {
   FormResponseData,
 } from './models';
 
-/**
- * Fetches and normalizes raw observation forms data from the API
- */
 const fetchAndNormalizeFormsData = async (): Promise<FormApiResponse[]> => {
   const response = await fetch(OBSERVATION_FORMS_URL);
 
@@ -37,9 +34,7 @@ const fetchAndNormalizeFormsData = async (): Promise<FormApiResponse[]> => {
   return Array.isArray(data) ? data : [];
 };
 
-/**
- * Gets translated name for a form based on current locale
- */
+
 const getTranslatedFormName = (
   form: FormApiResponse,
   currentLocale: string,
@@ -59,9 +54,7 @@ const getTranslatedFormName = (
   return form.name;
 };
 
-/**
- * Transforms API form data to application domain model
- */
+
 const transformToObservationForm = (
   form: FormApiResponse,
   currentLocale: string,
@@ -79,9 +72,7 @@ const transformToObservationForm = (
   };
 };
 
-/**
- * Function to fetch and process observation forms
- */
+
 export const fetchObservationForms = async (): Promise<ObservationForm[]> => {
   const formsArray = await fetchAndNormalizeFormsData();
   const currentLocale = getUserPreferredLocale();
@@ -116,13 +107,13 @@ export const fetchFormMetadata = async (
   const formSchema = JSON.parse(data.resources[0].value);
   const currentLocale = getUserPreferredLocale();
 
-  // Use fallback values from schema if API response doesn't have them
-  const formName = formSchema.name ?? data.name;
+  
+  const formName = data.name ?? formSchema.name;
   const formUuidValue = data.uuid ?? formSchema.uuid;
-  const formVersion = formSchema.version ?? data.version ?? '1';
+  const formVersion = data.version ?? formSchema.version ?? '1';
   const formPublished = data.published ?? false;
 
-  // Fetch translations from API endpoint if translationsUrl is present
+
   let translations: ObservationFormTranslations = { labels: {}, concepts: {} };
 
   if (
@@ -148,7 +139,7 @@ export const fetchFormMetadata = async (
         );
       }
     } catch (error) {
-      // Silently fail with empty translations
+      
     }
   }
 

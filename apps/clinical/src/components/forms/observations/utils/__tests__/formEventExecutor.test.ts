@@ -1,7 +1,7 @@
 // Import the mocked module to access the mock function
 import { runEventScript } from '@bahmni/form2-controls';
 import { Form2Observation, FormMetadata } from '@bahmni/services';
-import { executeOnFormSaveEvent, hasFormSaveEvent } from '../formEventExecutor';
+import { executeOnFormSaveEvent } from '../formEventExecutor';
 
 // Mock @bahmni/form2-controls runEventScript
 jest.mock('@bahmni/form2-controls', () => ({
@@ -250,43 +250,6 @@ describe('formEventExecutor', () => {
       ).toThrow(
         'Error in onFormSave event for form "Test Form": Unknown error occurred',
       );
-    });
-  });
-
-  describe('hasFormSaveEvent', () => {
-    it('should return true when form metadata contains onFormSave event', () => {
-      const metadata = createMockMetadata(btoa('some script'));
-
-      const result = hasFormSaveEvent(metadata);
-
-      expect(result).toBe(true);
-    });
-
-    it('should return false when form metadata has no events', () => {
-      const metadata = createMockMetadata();
-
-      const result = hasFormSaveEvent(metadata);
-
-      expect(result).toBe(false);
-    });
-
-    it('should return false when metadata is null', () => {
-      const result = hasFormSaveEvent(null);
-
-      expect(result).toBe(false);
-    });
-
-    it('should return false when schema has no events property', () => {
-      const metadata = {
-        name: 'Test Form',
-        uuid: 'form-uuid-123',
-        version: '1',
-        schema: {},
-      } as FormMetadata;
-
-      const result = hasFormSaveEvent(metadata);
-
-      expect(result).toBe(false);
     });
   });
 });

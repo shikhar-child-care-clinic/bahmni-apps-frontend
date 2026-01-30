@@ -36,7 +36,6 @@ export const executeOnFormSaveEvent = (
   }
 
   try {
-    // Validate the script
     if (
       typeof onFormSaveScript !== 'string' ||
       onFormSaveScript.trim() === ''
@@ -52,23 +51,18 @@ export const executeOnFormSaveEvent = (
       formData: formData,
     };
 
-    // Use form2-controls runEventScript function
-    // It handles base64 decoding, script execution, and provides form.get() support
     const result = runEventScript(
       formData,
       onFormSaveScript,
       formContext.patient,
     );
 
-    // Return modified observations if event returns them
     if (Array.isArray(result)) {
       return result;
     }
 
-    // If event doesn't return anything, use the modified context
     return formContext.observations;
   } catch (error) {
-    // Extract error message to show users which form failed
     const errorMessage =
       error instanceof Error
         ? error.message
@@ -82,13 +76,4 @@ export const executeOnFormSaveEvent = (
 
     throw new Error(formattedError);
   }
-};
-
-/**
- * Check if form metadata contains an onFormSave event
- */
-export const hasFormSaveEvent = (metadata: FormMetadata | null): boolean => {
-  if (!metadata) return false;
-  const schema = metadata.schema as Record<string, unknown>;
-  return Boolean((schema?.events as Record<string, unknown>)?.onFormSave);
 };
