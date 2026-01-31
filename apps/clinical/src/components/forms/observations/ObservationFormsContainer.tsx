@@ -51,16 +51,6 @@ interface ObservationFormsContainerProps {
   existingObservations?: Form2Observation[];
 }
 
-/**
- * ObservationFormsWrapper component
- *
- * Wraps the ObservationForms component with additional functionality that was extracted from ConsultationPad.
- * This component manages its own state for selected forms and viewing form,
- * and renders its own ActionArea when viewing a form.
- *
- * When viewing a form, it takes over the entire UI with its own ActionArea.
- * When not viewing a form, it renders just the observation forms component.
- */
 const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   onViewingFormChange,
   viewingForm,
@@ -120,6 +110,15 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
     ? pinnedForms.some((form) => form.uuid === viewingForm.uuid)
     : false;
 
+  const observationsWithValues = React.useMemo(() => {
+    if (!existingObservations) return [];
+    return existingObservations.filter(
+      (obs) =>
+        (obs.value !== null && obs.value !== undefined) ||
+        (obs.groupMembers && obs.groupMembers.length > 0),
+    );
+  }, [existingObservations]);
+
   const handlePinToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -176,10 +175,11 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
         return;
       }
 
+      // Get observations once
       const { observations: currentObservations, errors } =
         formContainerRef.current.getValue();
 
-      // Transform current observations to ensure comments and other fields are included
+      // Transform once
       const transformedObservations =
         currentObservations && currentObservations.length > 0
           ? transformContainerObservationsToForm2Observations(
@@ -187,10 +187,23 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
             )
           : [];
 
-      const hasNotesOnly = transformedObservations.some(
-        (obs) => (obs.comment ?? obs.interpretation) && !obs.value,
-      );
-      const isEmpty = transformedObservations.length === 0 && !hasNotesOnly;
+      // Recursively check if observation or its group members have values
+      const hasValue = (obs: Form2Observation): boolean => {
+        // Check if observation has a direct value
+        if (obs.value !== null && obs.value !== undefined && obs.value !== '') {
+          return true;
+        }
+
+        // Check if observation has group members with values (for grouped obs controls)
+        if (obs.groupMembers && obs.groupMembers.length > 0) {
+          return obs.groupMembers.some(hasValue);
+        }
+
+        return false;
+      };
+
+      const hasAnyValue = transformedObservations.some(hasValue);
+      const isEmpty = !hasAnyValue; // Empty if no values (including empty strings), even if there are notes
       const hasErrors = errors && errors.length > 0;
 
       if (isEmpty) {
@@ -217,30 +230,25 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
       setValidationErrorMessage(null);
 
       try {
-        const hasValidData = (obs: (typeof currentObservations)[number]) =>
-          obs.value !== undefined ||
-          (obs.groupMembers && obs.groupMembers.length > 0);
+        // Extract and append notes-only observations to the existing array
+        extractAndAppendNotesFromFormData(
+          formContainerRef,
+          transformedObservations,
+        );
 
-        const validCurrentObservations =
-          currentObservations?.filter(hasValidData);
-
-        const observationsToValidate: Form2Observation[] =
-          validCurrentObservations && validCurrentObservations.length > 0
-            ? (validCurrentObservations as Form2Observation[])
-            : observations;
-
+        // Get form data for executeOnFormSaveEvent
         const containerState = (
           formContainerRef.current as {
-            state?: { data?: Record<string, unknown> };
+            state?: {
+              data?: Record<string, unknown> | { toJS?: () => unknown };
+            };
           } | null
         )?.state;
-        const formData = containerState?.data as
-          | Record<string, unknown>
-          | undefined;
+        const formData = convertImmutableToPlainObject(containerState?.data);
 
         const processedObservations = executeOnFormSaveEvent(
           formMetadata!,
-          observationsToValidate,
+          transformedObservations,
           patientUUID!,
           formData,
         );
@@ -260,15 +268,23 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   const continueAnyway = () => {
     setValidationErrorType(null);
     if (formContainerRef.current) {
+      // Get observations once
       const { observations: currentObservations } =
         formContainerRef.current.getValue();
 
+      // Transform once
       const transformedObservations =
         currentObservations && currentObservations.length > 0
           ? transformContainerObservationsToForm2Observations(
               currentObservations,
             )
           : [];
+
+      // Extract and append notes-only observations
+      extractAndAppendNotesFromFormData(
+        formContainerRef,
+        transformedObservations,
+      );
 
       handleSaveForm(transformedObservations, validationErrorType);
     }
@@ -337,7 +353,7 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
               name: viewingForm?.name,
               version: formMetadata.version || '1',
             }}
-            observations={existingObservations ?? []}
+            observations={observationsWithValues}
             patient={{ uuid: patientUUID }}
             translations={formMetadata.translations ?? {}}
             validate={validationErrorType !== null}
@@ -390,6 +406,134 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   }
 
   return null;
+};
+
+const convertImmutableToPlainObject = (
+  data: Record<string, unknown> | { toJS?: () => unknown } | undefined,
+): Record<string, unknown> | undefined => {
+  if (!data || typeof data !== 'object') {
+    return undefined;
+  }
+
+  if ('toJS' in data && typeof data.toJS === 'function') {
+    return data.toJS() as Record<string, unknown>;
+  }
+
+  return data as Record<string, unknown>;
+};
+
+const extractAndAppendNotesFromFormData = (
+  formContainerRef: React.RefObject<React.ComponentRef<
+    typeof Form2Container
+  > | null>,
+  transformedObservations: Form2Observation[],
+): void => {
+  if (!formContainerRef.current) return;
+
+  // Extract notes from raw form data for fields without values
+  const containerState = (
+    formContainerRef.current as {
+      state?: { data?: Record<string, unknown> | { toJS?: () => unknown } };
+    } | null
+  )?.state;
+
+  const formData = convertImmutableToPlainObject(containerState?.data);
+
+  // Extract notes-only observations and append to the array
+  if (formData && Array.isArray(formData.children)) {
+    formData.children.forEach((child) => {
+      if (child && typeof child === 'object') {
+        processControlForNotesExtraction(
+          child as Parameters<typeof processControlForNotesExtraction>[0],
+          transformedObservations,
+        );
+      }
+    });
+  }
+};
+
+const processControlForNotesExtraction = (
+  control: {
+    conceptUuid?: string;
+    value?: unknown;
+    comment?: string;
+    interpretation?: string;
+    id?: string;
+    formFieldPath?: string;
+    children?: unknown[];
+    control?: { concept?: { uuid?: string } };
+  },
+  transformedObservations: Form2Observation[],
+): void => {
+  const valueObj =
+    control.value && typeof control.value === 'object'
+      ? (control.value as Record<string, unknown>)
+      : null;
+  const valueComment = valueObj?.comment;
+  const valueInterpretation = valueObj?.interpretation;
+  const actualValue = valueObj?.value;
+
+  const valueConcept =
+    valueObj?.concept &&
+    typeof valueObj.concept === 'object' &&
+    'uuid' in valueObj.concept
+      ? (valueObj.concept as { uuid?: string }).uuid
+      : undefined;
+
+  const controlConcept = control.control?.concept?.uuid;
+
+  const conceptUuid = control.conceptUuid ?? valueConcept ?? controlConcept;
+
+  const hasNoValue = valueObj
+    ? actualValue === null || actualValue === undefined || actualValue === ''
+    : control.value === null ||
+      control.value === undefined ||
+      control.value === '';
+  const hasNotes =
+    Boolean(control.comment ?? control.interpretation) ||
+    Boolean(valueComment ?? valueInterpretation);
+
+  if (
+    hasNoValue &&
+    hasNotes &&
+    conceptUuid &&
+    !transformedObservations.some((obs) => obs.concept.uuid === conceptUuid)
+  ) {
+    const observation: Form2Observation = {
+      concept: {
+        uuid: conceptUuid,
+        datatype: undefined,
+      },
+      value: null,
+      obsDatetime: new Date().toISOString(),
+      formNamespace: 'Bahmni',
+      formFieldPath: control.formFieldPath ?? control.id,
+    };
+
+    const finalComment = control.comment ?? valueComment;
+    const finalInterpretation = control.interpretation ?? valueInterpretation;
+
+    if (finalComment) {
+      observation.comment = String(finalComment);
+    }
+
+    if (finalInterpretation) {
+      observation.interpretation = String(finalInterpretation);
+    }
+
+    transformedObservations.push(observation);
+  }
+
+  if (Array.isArray(control.children)) {
+    control.children.forEach((child) => {
+      if (child && typeof child === 'object') {
+        processControlForNotesExtraction(
+          child as typeof control,
+          transformedObservations,
+        );
+      }
+    });
+  }
 };
 
 export default ObservationFormsContainer;
