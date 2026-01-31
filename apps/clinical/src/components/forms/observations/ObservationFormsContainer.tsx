@@ -17,6 +17,8 @@ import {
   getFormattedError,
   getUserPreferredLocale,
   transformContainerObservationsToForm2Observations,
+  convertImmutableToPlainObject,
+  extractNotesFromFormData,
 } from '@bahmni/services';
 import { usePatientUUID } from '@bahmni/widgets';
 import React, { useState, useRef } from 'react';
@@ -408,20 +410,6 @@ const ObservationFormsContainer: React.FC<ObservationFormsContainerProps> = ({
   return null;
 };
 
-const convertImmutableToPlainObject = (
-  data: Record<string, unknown> | { toJS?: () => unknown } | undefined,
-): Record<string, unknown> | undefined => {
-  if (!data || typeof data !== 'object') {
-    return undefined;
-  }
-
-  if ('toJS' in data && typeof data.toJS === 'function') {
-    return data.toJS() as Record<string, unknown>;
-  }
-
-  return data as Record<string, unknown>;
-};
-
 const extractAndAppendNotesFromFormData = (
   formContainerRef: React.RefObject<React.ComponentRef<
     typeof Form2Container
@@ -439,101 +427,8 @@ const extractAndAppendNotesFromFormData = (
 
   const formData = convertImmutableToPlainObject(containerState?.data);
 
-  // Extract notes-only observations and append to the array
-  if (formData && Array.isArray(formData.children)) {
-    formData.children.forEach((child) => {
-      if (child && typeof child === 'object') {
-        processControlForNotesExtraction(
-          child as Parameters<typeof processControlForNotesExtraction>[0],
-          transformedObservations,
-        );
-      }
-    });
-  }
-};
-
-const processControlForNotesExtraction = (
-  control: {
-    conceptUuid?: string;
-    value?: unknown;
-    comment?: string;
-    interpretation?: string;
-    id?: string;
-    formFieldPath?: string;
-    children?: unknown[];
-    control?: { concept?: { uuid?: string } };
-  },
-  transformedObservations: Form2Observation[],
-): void => {
-  const valueObj =
-    control.value && typeof control.value === 'object'
-      ? (control.value as Record<string, unknown>)
-      : null;
-  const valueComment = valueObj?.comment;
-  const valueInterpretation = valueObj?.interpretation;
-  const actualValue = valueObj?.value;
-
-  const valueConcept =
-    valueObj?.concept &&
-    typeof valueObj.concept === 'object' &&
-    'uuid' in valueObj.concept
-      ? (valueObj.concept as { uuid?: string }).uuid
-      : undefined;
-
-  const controlConcept = control.control?.concept?.uuid;
-
-  const conceptUuid = control.conceptUuid ?? valueConcept ?? controlConcept;
-
-  const hasNoValue = valueObj
-    ? actualValue === null || actualValue === undefined || actualValue === ''
-    : control.value === null ||
-      control.value === undefined ||
-      control.value === '';
-  const hasNotes =
-    Boolean(control.comment ?? control.interpretation) ||
-    Boolean(valueComment ?? valueInterpretation);
-
-  if (
-    hasNoValue &&
-    hasNotes &&
-    conceptUuid &&
-    !transformedObservations.some((obs) => obs.concept.uuid === conceptUuid)
-  ) {
-    const observation: Form2Observation = {
-      concept: {
-        uuid: conceptUuid,
-        datatype: undefined,
-      },
-      value: null,
-      obsDatetime: new Date().toISOString(),
-      formNamespace: 'Bahmni',
-      formFieldPath: control.formFieldPath ?? control.id,
-    };
-
-    const finalComment = control.comment ?? valueComment;
-    const finalInterpretation = control.interpretation ?? valueInterpretation;
-
-    if (finalComment) {
-      observation.comment = String(finalComment);
-    }
-
-    if (finalInterpretation) {
-      observation.interpretation = String(finalInterpretation);
-    }
-
-    transformedObservations.push(observation);
-  }
-
-  if (Array.isArray(control.children)) {
-    control.children.forEach((child) => {
-      if (child && typeof child === 'object') {
-        processControlForNotesExtraction(
-          child as typeof control,
-          transformedObservations,
-        );
-      }
-    });
-  }
+  // Extract notes-only observations and append to the array using service function
+  extractNotesFromFormData(formData, transformedObservations);
 };
 
 export default ObservationFormsContainer;

@@ -366,3 +366,130 @@ export function transformContainerObservationsToForm2Observations(
 
   return containerObservations.map(transform);
 }
+
+/**
+ * Converts Immutable.js data structures to plain JavaScript objects
+ */
+export function convertImmutableToPlainObject(
+  data: Record<string, unknown> | { toJS?: () => unknown } | undefined,
+): Record<string, unknown> | undefined {
+  if (!data || typeof data !== 'object') {
+    return undefined;
+  }
+
+  if ('toJS' in data && typeof data.toJS === 'function') {
+    return data.toJS() as Record<string, unknown>;
+  }
+
+  return data as Record<string, unknown>;
+}
+
+/**
+ * Extracts notes-only observations from raw form data
+ * This handles cases where form2-controls doesn't return observations for fields without values
+ */
+export function extractNotesFromFormData(
+  formData: Record<string, unknown> | undefined,
+  transformedObservations: Form2Observation[],
+): void {
+  if (!formData || !Array.isArray(formData.children)) {
+    return;
+  }
+
+  formData.children.forEach((child) => {
+    if (child && typeof child === 'object') {
+      processControlForNotesExtraction(
+        child as Parameters<typeof processControlForNotesExtraction>[0],
+        transformedObservations,
+      );
+    }
+  });
+}
+
+/**
+ * Recursively processes form controls to extract notes from fields without values
+ * Appends notes-only observations to the provided array
+ */
+function processControlForNotesExtraction(
+  control: {
+    conceptUuid?: string;
+    value?: unknown;
+    comment?: string;
+    interpretation?: string;
+    id?: string;
+    formFieldPath?: string;
+    children?: unknown[];
+    control?: { concept?: { uuid?: string } };
+  },
+  transformedObservations: Form2Observation[],
+): void {
+  const valueObj =
+    control.value && typeof control.value === 'object'
+      ? (control.value as Record<string, unknown>)
+      : null;
+  const valueComment = valueObj?.comment;
+  const valueInterpretation = valueObj?.interpretation;
+  const actualValue = valueObj?.value;
+
+  const valueConcept =
+    valueObj?.concept &&
+    typeof valueObj.concept === 'object' &&
+    'uuid' in valueObj.concept
+      ? (valueObj.concept as { uuid?: string }).uuid
+      : undefined;
+
+  const controlConcept = control.control?.concept?.uuid;
+
+  const conceptUuid = control.conceptUuid ?? valueConcept ?? controlConcept;
+
+  const hasNoValue = valueObj
+    ? actualValue === null || actualValue === undefined || actualValue === ''
+    : control.value === null ||
+      control.value === undefined ||
+      control.value === '';
+  const hasNotes =
+    Boolean(control.comment ?? control.interpretation) ||
+    Boolean(valueComment ?? valueInterpretation);
+
+  if (
+    hasNoValue &&
+    hasNotes &&
+    conceptUuid &&
+    !transformedObservations.some((obs) => obs.concept.uuid === conceptUuid)
+  ) {
+    const observation: Form2Observation = {
+      concept: {
+        uuid: conceptUuid,
+        datatype: undefined,
+      },
+      value: null,
+      obsDatetime: new Date().toISOString(),
+      formNamespace: 'Bahmni',
+      formFieldPath: control.formFieldPath ?? control.id,
+    };
+
+    const finalComment = control.comment ?? valueComment;
+    const finalInterpretation = control.interpretation ?? valueInterpretation;
+
+    if (finalComment) {
+      observation.comment = String(finalComment);
+    }
+
+    if (finalInterpretation) {
+      observation.interpretation = String(finalInterpretation);
+    }
+
+    transformedObservations.push(observation);
+  }
+
+  if (Array.isArray(control.children)) {
+    control.children.forEach((child) => {
+      if (child && typeof child === 'object') {
+        processControlForNotesExtraction(
+          child as typeof control,
+          transformedObservations,
+        );
+      }
+    });
+  }
+}

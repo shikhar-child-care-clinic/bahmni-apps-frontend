@@ -264,6 +264,8 @@ export {
   transformFormDataToObservations,
   transformObservationsToFormData,
   transformContainerObservationsToForm2Observations,
+  convertImmutableToPlainObject,
+  extractNotesFromFormData,
   getPatientFormData,
   type ObservationForm,
   type FormApiResponse,

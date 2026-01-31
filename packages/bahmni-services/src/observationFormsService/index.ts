@@ -21,6 +21,8 @@ export {
   transformFormDataToObservations,
   transformObservationsToFormData,
   transformContainerObservationsToForm2Observations,
+  convertImmutableToPlainObject,
+  extractNotesFromFormData,
   type FormData,
   type FormControlData,
   type Form2Observation,
