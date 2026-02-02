@@ -143,7 +143,7 @@ describe('Lab Investigation Utils', () => {
     });
   });
 
-  describe('filterLabTestEntries', () => {
+  describe('filterLabInvestigationEntries', () => {
     it('should return empty array when bundle has no entries', () => {
       const emptyBundle = createMockBundle([]);
       const result = filterLabInvestigationEntries(emptyBundle);
@@ -216,7 +216,7 @@ describe('Lab Investigation Utils', () => {
     });
   });
 
-  describe('formatLabTests', () => {
+  describe('formatLabInvestigations', () => {
     it('should format lab tests correctly', () => {
       const mockTests = [
         createMockServiceRequest({
