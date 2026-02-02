@@ -3,6 +3,10 @@
 @use "@carbon/react/scss/theme" as *;
 @use "@carbon/react/scss/type" as *;
 
+.labSkeleton {
+  max-inline-size: 100% !important;
+}
+
 .labTest {
   background-color: $layer-02;
   border-bottom: 1px solid $border-subtle;

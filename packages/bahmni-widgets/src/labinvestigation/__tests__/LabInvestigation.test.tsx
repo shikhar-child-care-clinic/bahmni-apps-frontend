@@ -204,7 +204,7 @@ describe('LabInvestigation', () => {
 
     render(renderLabInvestigations());
 
-    expect(screen.getByTestId('lab-test-loading')).toBeInTheDocument();
+    expect(screen.getByTestId('lab-skeleton')).toBeInTheDocument();
   });
 
   it('renders lab tests grouped by date', async () => {

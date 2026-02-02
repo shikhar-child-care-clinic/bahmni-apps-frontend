@@ -187,8 +187,7 @@ describe('LabInvestigation Integration Tests', () => {
 
     renderLabInvestigations();
 
-    const skeletonElement = document.querySelector('.cds--skeleton__text');
-    expect(skeletonElement).toBeInTheDocument();
+    expect(screen.getByTestId('lab-skeleton')).toBeInTheDocument();
   });
 
   it('displays error message when API call fails', async () => {

@@ -1,4 +1,8 @@
-import { Accordion, AccordionItem, SkeletonText } from '@bahmni/design-system';
+import {
+  Accordion,
+  AccordionItem,
+  CodeSnippetSkeleton,
+} from '@bahmni/design-system';
 import {
   shouldEnableEncounterFilter,
   useTranslation,
@@ -196,7 +200,11 @@ const LabInvestigation: React.FC<WidgetProps> = ({
 
   if (isLoading) {
     return (
-      <SkeletonText lineCount={5} width="100%" testId="lab-test-loading" />
+      <CodeSnippetSkeleton
+        type="multi"
+        className={styles.labSkeleton}
+        testId="lab-skeleton"
+      />
     );
   }
 
