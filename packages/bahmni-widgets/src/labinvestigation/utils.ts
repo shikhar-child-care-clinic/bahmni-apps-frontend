@@ -134,15 +134,14 @@ export function groupLabInvestigationsByDate(
 }
 
 export function getProcessedTestIds(
-  diagnosticReportsBundle: Bundle<DiagnosticReport> | undefined,
+  diagnosticReports: DiagnosticReport[] | undefined,
 ): string[] {
-  if (!diagnosticReportsBundle?.entry) return [];
+  if (!diagnosticReports || diagnosticReports.length === 0) return [];
 
   const testIds = new Set<string>();
 
-  diagnosticReportsBundle.entry
-    .filter((entry) => {
-      const report = entry.resource;
+  diagnosticReports
+    .filter((report) => {
       return (
         report?.status &&
         PROCESSED_REPORT_STATUSES.includes(
@@ -150,8 +149,7 @@ export function getProcessedTestIds(
         )
       );
     })
-    .forEach((entry) => {
-      const report = entry.resource;
+    .forEach((report) => {
       // Extract test IDs from basedOn references
       report?.basedOn?.forEach((ref) => {
         const testId = ref.reference?.split('/').pop();
@@ -168,15 +166,15 @@ export function getProcessedTestIds(
  * Creates a mapping from test IDs to report IDs for processed diagnostic reports
  */
 export function getTestIdToReportIdMap(
-  diagnosticReportsBundle: Bundle<DiagnosticReport> | undefined,
+  diagnosticReports: DiagnosticReport[] | undefined,
 ): Map<string, string> {
   const testIdToReportId = new Map<string, string>();
 
-  if (!diagnosticReportsBundle?.entry) return testIdToReportId;
+  if (!diagnosticReports || diagnosticReports.length === 0)
+    return testIdToReportId;
 
-  diagnosticReportsBundle.entry
-    .filter((entry) => {
-      const report = entry.resource;
+  diagnosticReports
+    .filter((report) => {
       return (
         report?.status &&
         PROCESSED_REPORT_STATUSES.includes(
@@ -184,8 +182,7 @@ export function getTestIdToReportIdMap(
         )
       );
     })
-    .forEach((entry) => {
-      const report = entry.resource;
+    .forEach((report) => {
       const reportId = report?.id;
 
       if (!reportId) return;
@@ -200,6 +197,17 @@ export function getTestIdToReportIdMap(
     });
 
   return testIdToReportId;
+}
+
+export function extractDiagnosticReportsFromBundle(
+  bundle: Bundle<DiagnosticReport> | undefined,
+): DiagnosticReport[] {
+  if (!bundle?.entry) return [];
+
+  return bundle.entry
+    .filter((entry) => entry.resource?.resourceType === 'DiagnosticReport')
+    .map((entry) => entry.resource as DiagnosticReport)
+    .filter((report): report is DiagnosticReport => !!report);
 }
 
 export function extractObservationsFromBundle(

@@ -345,7 +345,7 @@ describe('LabInvestigation', () => {
   });
 
   describe('Accordion interactions', () => {
-    it('should close first accordion and open second accordion when clicking second accordion', async () => {
+    it('should allow multiple accordions to be open at the same time', async () => {
       const user = userEvent.setup();
       render(renderLabInvestigations());
 
@@ -366,7 +366,9 @@ describe('LabInvestigation', () => {
       const firstAccordionButton = screen.getByRole('button', {
         name: /May 8, 2025/i,
       });
-      expect(firstAccordionButton).toHaveAttribute('aria-expanded', 'false');
+      // Both accordions should be open
+      expect(firstAccordionButton).toHaveAttribute('aria-expanded', 'true');
+      expect(secondAccordionButton).toHaveAttribute('aria-expanded', 'true');
     });
 
     it('should close accordion when clicking on open accordion', async () => {

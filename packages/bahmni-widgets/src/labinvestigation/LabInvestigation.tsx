@@ -11,7 +11,8 @@ import {
   getLabInvestigationsBundle,
   getDiagnosticReports,
 } from '@bahmni/services';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
+import type { DiagnosticReport } from 'fhir/r4';
 import React, { useMemo, useEffect, useState } from 'react';
 
 import { usePatientUUID } from '../hooks/usePatientUUID';
@@ -26,6 +27,7 @@ import {
   groupLabInvestigationsByDate,
   getProcessedTestIds,
   getTestIdToReportIdMap,
+  extractDiagnosticReportsFromBundle,
 } from './utils';
 
 const fetchLabInvestigations = async (
@@ -55,8 +57,8 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   const { addNotification } = useNotification();
   const categoryName = config?.orderType as string;
   const numberOfVisits = config?.numberOfVisits as number;
-  const [openAccordionIndex, setOpenAccordionIndex] = useState<number | null>(
-    0,
+  const [openAccordionIndices, setOpenAccordionIndices] = useState<Set<number>>(
+    new Set([0]),
   );
 
   const emptyEncounterFilter = shouldEnableEncounterFilter(
@@ -136,23 +138,28 @@ const LabInvestigation: React.FC<WidgetProps> = ({
     return groupLabInvestigationsByDate(labTests);
   }, [labTests]);
 
-  // Get test IDs for the currently open accordion
-  const openAccordionTestIds = useMemo(() => {
-    if (openAccordionIndex !== null && labTestsByDate[openAccordionIndex]) {
-      return labTestsByDate[openAccordionIndex].tests.map((test) => test.id);
-    }
-    return [];
-  }, [openAccordionIndex, labTestsByDate]);
-
-  // Fetch diagnostic reports for the open accordion
-  const { data: diagnosticReports } = useQuery({
-    queryKey: ['diagnosticReports', patientUUID, openAccordionTestIds],
-    queryFn: () => getDiagnosticReports(patientUUID!, openAccordionTestIds),
-    enabled:
-      !!patientUUID &&
-      openAccordionTestIds.length > 0 &&
-      openAccordionIndex !== null,
+  // Fetch diagnostic reports for each accordion separately to enable caching
+  const diagnosticReportQueries = useQueries({
+    queries: labTestsByDate.map((group, index) => {
+      const testIds = group.tests.map((test) => test.id);
+      return {
+        queryKey: ['diagnosticReports', patientUUID, index, testIds],
+        queryFn: () => getDiagnosticReports(patientUUID!, testIds),
+        enabled:
+          !!patientUUID &&
+          openAccordionIndices.has(index) &&
+          testIds.length > 0,
+      };
+    }),
   });
+
+  // Merge all diagnostic reports from open accordions
+  const diagnosticReports = useMemo<DiagnosticReport[]>(() => {
+    const reports = diagnosticReportQueries
+      .filter((query) => query.data)
+      .flatMap((query) => extractDiagnosticReportsFromBundle(query.data));
+    return reports;
+  }, [diagnosticReportQueries]);
 
   const processedTestIds = useMemo(() => {
     return getProcessedTestIds(diagnosticReports);
@@ -194,9 +201,17 @@ const LabInvestigation: React.FC<WidgetProps> = ({
         <AccordionItem
           key={group.date}
           className={styles.accordionItem}
-          open={index === openAccordionIndex}
+          open={openAccordionIndices.has(index)}
           onHeadingClick={() => {
-            setOpenAccordionIndex(openAccordionIndex === index ? null : index);
+            setOpenAccordionIndices((prev) => {
+              const newSet = new Set(prev);
+              if (newSet.has(index)) {
+                newSet.delete(index);
+              } else {
+                newSet.add(index);
+              }
+              return newSet;
+            });
           }}
           title={group.date}
         >
@@ -207,7 +222,7 @@ const LabInvestigation: React.FC<WidgetProps> = ({
               <LabInvestigationItem
                 key={`urgent-${group.date}-${test.testName}-${test.id || test.testName}`}
                 test={test}
-                isOpen={index === openAccordionIndex}
+                isOpen={openAccordionIndices.has(index)}
                 hasProcessedReport={processedTestIds.includes(test.id)}
                 reportId={testIdToReportIdMap.get(test.id)}
               />
@@ -220,7 +235,7 @@ const LabInvestigation: React.FC<WidgetProps> = ({
               <LabInvestigationItem
                 key={`nonurgent-${group.date}-${test.testName}-${test.id || test.testName}`}
                 test={test}
-                isOpen={index === openAccordionIndex}
+                isOpen={openAccordionIndices.has(index)}
                 hasProcessedReport={processedTestIds.includes(test.id)}
                 reportId={testIdToReportIdMap.get(test.id)}
               />
