@@ -32,7 +32,6 @@
 
 .testName {
   @include type-style("body-compact-01");
-  font-weight: 700;
   text-transform: capitalize;
 }
 
