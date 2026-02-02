@@ -10,9 +10,8 @@ import {
   getFormattedError,
   getLabInvestigationsBundle,
   getDiagnosticReports,
-  getDiagnosticReportBundle,
 } from '@bahmni/services';
-import { useQuery, useQueries } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import React, { useMemo, useEffect, useState } from 'react';
 
 import { usePatientUUID } from '../hooks/usePatientUUID';
@@ -25,9 +24,8 @@ import {
   filterLabInvestigationEntries,
   formatLabInvestigations,
   groupLabInvestigationsByDate,
-  getProcessedReportIds,
-  mapDiagnosticReportBundlesToTestResults,
-  updateTestsWithResults,
+  getProcessedTestIds,
+  getTestIdToReportIdMap,
 } from './utils';
 
 const fetchLabInvestigations = async (
@@ -156,39 +154,13 @@ const LabInvestigation: React.FC<WidgetProps> = ({
       openAccordionIndex !== null,
   });
 
-  const processedReportIds = useMemo(() => {
-    return getProcessedReportIds(diagnosticReports);
+  const processedTestIds = useMemo(() => {
+    return getProcessedTestIds(diagnosticReports);
   }, [diagnosticReports]);
 
-  // Fetch diagnostic report bundles for all processed reports
-  const diagnosticReportBundles = useQueries({
-    queries: processedReportIds.map((reportId) => ({
-      queryKey: ['diagnosticReportBundle', reportId],
-      queryFn: () => getDiagnosticReportBundle(reportId),
-      enabled: !!reportId,
-    })),
-  });
-
-  // Map diagnostic report bundles to test results
-  const testResultsMap = useMemo(() => {
-    const bundles = diagnosticReportBundles.map((query) => query.data);
-    return mapDiagnosticReportBundlesToTestResults(bundles, t);
-  }, [diagnosticReportBundles, t]);
-
-  // Update labTestsByDate with results for the open accordion
-  const labTestsByDateWithResults = useMemo(() => {
-    if (openAccordionIndex === null) return labTestsByDate;
-
-    return labTestsByDate.map((group, index) => {
-      if (index === openAccordionIndex) {
-        return {
-          ...group,
-          tests: updateTestsWithResults(group.tests, testResultsMap),
-        };
-      }
-      return group;
-    });
-  }, [labTestsByDate, openAccordionIndex, testResultsMap]);
+  const testIdToReportIdMap = useMemo(() => {
+    return getTestIdToReportIdMap(diagnosticReports);
+  }, [diagnosticReports]);
 
   if (hasError) {
     return (
@@ -218,7 +190,7 @@ const LabInvestigation: React.FC<WidgetProps> = ({
 
   return (
     <Accordion align="start">
-      {labTestsByDateWithResults.map((group: LabTestsByDate, index) => (
+      {labTestsByDate.map((group: LabTestsByDate, index) => (
         <AccordionItem
           key={group.date}
           className={styles.accordionItem}
@@ -235,6 +207,9 @@ const LabInvestigation: React.FC<WidgetProps> = ({
               <LabInvestigationItem
                 key={`urgent-${group.date}-${test.testName}-${test.id || test.testName}`}
                 test={test}
+                isOpen={index === openAccordionIndex}
+                hasProcessedReport={processedTestIds.includes(test.id)}
+                reportId={testIdToReportIdMap.get(test.id)}
               />
             ))}
 
@@ -245,6 +220,9 @@ const LabInvestigation: React.FC<WidgetProps> = ({
               <LabInvestigationItem
                 key={`nonurgent-${group.date}-${test.testName}-${test.id || test.testName}`}
                 test={test}
+                isOpen={index === openAccordionIndex}
+                hasProcessedReport={processedTestIds.includes(test.id)}
+                reportId={testIdToReportIdMap.get(test.id)}
               />
             ))}
         </AccordionItem>

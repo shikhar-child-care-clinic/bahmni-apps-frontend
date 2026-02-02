@@ -270,9 +270,9 @@ describe('LabInvestigation Integration Tests', () => {
       expect(screen.getByText(/March 25, 2025/i)).toBeInTheDocument();
     });
 
-    // All tests should show pending results
+    // Only tests in the open accordion should show pending results
     const pendingMessages = screen.getAllByText('Results Pending .... ....');
-    expect(pendingMessages).toHaveLength(3); // Three tests total
+    expect(pendingMessages).toHaveLength(2); // Two tests in first accordion
   });
 
   it('handles API errors gracefully', async () => {

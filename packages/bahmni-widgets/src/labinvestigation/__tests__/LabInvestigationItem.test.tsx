@@ -1,5 +1,7 @@
-import { useTranslation } from '@bahmni/services';
-import { render, screen } from '@testing-library/react';
+import { useTranslation, getDiagnosticReportBundle } from '@bahmni/services';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, waitFor } from '@testing-library/react';
+import { Bundle } from 'fhir/r4';
 
 import LabInvestigationItem from '../LabInvestigationItem';
 import { FormattedLabInvestigations, LabTestPriority } from '../models';
@@ -7,6 +9,7 @@ import { FormattedLabInvestigations, LabTestPriority } from '../models';
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   useTranslation: jest.fn(),
+  getDiagnosticReportBundle: jest.fn(),
 }));
 
 jest.mock('react-router-dom', () => ({
@@ -16,6 +19,11 @@ jest.mock('react-router-dom', () => ({
 const mockUseTranslation = useTranslation as jest.MockedFunction<
   typeof useTranslation
 >;
+const mockGetDiagnosticReportBundle =
+  getDiagnosticReportBundle as jest.MockedFunction<
+    typeof getDiagnosticReportBundle
+  >;
+
 describe('LabInvestigationItem', () => {
   const baseLabTest: FormattedLabInvestigations = {
     id: 'test-123',
@@ -26,6 +34,24 @@ describe('LabInvestigationItem', () => {
     formattedDate: '05/08/2025',
     result: undefined,
     testType: 'Individual',
+  };
+
+  const renderWithQueryClient = (component: React.ReactElement) => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: 0,
+          gcTime: 0,
+        },
+      },
+    });
+
+    return render(
+      <QueryClientProvider client={queryClient}>
+        {component}
+      </QueryClientProvider>,
+    );
   };
 
   beforeEach(() => {
@@ -39,6 +65,13 @@ describe('LabInvestigationItem', () => {
           LAB_TEST_URGENT: 'STAT',
           LAB_TEST_ORDERED_BY: 'Ordered by',
           LAB_TEST_RESULTS_PENDING: 'Results Pending',
+          LAB_TEST_NAME: 'Test Name',
+          LAB_TEST_RESULT: 'Result',
+          LAB_TEST_REFERENCE_RANGE: 'Reference Range',
+          LAB_TEST_REPORTED_ON: 'Reported On',
+          LAB_TEST_ACTIONS: 'Actions',
+          LAB_TEST_VIEW_ATTACHMENT: 'View Attachment',
+          LAB_TEST_ERROR_LOADING: 'Error loading results',
         };
         return translations[key] || key;
       }) as any,
@@ -46,45 +79,81 @@ describe('LabInvestigationItem', () => {
   });
 
   it('renders test name', () => {
-    render(<LabInvestigationItem test={baseLabTest} />);
+    renderWithQueryClient(
+      <LabInvestigationItem
+        test={baseLabTest}
+        isOpen={false}
+        patientUUID="patient-123"
+        hasProcessedReport={false}
+      />,
+    );
 
     expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
   });
 
   it('renders ordered by information', () => {
-    render(<LabInvestigationItem test={baseLabTest} />);
+    renderWithQueryClient(
+      <LabInvestigationItem
+        test={baseLabTest}
+        isOpen={false}
+        patientUUID="patient-123"
+        hasProcessedReport={false}
+      />,
+    );
 
     expect(screen.getByText('Ordered by: Dr. Smith')).toBeInTheDocument();
   });
 
-  it('renders results pending message', () => {
-    render(<LabInvestigationItem test={baseLabTest} />);
-
-    expect(screen.getByText('Results Pending ....')).toBeInTheDocument();
-  });
-
   it('shows test type info only for Panel tests', () => {
     const panelTest = { ...baseLabTest, testType: 'Panel' };
-    render(<LabInvestigationItem test={panelTest} />);
+    renderWithQueryClient(
+      <LabInvestigationItem
+        test={panelTest}
+        isOpen={false}
+        patientUUID="patient-123"
+        hasProcessedReport={false}
+      />,
+    );
 
     expect(screen.getByText('Panel')).toBeInTheDocument();
   });
 
   it('does not show test type info for non-Panel tests', () => {
-    render(<LabInvestigationItem test={baseLabTest} />);
+    renderWithQueryClient(
+      <LabInvestigationItem
+        test={baseLabTest}
+        isOpen={false}
+        patientUUID="patient-123"
+        hasProcessedReport={false}
+      />,
+    );
 
     expect(screen.queryByText('Individual')).not.toBeInTheDocument();
   });
 
   it('shows priority tag for stat priority', () => {
     const statTest = { ...baseLabTest, priority: LabTestPriority.stat };
-    render(<LabInvestigationItem test={statTest} />);
+    renderWithQueryClient(
+      <LabInvestigationItem
+        test={statTest}
+        isOpen={false}
+        patientUUID="patient-123"
+        hasProcessedReport={false}
+      />,
+    );
 
     expect(screen.getByText('STAT')).toBeInTheDocument();
   });
 
   it('does not show priority tag for routine priority', () => {
-    render(<LabInvestigationItem test={baseLabTest} />);
+    renderWithQueryClient(
+      <LabInvestigationItem
+        test={baseLabTest}
+        isOpen={false}
+        patientUUID="patient-123"
+        hasProcessedReport={false}
+      />,
+    );
 
     expect(screen.queryByText('STAT')).not.toBeInTheDocument();
     expect(
@@ -98,13 +167,19 @@ describe('LabInvestigationItem', () => {
       testType: 'Panel',
       priority: LabTestPriority.stat,
     };
-    render(<LabInvestigationItem test={panelStatTest} />);
+    renderWithQueryClient(
+      <LabInvestigationItem
+        test={panelStatTest}
+        isOpen={false}
+        patientUUID="patient-123"
+        hasProcessedReport={false}
+      />,
+    );
 
     expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
     expect(screen.getByText('Panel')).toBeInTheDocument();
     expect(screen.getByText('STAT')).toBeInTheDocument();
     expect(screen.getByText('Ordered by: Dr. Smith')).toBeInTheDocument();
-    expect(screen.getByText('Results Pending ....')).toBeInTheDocument();
   });
 
   it('renders note tooltip when note is present', () => {
@@ -112,7 +187,14 @@ describe('LabInvestigationItem', () => {
       ...baseLabTest,
       note: 'Patient fasting required',
     };
-    render(<LabInvestigationItem test={testWithNote} />);
+    renderWithQueryClient(
+      <LabInvestigationItem
+        test={testWithNote}
+        isOpen={false}
+        patientUUID="patient-123"
+        hasProcessedReport={false}
+      />,
+    );
 
     const tooltipButton = screen.getByRole('button', {
       name: 'Show information',
@@ -122,7 +204,14 @@ describe('LabInvestigationItem', () => {
   });
 
   it('does not render note tooltip when note is absent', () => {
-    render(<LabInvestigationItem test={baseLabTest} />);
+    renderWithQueryClient(
+      <LabInvestigationItem
+        test={baseLabTest}
+        isOpen={false}
+        patientUUID="patient-123"
+        hasProcessedReport={false}
+      />,
+    );
 
     const tooltipButton = screen.queryByRole('button', {
       name: 'Show information',
@@ -130,125 +219,76 @@ describe('LabInvestigationItem', () => {
     expect(tooltipButton).not.toBeInTheDocument();
   });
 
-  it('renders results table when test has results', () => {
-    const testWithResults = {
-      ...baseLabTest,
-      result: [
-        {
-          status: 'final',
-          TestName: 'Hemoglobin',
-          Result: '14.5 g/dL',
-          referenceRange: '12-16 g/dL',
-          reportedOn: 'May 8, 2025',
-          actions: '',
-        },
-        {
-          status: 'final',
-          TestName: 'WBC Count',
-          Result: '7500 cells/μL',
-          referenceRange: '4000-11000 cells/μL',
-          reportedOn: 'May 8, 2025',
-          actions: '',
-        },
-      ],
-    };
+  it('does not show results when accordion is closed', () => {
+    renderWithQueryClient(
+      <LabInvestigationItem
+        test={baseLabTest}
+        isOpen={false}
+        patientUUID="patient-123"
+        hasProcessedReport={false}
+      />,
+    );
 
-    render(<LabInvestigationItem test={testWithResults} />);
-
-    expect(screen.getByText('Hemoglobin')).toBeInTheDocument();
-    expect(screen.getByText('14.5 g/dL')).toBeInTheDocument();
-    expect(screen.getByText('12-16 g/dL')).toBeInTheDocument();
-    expect(screen.getByText('WBC Count')).toBeInTheDocument();
-    expect(screen.getByText('7500 cells/μL')).toBeInTheDocument();
+    expect(screen.queryByText('Results Pending ....')).not.toBeInTheDocument();
   });
 
-  it('does not render results table when test has no results', () => {
-    render(<LabInvestigationItem test={baseLabTest} />);
-
-    const resultTable = screen.queryByTestId(
-      `lab-test-results-table-${baseLabTest.testName}`,
+  it('shows results pending when accordion is open but no processed report', () => {
+    renderWithQueryClient(
+      <LabInvestigationItem
+        test={baseLabTest}
+        isOpen={true}
+        patientUUID="patient-123"
+        hasProcessedReport={false}
+      />,
     );
-    expect(resultTable).not.toBeInTheDocument();
+
     expect(screen.getByText('Results Pending ....')).toBeInTheDocument();
   });
 
-  it('renders results table with empty result fields as dashes', () => {
-    const testWithEmptyResults = {
-      ...baseLabTest,
-      result: [
+  it('shows loading skeleton then results when data is fetched', async () => {
+    const mockBundle: Bundle = {
+      resourceType: 'Bundle',
+      type: 'collection',
+      entry: [
         {
-          status: 'final',
-          TestName: 'Test',
-          Result: '',
-          referenceRange: '',
-          reportedOn: '',
-          actions: '',
+          resource: {
+            resourceType: 'DiagnosticReport',
+            id: 'report-1',
+            status: 'final',
+            code: { text: 'CBC' },
+          },
+        },
+        {
+          resource: {
+            resourceType: 'Observation',
+            id: 'obs-1',
+            status: 'final',
+            code: { text: 'Hemoglobin' },
+            valueQuantity: { value: 14.5, unit: 'g/dL' },
+          },
         },
       ],
     };
 
-    render(<LabInvestigationItem test={testWithEmptyResults} />);
+    mockGetDiagnosticReportBundle.mockResolvedValue(mockBundle);
 
-    const dashes = screen.getAllByText('--');
-    expect(dashes.length).toBeGreaterThan(0);
-  });
+    renderWithQueryClient(
+      <LabInvestigationItem
+        test={baseLabTest}
+        isOpen={true}
+        patientUUID="patient-123"
+        hasProcessedReport={true}
+        reportId="report-1"
+      />,
+    );
 
-  it('renders view attachment link in results table', () => {
-    const testWithResults = {
-      ...baseLabTest,
-      result: [
-        {
-          status: 'final',
-          TestName: 'Hemoglobin',
-          Result: '14.5 g/dL',
-          referenceRange: '12-16 g/dL',
-          reportedOn: 'May 8, 2025',
-          actions: '',
-        },
-      ],
-    };
+    expect(screen.getByTestId('sortable-table-skeleton')).toBeInTheDocument();
 
-    render(<LabInvestigationItem test={testWithResults} />);
-
-    const viewLink = screen.getByText('LAB_TEST_VIEW_ATTACHMENT');
-    expect(viewLink).toBeInTheDocument();
-  });
-
-  it('renders multiple result rows in table', () => {
-    const testWithMultipleResults = {
-      ...baseLabTest,
-      result: [
-        {
-          status: 'final',
-          TestName: 'Test 1',
-          Result: 'Result 1',
-          referenceRange: 'Range 1',
-          reportedOn: 'Date 1',
-          actions: '',
-        },
-        {
-          status: 'final',
-          TestName: 'Test 2',
-          Result: 'Result 2',
-          referenceRange: 'Range 2',
-          reportedOn: 'Date 2',
-          actions: '',
-        },
-        {
-          status: 'final',
-          TestName: 'Test 3',
-          Result: 'Result 3',
-          referenceRange: 'Range 3',
-          reportedOn: 'Date 3',
-          actions: '',
-        },
-      ],
-    };
-
-    render(<LabInvestigationItem test={testWithMultipleResults} />);
-
-    expect(screen.getByText('Test 1')).toBeInTheDocument();
-    expect(screen.getByText('Test 2')).toBeInTheDocument();
-    expect(screen.getByText('Test 3')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId('sortable-table-skeleton'),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText('Hemoglobin')).toBeInTheDocument();
+    });
   });
 });

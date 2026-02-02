@@ -4,29 +4,50 @@ import {
   SortableDataTable,
   Link,
 } from '@bahmni/design-system';
-import { useTranslation } from '@bahmni/services';
+import { useTranslation, getDiagnosticReportBundle } from '@bahmni/services';
+import { useQuery } from '@tanstack/react-query';
 import React, { useMemo } from 'react';
-import {
-  FormattedLabInvestigations,
-  LabTestPriority,
-  LabTestResult,
-} from './models';
+import { FormattedLabInvestigations, LabTestPriority } from './models';
 import styles from './styles/LabInvestigation.module.scss';
+import { mapSingleDiagnosticReportBundleToTestResults } from './utils';
 
 interface LabInvestigationItemProps {
   test: FormattedLabInvestigations;
+  isOpen: boolean;
+  hasProcessedReport: boolean;
+  reportId?: string;
 }
 const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
   test,
+  isOpen,
+  hasProcessedReport,
+  reportId,
 }) => {
   const { t } = useTranslation();
 
-  const hasResults =
-    Array.isArray(test.result) && (test.result as LabTestResult[]).length > 0;
+  const {
+    data: diagnosticReportBundle,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['diagnosticReportBundle', reportId],
+    queryFn: () => getDiagnosticReportBundle(reportId!),
+    enabled: isOpen && hasProcessedReport && !!reportId,
+  });
+
+  const testResults = useMemo(() => {
+    if (!diagnosticReportBundle) return undefined;
+    return mapSingleDiagnosticReportBundleToTestResults(
+      diagnosticReportBundle,
+      t,
+    );
+  }, [diagnosticReportBundle, t]);
+
+  const hasResults = Array.isArray(testResults) && testResults.length > 0;
 
   const tableRows = useMemo(() => {
-    if (!hasResults) return [];
-    return (test.result as LabTestResult[]).map((result, index) => ({
+    if (!hasResults || !testResults) return [];
+    return testResults.map((result, index) => ({
       id: `${test.id}-${index}`,
       testName: result.TestName,
       result: result.Result,
@@ -35,7 +56,7 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
       status: result.status,
       interpretation: result.interpretation,
     }));
-  }, [hasResults, test.result, test.id]);
+  }, [hasResults, testResults, test.id]);
 
   const tableHeaders = useMemo(
     () => [
@@ -79,6 +100,12 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
     }
   };
 
+  // Determine which state to show
+  const showLoading = isOpen && hasProcessedReport && isLoading;
+  const showResults = isOpen && hasProcessedReport && !isLoading && hasResults;
+  const showPending = isOpen && !hasProcessedReport && !isLoading;
+  const showError = isOpen && hasProcessedReport && isError;
+
   return (
     <div className={styles.labTest}>
       <div className={styles.labTestHeader}>
@@ -106,7 +133,16 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
           {t('LAB_TEST_ORDERED_BY')}: {test.orderedBy}
         </span>
       </div>
-      {hasResults ? (
+      {showLoading && (
+        <SortableDataTable
+          headers={tableHeaders}
+          rows={[]}
+          loading={true}
+          ariaLabel={`${test.testName} results`}
+          className={styles.labTestResultsTable}
+        />
+      )}
+      {showResults && (
         <SortableDataTable
           headers={tableHeaders}
           rows={tableRows}
@@ -115,10 +151,20 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
           renderCell={renderCell}
           className={styles.labTestResultsTable}
         />
-      ) : (
+      )}
+      {showPending && (
         <div className={styles.testResultsPending}>
           {t('LAB_TEST_RESULTS_PENDING') + ' ....'}
         </div>
+      )}
+      {showError && (
+        <SortableDataTable
+          headers={tableHeaders}
+          rows={[]}
+          errorStateMessage={t('LAB_TEST_ERROR_LOADING')}
+          ariaLabel={`${test.testName} results`}
+          className={styles.labTestResultsTable}
+        />
       )}
     </div>
   );

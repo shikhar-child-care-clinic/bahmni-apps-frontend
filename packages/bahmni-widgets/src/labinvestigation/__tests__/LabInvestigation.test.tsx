@@ -426,7 +426,7 @@ describe('LabInvestigation', () => {
       });
     });
 
-    it('should fetch diagnostic report bundle for processed reports', async () => {
+    it('should pass reportId to child component for processed reports', async () => {
       const mockDiagnosticReports: Bundle<DiagnosticReport> = {
         resourceType: 'Bundle',
         type: 'searchset',
@@ -452,7 +452,9 @@ describe('LabInvestigation', () => {
       });
 
       await waitFor(() => {
-        expect(mockGetDiagnosticReportBundle).toHaveBeenCalledWith('report-1');
+        expect(mockGetDiagnosticReports).toHaveBeenCalledWith('patient-123', [
+          'test-1',
+        ]);
       });
     });
   });

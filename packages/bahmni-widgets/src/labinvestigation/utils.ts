@@ -137,12 +137,14 @@ export function groupLabInvestigationsByDate(
   );
 }
 
-export function getProcessedReportIds(
+export function getProcessedTestIds(
   diagnosticReportsBundle: Bundle<DiagnosticReport> | undefined,
 ): string[] {
   if (!diagnosticReportsBundle?.entry) return [];
 
-  return diagnosticReportsBundle.entry
+  const testIds = new Set<string>();
+
+  diagnosticReportsBundle.entry
     .filter((entry) => {
       const report = entry.resource;
       return (
@@ -152,8 +154,56 @@ export function getProcessedReportIds(
         )
       );
     })
-    .map((entry) => entry.resource?.id)
-    .filter((id): id is string => !!id);
+    .forEach((entry) => {
+      const report = entry.resource;
+      // Extract test IDs from basedOn references
+      report?.basedOn?.forEach((ref) => {
+        const testId = ref.reference?.split('/').pop();
+        if (testId) {
+          testIds.add(testId);
+        }
+      });
+    });
+
+  return Array.from(testIds);
+}
+
+/**
+ * Creates a mapping from test IDs to report IDs for processed diagnostic reports
+ */
+export function getTestIdToReportIdMap(
+  diagnosticReportsBundle: Bundle<DiagnosticReport> | undefined,
+): Map<string, string> {
+  const testIdToReportId = new Map<string, string>();
+
+  if (!diagnosticReportsBundle?.entry) return testIdToReportId;
+
+  diagnosticReportsBundle.entry
+    .filter((entry) => {
+      const report = entry.resource;
+      return (
+        report?.status &&
+        PROCESSED_REPORT_STATUSES.includes(
+          report.status as (typeof PROCESSED_REPORT_STATUSES)[number],
+        )
+      );
+    })
+    .forEach((entry) => {
+      const report = entry.resource;
+      const reportId = report?.id;
+
+      if (!reportId) return;
+
+      // Map test IDs from basedOn references to this report ID
+      report?.basedOn?.forEach((ref) => {
+        const testId = ref.reference?.split('/').pop();
+        if (testId) {
+          testIdToReportId.set(testId, reportId);
+        }
+      });
+    });
+
+  return testIdToReportId;
 }
 
 export function extractObservationsFromBundle(
@@ -265,6 +315,34 @@ export function mapDiagnosticReportBundlesToTestResults(
   });
 
   return resultsMap;
+}
+
+/**
+ * Maps a single diagnostic report bundle to test results
+ * @param bundle - DiagnosticReport bundle with observations
+ * @param t - Translation function
+ * @returns Array of LabTestResult or undefined if no valid results
+ */
+export function mapSingleDiagnosticReportBundleToTestResults(
+  bundle: Bundle | undefined,
+  t: (key: string) => string,
+): LabTestResult[] | undefined {
+  if (!bundle?.entry) return undefined;
+
+  // Find the DiagnosticReport resource in the bundle
+  const diagnosticReportEntry = bundle.entry.find(
+    (entry) => entry.resource?.resourceType === 'DiagnosticReport',
+  );
+  const diagnosticReport = diagnosticReportEntry?.resource as
+    | DiagnosticReport
+    | undefined;
+
+  if (!diagnosticReport) return undefined;
+
+  const observations = extractObservationsFromBundle(bundle);
+  const results = formatObservationsAsLabTestResults(observations, t);
+
+  return results.length > 0 ? results : undefined;
 }
 
 /**

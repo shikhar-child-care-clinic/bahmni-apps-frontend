@@ -8,10 +8,12 @@ import {
   determineTestType,
   formatLabInvestigations,
   groupLabInvestigationsByDate,
-  getProcessedReportIds,
+  getProcessedTestIds,
+  getTestIdToReportIdMap,
   extractObservationsFromBundle,
   formatObservationsAsLabTestResults,
   mapDiagnosticReportBundlesToTestResults,
+  mapSingleDiagnosticReportBundleToTestResults,
   updateTestsWithResults,
 } from '../utils';
 
@@ -361,8 +363,8 @@ describe('Lab Investigation Utils', () => {
     });
   });
 
-  describe('getProcessedReportIds', () => {
-    it('should extract IDs from reports with final status', () => {
+  describe('getProcessedTestIds', () => {
+    it('should extract test IDs from basedOn references', () => {
       const mockBundle = {
         resourceType: 'Bundle' as const,
         type: 'searchset' as const,
@@ -373,6 +375,7 @@ describe('Lab Investigation Utils', () => {
               id: 'report-1',
               status: 'final' as const,
               code: { text: 'Test' },
+              basedOn: [{ reference: 'ServiceRequest/test-1' }],
             },
           },
           {
@@ -381,21 +384,49 @@ describe('Lab Investigation Utils', () => {
               id: 'report-2',
               status: 'amended' as const,
               code: { text: 'Test' },
+              basedOn: [{ reference: 'ServiceRequest/test-2' }],
             },
           },
         ],
       };
 
-      const result = getProcessedReportIds(mockBundle);
+      const result = getProcessedTestIds(mockBundle);
 
       expect(result).toHaveLength(2);
-      expect(result).toContain('report-1');
-      expect(result).toContain('report-2');
+      expect(result).toContain('test-1');
+      expect(result).toContain('test-2');
     });
 
     it('should return empty array for undefined bundle', () => {
-      const result = getProcessedReportIds(undefined);
+      const result = getProcessedTestIds(undefined);
       expect(result).toEqual([]);
+    });
+
+    it('should handle multiple basedOn references', () => {
+      const mockBundle = {
+        resourceType: 'Bundle' as const,
+        type: 'searchset' as const,
+        entry: [
+          {
+            resource: {
+              resourceType: 'DiagnosticReport' as const,
+              id: 'report-1',
+              status: 'final' as const,
+              code: { text: 'Test' },
+              basedOn: [
+                { reference: 'ServiceRequest/test-1' },
+                { reference: 'ServiceRequest/test-2' },
+              ],
+            },
+          },
+        ],
+      };
+
+      const result = getProcessedTestIds(mockBundle);
+
+      expect(result).toHaveLength(2);
+      expect(result).toContain('test-1');
+      expect(result).toContain('test-2');
     });
 
     it('should filter out non-processed statuses', () => {
@@ -409,14 +440,152 @@ describe('Lab Investigation Utils', () => {
               id: 'report-1',
               status: 'registered' as const,
               code: { text: 'Test' },
+              basedOn: [{ reference: 'ServiceRequest/test-1' }],
             },
           },
         ],
       };
 
-      const result = getProcessedReportIds(mockBundle);
+      const result = getProcessedTestIds(mockBundle);
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('getTestIdToReportIdMap', () => {
+    it('should create mapping from test IDs to report IDs', () => {
+      const mockBundle = {
+        resourceType: 'Bundle' as const,
+        type: 'searchset' as const,
+        entry: [
+          {
+            resource: {
+              resourceType: 'DiagnosticReport' as const,
+              id: 'report-1',
+              status: 'final' as const,
+              code: { text: 'Test' },
+              basedOn: [{ reference: 'ServiceRequest/test-1' }],
+            },
+          },
+          {
+            resource: {
+              resourceType: 'DiagnosticReport' as const,
+              id: 'report-2',
+              status: 'amended' as const,
+              code: { text: 'Test' },
+              basedOn: [{ reference: 'ServiceRequest/test-2' }],
+            },
+          },
+        ],
+      };
+
+      const result = getTestIdToReportIdMap(mockBundle);
+
+      expect(result.size).toBe(2);
+      expect(result.get('test-1')).toBe('report-1');
+      expect(result.get('test-2')).toBe('report-2');
+    });
+
+    it('should return empty map for undefined bundle', () => {
+      const result = getTestIdToReportIdMap(undefined);
+      expect(result.size).toBe(0);
+    });
+
+    it('should handle multiple basedOn references for same report', () => {
+      const mockBundle = {
+        resourceType: 'Bundle' as const,
+        type: 'searchset' as const,
+        entry: [
+          {
+            resource: {
+              resourceType: 'DiagnosticReport' as const,
+              id: 'report-1',
+              status: 'final' as const,
+              code: { text: 'Test' },
+              basedOn: [
+                { reference: 'ServiceRequest/test-1' },
+                { reference: 'ServiceRequest/test-2' },
+              ],
+            },
+          },
+        ],
+      };
+
+      const result = getTestIdToReportIdMap(mockBundle);
+
+      expect(result.size).toBe(2);
+      expect(result.get('test-1')).toBe('report-1');
+      expect(result.get('test-2')).toBe('report-1');
+    });
+  });
+
+  describe('mapSingleDiagnosticReportBundleToTestResults', () => {
+    it('should map single bundle to test results', () => {
+      const mockBundle = {
+        resourceType: 'Bundle' as const,
+        type: 'collection' as const,
+        entry: [
+          {
+            resource: {
+              resourceType: 'DiagnosticReport' as const,
+              id: 'report-1',
+              status: 'final' as const,
+              code: { text: 'CBC' },
+            },
+          },
+          {
+            resource: {
+              resourceType: 'Observation' as const,
+              id: 'obs-1',
+              status: 'final' as const,
+              code: { text: 'Hemoglobin' },
+              valueQuantity: { value: 14.5, unit: 'g/dL' },
+            },
+          },
+        ],
+      };
+
+      const result = mapSingleDiagnosticReportBundleToTestResults(
+        mockBundle,
+        mockTranslate,
+      );
+
+      expect(result).toBeDefined();
+      expect(result).toHaveLength(1);
+      expect(result![0].TestName).toBe('Hemoglobin');
+    });
+
+    it('should return undefined for bundle without diagnostic report', () => {
+      const mockBundle = {
+        resourceType: 'Bundle' as const,
+        type: 'collection' as const,
+        entry: [
+          {
+            resource: {
+              resourceType: 'Observation' as const,
+              id: 'obs-1',
+              status: 'final' as const,
+              code: { text: 'Hemoglobin' },
+            },
+          },
+        ],
+      };
+
+      const result = mapSingleDiagnosticReportBundleToTestResults(
+        mockBundle,
+        mockTranslate,
+      );
+
+      expect(result).toBeUndefined();
+    });
+
+    it('should return undefined for undefined bundle', () => {
+      const result = mapSingleDiagnosticReportBundleToTestResults(
+        undefined,
+        mockTranslate,
+      );
+
+      expect(result).toBeUndefined();
     });
   });
 
