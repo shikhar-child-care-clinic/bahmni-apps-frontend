@@ -28,6 +28,7 @@ import {
   getProcessedTestIds,
   getTestIdToReportIdMap,
   extractDiagnosticReportsFromBundle,
+  sortLabInvestigationsByPriority,
 } from './utils';
 
 const fetchLabInvestigations = async (
@@ -134,13 +135,14 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   const isLoading = isLoadingOrderTypes || isLoadingLabInvestigations;
   const hasError = isOrderTypesError || isLabInvestigationsError;
 
-  const labTestsByDate = useMemo<LabTestsByDate[]>(() => {
-    return groupLabInvestigationsByDate(labTests);
+  const sortedLabInvestigationsByDate = useMemo<LabTestsByDate[]>(() => {
+    const groupedTests = groupLabInvestigationsByDate(labTests);
+    return sortLabInvestigationsByPriority(groupedTests);
   }, [labTests]);
 
   // Fetch diagnostic reports for each accordion separately to enable caching
   const diagnosticReportQueries = useQueries({
-    queries: labTestsByDate.map((group, index) => {
+    queries: sortedLabInvestigationsByDate.map((group, index) => {
       const testIds = group.tests.map((test) => test.id);
       return {
         queryKey: ['diagnosticReports', patientUUID, index, testIds],
@@ -197,7 +199,7 @@ const LabInvestigation: React.FC<WidgetProps> = ({
 
   return (
     <Accordion align="start">
-      {labTestsByDate.map((group: LabTestsByDate, index) => (
+      {sortedLabInvestigationsByDate.map((group: LabTestsByDate, index) => (
         <AccordionItem
           key={group.date}
           className={styles.accordionItem}
@@ -215,31 +217,15 @@ const LabInvestigation: React.FC<WidgetProps> = ({
           }}
           title={group.date}
         >
-          {/* Render 'urgent' tests first */}
-          {group.tests
-            ?.filter((test) => test.priority === 'Urgent')
-            .map((test) => (
-              <LabInvestigationItem
-                key={`urgent-${group.date}-${test.testName}-${test.id || test.testName}`}
-                test={test}
-                isOpen={openAccordionIndices.has(index)}
-                hasProcessedReport={processedTestIds.includes(test.id)}
-                reportId={testIdToReportIdMap.get(test.id)}
-              />
-            ))}
-
-          {/* Then render non-urgent tests */}
-          {group.tests
-            ?.filter((test) => test.priority !== 'Urgent')
-            .map((test) => (
-              <LabInvestigationItem
-                key={`nonurgent-${group.date}-${test.testName}-${test.id || test.testName}`}
-                test={test}
-                isOpen={openAccordionIndices.has(index)}
-                hasProcessedReport={processedTestIds.includes(test.id)}
-                reportId={testIdToReportIdMap.get(test.id)}
-              />
-            ))}
+          {group.tests?.map((test) => (
+            <LabInvestigationItem
+              key={`${group.date}-${test.testName}-${test.id || test.testName}`}
+              test={test}
+              isOpen={openAccordionIndices.has(index)}
+              hasProcessedReport={processedTestIds.includes(test.id)}
+              reportId={testIdToReportIdMap.get(test.id)}
+            />
+          ))}
         </AccordionItem>
       ))}
     </Accordion>

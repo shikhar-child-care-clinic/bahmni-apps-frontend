@@ -133,6 +133,23 @@ export function groupLabInvestigationsByDate(
   );
 }
 
+/**
+ * Sorts tests within each date group to show urgent tests first
+ */
+export function sortLabInvestigationsByPriority(
+  labTestsByDate: LabTestsByDate[],
+): LabTestsByDate[] {
+  return labTestsByDate.map((group) => ({
+    ...group,
+    tests: [...group.tests].sort((a, b) => {
+      // Urgent tests first, then routine
+      if (a.priority === 'Urgent' && b.priority !== 'Urgent') return -1;
+      if (a.priority !== 'Urgent' && b.priority === 'Urgent') return 1;
+      return 0;
+    }),
+  }));
+}
+
 export function getProcessedTestIds(
   diagnosticReports: DiagnosticReport[] | undefined,
 ): string[] {
