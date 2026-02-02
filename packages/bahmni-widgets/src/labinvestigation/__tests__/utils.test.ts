@@ -1,11 +1,14 @@
 import { formatDate } from '@bahmni/services';
 import { ServiceRequest, Bundle } from 'fhir/r4';
 
-import { LabTestPriority, FormattedLabInvestigations } from '../models';
+import {
+  LabInvestigationPriority,
+  FormattedLabInvestigations,
+} from '../models';
 import {
   filterLabInvestigationEntries,
-  mapLabTestPriority,
-  determineTestType,
+  mapLabInvestigationPriority,
+  determineInvestigationType,
   formatLabInvestigations,
   groupLabInvestigationsByDate,
   getProcessedTestIds,
@@ -70,33 +73,33 @@ describe('Lab Investigation Utils', () => {
 
   const mockTranslate = (key: string) => key;
 
-  describe('mapLabTestPriority', () => {
+  describe('mapLabInvestigationPriority', () => {
     it('should map routine priority correctly', () => {
       const labTest = createMockServiceRequest({ priority: 'routine' });
-      const result = mapLabTestPriority(labTest);
-      expect(result).toBe(LabTestPriority.routine);
+      const result = mapLabInvestigationPriority(labTest);
+      expect(result).toBe(LabInvestigationPriority.routine);
     });
 
     it('should map stat priority correctly', () => {
       const labTest = createMockServiceRequest({ priority: 'stat' });
-      const result = mapLabTestPriority(labTest);
-      expect(result).toBe(LabTestPriority.stat);
+      const result = mapLabInvestigationPriority(labTest);
+      expect(result).toBe(LabInvestigationPriority.stat);
     });
 
     it('should default to routine for undefined priority', () => {
       const labTest = createMockServiceRequest({ priority: undefined });
-      const result = mapLabTestPriority(labTest);
-      expect(result).toBe(LabTestPriority.routine);
+      const result = mapLabInvestigationPriority(labTest);
+      expect(result).toBe(LabInvestigationPriority.routine);
     });
 
     it('should default to routine for unknown priority', () => {
       const labTest = createMockServiceRequest({ priority: 'urgent' });
-      const result = mapLabTestPriority(labTest);
-      expect(result).toBe(LabTestPriority.routine);
+      const result = mapLabInvestigationPriority(labTest);
+      expect(result).toBe(LabInvestigationPriority.routine);
     });
   });
 
-  describe('determineTestType', () => {
+  describe('determineInvestigationType', () => {
     it('should identify Panel test type', () => {
       const labTest = createMockServiceRequest({
         extension: [
@@ -106,7 +109,7 @@ describe('Lab Investigation Utils', () => {
           },
         ],
       });
-      const result = determineTestType(labTest);
+      const result = determineInvestigationType(labTest);
       expect(result).toBe('Panel');
     });
 
@@ -119,13 +122,13 @@ describe('Lab Investigation Utils', () => {
           },
         ],
       });
-      const result = determineTestType(labTest);
+      const result = determineInvestigationType(labTest);
       expect(result).toBe('Single Test');
     });
 
     it('should default to Single Test when no extension', () => {
       const labTest = createMockServiceRequest({ extension: undefined });
-      const result = determineTestType(labTest);
+      const result = determineInvestigationType(labTest);
       expect(result).toBe('Single Test');
     });
 
@@ -138,7 +141,7 @@ describe('Lab Investigation Utils', () => {
           },
         ],
       });
-      const result = determineTestType(labTest);
+      const result = determineInvestigationType(labTest);
       expect(result).toBe('Single Test');
     });
   });
@@ -240,7 +243,7 @@ describe('Lab Investigation Utils', () => {
       expect(result[0]).toEqual({
         id: 'test-1',
         testName: 'Blood Test',
-        priority: LabTestPriority.routine,
+        priority: LabInvestigationPriority.routine,
         orderedBy: 'Dr. Smith',
         orderedDate: '2025-05-08T12:44:24+00:00',
         formattedDate: 'May 8, 2025',
@@ -288,7 +291,7 @@ describe('Lab Investigation Utils', () => {
         {
           id: 'test-1',
           testName: 'Test 1',
-          priority: LabTestPriority.routine,
+          priority: LabInvestigationPriority.routine,
           orderedBy: 'Dr. Smith',
           orderedDate: '2025-05-08T12:44:24+00:00',
           formattedDate: 'May 8, 2025',
@@ -298,7 +301,7 @@ describe('Lab Investigation Utils', () => {
         {
           id: 'test-2',
           testName: 'Test 2',
-          priority: LabTestPriority.routine,
+          priority: LabInvestigationPriority.routine,
           orderedBy: 'Dr. Smith',
           orderedDate: '2025-05-08T14:30:00+00:00',
           formattedDate: 'May 8, 2025',
@@ -319,7 +322,7 @@ describe('Lab Investigation Utils', () => {
         {
           id: 'test-1',
           testName: 'Old Test',
-          priority: LabTestPriority.routine,
+          priority: LabInvestigationPriority.routine,
           orderedBy: 'Dr. Smith',
           orderedDate: '2025-01-01T00:00:00+00:00',
           formattedDate: 'Jan 1, 2025',
@@ -329,7 +332,7 @@ describe('Lab Investigation Utils', () => {
         {
           id: 'test-2',
           testName: 'New Test',
-          priority: LabTestPriority.routine,
+          priority: LabInvestigationPriority.routine,
           orderedBy: 'Dr. Smith',
           orderedDate: '2025-12-31T00:00:00+00:00',
           formattedDate: 'Dec 31, 2025',
@@ -782,7 +785,7 @@ describe('Lab Investigation Utils', () => {
         {
           id: 'test-1',
           testName: 'Blood Test',
-          priority: LabTestPriority.routine,
+          priority: LabInvestigationPriority.routine,
           orderedBy: 'Dr. Smith',
           orderedDate: '2025-05-08T12:44:24+00:00',
           formattedDate: 'May 8, 2025',
@@ -814,7 +817,7 @@ describe('Lab Investigation Utils', () => {
         {
           id: 'test-1',
           testName: 'Blood Test',
-          priority: LabTestPriority.routine,
+          priority: LabInvestigationPriority.routine,
           orderedBy: 'Dr. Smith',
           orderedDate: '2025-05-08T12:44:24+00:00',
           formattedDate: 'May 8, 2025',

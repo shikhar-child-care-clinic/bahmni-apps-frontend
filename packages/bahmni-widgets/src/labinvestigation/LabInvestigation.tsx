@@ -19,7 +19,7 @@ import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
 import LabInvestigationItem from './LabInvestigationItem';
-import { FormattedLabInvestigations, LabTestsByDate } from './models';
+import { FormattedLabInvestigations, LabInvestigationsByDate } from './models';
 import styles from './styles/LabInvestigation.module.scss';
 import {
   filterLabInvestigationEntries,
@@ -135,7 +135,9 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   const isLoading = isLoadingOrderTypes || isLoadingLabInvestigations;
   const hasError = isOrderTypesError || isLabInvestigationsError;
 
-  const sortedLabInvestigationsByDate = useMemo<LabTestsByDate[]>(() => {
+  const sortedLabInvestigationsByDate = useMemo<
+    LabInvestigationsByDate[]
+  >(() => {
     const groupedTests = groupLabInvestigationsByDate(labTests);
     return sortLabInvestigationsByPriority(groupedTests);
   }, [labTests]);
@@ -199,35 +201,37 @@ const LabInvestigation: React.FC<WidgetProps> = ({
 
   return (
     <Accordion align="start">
-      {sortedLabInvestigationsByDate.map((group: LabTestsByDate, index) => (
-        <AccordionItem
-          key={group.date}
-          className={styles.accordionItem}
-          open={openAccordionIndices.has(index)}
-          onHeadingClick={() => {
-            setOpenAccordionIndices((prev) => {
-              const newSet = new Set(prev);
-              if (newSet.has(index)) {
-                newSet.delete(index);
-              } else {
-                newSet.add(index);
-              }
-              return newSet;
-            });
-          }}
-          title={group.date}
-        >
-          {group.tests?.map((test) => (
-            <LabInvestigationItem
-              key={`${group.date}-${test.testName}-${test.id || test.testName}`}
-              test={test}
-              isOpen={openAccordionIndices.has(index)}
-              hasProcessedReport={processedTestIds.includes(test.id)}
-              reportId={testIdToReportIdMap.get(test.id)}
-            />
-          ))}
-        </AccordionItem>
-      ))}
+      {sortedLabInvestigationsByDate.map(
+        (group: LabInvestigationsByDate, index) => (
+          <AccordionItem
+            key={group.date}
+            className={styles.accordionItem}
+            open={openAccordionIndices.has(index)}
+            onHeadingClick={() => {
+              setOpenAccordionIndices((prev) => {
+                const newSet = new Set(prev);
+                if (newSet.has(index)) {
+                  newSet.delete(index);
+                } else {
+                  newSet.add(index);
+                }
+                return newSet;
+              });
+            }}
+            title={group.date}
+          >
+            {group.tests?.map((test) => (
+              <LabInvestigationItem
+                key={`${group.date}-${test.testName}-${test.id || test.testName}`}
+                test={test}
+                isOpen={openAccordionIndices.has(index)}
+                hasProcessedReport={processedTestIds.includes(test.id)}
+                reportId={testIdToReportIdMap.get(test.id)}
+              />
+            ))}
+          </AccordionItem>
+        ),
+      )}
     </Accordion>
   );
 };

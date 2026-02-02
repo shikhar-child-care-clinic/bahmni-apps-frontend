@@ -7,7 +7,7 @@ import {
 import { useTranslation, getDiagnosticReportBundle } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import React, { useMemo } from 'react';
-import { FormattedLabInvestigations, LabTestPriority } from './models';
+import { FormattedLabInvestigations, LabInvestigationPriority } from './models';
 import styles from './styles/LabInvestigation.module.scss';
 import { mapSingleDiagnosticReportBundleToTestResults } from './utils';
 
@@ -142,7 +142,7 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
               ariaLabel={test.note}
             />
           )}
-          {test.priority === LabTestPriority.stat && (
+          {test.priority === LabInvestigationPriority.stat && (
             <Tag type="red" data-testid={`lab-test-priority-${test.priority}`}>
               {t(`LAB_TEST_${test.priority.toUpperCase()}`)}
             </Tag>

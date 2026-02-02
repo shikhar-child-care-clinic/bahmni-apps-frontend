@@ -13,7 +13,10 @@ import { Bundle, ServiceRequest, DiagnosticReport } from 'fhir/r4';
 import { usePatientUUID } from '../../hooks/usePatientUUID';
 import { useNotification } from '../../notification';
 import LabInvestigation from '../LabInvestigation';
-import { FormattedLabInvestigations, LabTestPriority } from '../models';
+import {
+  FormattedLabInvestigations,
+  LabInvestigationPriority,
+} from '../models';
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
@@ -255,13 +258,17 @@ describe('LabInvestigation', () => {
     const testPriorities = screen.getAllByTestId('test-priority');
 
     expect(testNames[0]).toHaveTextContent('Complete Blood Count');
-    expect(testPriorities[0]).toHaveTextContent(LabTestPriority.routine);
+    expect(testPriorities[0]).toHaveTextContent(
+      LabInvestigationPriority.routine,
+    );
 
     expect(testNames[1]).toHaveTextContent('Lipid Panel');
-    expect(testPriorities[1]).toHaveTextContent(LabTestPriority.stat);
+    expect(testPriorities[1]).toHaveTextContent(LabInvestigationPriority.stat);
 
     expect(testNames[2]).toHaveTextContent('Liver Function');
-    expect(testPriorities[2]).toHaveTextContent(LabTestPriority.routine);
+    expect(testPriorities[2]).toHaveTextContent(
+      LabInvestigationPriority.routine,
+    );
   });
 
   it('opens first accordion item by default', async () => {

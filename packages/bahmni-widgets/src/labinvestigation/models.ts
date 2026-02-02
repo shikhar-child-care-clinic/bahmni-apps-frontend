@@ -1,4 +1,4 @@
-export enum LabTestPriority {
+export enum LabInvestigationPriority {
   stat = 'Urgent',
   routine = 'Routine',
 }
@@ -6,7 +6,7 @@ export enum LabTestPriority {
 export interface FormattedLabInvestigations {
   readonly id: string;
   readonly testName: string;
-  readonly priority: LabTestPriority;
+  readonly priority: LabInvestigationPriority;
   readonly orderedBy: string;
   readonly orderedDate: string; // ISO date string
   readonly formattedDate: string; // Formatted date for display
@@ -15,7 +15,7 @@ export interface FormattedLabInvestigations {
   readonly note?: string;
 }
 
-export interface LabTestsByDate {
+export interface LabInvestigationsByDate {
   readonly date: string; // Formatted date string
   readonly rawDate: string; // Original ISO date string for sorting
   readonly tests: FormattedLabInvestigations[];

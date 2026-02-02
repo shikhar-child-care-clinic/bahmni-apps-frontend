@@ -4,7 +4,10 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { Bundle } from 'fhir/r4';
 
 import LabInvestigationItem from '../LabInvestigationItem';
-import { FormattedLabInvestigations, LabTestPriority } from '../models';
+import {
+  FormattedLabInvestigations,
+  LabInvestigationPriority,
+} from '../models';
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
@@ -28,7 +31,7 @@ describe('LabInvestigationItem', () => {
   const baseLabTest: FormattedLabInvestigations = {
     id: 'test-123',
     testName: 'Complete Blood Count',
-    priority: LabTestPriority.routine,
+    priority: LabInvestigationPriority.routine,
     orderedBy: 'Dr. Smith',
     orderedDate: '2025-05-08T12:44:24+00:00',
     formattedDate: '05/08/2025',
@@ -128,7 +131,10 @@ describe('LabInvestigationItem', () => {
   });
 
   it('shows priority tag for stat priority', () => {
-    const statTest = { ...baseLabTest, priority: LabTestPriority.stat };
+    const statTest = {
+      ...baseLabTest,
+      priority: LabInvestigationPriority.stat,
+    };
     renderWithQueryClient(
       <LabInvestigationItem
         test={statTest}
@@ -151,7 +157,9 @@ describe('LabInvestigationItem', () => {
 
     expect(screen.queryByText('STAT')).not.toBeInTheDocument();
     expect(
-      screen.queryByTestId(`lab-test-priority-${LabTestPriority.routine}`),
+      screen.queryByTestId(
+        `lab-test-priority-${LabInvestigationPriority.routine}`,
+      ),
     ).not.toBeInTheDocument();
   });
 
@@ -159,7 +167,7 @@ describe('LabInvestigationItem', () => {
     const panelStatTest = {
       ...baseLabTest,
       testType: 'Panel',
-      priority: LabTestPriority.stat,
+      priority: LabInvestigationPriority.stat,
     };
     renderWithQueryClient(
       <LabInvestigationItem

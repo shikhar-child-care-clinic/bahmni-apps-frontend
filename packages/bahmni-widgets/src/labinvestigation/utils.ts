@@ -6,8 +6,8 @@ import {
 import { Bundle, ServiceRequest, DiagnosticReport, Observation } from 'fhir/r4';
 import {
   FormattedLabInvestigations,
-  LabTestPriority,
-  LabTestsByDate,
+  LabInvestigationPriority,
+  LabInvestigationsByDate,
   LabTestResult,
 } from './models';
 
@@ -45,22 +45,22 @@ export function filterLabInvestigationEntries(
 }
 
 /**
- * Maps a FHIR priority code to LabTestPriority enum
+ * Maps a FHIR priority code to LabInvestigationPriority enum
  **/
-export const mapLabTestPriority = (
+export const mapLabInvestigationPriority = (
   labTest: ServiceRequest,
-): LabTestPriority => {
+): LabInvestigationPriority => {
   switch (labTest.priority) {
     case 'routine':
-      return LabTestPriority.routine;
+      return LabInvestigationPriority.routine;
     case 'stat':
-      return LabTestPriority.stat;
+      return LabInvestigationPriority.stat;
     default:
-      return LabTestPriority.routine;
+      return LabInvestigationPriority.routine;
   }
 };
 
-export const determineTestType = (labTest: ServiceRequest): string => {
+export const determineInvestigationType = (labTest: ServiceRequest): string => {
   // Check if the test has an extension that indicates it's a panel
   const panelExtension = labTest.extension?.find(
     (ext) =>
@@ -81,7 +81,7 @@ export function formatLabInvestigations(
   t: (key: string) => string,
 ): FormattedLabInvestigations[] {
   return labInvestigations.map((labTest) => {
-    const priority = mapLabTestPriority(labTest);
+    const priority = mapLabInvestigationPriority(labTest);
     const orderedDate = labTest.occurrencePeriod?.start;
     let formattedDate;
     if (orderedDate) {
@@ -90,7 +90,7 @@ export function formatLabInvestigations(
         dateFormatResult.formattedResult || orderedDate.split('T')[0];
     }
 
-    const testType = determineTestType(labTest);
+    const testType = determineInvestigationType(labTest);
     const note = labTest.note?.[0]?.text;
 
     return {
@@ -110,8 +110,8 @@ export function formatLabInvestigations(
 
 export function groupLabInvestigationsByDate(
   labTests: FormattedLabInvestigations[],
-): LabTestsByDate[] {
-  const dateMap = new Map<string, LabTestsByDate>();
+): LabInvestigationsByDate[] {
+  const dateMap = new Map<string, LabInvestigationsByDate>();
 
   labTests.forEach((labTest) => {
     const dateKey = labTest.orderedDate.split('T')[0]; // Get YYYY-MM-DD part
@@ -137,8 +137,8 @@ export function groupLabInvestigationsByDate(
  * Sorts tests within each date group to show urgent tests first
  */
 export function sortLabInvestigationsByPriority(
-  labTestsByDate: LabTestsByDate[],
-): LabTestsByDate[] {
+  labTestsByDate: LabInvestigationsByDate[],
+): LabInvestigationsByDate[] {
   return labTestsByDate.map((group) => ({
     ...group,
     tests: [...group.tests].sort((a, b) => {
