@@ -13,6 +13,7 @@ import {
   VALIDATION_STATE_EMPTY,
   VALIDATION_STATE_MANDATORY,
   VALIDATION_STATE_INVALID,
+  VALIDATION_STATE_SCRIPT_ERROR,
 } from '../../../constants/forms';
 import { useObservationFormsStore } from '../../../stores/observationFormsStore';
 import styles from './styles/ObservationForms.module.scss';
@@ -59,6 +60,11 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
   }) => {
     const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedItem, setSelectedItem] = useState<{
+      id: string;
+      label: string;
+      disabled?: boolean;
+    } | null>(null);
     const { getFormData } = useObservationFormsStore();
 
     // Client-side filtering based on search term
@@ -130,15 +136,17 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
       (data: {
         selectedItem?: { id: string; label: string; disabled?: boolean } | null;
       }) => {
-        const selectedItem = data.selectedItem;
-        if (!selectedItem?.id || selectedItem.disabled) {
+        const selected = data.selectedItem;
+        if (!selected?.id || selected.disabled) {
           return;
         }
         const form = availableForms.find(
-          (f: ObservationForm) => f.uuid === selectedItem.id,
+          (f: ObservationForm) => f.uuid === selected.id,
         );
         if (form) {
           onFormSelect?.(form);
+          // Clear the selection after selecting a form
+          setSelectedItem(null);
         }
       },
       [availableForms, onFormSelect],
@@ -228,6 +236,7 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
             placeholder={t('OBSERVATION_FORMS_SEARCH_PLACEHOLDER')}
             items={searchResults}
             itemToString={(item) => item?.label ?? ''}
+            selectedItem={selectedItem}
             onChange={handleOnChange}
             onInputChange={handleSearch}
             size="md"
@@ -246,16 +255,17 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
             >
               {selectedForms.map((form: ObservationForm) => {
                 const savedFormData = getFormData(form.uuid);
-                const validationState = savedFormData?.validationState;
+                const validationErrorType = savedFormData?.validationErrorType;
 
                 // Show error indicator for all validation error types
                 const showError =
-                  validationState === VALIDATION_STATE_MANDATORY ||
-                  validationState === VALIDATION_STATE_INVALID ||
-                  validationState === VALIDATION_STATE_EMPTY;
+                  validationErrorType === VALIDATION_STATE_MANDATORY ||
+                  validationErrorType === VALIDATION_STATE_INVALID ||
+                  validationErrorType === VALIDATION_STATE_EMPTY ||
+                  validationErrorType === VALIDATION_STATE_SCRIPT_ERROR;
                 const errorMessage = showError
                   ? t(
-                      `OBSERVATION_ADDED_FORM_VALIDATION_ERROR_TITLE_${validationState.toUpperCase()}`,
+                      `OBSERVATION_ADDED_FORM_VALIDATION_ERROR_TITLE_${validationErrorType.toUpperCase()}`,
                     )
                   : undefined;
 
