@@ -100,11 +100,30 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
     }
   };
 
-  // Determine which state to show
-  const showLoading = isOpen && hasProcessedReport && isLoading;
-  const showResults = isOpen && hasProcessedReport && !isLoading && hasResults;
-  const showPending = isOpen && !hasProcessedReport && !isLoading;
-  const showError = isOpen && hasProcessedReport && isError;
+  const renderTestResults = () => {
+    if (!isOpen) return null;
+
+    if (!hasProcessedReport) {
+      return (
+        <div className={styles.testResultsPending}>
+          {t('LAB_TEST_RESULTS_PENDING') + ' ....'}
+        </div>
+      );
+    }
+
+    return (
+      <SortableDataTable
+        headers={tableHeaders}
+        rows={tableRows}
+        loading={isLoading}
+        errorStateMessage={isError ? t('LAB_TEST_ERROR_LOADING') : undefined}
+        ariaLabel={`${test.testName} results`}
+        data-testid={`lab-test-results-table-${test.testName}`}
+        renderCell={renderCell}
+        className={styles.labTestResultsTable}
+      />
+    );
+  };
 
   return (
     <div className={styles.labTest}>
@@ -133,39 +152,7 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
           {t('LAB_TEST_ORDERED_BY')}: {test.orderedBy}
         </span>
       </div>
-      {showLoading && (
-        <SortableDataTable
-          headers={tableHeaders}
-          rows={[]}
-          loading={true}
-          ariaLabel={`${test.testName} results`}
-          className={styles.labTestResultsTable}
-        />
-      )}
-      {showResults && (
-        <SortableDataTable
-          headers={tableHeaders}
-          rows={tableRows}
-          ariaLabel={`${test.testName} results`}
-          data-testid={`lab-test-results-table-${test.testName}`}
-          renderCell={renderCell}
-          className={styles.labTestResultsTable}
-        />
-      )}
-      {showPending && (
-        <div className={styles.testResultsPending}>
-          {t('LAB_TEST_RESULTS_PENDING') + ' ....'}
-        </div>
-      )}
-      {showError && (
-        <SortableDataTable
-          headers={tableHeaders}
-          rows={[]}
-          errorStateMessage={t('LAB_TEST_ERROR_LOADING')}
-          ariaLabel={`${test.testName} results`}
-          className={styles.labTestResultsTable}
-        />
-      )}
+      {renderTestResults()}
     </div>
   );
 };

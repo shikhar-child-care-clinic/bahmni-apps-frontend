@@ -268,18 +268,6 @@ describe('Lab Investigation Utils', () => {
       expect(result[0].formattedDate).toBe('');
     });
 
-    it('should filter out tests without id', () => {
-      const mockTests = [
-        createMockServiceRequest({ id: undefined }),
-        createMockServiceRequest({ id: 'test-1' }),
-      ];
-
-      const result = formatLabInvestigations(mockTests, mockTranslate);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('test-1');
-    });
-
     it('should extract note when present', () => {
       const mockTests = [
         createMockServiceRequest({

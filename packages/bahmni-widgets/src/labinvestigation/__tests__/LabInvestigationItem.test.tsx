@@ -83,7 +83,6 @@ describe('LabInvestigationItem', () => {
       <LabInvestigationItem
         test={baseLabTest}
         isOpen={false}
-        patientUUID="patient-123"
         hasProcessedReport={false}
       />,
     );
@@ -96,7 +95,6 @@ describe('LabInvestigationItem', () => {
       <LabInvestigationItem
         test={baseLabTest}
         isOpen={false}
-        patientUUID="patient-123"
         hasProcessedReport={false}
       />,
     );
@@ -110,7 +108,6 @@ describe('LabInvestigationItem', () => {
       <LabInvestigationItem
         test={panelTest}
         isOpen={false}
-        patientUUID="patient-123"
         hasProcessedReport={false}
       />,
     );
@@ -123,7 +120,6 @@ describe('LabInvestigationItem', () => {
       <LabInvestigationItem
         test={baseLabTest}
         isOpen={false}
-        patientUUID="patient-123"
         hasProcessedReport={false}
       />,
     );
@@ -137,7 +133,6 @@ describe('LabInvestigationItem', () => {
       <LabInvestigationItem
         test={statTest}
         isOpen={false}
-        patientUUID="patient-123"
         hasProcessedReport={false}
       />,
     );
@@ -150,7 +145,6 @@ describe('LabInvestigationItem', () => {
       <LabInvestigationItem
         test={baseLabTest}
         isOpen={false}
-        patientUUID="patient-123"
         hasProcessedReport={false}
       />,
     );
@@ -171,7 +165,6 @@ describe('LabInvestigationItem', () => {
       <LabInvestigationItem
         test={panelStatTest}
         isOpen={false}
-        patientUUID="patient-123"
         hasProcessedReport={false}
       />,
     );
@@ -191,7 +184,6 @@ describe('LabInvestigationItem', () => {
       <LabInvestigationItem
         test={testWithNote}
         isOpen={false}
-        patientUUID="patient-123"
         hasProcessedReport={false}
       />,
     );
@@ -208,7 +200,6 @@ describe('LabInvestigationItem', () => {
       <LabInvestigationItem
         test={baseLabTest}
         isOpen={false}
-        patientUUID="patient-123"
         hasProcessedReport={false}
       />,
     );
@@ -224,7 +215,6 @@ describe('LabInvestigationItem', () => {
       <LabInvestigationItem
         test={baseLabTest}
         isOpen={false}
-        patientUUID="patient-123"
         hasProcessedReport={false}
       />,
     );
@@ -236,8 +226,7 @@ describe('LabInvestigationItem', () => {
     renderWithQueryClient(
       <LabInvestigationItem
         test={baseLabTest}
-        isOpen={true}
-        patientUUID="patient-123"
+        isOpen
         hasProcessedReport={false}
       />,
     );
@@ -275,9 +264,8 @@ describe('LabInvestigationItem', () => {
     renderWithQueryClient(
       <LabInvestigationItem
         test={baseLabTest}
-        isOpen={true}
-        patientUUID="patient-123"
-        hasProcessedReport={true}
+        isOpen
+        hasProcessedReport
         reportId="report-1"
       />,
     );

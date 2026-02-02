@@ -80,36 +80,32 @@ export function formatLabInvestigations(
   labInvestigations: ServiceRequest[],
   t: (key: string) => string,
 ): FormattedLabInvestigations[] {
-  return labInvestigations
-    .filter(
-      (labTest): labTest is ServiceRequest & { id: string } => !!labTest.id,
-    )
-    .map((labTest) => {
-      const priority = mapLabTestPriority(labTest);
-      const orderedDate = labTest.occurrencePeriod?.start;
-      let formattedDate;
-      if (orderedDate) {
-        const dateFormatResult = formatDate(orderedDate, t, 'MMMM d, yyyy');
-        formattedDate =
-          dateFormatResult.formattedResult || orderedDate.split('T')[0];
-      }
+  return labInvestigations.map((labTest) => {
+    const priority = mapLabTestPriority(labTest);
+    const orderedDate = labTest.occurrencePeriod?.start;
+    let formattedDate;
+    if (orderedDate) {
+      const dateFormatResult = formatDate(orderedDate, t, 'MMMM d, yyyy');
+      formattedDate =
+        dateFormatResult.formattedResult || orderedDate.split('T')[0];
+    }
 
-      const testType = determineTestType(labTest);
-      const note = labTest.note?.[0]?.text;
+    const testType = determineTestType(labTest);
+    const note = labTest.note?.[0]?.text;
 
-      return {
-        id: labTest.id,
-        testName: labTest.code?.text ?? '',
-        priority,
-        orderedBy: labTest.requester?.display ?? '',
-        orderedDate: orderedDate ?? '',
-        formattedDate: formattedDate ?? '',
-        // Result would typically come from a separate Observation resource
-        result: undefined,
-        testType,
-        note,
-      };
-    });
+    return {
+      id: labTest.id!,
+      testName: labTest.code?.text ?? '',
+      priority,
+      orderedBy: labTest.requester?.display ?? '',
+      orderedDate: orderedDate ?? '',
+      formattedDate: formattedDate ?? '',
+      // Result would typically come from a separate Observation resource
+      result: undefined,
+      testType,
+      note,
+    };
+  });
 }
 
 export function groupLabInvestigationsByDate(
