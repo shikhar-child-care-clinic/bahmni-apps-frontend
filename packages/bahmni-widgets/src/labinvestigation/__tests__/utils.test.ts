@@ -282,7 +282,7 @@ describe('Lab Investigation Utils', () => {
     });
   });
 
-  describe('groupLabTestsByDate', () => {
+  describe('groupLabInvestigationsByDate', () => {
     it('should group tests by date', () => {
       const mockFormattedTests: FormattedLabInvestigations[] = [
         {
