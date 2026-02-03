@@ -1,4 +1,5 @@
 import { Appointment } from '@bahmni/services';
+import { format } from 'date-fns';
 
 export interface FormattedAppointment extends Appointment {
   id?: string; // For table row keying (SortableDataTable uses 'id' for unique keys)
@@ -21,20 +22,17 @@ export const transformSqlAppointmentResponse = (
   return {
     uuid: sqlResponse.uuid as string,
     startDateTime:
-      sqlResponse.DASHBOARD_APPOINTMENTS_START_DATE_IN_UTC_KEY as unknown as
-        | number
-        | string
-        | number[],
+      sqlResponse.DASHBOARD_APPOINTMENTS_START_DATE_IN_UTC_KEY as number,
+    endDateTime:
+      sqlResponse.DASHBOARD_APPOINTMENTS_END_DATE_IN_UTC_KEY as number,
     appointmentSlot: sqlResponse.DASHBOARD_APPOINTMENTS_SLOT_KEY as
       | string
       | undefined,
     appointmentNumber:
-      (sqlResponse.DASHBOARD_APPOINTMENTS_APPOINTMENT_NUMBER_KEY as
+      sqlResponse.DASHBOARD_APPOINTMENTS_APPOINTMENT_NUMBER_KEY as
         | string
-        | undefined) ?? undefined,
-    reason:
-      (sqlResponse.DASHBOARD_APPOINTMENTS_REASON_KEY as string | undefined) ??
-      undefined,
+        | undefined,
+    reason: sqlResponse.DASHBOARD_APPOINTMENTS_REASON_KEY as string | undefined,
     service: {
       appointmentServiceId: 0,
       name:
@@ -88,7 +86,6 @@ export const transformSqlAppointmentResponse = (
     reasons: [],
     dateCreated: 0,
     dateAppointmentScheduled: 0,
-    endDateTime: 0,
     patient: {
       uuid: '',
       identifier: '',
@@ -103,7 +100,59 @@ export const transformSqlAppointmentResponse = (
 };
 
 /**
- * Formats an appointment object for display by converting timestamps to readable date and time strings
+ * Converts UTC array [year, month, day, hour, minute] to formatted date string
+ * This ensures UTC time is converted to local timezone before formatting
+ */
+const formatDateFromUtcArray = (dateTimeArray: number[]): string => {
+  try {
+    if (!Array.isArray(dateTimeArray) || dateTimeArray.length < 5) {
+      return '-';
+    }
+
+    const [year, month, day, hour, minute] = dateTimeArray;
+
+    // Create date from UTC values using Date.UTC()
+    // Date.UTC returns milliseconds since epoch, creating a proper UTC timestamp
+    // When we pass it to a Date object, it's automatically converted to local timezone for display
+    const utcTimestamp = Date.UTC(year, month - 1, day, hour, minute);
+    const date = new Date(utcTimestamp);
+
+    // Format as DD/MM/YYYY in local timezone
+    return format(date, 'dd/MM/yyyy');
+  } catch {
+    return '-';
+  }
+};
+
+/**
+ * Converts UTC array [year, month, day, hour, minute] to formatted time string
+ * This ensures UTC time is converted to local timezone before formatting
+ */
+const formatTimeFromUtcArray = (dateTimeArray: number[]): string => {
+  try {
+    if (!Array.isArray(dateTimeArray) || dateTimeArray.length < 5) {
+      return '-';
+    }
+
+    const [year, month, day, hour, minute] = dateTimeArray;
+
+    // Create date from UTC values using Date.UTC()
+    // Date.UTC returns milliseconds since epoch, creating a proper UTC timestamp
+    // When we pass it to a Date object, it's automatically converted to local timezone for display
+    const utcTimestamp = Date.UTC(year, month - 1, day, hour, minute);
+    const date = new Date(utcTimestamp);
+
+    // Format as hh:mm a (e.g., "09:30 PM") in local timezone
+    return format(date, 'hh:mm a');
+  } catch {
+    return '-';
+  }
+};
+
+/**
+ * Formats an appointment object for display by converting UTC timestamps to readable date and time strings
+ *
+ * NOTE: Time slot is reconstructed from UTC arrays (not from response) to ensure proper timezone conversion
  */
 export const formatAppointment = (
   appointment: Appointment & {
@@ -112,46 +161,31 @@ export const formatAppointment = (
     reason?: string;
   },
 ): FormattedAppointment => {
-  let appointmentDate = '';
-  let appointmentTime = '';
+  let appointmentDate = '-';
+  let appointmentTime = '-';
 
   try {
     // Handle null/undefined startDateTime
-    if (!appointment.startDateTime) {
-      appointmentDate = '-';
-      appointmentTime = '-';
-    } else {
-      let dateObj: Date | null = null;
-
+    if (appointment.startDateTime) {
       // Check if startDateTime is an array (from SQL endpoint: [year, month, day, hour, minute])
-      if (
-        Array.isArray(appointment.startDateTime) &&
-        appointment.startDateTime.length >= 5
-      ) {
-        const [year, month, day, hour, minute] = appointment.startDateTime;
-        dateObj = new Date(year, month - 1, day, hour, minute);
-      } else {
-        // Try converting as timestamp or date string
-        dateObj = new Date(appointment.startDateTime);
-      }
+      if (Array.isArray(appointment.startDateTime)) {
+        appointmentDate = formatDateFromUtcArray(
+          appointment.startDateTime as number[],
+        );
 
-      // Check if date is valid
-      if (dateObj && !isNaN(dateObj.getTime())) {
-        // Format date as DD/MM/YYYY to match SQL response format
-        appointmentDate = dateObj.toLocaleDateString('en-GB');
+        // Reconstruct time slot from UTC arrays to ensure proper timezone conversion
+        const startTime = formatTimeFromUtcArray(
+          appointment.startDateTime as number[],
+        );
 
-        // Use appointmentSlot from SQL response if available (time range like "11:30 PM - 11:46 PM")
-        // Otherwise format time as HH:MM AM/PM
-        appointmentTime =
-          appointment.appointmentSlot ??
-          dateObj.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-          });
-      } else {
-        appointmentDate = '-';
-        appointmentTime = '-';
+        // Check if endDateTime is also available in UTC format
+        let endTime = startTime; // Default to start time if no end time
+        if (appointment.endDateTime && Array.isArray(appointment.endDateTime)) {
+          endTime = formatTimeFromUtcArray(appointment.endDateTime as number[]);
+        }
+
+        // Reconstruct time slot from converted times (don't use response slot as it's not timezone-converted)
+        appointmentTime = `${startTime} - ${endTime}`;
       }
     }
   } catch {
@@ -162,7 +196,7 @@ export const formatAppointment = (
 
   return {
     ...appointment,
-    id: appointment.uuid, // uuid is guaranteed to be unique (generated if not from API)
+    id: appointment.uuid,
     appointmentDate,
     appointmentTime,
   };
@@ -170,19 +204,14 @@ export const formatAppointment = (
 
 /**
  * Sorts appointments by date in ascending order (earliest first)
- * Parses DD/MM/YYYY format explicitly to avoid JavaScript Date parsing ambiguity
  */
 export const sortAppointmentsByDate = (
   appointments: FormattedAppointment[],
 ): FormattedAppointment[] => {
-  const parseDateString = (dateStr: string): Date => {
-    const [day, month, year] = dateStr.split('/');
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  };
-
-  return [...appointments].sort(
-    (a, b) =>
-      parseDateString(a.appointmentDate).getTime() -
-      parseDateString(b.appointmentDate).getTime(),
-  );
+  return [...appointments].sort((a, b) => {
+    // Parse date strings in dd/MM/yyyy format and compare
+    const dateA = new Date(a.appointmentDate.split('/').reverse().join('-'));
+    const dateB = new Date(b.appointmentDate.split('/').reverse().join('-'));
+    return dateA.getTime() - dateB.getTime();
+  });
 };
