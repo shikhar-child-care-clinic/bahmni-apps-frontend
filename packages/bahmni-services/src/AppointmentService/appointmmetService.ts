@@ -3,6 +3,8 @@ import {
   APPOINTMENTS_SEARCH_URL,
   APPOINTMENTS_URL,
   BAHMNI_SQL_URL,
+  UPCOMING_APPOINTMENTS_SQL_QUERY,
+  PAST_APPOINTMENTS_SQL_QUERY,
 } from './constants';
 import { Appointment } from './models';
 
@@ -24,7 +26,7 @@ export const getUpcomingAppointments = async (
   patientUuid: string,
 ): Promise<Appointment[]> => {
   const appointments = await get<Appointment[]>(
-    `${BAHMNI_SQL_URL}?patientUuid=${patientUuid}&q=bahmni.sqlGet.upComingAppointments&v=full`,
+    `${BAHMNI_SQL_URL}?patientUuid=${patientUuid}&q=${UPCOMING_APPOINTMENTS_SQL_QUERY}&v=full`,
   );
   return appointments;
 };
@@ -37,7 +39,7 @@ export const getPastAppointments = async (
   patientUuid: string,
 ): Promise<Appointment[]> => {
   const appointments = await get<Appointment[]>(
-    `${BAHMNI_SQL_URL}?patientUuid=${patientUuid}&q=bahmni.sqlGet.pastAppointments&v=full`,
+    `${BAHMNI_SQL_URL}?patientUuid=${patientUuid}&q=${PAST_APPOINTMENTS_SQL_QUERY}&v=full`,
   );
   return appointments;
 };
