@@ -59,6 +59,10 @@ const getAppointmentStatusClassName = (status: string): string => {
       return styles.cancelledStatus;
     case 'missed':
       return styles.missedStatus;
+    case 'waitlist':
+      return styles.waitListStatus;
+    case 'checkedin':
+      return styles.checkedInStatus;
     default:
       return styles.unknownStatus;
   }
@@ -76,6 +80,10 @@ const getAppointmentStatusKey = (status: string): string => {
       return 'APPOINTMENTS_STATUS_CANCELLED';
     case 'missed':
       return 'APPOINTMENTS_STATUS_MISSED';
+    case 'waitlist':
+      return 'APPOINTMENTS_STATUS_WAITLIST';
+    case 'checkedin':
+      return 'APPOINTMENTS_STATUS_CHECKEDIN';
     default:
       return 'APPOINTMENTS_STATUS_UNKNOWN';
   }
@@ -191,9 +199,7 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
         // Transform SQL response to Appointment format, then format for display
         const appointment = transformSqlAppointmentResponse(sqlResponse);
         // Add a generated uuid if API didn't provide one
-        if (!appointment.uuid) {
-          appointment.uuid = `upcoming-${index}`;
-        }
+        appointment.uuid ??= `upcoming-${index}`;
         return formatAppointment(appointment);
       },
     );
@@ -212,9 +218,7 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
         // Transform SQL response to Appointment format, then format for display
         const appointment = transformSqlAppointmentResponse(sqlResponse);
         // Add a generated uuid if API didn't provide one
-        if (!appointment.uuid) {
-          appointment.uuid = `past-${index}`;
-        }
+        appointment.uuid ??= `past-${index}`;
         return formatAppointment(appointment);
       },
     );
