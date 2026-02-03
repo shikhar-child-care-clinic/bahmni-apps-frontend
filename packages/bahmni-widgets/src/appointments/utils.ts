@@ -170,13 +170,19 @@ export const formatAppointment = (
 
 /**
  * Sorts appointments by date in ascending order (earliest first)
+ * Parses DD/MM/YYYY format explicitly to avoid JavaScript Date parsing ambiguity
  */
 export const sortAppointmentsByDate = (
   appointments: FormattedAppointment[],
 ): FormattedAppointment[] => {
+  const parseDateString = (dateStr: string): Date => {
+    const [day, month, year] = dateStr.split('/');
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  };
+
   return [...appointments].sort(
     (a, b) =>
-      new Date(a.appointmentDate).getTime() -
-      new Date(b.appointmentDate).getTime(),
+      parseDateString(a.appointmentDate).getTime() -
+      parseDateString(b.appointmentDate).getTime(),
   );
 };

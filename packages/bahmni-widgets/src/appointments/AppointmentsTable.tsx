@@ -14,7 +14,7 @@ import {
   getPastAppointments,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
@@ -24,6 +24,28 @@ import {
   FormattedAppointment,
   transformSqlAppointmentResponse,
 } from './utils';
+
+// Field name to translation key mapping
+const FIELD_TRANSLATION_MAP: Record<string, string> = {
+  appointmentNumber: 'APPOINTMENTS_NUMBER',
+  service: 'APPOINTMENTS_SERVICE',
+  reason: 'APPOINTMENTS_REASON',
+  appointmentDate: 'APPOINTMENTS_DATE',
+  appointmentSlot: 'APPOINTMENTS_SLOT',
+  status: 'APPOINTMENTS_STATUS',
+  provider: 'APPOINTMENTS_PROVIDER',
+};
+
+// Default fields to display in the table
+const DEFAULT_FIELDS = [
+  'appointmentNumber',
+  'service',
+  'reason',
+  'appointmentDate',
+  'appointmentSlot',
+  'status',
+  'provider',
+];
 
 // Helper function to get appointment status CSS class
 const getAppointmentStatusClassName = (status: string): string => {
@@ -59,11 +81,7 @@ const getAppointmentStatusKey = (status: string): string => {
   }
 };
 
-const AppointmentsTable: React.FC<WidgetProps> = ({
-  config,
-  episodeOfCareUuids,
-  encounterUuids,
-}) => {
+const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
   const { addNotification } = useNotification();
@@ -143,47 +161,26 @@ const AppointmentsTable: React.FC<WidgetProps> = ({
     setSelectedIndex(selectedIndex);
   };
 
-  // Map field names to translation keys
-  const fieldTranslationMap: Record<string, string> = {
-    appointmentNumber: 'APPOINTMENTS_NUMBER',
-    service: 'APPOINTMENTS_SERVICE',
-    reason: 'APPOINTMENTS_REASON',
-    appointmentDate: 'APPOINTMENTS_DATE',
-    appointmentSlot: 'APPOINTMENTS_SLOT',
-    status: 'APPOINTMENTS_STATUS',
-    provider: 'APPOINTMENTS_PROVIDER',
-  };
-
   // Get configured fields from config, or use default if not provided
-  const defaultFields = [
-    'appointmentNumber',
-    'service',
-    'reason',
-    'appointmentDate',
-    'appointmentSlot',
-    'status',
-    'provider',
-  ];
-
-  const configuredFields = config?.fields ?? defaultFields;
+  const configuredFields = config?.fields ?? DEFAULT_FIELDS;
 
   // Table headers - built from config fields
   const headers = useMemo(
     () =>
-      configuredFields.map((fieldKey: string) => ({
+      (config?.fields ?? DEFAULT_FIELDS).map((fieldKey: string) => ({
         key: fieldKey,
-        header: t(fieldTranslationMap[fieldKey] || fieldKey),
+        header: t(FIELD_TRANSLATION_MAP[fieldKey] || fieldKey),
       })),
-    [config?.fields, t], // Use config?.fields directly, not configuredFields
+    [config?.fields, t],
   );
 
   const sortable = useMemo(
     () =>
-      configuredFields.map((fieldKey: string) => ({
+      (config?.fields ?? DEFAULT_FIELDS).map((fieldKey: string) => ({
         key: fieldKey,
         sortable: true,
       })),
-    [config?.fields], // Use config?.fields directly, not configuredFields
+    [config?.fields],
   );
 
   // Format upcoming appointments for display
@@ -195,7 +192,7 @@ const AppointmentsTable: React.FC<WidgetProps> = ({
         const appointment = transformSqlAppointmentResponse(sqlResponse);
         // Add a generated uuid if API didn't provide one
         if (!appointment.uuid) {
-          appointment.uuid = `upcoming-${index}-${Date.now()}`;
+          appointment.uuid = `upcoming-${index}`;
         }
         return formatAppointment(appointment);
       },
@@ -216,7 +213,7 @@ const AppointmentsTable: React.FC<WidgetProps> = ({
         const appointment = transformSqlAppointmentResponse(sqlResponse);
         // Add a generated uuid if API didn't provide one
         if (!appointment.uuid) {
-          appointment.uuid = `past-${index}-${Date.now()}`;
+          appointment.uuid = `past-${index}`;
         }
         return formatAppointment(appointment);
       },
@@ -225,42 +222,45 @@ const AppointmentsTable: React.FC<WidgetProps> = ({
   }, [pastAppointments]);
 
   // Custom cell renderer for table cells
-  const renderCell = (row: FormattedAppointment, key: string) => {
-    // Safety check for undefined row
-    if (!row) {
-      return '-';
-    }
+  const renderCell = useCallback(
+    (row: FormattedAppointment, key: string) => {
+      // Safety check for undefined row
+      if (!row) {
+        return '-';
+      }
 
-    const record = row as unknown as Record<string, unknown>;
-    switch (key) {
-      case 'appointmentNumber':
-        return (record.appointmentNumber as string | undefined) ?? '-';
-      case 'service':
-        // Service name from API
-        return row.service?.name ?? '-';
-      case 'reason':
-        return (record.reason as string | undefined) ?? '-';
-      case 'appointmentDate':
-        // Date is already formatted as DD/MM/YYYY
-        return row.appointmentDate ?? '-';
-      case 'appointmentSlot':
-        // Slot/Time range from SQL (e.g., "11:30 PM - 11:46 PM")
-        return row.appointmentTime ?? '-';
-      case 'status':
-        return (
-          <span
-            className={getAppointmentStatusClassName(row.status)}
-            data-testid={`appointment-status-${row.uuid}`}
-          >
-            {t(getAppointmentStatusKey(row.status))}
-          </span>
-        );
-      case 'provider':
-        return row.provider?.name ?? t('APPOINTMENTS_TABLE_NOT_AVAILABLE');
-      default:
-        return null;
-    }
-  };
+      const record = row as unknown as Record<string, unknown>;
+      switch (key) {
+        case 'appointmentNumber':
+          return (record.appointmentNumber as string | undefined) ?? '-';
+        case 'service':
+          // Service name from API
+          return row.service?.name ?? '-';
+        case 'reason':
+          return (record.reason as string | undefined) ?? '-';
+        case 'appointmentDate':
+          // Date is already formatted as DD/MM/YYYY
+          return row.appointmentDate ?? '-';
+        case 'appointmentSlot':
+          // Slot/Time range from SQL (e.g., "11:30 PM - 11:46 PM")
+          return row.appointmentTime ?? '-';
+        case 'status':
+          return (
+            <span
+              className={getAppointmentStatusClassName(row.status)}
+              data-testid={`appointment-status-${row.uuid}`}
+            >
+              {t(getAppointmentStatusKey(row.status))}
+            </span>
+          );
+        case 'provider':
+          return row.provider?.name ?? t('APPOINTMENTS_TABLE_NOT_AVAILABLE');
+        default:
+          return null;
+      }
+    },
+    [t],
+  );
 
   const hasError = upcomingError || pastError;
 
