@@ -2,13 +2,19 @@ import { ValueSet, ValueSetExpansionContains } from 'fhir/r4';
 import i18next from 'i18next';
 import { get } from '../api';
 import { searchFHIRConceptsByName } from '../conceptService';
+import { getServiceRequests } from '../orderRequestService';
 import {
   ALL_ORDERABLES_CONCEPT_NAME,
   ORDER_TYPE_URL,
   PANEL_CONCEPT_CLASS_NAME,
   FHIR_CONCEPT_CLASS_EXTENSION_URL,
 } from './constants';
-import { FlattenedInvestigations, OrderType, OrderTypeResponse } from './model';
+import {
+  ExistingServiceRequest,
+  FlattenedInvestigations,
+  OrderType,
+  OrderTypeResponse,
+} from './model';
 
 const fetchInvestigations = async (): Promise<ValueSet> => {
   return await searchFHIRConceptsByName(ALL_ORDERABLES_CONCEPT_NAME);
@@ -115,13 +121,38 @@ export const getCategoryUuidFromOrderTypes = async (
   return orderType?.uuid;
 };
 
-/**
- * Gets all order type names (categories) from the backend.
- * Returns an array of category display names (e.g., ['Lab Order', 'Radiology Order', 'Procedure Order']).
- *
- * @returns Array of order type display names
- */
 export const getOrderTypeNames = async (): Promise<string[]> => {
   const orderTypesData = await getOrderTypes();
   return orderTypesData.results.map((orderType) => orderType.display);
+};
+
+export const getExistingServiceRequestsForAllCategories = async (
+  patientUUID: string,
+  encounterUuids?: string[],
+): Promise<ExistingServiceRequest[]> => {
+  const orderTypesData = await getOrderTypes();
+  const results: ExistingServiceRequest[] = [];
+
+  for (const orderType of orderTypesData.results) {
+    const categoryUuid = orderType.uuid;
+    if (categoryUuid) {
+      const bundle = await getServiceRequests(
+        categoryUuid,
+        patientUUID,
+        encounterUuids,
+      );
+      const items =
+        bundle.entry
+          ?.map((entry) => ({
+            conceptCode: entry.resource?.code?.coding?.[0]?.code ?? '',
+            categoryUuid: categoryUuid,
+            display: entry.resource?.code?.text ?? '',
+            requesterUuid:
+              entry.resource?.requester?.reference?.split('/')[1] ?? '',
+          }))
+          .filter((item) => item.conceptCode) ?? [];
+      results.push(...items);
+    }
+  }
+  return results;
 };

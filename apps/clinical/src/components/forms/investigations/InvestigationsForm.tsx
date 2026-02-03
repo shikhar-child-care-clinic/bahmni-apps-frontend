@@ -7,8 +7,7 @@ import {
 } from '@bahmni/design-system';
 import {
   useTranslation,
-  getServiceRequests,
-  getOrderTypes,
+  getExistingServiceRequestsForAllCategories,
 } from '@bahmni/services';
 import { usePatientUUID, useActivePractitioner } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
@@ -55,42 +54,11 @@ const InvestigationsForm: React.FC = React.memo(() => {
 
   const { data: existingServiceRequests } = useQuery({
     queryKey: ['existingServiceRequests', patientUUID, currentEncounterId],
-    queryFn: async () => {
-      const orderTypesData = await getOrderTypes();
-      const results: Array<{
-        conceptCode: string;
-        categoryUuid: string;
-        display: string;
-        requesterUuid: string;
-      }> = [];
-
-      const encounterUuids = currentEncounterId
-        ? [currentEncounterId]
-        : undefined;
-
-      for (const orderType of orderTypesData.results) {
-        const categoryUuid = orderType.uuid;
-        if (categoryUuid && patientUUID) {
-          const bundle = await getServiceRequests(
-            categoryUuid,
-            patientUUID,
-            encounterUuids,
-          );
-          const items =
-            bundle.entry
-              ?.map((entry) => ({
-                conceptCode: entry.resource?.code?.coding?.[0]?.code ?? '',
-                categoryUuid: categoryUuid,
-                display: entry.resource?.code?.text ?? '',
-                requesterUuid:
-                  entry.resource?.requester?.reference?.split('/')[1] ?? '',
-              }))
-              .filter((item) => item.conceptCode) ?? [];
-          results.push(...items);
-        }
-      }
-      return results;
-    },
+    queryFn: () =>
+      getExistingServiceRequestsForAllCategories(
+        patientUUID!,
+        currentEncounterId ? [currentEncounterId] : undefined,
+      ),
     enabled: !!patientUUID && !!currentEncounterId,
   });
 

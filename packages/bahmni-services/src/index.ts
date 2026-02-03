@@ -169,6 +169,8 @@ export {
   getOrderTypes,
   getCategoryUuidFromOrderTypes,
   getOrderTypeNames,
+  getExistingServiceRequestsForAllCategories,
+  type ExistingServiceRequest,
   type FlattenedInvestigations,
   type OrderType,
   type OrderTypeResponse,
