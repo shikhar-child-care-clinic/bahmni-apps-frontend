@@ -8,8 +8,7 @@ import {
 import {
   useTranslation,
   getServiceRequests,
-  getCategoryUuidFromOrderTypes,
-  getOrderTypeNames,
+  getOrderTypes,
 } from '@bahmni/services';
 import { usePatientUUID, useActivePractitioner } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
@@ -57,7 +56,7 @@ const InvestigationsForm: React.FC = React.memo(() => {
   const { data: existingServiceRequests } = useQuery({
     queryKey: ['existingServiceRequests', patientUUID, currentEncounterId],
     queryFn: async () => {
-      const categories = await getOrderTypeNames();
+      const orderTypesData = await getOrderTypes();
       const results: Array<{
         conceptCode: string;
         categoryUuid: string;
@@ -69,8 +68,8 @@ const InvestigationsForm: React.FC = React.memo(() => {
         ? [currentEncounterId]
         : undefined;
 
-      for (const categoryName of categories) {
-        const categoryUuid = await getCategoryUuidFromOrderTypes(categoryName);
+      for (const orderType of orderTypesData.results) {
+        const categoryUuid = orderType.uuid;
         if (categoryUuid && patientUUID) {
           const bundle = await getServiceRequests(
             categoryUuid,
