@@ -5,6 +5,7 @@ import {
   post,
   Form2Observation,
 } from '@bahmni/services';
+import { FhirObservationTransformer } from '@bahmni/form2-controls';
 import { BundleEntry, Reference, Encounter } from 'fhir/r4';
 import { CONSULTATION_BUNDLE_URL } from '../constants/app';
 import { CONSULTATION_ERROR_MESSAGES } from '../constants/errors';
@@ -19,7 +20,6 @@ import {
 } from '../utils/fhir/conditionResourceCreator';
 import { createBundleEntry } from '../utils/fhir/consultationBundleCreator';
 import { createMedicationRequestResource } from '../utils/fhir/medicationRequestResourceCreator';
-import { createObservationResources } from '../utils/fhir/observationResourceCreator';
 import {
   createPractitionerReference,
   createEncounterReferenceFromString,
@@ -372,6 +372,7 @@ export function createMedicationRequestEntries({
 
 /**
  * Creates bundle entries for observations from observation forms as part of consultation bundle
+ * Uses FhirObservationTransformer from form2-controls library for FHIR transformation.
  * @param params - Parameters required for creating observation bundle entries
  * @returns Array of BundleEntry for observations
  * @throws Error with specific message key for translation
@@ -399,6 +400,7 @@ export function createObservationBundleEntries({
   }
 
   const observationEntries: BundleEntry[] = [];
+  const transformer = new FhirObservationTransformer();
 
   // Iterate through all observation forms and their observations
   for (const formUuid in observationFormsData) {
@@ -408,21 +410,20 @@ export function createObservationBundleEntries({
       continue;
     }
 
-    // Create FHIR Observation resources from the observation payloads
+    // Create FHIR Observation resources using form2-controls transformer
     // Returns array of { resource, fullUrl } objects
-    const observationResults = createObservationResources(
-      observations,
-      encounterSubject,
-      createEncounterReferenceFromString(encounterReference),
-      createPractitionerReference(practitionerUUID),
-    );
+    const observationResults = transformer.toFhir(observations, {
+      patientReference: encounterSubject as any,
+      encounterReference: createEncounterReferenceFromString(encounterReference) as any,
+      performerReference: createPractitionerReference(practitionerUUID) as any,
+    });
 
     // Create bundle entries for each observation resource
     // Use the pre-generated fullUrl so hasMember references work correctly
     for (const result of observationResults) {
       const observationBundleEntry = createBundleEntry(
         result.fullUrl,
-        result.resource,
+        result.resource as any,
         'POST',
       );
       observationEntries.push(observationBundleEntry);
