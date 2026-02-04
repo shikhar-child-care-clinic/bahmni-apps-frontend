@@ -9,6 +9,7 @@ import {
   LabInvestigationPriority,
   LabInvestigationsByDate,
   LabTestResult,
+  Attachment,
 } from './models';
 
 export enum REFERENCE_RANGE_CODE {
@@ -154,45 +155,25 @@ export function sortLabInvestigationsByPriority(
   }));
 }
 
-export function getProcessedTestIds(
-  diagnosticReports: DiagnosticReport[] | undefined,
-): string[] {
-  if (!diagnosticReports || diagnosticReports.length === 0) return [];
-
-  const testIds = new Set<string>();
-
-  diagnosticReports
-    .filter((report) => {
-      return (
-        report?.status &&
-        PROCESSED_REPORT_STATUSES.includes(
-          report.status as (typeof PROCESSED_REPORT_STATUSES)[number],
-        )
-      );
-    })
-    .forEach((report) => {
-      // Extract test IDs from basedOn references
-      report?.basedOn?.forEach((ref) => {
-        const testId = ref.reference?.split('/').pop();
-        if (testId) {
-          testIds.add(testId);
-        }
-      });
-    });
-
-  return Array.from(testIds);
-}
-
 /**
- * Creates a mapping from test IDs to report IDs for processed diagnostic reports
+ * Enriches lab investigation tests with diagnostic report information (reportId and attachments)
+ * @param tests - Array of formatted lab tests
+ * @param diagnosticReports - Array of diagnostic reports
+ * @returns Enriched array of tests with reportId and attachments populated
  */
-export function getTestIdToReportIdMap(
+export function updateInvestigationsWithReportInfo(
+  tests: FormattedLabInvestigations[],
   diagnosticReports: DiagnosticReport[] | undefined,
-): Map<string, string> {
-  const testIdToReportId = new Map<string, string>();
+): FormattedLabInvestigations[] {
+  if (!diagnosticReports || diagnosticReports.length === 0) {
+    return tests;
+  }
 
-  if (!diagnosticReports || diagnosticReports.length === 0)
-    return testIdToReportId;
+  // Build a map of test IDs to report info in a single pass
+  const testIdToReportInfo = new Map<
+    string,
+    { reportId: string; attachments?: Attachment[] }
+  >();
 
   diagnosticReports
     .filter((report) => {
@@ -205,19 +186,34 @@ export function getTestIdToReportIdMap(
     })
     .forEach((report) => {
       const reportId = report?.id;
-
       if (!reportId) return;
 
-      // Map test IDs from basedOn references to this report ID
+      const attachments = extractAttachmentsFromDiagnosticReport(report);
+
+      // Extract test IDs from basedOn references and map to report info
       report?.basedOn?.forEach((ref) => {
         const testId = ref.reference?.split('/').pop();
         if (testId) {
-          testIdToReportId.set(testId, reportId);
+          testIdToReportInfo.set(testId, {
+            reportId,
+            attachments,
+          });
         }
       });
     });
 
-  return testIdToReportId;
+  // Enrich tests with report info
+  return tests.map((test) => {
+    const reportInfo = testIdToReportInfo.get(test.id);
+    if (reportInfo) {
+      return {
+        ...test,
+        reportId: reportInfo.reportId,
+        attachments: reportInfo.attachments,
+      };
+    }
+    return test;
+  });
 }
 
 export function extractDiagnosticReportsFromBundle(
@@ -240,6 +236,32 @@ export function extractObservationsFromBundle(
     .filter((entry) => entry.resource?.resourceType === 'Observation')
     .map((entry) => entry.resource as Observation)
     .filter((obs): obs is Observation => !!obs);
+}
+
+/**
+ * Extracts attachments from DiagnosticReport's presentedForm array
+ * @param diagnosticReport - The diagnostic report resource
+ * @returns Array of attachments or undefined if none exist
+ */
+export function extractAttachmentsFromDiagnosticReport(
+  diagnosticReport: DiagnosticReport | undefined,
+): Attachment[] | undefined {
+  if (
+    !diagnosticReport?.presentedForm ||
+    diagnosticReport.presentedForm.length === 0
+  ) {
+    return undefined;
+  }
+
+  const attachments = diagnosticReport.presentedForm
+    .filter((form) => form.url) // Only include forms that have a URL
+    .map((form) => ({
+      url: form.url!,
+      id: form.id!,
+      contentType: form.contentType,
+    }));
+
+  return attachments.length > 0 ? attachments : undefined;
 }
 
 export function formatObservationsAsLabTestResults(
@@ -336,6 +358,18 @@ export function mapDiagnosticReportBundleToTestResults(
 
   const observations = extractObservationsFromBundle(bundle);
   const results = formatObservationsAsLabTestResults(observations, t);
+
+  // Extract attachments from the diagnostic report
+  const attachments = extractAttachmentsFromDiagnosticReport(diagnosticReport);
+
+  // For single test results, add the first attachment (if available)
+  // This assumes a single test will have at most one attachment
+  if (attachments && attachments.length > 0 && results.length > 0) {
+    return results.map((result) => ({
+      ...result,
+      attachment: attachments[0],
+    }));
+  }
 
   return results.length > 0 ? results : undefined;
 }
