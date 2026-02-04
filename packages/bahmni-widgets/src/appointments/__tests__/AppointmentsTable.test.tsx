@@ -495,7 +495,9 @@ describe('AppointmentsTable', () => {
 
       render(<AppointmentsTable config={{}} episodeOfCareUuids={[]} />);
 
-      expect(screen.getByText('NO_UPCOMING_APPOINTMENTS')).toBeInTheDocument();
+      expect(
+        screen.getByText('DASHBOARD_NO_UPCOMING_APPOINTMENTS_KEY'),
+      ).toBeInTheDocument();
     });
 
     it('should show empty state for past appointments when none exist', async () => {
@@ -518,7 +520,9 @@ describe('AppointmentsTable', () => {
       const pastTab = screen.getByText('APPOINTMENTS_TAB_PAST');
       await userEvent.click(pastTab);
 
-      expect(screen.getByText('NO_APPOINTMENT_HISTORY')).toBeInTheDocument();
+      expect(
+        screen.getByText('DASHBOARD_NO_PAST_APPOINTMENTS_KEY'),
+      ).toBeInTheDocument();
     });
   });
 

@@ -1,13 +1,19 @@
+@use "@carbon/react/scss/colors" as *;
+@use "@carbon/react/scss/type" as *;
+@use "@carbon/react/scss/theme" as *;
+@use "@carbon/react/scss/spacing" as *;
+
 .appointmentsTable {
   margin-top: 1rem;
 }
 
 .appointmentTabList {
-  margin-bottom: 1rem;
+  border-top: 1px solid $border-subtle;
+  margin-bottom: 0;
 }
 
 .appointmentTabs {
-  padding: 1rem 0 0 0; // Remove bottom padding, keep top padding only
+  padding: 0 !important;
 }
 
 .appointmentsTableBody {
@@ -22,10 +28,11 @@
 }
 
 .appointmentTableEmpty {
-  padding: 2rem;
+  @include type-style("label-02");
+  background-color: $background;
+  padding: $spacing-06 $spacing-05;
   text-align: center;
-  color: #525252;
-  font-size: 0.875rem;
+  border-top: 1px solid $border-subtle-02;
 }
 
 // Status badge styles (filled badges with light background)

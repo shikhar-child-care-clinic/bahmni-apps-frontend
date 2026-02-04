@@ -41,8 +41,6 @@
   "APPOINTMENTS_SERVICE": "Service",
   "APPOINTMENTS_REASON": "Reason",
   "APPOINTMENTS_SLOT": "Slot",
-  "NO_UPCOMING_APPOINTMENTS": "No upcoming appointments",
-  "NO_APPOINTMENT_HISTORY": "No appointment history",
   "AUDIT_LOG_ERROR_UNKNOWN_EVENT_TYPE": "Unknown audit event type: {{eventType}}",
   "BODY_POSITION_FOWLERS_POSITION": "Fowler's position",
   "BODY_POSITION_OTHER": "Other",
