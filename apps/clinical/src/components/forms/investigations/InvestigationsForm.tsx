@@ -56,7 +56,7 @@ const InvestigationsForm: React.FC = React.memo(() => {
 
   // Static query for order types - cached globally, doesn't re-fetch when encounter changes
   const { data: orderTypesData } = useQuery({
-    queryKey: [ORDER_TYPE_QUERY_KEY],
+    queryKey: ORDER_TYPE_QUERY_KEY,
     queryFn: getOrderTypes,
   });
 
