@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import React, { useMemo } from 'react';
 import { FormattedLabInvestigations, LabInvestigationPriority } from './models';
 import styles from './styles/LabInvestigation.module.scss';
-import { mapSingleDiagnosticReportBundleToTestResults } from './utils';
+import { mapDiagnosticReportBundleToTestResults } from './utils';
 
 interface LabInvestigationItemProps {
   test: FormattedLabInvestigations;
@@ -37,10 +37,7 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
 
   const testResults = useMemo(() => {
     if (!diagnosticReportBundle) return undefined;
-    return mapSingleDiagnosticReportBundleToTestResults(
-      diagnosticReportBundle,
-      t,
-    );
+    return mapDiagnosticReportBundleToTestResults(diagnosticReportBundle, t);
   }, [diagnosticReportBundle, t]);
 
   const hasResults = Array.isArray(testResults) && testResults.length > 0;

@@ -312,48 +312,13 @@ export function formatObservationsAsLabTestResults(
   });
 }
 
-export function mapDiagnosticReportBundlesToTestResults(
-  bundles: (Bundle | undefined)[],
-  t: (key: string) => string,
-): Map<string, LabTestResult[]> {
-  const resultsMap = new Map<string, LabTestResult[]>();
-
-  bundles.forEach((bundle) => {
-    if (!bundle?.entry) return;
-
-    // Find the DiagnosticReport resource in the bundle
-    const diagnosticReportEntry = bundle.entry.find(
-      (entry) => entry.resource?.resourceType === 'DiagnosticReport',
-    );
-    const diagnosticReport = diagnosticReportEntry?.resource as
-      | DiagnosticReport
-      | undefined;
-
-    if (!diagnosticReport?.basedOn) return;
-
-    // Extract the test/ServiceRequest ID from the basedOn reference
-    diagnosticReport.basedOn.forEach((ref) => {
-      const testId = ref.reference?.split('/').pop();
-      if (!testId) return;
-
-      const observations = extractObservationsFromBundle(bundle);
-      const results = formatObservationsAsLabTestResults(observations, t);
-      if (results.length > 0) {
-        resultsMap.set(testId, results);
-      }
-    });
-  });
-
-  return resultsMap;
-}
-
 /**
  * Maps a single diagnostic report bundle to test results
  * @param bundle - DiagnosticReport bundle with observations
  * @param t - Translation function
  * @returns Array of LabTestResult or undefined if no valid results
  */
-export function mapSingleDiagnosticReportBundleToTestResults(
+export function mapDiagnosticReportBundleToTestResults(
   bundle: Bundle | undefined,
   t: (key: string) => string,
 ): LabTestResult[] | undefined {

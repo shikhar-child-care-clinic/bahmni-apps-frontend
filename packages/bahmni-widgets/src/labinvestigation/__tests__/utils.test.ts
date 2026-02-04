@@ -15,8 +15,7 @@ import {
   getTestIdToReportIdMap,
   extractObservationsFromBundle,
   formatObservationsAsLabTestResults,
-  mapDiagnosticReportBundlesToTestResults,
-  mapSingleDiagnosticReportBundleToTestResults,
+  mapDiagnosticReportBundleToTestResults,
   updateTestsWithResults,
   REFERENCE_RANGE_CODE,
 } from '../utils';
@@ -477,7 +476,7 @@ describe('Lab Investigation Utils', () => {
     });
   });
 
-  describe('mapSingleDiagnosticReportBundleToTestResults', () => {
+  describe('mapDiagnosticReportBundleToTestResults', () => {
     it('should map single bundle to test results', () => {
       const mockBundle = {
         resourceType: 'Bundle' as const,
@@ -503,7 +502,7 @@ describe('Lab Investigation Utils', () => {
         ],
       };
 
-      const result = mapSingleDiagnosticReportBundleToTestResults(
+      const result = mapDiagnosticReportBundleToTestResults(
         mockBundle,
         mockTranslate,
       );
@@ -529,7 +528,7 @@ describe('Lab Investigation Utils', () => {
         ],
       };
 
-      const result = mapSingleDiagnosticReportBundleToTestResults(
+      const result = mapDiagnosticReportBundleToTestResults(
         mockBundle,
         mockTranslate,
       );
@@ -538,7 +537,7 @@ describe('Lab Investigation Utils', () => {
     });
 
     it('should return undefined for undefined bundle', () => {
-      const result = mapSingleDiagnosticReportBundleToTestResults(
+      const result = mapDiagnosticReportBundleToTestResults(
         undefined,
         mockTranslate,
       );
@@ -725,71 +724,6 @@ describe('Lab Investigation Utils', () => {
 
       expect(result[0].value).toBe('Abnormal');
       expect(result[0].unit).toBe('');
-    });
-  });
-
-  describe('mapDiagnosticReportBundlesToTestResults', () => {
-    it('should map diagnostic report bundles to test results', () => {
-      const bundles = [
-        {
-          resourceType: 'Bundle' as const,
-          type: 'collection' as const,
-          entry: [
-            {
-              resource: {
-                resourceType: 'DiagnosticReport' as const,
-                id: 'report-1',
-                status: 'final' as const,
-                code: { text: 'CBC' },
-                basedOn: [{ reference: 'ServiceRequest/test-1' }],
-              },
-            },
-            {
-              resource: {
-                resourceType: 'Observation' as const,
-                id: 'obs-1',
-                status: 'final' as const,
-                code: { text: 'Hemoglobin' },
-                valueQuantity: { value: 14.5, unit: 'g/dL' },
-              },
-            },
-          ],
-        },
-      ];
-
-      const result = mapDiagnosticReportBundlesToTestResults(
-        bundles,
-        mockTranslate,
-      );
-
-      expect(result.size).toBe(1);
-      expect(result.has('test-1')).toBe(true);
-    });
-
-    it('should handle bundles without basedOn references', () => {
-      const bundles = [
-        {
-          resourceType: 'Bundle' as const,
-          type: 'collection' as const,
-          entry: [
-            {
-              resource: {
-                resourceType: 'DiagnosticReport' as const,
-                id: 'report-1',
-                status: 'final' as const,
-                code: { text: 'CBC' },
-              },
-            },
-          ],
-        },
-      ];
-
-      const result = mapDiagnosticReportBundlesToTestResults(
-        bundles,
-        mockTranslate,
-      );
-
-      expect(result.size).toBe(0);
     });
   });
 
