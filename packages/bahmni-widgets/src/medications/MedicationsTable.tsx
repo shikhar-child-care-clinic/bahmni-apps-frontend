@@ -228,7 +228,8 @@ const MedicationsTable: React.FC<WidgetProps> = ({
 
   const renderCell = (row: FormattedMedicationRequest, key: string) => {
     switch (key) {
-      case 'name':
+      case 'name': {
+        // Show quantity (e.g., "4 Tablet", "2 mg")
         return (
           <>
             <div className={styles.medicationName}>
@@ -246,6 +247,7 @@ const MedicationsTable: React.FC<WidgetProps> = ({
             {row.asNeeded && <Tag className={styles.PRN}>PRN</Tag>}
           </>
         );
+      }
       case 'dosage': {
         if (typeof row.dosage === 'string') {
           return <p className={styles.columnDataBold}>{row.dosage}</p>;
