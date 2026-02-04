@@ -71,7 +71,9 @@ describe('RadiologyInvestigationTable', () => {
     expect(
       screen.getByTestId('radiology-investigations-table-test-id'),
     ).toBeInTheDocument();
-    expect(screen.getByTestId('sortable-table-skeleton')).toBeInTheDocument();
+    expect(
+      screen.getByTestId('radiology-investigations-table-skeleton'),
+    ).toBeInTheDocument();
   });
 
   it('should show error state when an error occurs', () => {
@@ -85,7 +87,9 @@ describe('RadiologyInvestigationTable', () => {
     expect(
       screen.getByTestId('radiology-investigations-table-test-id'),
     ).toBeInTheDocument();
-    expect(screen.getByTestId('sortable-table-error')).toBeInTheDocument();
+    expect(
+      screen.getByTestId('radiology-investigations-table-error'),
+    ).toBeInTheDocument();
     expect(mockAddNotification).toHaveBeenCalledWith({
       type: 'error',
       title: 'ERROR_DEFAULT_TITLE',
@@ -209,7 +213,9 @@ describe('RadiologyInvestigationTable', () => {
     expect(
       screen.getByTestId('radiology-investigations-table-test-id'),
     ).toBeInTheDocument();
-    expect(screen.getByTestId('sortable-table-empty')).toBeInTheDocument();
+    expect(
+      screen.getByTestId('radiology-investigations-table-empty'),
+    ).toBeInTheDocument();
   });
 
   it('should show radiology investigations table when patient has investigations', () => {
