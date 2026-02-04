@@ -18,6 +18,7 @@ import {
   mapDiagnosticReportBundlesToTestResults,
   mapSingleDiagnosticReportBundleToTestResults,
   updateTestsWithResults,
+  REFERENCE_RANGE_CODE,
 } from '../utils';
 
 jest.mock('@bahmni/services', () => ({
@@ -597,6 +598,13 @@ describe('Lab Investigation Utils', () => {
           },
           referenceRange: [
             {
+              type: {
+                coding: [
+                  {
+                    code: REFERENCE_RANGE_CODE.NORMAL,
+                  },
+                ],
+              },
               low: { value: 12, unit: 'g/dL' },
               high: { value: 16, unit: 'g/dL' },
             },
@@ -614,7 +622,7 @@ describe('Lab Investigation Utils', () => {
       expect(result[0].TestName).toBe('Hemoglobin');
       expect(result[0].value).toBe('14.5');
       expect(result[0].unit).toBe('g/dL');
-      expect(result[0].referenceRange).toBe('12 - 16 g/dL');
+      expect(result[0].referenceRange).toBe('12 - 16');
     });
 
     it('should handle string values', () => {

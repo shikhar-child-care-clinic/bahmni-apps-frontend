@@ -11,6 +11,10 @@ import {
   LabTestResult,
 } from './models';
 
+export enum REFERENCE_RANGE_CODE {
+  NORMAL = 'normal',
+}
+
 export function filterLabInvestigationEntries(
   labInvestigationBundle: Bundle<ServiceRequest>,
 ): ServiceRequest[] {
@@ -265,19 +269,23 @@ export function formatObservationsAsLabTestResults(
       value = obs.valueCodeableConcept.coding[0].display;
     }
 
-    //TODO: test when api returns referenceRange.
     const referenceRange =
       obs.referenceRange
-        ?.map((range) => {
+        ?.filter((range) => {
+          // Only include reference ranges with code "normal"
+          return range.type?.coding?.some(
+            (coding) => coding.code === REFERENCE_RANGE_CODE.NORMAL,
+          );
+        })
+        .map((range) => {
           const low = range.low?.value;
           const high = range.high?.value;
-          const rangeUnit = range.low?.unit ?? range.high?.unit ?? '';
           if (low !== undefined && high !== undefined) {
-            return `${low} - ${high} ${rangeUnit}`.trim();
+            return `${low} - ${high}`;
           } else if (low !== undefined) {
-            return `> ${low} ${rangeUnit}`.trim();
+            return `> ${low}`;
           } else if (high !== undefined) {
-            return `< ${high} ${rangeUnit}`.trim();
+            return `< ${high}`;
           }
           return range.text ?? '';
         })
