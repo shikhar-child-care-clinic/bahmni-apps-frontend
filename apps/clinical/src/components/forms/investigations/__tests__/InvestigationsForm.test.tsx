@@ -25,18 +25,14 @@ jest.mock('../../../../stores/serviceRequestStore');
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
-  getServiceRequests: jest.fn().mockResolvedValue({ entry: [] }),
-  getCategoryUuidFromOrderTypes: jest
-    .fn()
-    .mockImplementation((categoryName: string) => {
-      if (categoryName === 'Lab Order') return Promise.resolve('lab');
-      if (categoryName === 'Radiology Order') return Promise.resolve('rad');
-      if (categoryName === 'Procedure Order') return Promise.resolve('proc');
-      return Promise.resolve('mock-uuid');
-    }),
-  getOrderTypeNames: jest
-    .fn()
-    .mockResolvedValue(['Lab Order', 'Radiology Order', 'Procedure Order']),
+  getOrderTypes: jest.fn().mockResolvedValue({
+    results: [
+      { uuid: 'lab', display: 'Lab Order', conceptClasses: [] },
+      { uuid: 'rad', display: 'Radiology Order', conceptClasses: [] },
+      { uuid: 'proc', display: 'Procedure Order', conceptClasses: [] },
+    ],
+  }),
+  getExistingServiceRequestsForAllCategories: jest.fn().mockResolvedValue([]),
 }));
 
 jest.mock('@bahmni/widgets', () => ({
@@ -910,7 +906,8 @@ describe('InvestigationsForm', () => {
   });
 
   describe('Backend Duplicate Detection', () => {
-    const { getServiceRequests } = jest.requireMock('@bahmni/services');
+    const { getExistingServiceRequestsForAllCategories } =
+      jest.requireMock('@bahmni/services');
 
     beforeEach(() => {
       jest.clearAllMocks();
@@ -925,21 +922,14 @@ describe('InvestigationsForm', () => {
     });
 
     test('blocks duplicate when same provider tries to add same test in same encounter', async () => {
-      getServiceRequests.mockResolvedValue({
-        entry: [
-          {
-            resource: {
-              code: {
-                coding: [{ code: 'cbc-001' }],
-                text: 'Complete Blood Count',
-              },
-              requester: {
-                reference: 'Practitioner/mock-practitioner-uuid',
-              },
-            },
-          },
-        ],
-      });
+      getExistingServiceRequestsForAllCategories.mockResolvedValue([
+        {
+          conceptCode: 'cbc-001',
+          categoryUuid: 'lab',
+          display: 'Complete Blood Count',
+          requesterUuid: 'mock-practitioner-uuid',
+        },
+      ]);
 
       const user = userEvent.setup();
       render(<InvestigationsForm />, { wrapper: createWrapper() });
@@ -962,21 +952,14 @@ describe('InvestigationsForm', () => {
     });
 
     test('allows same test when different provider added it in same encounter', async () => {
-      getServiceRequests.mockResolvedValue({
-        entry: [
-          {
-            resource: {
-              code: {
-                coding: [{ code: 'cbc-001' }],
-                text: 'Complete Blood Count',
-              },
-              requester: {
-                reference: 'Practitioner/different-practitioner-uuid',
-              },
-            },
-          },
-        ],
-      });
+      getExistingServiceRequestsForAllCategories.mockResolvedValue([
+        {
+          conceptCode: 'cbc-001',
+          categoryUuid: 'lab',
+          display: 'Complete Blood Count',
+          requesterUuid: 'different-practitioner-uuid',
+        },
+      ]);
 
       const user = userEvent.setup();
       render(<InvestigationsForm />, { wrapper: createWrapper() });
@@ -1000,7 +983,7 @@ describe('InvestigationsForm', () => {
     });
 
     test('allows same test when it exists in different encounter', async () => {
-      getServiceRequests.mockResolvedValue({ entry: [] });
+      getExistingServiceRequestsForAllCategories.mockResolvedValue([]);
 
       const user = userEvent.setup();
       render(<InvestigationsForm />, { wrapper: createWrapper() });
@@ -1024,21 +1007,14 @@ describe('InvestigationsForm', () => {
     });
 
     test('clears duplicate notification when search is cleared', async () => {
-      getServiceRequests.mockResolvedValue({
-        entry: [
-          {
-            resource: {
-              code: {
-                coding: [{ code: 'cbc-001' }],
-                text: 'Complete Blood Count',
-              },
-              requester: {
-                reference: 'Practitioner/mock-practitioner-uuid',
-              },
-            },
-          },
-        ],
-      });
+      getExistingServiceRequestsForAllCategories.mockResolvedValue([
+        {
+          conceptCode: 'cbc-001',
+          categoryUuid: 'lab',
+          display: 'Complete Blood Count',
+          requesterUuid: 'mock-practitioner-uuid',
+        },
+      ]);
 
       const user = userEvent.setup();
       render(<InvestigationsForm />, { wrapper: createWrapper() });
@@ -1068,21 +1044,14 @@ describe('InvestigationsForm', () => {
     });
 
     test('closes duplicate notification when close button is clicked', async () => {
-      getServiceRequests.mockResolvedValue({
-        entry: [
-          {
-            resource: {
-              code: {
-                coding: [{ code: 'cbc-001' }],
-                text: 'Complete Blood Count',
-              },
-              requester: {
-                reference: 'Practitioner/mock-practitioner-uuid',
-              },
-            },
-          },
-        ],
-      });
+      getExistingServiceRequestsForAllCategories.mockResolvedValue([
+        {
+          conceptCode: 'cbc-001',
+          categoryUuid: 'lab',
+          display: 'Complete Blood Count',
+          requesterUuid: 'mock-practitioner-uuid',
+        },
+      ]);
 
       const user = userEvent.setup();
       render(<InvestigationsForm />, { wrapper: createWrapper() });

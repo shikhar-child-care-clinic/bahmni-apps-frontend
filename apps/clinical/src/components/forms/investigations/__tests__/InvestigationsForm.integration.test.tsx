@@ -16,18 +16,14 @@ jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   getFlattenedInvestigations: jest.fn(),
   getFormattedError: jest.fn(),
-  getServiceRequests: jest.fn().mockResolvedValue({ entry: [] }),
-  getCategoryUuidFromOrderTypes: jest
-    .fn()
-    .mockImplementation((categoryName: string) => {
-      if (categoryName === 'Lab Order') return Promise.resolve('LAB');
-      if (categoryName === 'Radiology Order') return Promise.resolve('RAD');
-      if (categoryName === 'Procedure Order') return Promise.resolve('PROC');
-      return Promise.resolve('mock-uuid');
-    }),
-  getOrderTypeNames: jest
-    .fn()
-    .mockResolvedValue(['Lab Order', 'Radiology Order', 'Procedure Order']),
+  getOrderTypes: jest.fn().mockResolvedValue({
+    results: [
+      { uuid: 'LAB', display: 'Lab Order', conceptClasses: [] },
+      { uuid: 'RAD', display: 'Radiology Order', conceptClasses: [] },
+      { uuid: 'PROC', display: 'Procedure Order', conceptClasses: [] },
+    ],
+  }),
+  getExistingServiceRequestsForAllCategories: jest.fn().mockResolvedValue([]),
 }));
 
 jest.mock('@bahmni/widgets', () => ({

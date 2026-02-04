@@ -7,9 +7,9 @@ import {
 } from '@bahmni/design-system';
 import {
   useTranslation,
-  getServiceRequests,
-  getCategoryUuidFromOrderTypes,
-  getOrderTypeNames,
+  getOrderTypes,
+  getExistingServiceRequestsForAllCategories,
+  ORDER_TYPE_QUERY_KEY,
 } from '@bahmni/services';
 import { usePatientUUID, useActivePractitioner } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
@@ -54,45 +54,22 @@ const InvestigationsForm: React.FC = React.memo(() => {
     isSelectedInCategory,
   } = useServiceRequestStore();
 
+  // Static query for order types - cached globally, doesn't re-fetch when encounter changes
+  const { data: orderTypesData } = useQuery({
+    queryKey: ORDER_TYPE_QUERY_KEY,
+    queryFn: getOrderTypes,
+  });
+
+  // Dynamic query for existing service requests - only re-fetches when patient/encounter changes
   const { data: existingServiceRequests } = useQuery({
     queryKey: ['existingServiceRequests', patientUUID, currentEncounterId],
-    queryFn: async () => {
-      const categories = await getOrderTypeNames();
-      const results: Array<{
-        conceptCode: string;
-        categoryUuid: string;
-        display: string;
-        requesterUuid: string;
-      }> = [];
-
-      const encounterUuids = currentEncounterId
-        ? [currentEncounterId]
-        : undefined;
-
-      for (const categoryName of categories) {
-        const categoryUuid = await getCategoryUuidFromOrderTypes(categoryName);
-        if (categoryUuid && patientUUID) {
-          const bundle = await getServiceRequests(
-            categoryUuid,
-            patientUUID,
-            encounterUuids,
-          );
-          const items =
-            bundle.entry
-              ?.map((entry) => ({
-                conceptCode: entry.resource?.code?.coding?.[0]?.code ?? '',
-                categoryUuid: categoryUuid,
-                display: entry.resource?.code?.text ?? '',
-                requesterUuid:
-                  entry.resource?.requester?.reference?.split('/')[1] ?? '',
-              }))
-              .filter((item) => item.conceptCode) ?? [];
-          results.push(...items);
-        }
-      }
-      return results;
-    },
-    enabled: !!patientUUID && !!currentEncounterId,
+    queryFn: () =>
+      getExistingServiceRequestsForAllCategories(
+        orderTypesData!.results,
+        patientUUID!,
+        currentEncounterId ? [currentEncounterId] : undefined,
+      ),
+    enabled: !!patientUUID && !!currentEncounterId && !!orderTypesData,
   });
 
   const translateOrderType = useCallback(
@@ -112,9 +89,10 @@ const InvestigationsForm: React.FC = React.memo(() => {
     ): boolean => {
       const isExistingInvestigation = existingServiceRequests?.some(
         (sr) =>
-          sr.conceptCode === investigationCode &&
-          sr.categoryUuid === categoryCode &&
-          sr.requesterUuid === currentPractitionerUuid,
+          sr.conceptCode.toLowerCase() === investigationCode.toLowerCase() &&
+          sr.categoryUuid.toLowerCase() === categoryCode.toLowerCase() &&
+          sr.requesterUuid.toLowerCase() ===
+            currentPractitionerUuid?.toLowerCase(),
       );
 
       const isSelectedInvestigation = isSelectedInCategory(
@@ -232,14 +210,25 @@ const InvestigationsForm: React.FC = React.memo(() => {
     }
 
     const mappedItems = investigations.map((item) => {
-      if (!selectedServiceRequests.has(item.category)) return item;
-      const selectedItemsInCategory = selectedServiceRequests.get(
-        item.category,
+      // Only check against current session selections for dropdown display
+      // Backend duplicates are handled via notification in handleChange
+      // Case-insensitive category lookup
+      const categoryLower = item.category.toLowerCase();
+      let selectedItemsInCategory;
+
+      for (const [key, value] of selectedServiceRequests) {
+        if (key.toLowerCase() === categoryLower) {
+          selectedItemsInCategory = value;
+          break;
+        }
+      }
+
+      if (!selectedItemsInCategory) return item;
+
+      const isAlreadySelected = selectedItemsInCategory.some(
+        (selectedItem) =>
+          selectedItem.id.toLowerCase() === item.code.toLowerCase(),
       );
-      const isAlreadySelected =
-        selectedItemsInCategory?.some(
-          (selectedItem) => selectedItem.id === item.code,
-        ) ?? false;
       return {
         ...item,
         display: isAlreadySelected

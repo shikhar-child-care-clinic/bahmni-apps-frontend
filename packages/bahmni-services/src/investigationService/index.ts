@@ -3,8 +3,10 @@ export {
   getOrderTypes,
   getCategoryUuidFromOrderTypes,
   getOrderTypeNames,
+  getExistingServiceRequestsForAllCategories,
 } from './investigationService';
 export {
+  type ExistingServiceRequest,
   type FlattenedInvestigations,
   type OrderType,
   type OrderTypeResponse,
