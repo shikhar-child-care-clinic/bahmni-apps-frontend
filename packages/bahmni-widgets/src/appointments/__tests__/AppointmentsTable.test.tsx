@@ -1,9 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { axe, toHaveNoViolations } from 'jest-axe';
 import { usePatientUUID } from '../../hooks/usePatientUUID';
 import { useNotification } from '../../notification';
 import AppointmentsTable from '../AppointmentsTable';
+
+expect.extend(toHaveNoViolations);
 
 jest.mock('../../hooks/usePatientUUID');
 jest.mock('../../notification');
@@ -629,6 +632,92 @@ describe('AppointmentsTable', () => {
       );
 
       expect(screen.getByTestId('appointments-table')).toBeInTheDocument();
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('should have no accessibility violations when rendering with upcoming appointments', async () => {
+      let callCount = 0;
+      mockUseQuery.mockImplementation((options: any) => {
+        callCount++;
+        if (callCount === 1) {
+          // First call is for upcoming
+          return {
+            data: [mockUpcomingAppointment],
+            isLoading: false,
+            isError: false,
+            error: null,
+            refetch: jest.fn(),
+            isFetching: false,
+            status: 'success',
+            fetchStatus: 'idle',
+          } as any;
+        }
+        // Second call is for past
+        return {
+          data: [mockPastAppointment],
+          isLoading: false,
+          isError: false,
+          error: null,
+          refetch: jest.fn(),
+          isFetching: false,
+          status: 'success',
+          fetchStatus: 'idle',
+        } as any;
+      });
+
+      const { container } = render(
+        <AppointmentsTable config={{}} episodeOfCareUuids={[]} />,
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it('should have no accessibility violations when rendering with error state', async () => {
+      mockUseQuery.mockImplementation(
+        () =>
+          ({
+            data: undefined,
+            isLoading: false,
+            isError: true,
+            error: new Error('Network error'),
+            refetch: jest.fn(),
+            isFetching: false,
+            status: 'error',
+            fetchStatus: 'idle',
+          }) as any,
+      );
+
+      const { container } = render(
+        <AppointmentsTable config={{}} episodeOfCareUuids={[]} />,
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it('should have no accessibility violations when rendering with empty state', async () => {
+      mockUseQuery.mockImplementation(
+        () =>
+          ({
+            data: [],
+            isLoading: false,
+            isError: false,
+            error: null,
+            refetch: jest.fn(),
+            isFetching: false,
+            status: 'success',
+            fetchStatus: 'idle',
+          }) as any,
+      );
+
+      const { container } = render(
+        <AppointmentsTable config={{}} episodeOfCareUuids={[]} />,
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
     });
   });
 });
