@@ -89,9 +89,10 @@ const InvestigationsForm: React.FC = React.memo(() => {
     ): boolean => {
       const isExistingInvestigation = existingServiceRequests?.some(
         (sr) =>
-          sr.conceptCode === investigationCode &&
-          sr.categoryUuid === categoryCode &&
-          sr.requesterUuid === currentPractitionerUuid,
+          sr.conceptCode.toLowerCase() === investigationCode.toLowerCase() &&
+          sr.categoryUuid.toLowerCase() === categoryCode.toLowerCase() &&
+          sr.requesterUuid.toLowerCase() ===
+            currentPractitionerUuid?.toLowerCase(),
       );
 
       const isSelectedInvestigation = isSelectedInCategory(
@@ -209,14 +210,25 @@ const InvestigationsForm: React.FC = React.memo(() => {
     }
 
     const mappedItems = investigations.map((item) => {
-      if (!selectedServiceRequests.has(item.category)) return item;
-      const selectedItemsInCategory = selectedServiceRequests.get(
-        item.category,
+      // Only check against current session selections for dropdown display
+      // Backend duplicates are handled via notification in handleChange
+      // Case-insensitive category lookup
+      const categoryLower = item.category.toLowerCase();
+      let selectedItemsInCategory;
+
+      for (const [key, value] of selectedServiceRequests) {
+        if (key.toLowerCase() === categoryLower) {
+          selectedItemsInCategory = value;
+          break;
+        }
+      }
+
+      if (!selectedItemsInCategory) return item;
+
+      const isAlreadySelected = selectedItemsInCategory.some(
+        (selectedItem) =>
+          selectedItem.id.toLowerCase() === item.code.toLowerCase(),
       );
-      const isAlreadySelected =
-        selectedItemsInCategory?.some(
-          (selectedItem) => selectedItem.id === item.code,
-        ) ?? false;
       return {
         ...item,
         display: isAlreadySelected

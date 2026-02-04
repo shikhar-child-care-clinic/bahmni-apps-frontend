@@ -134,8 +134,23 @@ export const useServiceRequestStore = create<ServiceRequestState>(
     getState: () => get(),
 
     isSelectedInCategory: (category: string, conceptCode: string): boolean => {
-      const selectedInCategory = get().selectedServiceRequests.get(category);
-      return selectedInCategory?.some((si) => si.id === conceptCode) ?? false;
+      // Case-insensitive category lookup
+      const categoryLower = category.toLowerCase();
+      const selectedServiceRequests = get().selectedServiceRequests;
+      let selectedInCategory: ServiceRequestInputEntry[] | undefined;
+
+      for (const [key, value] of selectedServiceRequests) {
+        if (key.toLowerCase() === categoryLower) {
+          selectedInCategory = value;
+          break;
+        }
+      }
+
+      return (
+        selectedInCategory?.some(
+          (si) => si.id.toLowerCase() === conceptCode.toLowerCase(),
+        ) ?? false
+      );
     },
   }),
 );
