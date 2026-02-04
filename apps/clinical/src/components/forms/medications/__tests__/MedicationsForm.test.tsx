@@ -1,3 +1,5 @@
+import { useNotification, usePatientUUID } from '@bahmni/widgets';
+import { useQuery } from '@tanstack/react-query';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Medication } from 'fhir/r4';
@@ -23,12 +25,32 @@ jest.mock('../../../../services/medicationService', () => ({
   ),
 }));
 
+// Mock @bahmni/widgets hooks
+jest.mock('@bahmni/widgets', () => ({
+  useNotification: jest.fn(),
+  usePatientUUID: jest.fn(),
+}));
+
+// Mock TanStack Query
+jest.mock('@tanstack/react-query', () => ({
+  useQuery: jest.fn(),
+}));
+
 // Mock CSS modules
 jest.mock('../styles/MedicationsForm.module.scss', () => ({
   medicationsFormTile: 'medicationsFormTile',
   medicationsFormTitle: 'medicationsFormTitle',
   medicationsBox: 'medicationsBox',
+  duplicateNotification: 'duplicateNotification',
 }));
+
+const mockUseNotification = useNotification as jest.MockedFunction<
+  typeof useNotification
+>;
+const mockUsePatientUUID = usePatientUUID as jest.MockedFunction<
+  typeof usePatientUUID
+>;
+const mockUseQuery = useQuery as jest.MockedFunction<typeof useQuery>;
 
 // Mock data
 const mockMedication: Medication = {
@@ -138,6 +160,19 @@ describe('MedicationsForm', () => {
     (useMedicationSearch as jest.Mock).mockReturnValue(
       mockMedicationSearchHook,
     );
+
+    // Mock @bahmni/widgets hooks
+    mockUseNotification.mockReturnValue({
+      addNotification: jest.fn(),
+    } as ReturnType<typeof useNotification>);
+    mockUsePatientUUID.mockReturnValue('patient-uuid-123');
+
+    // Mock TanStack Query for existing medications
+    mockUseQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useQuery>);
   });
 
   // HAPPY PATH TESTS
