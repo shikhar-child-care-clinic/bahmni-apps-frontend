@@ -3,10 +3,11 @@ import {
   TooltipIcon,
   SortableDataTable,
   Link,
+  Modal,
 } from '@bahmni/design-system';
 import { useTranslation, getDiagnosticReportBundle } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { FormattedLabInvestigations, LabInvestigationPriority } from './models';
 import styles from './styles/LabInvestigation.module.scss';
 import { mapDiagnosticReportBundleToTestResults } from './utils';
@@ -24,6 +25,7 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
   reportId,
 }) => {
   const { t } = useTranslation();
+  const [isAttachmentsModalOpen, setIsAttachmentsModalOpen] = useState(false);
 
   const {
     data: diagnosticReportBundle,
@@ -141,6 +143,11 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
     );
   };
 
+  const hasAttachments =
+    test.testType === 'Panel' &&
+    test.attachments &&
+    test.attachments.length > 0;
+
   return (
     <div className={styles.labTest}>
       <div className={styles.labTestHeader}>
@@ -150,6 +157,14 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
             <span className={styles.testDetails}>
               {t(`LAB_TEST_${test.testType.toUpperCase()}`)}
             </span>
+          )}
+          {hasAttachments && (
+            <Link
+              onClick={() => setIsAttachmentsModalOpen(true)}
+              className={styles.viewAttachmentsLink}
+            >
+              {t('LAB_TEST_VIEW_ATTACHMENT')}
+            </Link>
           )}
           {test.note && (
             <TooltipIcon
@@ -169,6 +184,39 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
         </span>
       </div>
       {renderTestResults()}
+
+      {/* Attachments Modal */}
+      {hasAttachments && (
+        <Modal
+          open={isAttachmentsModalOpen}
+          onRequestClose={() => setIsAttachmentsModalOpen(false)}
+          passiveModal
+          modalHeading={t('LAB_TEST_ATTACHMENTS')}
+          testId="attachments-modal"
+        >
+          <Modal.Body>
+            <ul className={styles.attachmentsList}>
+              {test.attachments!.map((attachment, index) => (
+                <li key={attachment.id || index}>
+                  <Link
+                    href={attachment.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {attachment.id || `Attachment ${index + 1}`}
+                  </Link>
+                  {attachment.contentType && (
+                    <span className={styles.attachmentType}>
+                      {' '}
+                      ({attachment.contentType})
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Modal.Body>
+        </Modal>
+      )}
     </div>
   );
 };

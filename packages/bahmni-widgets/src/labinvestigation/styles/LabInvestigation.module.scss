@@ -86,3 +86,28 @@
     border-block-start: none !important;
   }
 }
+
+.viewAttachmentsLink {
+  margin-inline-start: $spacing-02;
+}
+
+.attachmentsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  li {
+    padding: $spacing-03 0;
+    border-bottom: 1px solid $border-subtle;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.attachmentType {
+  @include type-style("caption-01");
+  color: $text-secondary;
+  margin-inline-start: $spacing-02;
+}

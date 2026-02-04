@@ -166,6 +166,7 @@
   "LAB_TEST_RESULTS_PENDING": "Resultados pendientes",
   "LAB_TEST_UNAVAILABLE": "No se registraron pruebas de laboratorio",
   "LAB_TEST_URGENT": "Urgente",
+  "LAB_TEST_ATTACHMENTS": "Adjunto",
   "LAB_TEST_VIEW_ATTACHMENT": "Ver adjunto",
   "LOADING_CLINICAL_CONFIG": "Cargando configuración clínica...",
   "LOADING_CONCEPTS": "Cargando conceptos...",
