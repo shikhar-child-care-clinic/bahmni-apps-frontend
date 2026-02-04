@@ -612,7 +612,8 @@ describe('Lab Investigation Utils', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].TestName).toBe('Hemoglobin');
-      expect(result[0].Result).toBe('14.5 g/dL');
+      expect(result[0].value).toBe('14.5');
+      expect(result[0].unit).toBe('g/dL');
       expect(result[0].referenceRange).toBe('12 - 16 g/dL');
     });
 
@@ -632,7 +633,8 @@ describe('Lab Investigation Utils', () => {
         mockTranslate,
       );
 
-      expect(result[0].Result).toBe('O+');
+      expect(result[0].value).toBe('O+');
+      expect(result[0].unit).toBe('');
     });
 
     it('should handle boolean values - true as Positive', () => {
@@ -651,7 +653,8 @@ describe('Lab Investigation Utils', () => {
         mockTranslate,
       );
 
-      expect(result[0].Result).toBe('Positive');
+      expect(result[0].value).toBe('Positive');
+      expect(result[0].unit).toBe('');
     });
 
     it('should handle boolean values - false as Negative', () => {
@@ -670,7 +673,8 @@ describe('Lab Investigation Utils', () => {
         mockTranslate,
       );
 
-      expect(result[0].Result).toBe('Negative');
+      expect(result[0].value).toBe('Negative');
+      expect(result[0].unit).toBe('');
     });
 
     it('should handle integer values', () => {
@@ -689,7 +693,8 @@ describe('Lab Investigation Utils', () => {
         mockTranslate,
       );
 
-      expect(result[0].Result).toBe('8500');
+      expect(result[0].value).toBe('8500');
+      expect(result[0].unit).toBe('');
     });
 
     it('should handle CodeableConcept text values', () => {
@@ -710,7 +715,8 @@ describe('Lab Investigation Utils', () => {
         mockTranslate,
       );
 
-      expect(result[0].Result).toBe('Abnormal');
+      expect(result[0].value).toBe('Abnormal');
+      expect(result[0].unit).toBe('');
     });
   });
 

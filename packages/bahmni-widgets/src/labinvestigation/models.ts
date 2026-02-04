@@ -24,7 +24,8 @@ export interface LabInvestigationsByDate {
 export interface LabTestResult {
   status: string;
   TestName: string;
-  Result: string;
+  value: string;
+  unit: string;
   referenceRange: string;
   reportedOn: string;
   actions: string;

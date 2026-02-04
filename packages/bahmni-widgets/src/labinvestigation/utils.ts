@@ -247,22 +247,22 @@ export function formatObservationsAsLabTestResults(
 
     // Determine result value with unit
     // FHIR Observation.value[x] handled types: valueQuantity, valueCodeableConcept,valueString, valueBoolean, valueInteger
-    let result = '';
+    let value = '';
+    let unit = '';
     if (obs.valueQuantity?.value !== undefined) {
       // Quantitative result with optional unit (e.g., "5.8 mmol/L")
-      const value = obs.valueQuantity.value.toString();
-      const unit = obs.valueQuantity.unit ?? '';
-      result = unit ? `${value} ${unit}` : value;
+      value = obs.valueQuantity.value.toString();
+      unit = obs.valueQuantity.unit ?? '';
     } else if (obs.valueBoolean !== undefined) {
-      result = obs.valueBoolean ? 'Positive' : 'Negative';
+      value = obs.valueBoolean ? 'Positive' : 'Negative';
     } else if (obs.valueInteger !== undefined) {
-      result = obs.valueInteger.toString();
+      value = obs.valueInteger.toString();
     } else if (obs.valueString) {
-      result = obs.valueString;
+      value = obs.valueString;
     } else if (obs.valueCodeableConcept?.text) {
-      result = obs.valueCodeableConcept.text;
+      value = obs.valueCodeableConcept.text;
     } else if (obs.valueCodeableConcept?.coding?.[0]?.display) {
-      result = obs.valueCodeableConcept.coding[0].display;
+      value = obs.valueCodeableConcept.coding[0].display;
     }
 
     //TODO: test when api returns referenceRange.
@@ -294,7 +294,8 @@ export function formatObservationsAsLabTestResults(
     return {
       status: obs.status || '',
       TestName: testName,
-      Result: result,
+      value,
+      unit,
       referenceRange,
       reportedOn,
       actions: '', // Actions are typically not part of the observation resource

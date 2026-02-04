@@ -35,10 +35,19 @@
   text-transform: capitalize;
 }
 
-.abnormalResult {
-  @include type-style("body-compact-01");
+.resultUnit {
+  @include type-style("caption-01");
+  color: $text-secondary;
+}
+
+.abnormalResultValue {
   color: $text-error;
   font-weight: 700;
+}
+
+.abnormalResultUnit {
+  @include type-style("caption-01");
+  color: $support-error;
 }
 
 .testDetails {

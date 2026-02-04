@@ -50,7 +50,8 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
     return testResults.map((result, index) => ({
       id: `${test.id}-${index}`,
       testName: result.TestName,
-      result: result.Result,
+      value: result.value,
+      unit: result.unit,
       referenceRange: result.referenceRange,
       reportedOn: result.reportedOn,
       status: result.status,
@@ -76,10 +77,28 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
       case 'testName':
         return <span className={styles.testName}>{row.testName || '--'}</span>;
       case 'result':
-        return (
-          <span className={isAbnormal ? styles.abnormalResult : undefined}>
-            {row.result || '--'}
-          </span>
+        return row.value ? (
+          <>
+            <span
+              className={
+                isAbnormal ? styles.abnormalResultValue : styles.resultValue
+              }
+            >
+              {row.value}
+            </span>
+            {row.unit && (
+              <span
+                className={
+                  isAbnormal ? styles.abnormalResultUnit : styles.resultUnit
+                }
+              >
+                {' '}
+                {row.unit}
+              </span>
+            )}
+          </>
+        ) : (
+          '--'
         );
       case 'referenceRange':
         return row.referenceRange || '--';
