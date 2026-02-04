@@ -294,38 +294,48 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
         <TabPanels>
           {/* Tab 1: Upcoming Appointments (from SQL endpoint - already filtered) */}
           <TabPanel className={styles.appointmentTabs}>
-            <SortableDataTable
-              headers={headers}
-              ariaLabel={t('APPOINTMENTS_TABLE_ARIA_LABEL')}
-              rows={
-                formattedUpcomingAppointments as unknown as Array<
-                  Record<string, unknown>
-                >
-              }
-              loading={upcomingLoading}
-              sortable={sortable}
-              emptyStateMessage={t('NO_UPCOMING_APPOINTMENTS')}
-              renderCell={renderCell}
-              className={styles.appointmentsTableBody}
-            />
+            {formattedUpcomingAppointments.length > 0 ? (
+              <SortableDataTable
+                headers={headers}
+                ariaLabel={t('APPOINTMENTS_TABLE_ARIA_LABEL')}
+                rows={
+                  formattedUpcomingAppointments as unknown as Array<
+                    Record<string, unknown>
+                  >
+                }
+                loading={upcomingLoading}
+                sortable={sortable}
+                renderCell={renderCell}
+                className={styles.appointmentsTableBody}
+              />
+            ) : (
+              <p className={styles.appointmentTableEmpty}>
+                {t('DASHBOARD_NO_UPCOMING_APPOINTMENTS_KEY')}
+              </p>
+            )}
           </TabPanel>
 
           {/* Tab 2: Past Appointments (simple table view, same as upcoming) */}
           <TabPanel className={styles.appointmentTabs}>
-            <SortableDataTable
-              headers={headers}
-              ariaLabel={t('APPOINTMENTS_TABLE_ARIA_LABEL')}
-              rows={
-                formattedPastAppointments as unknown as Array<
-                  Record<string, unknown>
-                >
-              }
-              loading={pastLoading}
-              sortable={sortable}
-              emptyStateMessage={t('NO_APPOINTMENT_HISTORY')}
-              renderCell={renderCell}
-              className={styles.appointmentsTableBody}
-            />
+            {formattedPastAppointments.length > 0 ? (
+              <SortableDataTable
+                headers={headers}
+                ariaLabel={t('APPOINTMENTS_TABLE_ARIA_LABEL')}
+                rows={
+                  formattedPastAppointments as unknown as Array<
+                    Record<string, unknown>
+                  >
+                }
+                loading={pastLoading}
+                sortable={sortable}
+                renderCell={renderCell}
+                className={styles.appointmentsTableBody}
+              />
+            ) : (
+              <p className={styles.appointmentTableEmpty}>
+                {t('DASHBOARD_NO_PAST_APPOINTMENTS_KEY')}
+              </p>
+            )}
           </TabPanel>
         </TabPanels>
       </Tabs>
