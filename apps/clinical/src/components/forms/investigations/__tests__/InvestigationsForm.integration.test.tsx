@@ -16,6 +16,13 @@ jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   getFlattenedInvestigations: jest.fn(),
   getFormattedError: jest.fn(),
+  getOrderTypes: jest.fn().mockResolvedValue({
+    results: [
+      { uuid: 'LAB', display: 'Lab Order', conceptClasses: [] },
+      { uuid: 'RAD', display: 'Radiology Order', conceptClasses: [] },
+      { uuid: 'PROC', display: 'Procedure Order', conceptClasses: [] },
+    ],
+  }),
   getExistingServiceRequestsForAllCategories: jest.fn().mockResolvedValue([]),
 }));
 

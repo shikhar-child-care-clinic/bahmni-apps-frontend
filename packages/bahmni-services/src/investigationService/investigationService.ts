@@ -127,13 +127,13 @@ export const getOrderTypeNames = async (): Promise<string[]> => {
 };
 
 export const getExistingServiceRequestsForAllCategories = async (
+  orderTypes: OrderType[],
   patientUUID: string,
   encounterUuids?: string[],
 ): Promise<ExistingServiceRequest[]> => {
-  const orderTypesData = await getOrderTypes();
   const results: ExistingServiceRequest[] = [];
 
-  for (const orderType of orderTypesData.results) {
+  for (const orderType of orderTypes) {
     const categoryUuid = orderType.uuid;
     if (categoryUuid) {
       const bundle = await getServiceRequests(

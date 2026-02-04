@@ -25,6 +25,13 @@ jest.mock('../../../../stores/serviceRequestStore');
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
+  getOrderTypes: jest.fn().mockResolvedValue({
+    results: [
+      { uuid: 'lab', display: 'Lab Order', conceptClasses: [] },
+      { uuid: 'rad', display: 'Radiology Order', conceptClasses: [] },
+      { uuid: 'proc', display: 'Procedure Order', conceptClasses: [] },
+    ],
+  }),
   getExistingServiceRequestsForAllCategories: jest.fn().mockResolvedValue([]),
 }));
 

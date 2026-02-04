@@ -7,7 +7,9 @@ import {
 } from '@bahmni/design-system';
 import {
   useTranslation,
+  getOrderTypes,
   getExistingServiceRequestsForAllCategories,
+  ORDER_TYPE_QUERY_KEY,
 } from '@bahmni/services';
 import { usePatientUUID, useActivePractitioner } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
@@ -52,14 +54,22 @@ const InvestigationsForm: React.FC = React.memo(() => {
     isSelectedInCategory,
   } = useServiceRequestStore();
 
+  // Static query for order types - cached globally, doesn't re-fetch when encounter changes
+  const { data: orderTypesData } = useQuery({
+    queryKey: [ORDER_TYPE_QUERY_KEY],
+    queryFn: getOrderTypes,
+  });
+
+  // Dynamic query for existing service requests - only re-fetches when patient/encounter changes
   const { data: existingServiceRequests } = useQuery({
     queryKey: ['existingServiceRequests', patientUUID, currentEncounterId],
     queryFn: () =>
       getExistingServiceRequestsForAllCategories(
+        orderTypesData!.results,
         patientUUID!,
         currentEncounterId ? [currentEncounterId] : undefined,
       ),
-    enabled: !!patientUUID && !!currentEncounterId,
+    enabled: !!patientUUID && !!currentEncounterId && !!orderTypesData,
   });
 
   const translateOrderType = useCallback(
