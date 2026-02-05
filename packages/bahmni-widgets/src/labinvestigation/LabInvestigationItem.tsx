@@ -8,6 +8,7 @@ import {
 import { useTranslation, getDiagnosticReportBundle } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import React, { useMemo, useState } from 'react';
+import AttachmentViewer from './AttachmentViewer';
 import { FormattedLabInvestigations, LabInvestigationPriority } from './models';
 import styles from './styles/LabInvestigation.module.scss';
 import { mapDiagnosticReportBundleToTestResults } from './utils';
@@ -149,7 +150,7 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
               onClick={() => setIsAttachmentsModalOpen(true)}
               className={styles.viewAttachmentsLink}
             >
-              {t('LAB_TEST_VIEW_ATTACHMENT')}
+              {t('LAB_TEST_VIEW_ATTACHMENT')} ({test.attachments!.length})
             </Link>
           )}
           {test.note && (
@@ -171,35 +172,26 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
       </div>
       {renderTestResults()}
 
-      {/* Attachments Modal */}
       {hasAttachments && (
         <Modal
           open={isAttachmentsModalOpen}
           onRequestClose={() => setIsAttachmentsModalOpen(false)}
           passiveModal
-          modalHeading={t('LAB_TEST_ATTACHMENTS')}
+          modalHeading={`${t('LAB_TEST_VIEW_ATTACHMENT')} (${test.attachments!.length})`}
           testId="attachments-modal"
+          size="lg"
         >
           <Modal.Body>
-            <ul className={styles.attachmentsList}>
+            <div className={styles.attachmentsContainer}>
               {test.attachments!.map((attachment, index) => (
-                <li key={attachment.id || index}>
-                  <Link
-                    href={attachment.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {attachment.id || `Attachment ${index + 1}`}
-                  </Link>
-                  {attachment.contentType && (
-                    <span className={styles.attachmentType}>
-                      {' '}
-                      ({attachment.contentType})
-                    </span>
-                  )}
-                </li>
+                <AttachmentViewer
+                  key={attachment.id || index}
+                  attachment={attachment}
+                  index={index + 1}
+                  totalCount={test.attachments!.length}
+                />
               ))}
-            </ul>
+            </div>
           </Modal.Body>
         </Modal>
       )}
