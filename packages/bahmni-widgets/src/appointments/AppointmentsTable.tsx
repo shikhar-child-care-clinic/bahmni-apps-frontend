@@ -250,12 +250,12 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
           return row.appointmentTime ?? '-';
         case 'status':
           return (
-            <span
-              className={getAppointmentStatusClassName(row.status)}
+            <div
+              className={`${styles.statusChip} ${getAppointmentStatusClassName(row.status)}`}
               data-testid={`appointment-status-${row.uuid}`}
             >
               {t(getAppointmentStatusKey(row.status))}
-            </span>
+            </div>
           );
         case 'provider':
           return row.provider?.name ?? t('APPOINTMENTS_TABLE_NOT_AVAILABLE');
