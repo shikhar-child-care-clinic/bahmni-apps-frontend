@@ -33,6 +33,58 @@ jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   post: jest.fn(),
 }));
+jest.mock('@bahmni/form2-controls', () => ({
+  transformToFhir: jest.fn().mockImplementation((observations: any[]) => {
+    let idCounter = 0;
+
+    const processObservations = (obs: any[]): any[] => {
+      const localResults: any[] = [];
+
+      obs.forEach((o) => {
+        const currentId = `mock-id-${idCounter++}`;
+        const currentFullUrl = `urn:uuid:${currentId}`;
+
+        if (o.groupMembers && o.groupMembers.length > 0) {
+          const memberResults = processObservations(o.groupMembers);
+          localResults.push(...memberResults);
+
+          const parentObservation: Observation = {
+            resourceType: 'Observation',
+            id: currentId,
+            status: 'final',
+            code: { coding: [{ code: o.concept?.uuid }] },
+            hasMember: memberResults.map((m) => ({
+              reference: m.fullUrl,
+              type: 'Observation',
+            })) as any[],
+          };
+
+          localResults.push({
+            resource: parentObservation,
+            fullUrl: currentFullUrl,
+          });
+        } else {
+          const childObservation: Observation = {
+            resourceType: 'Observation',
+            id: currentId,
+            status: 'final',
+            code: { coding: [{ code: o.concept?.uuid }] },
+          };
+
+          localResults.push({
+            resource: childObservation,
+            fullUrl: currentFullUrl,
+          });
+        }
+      });
+
+      return localResults;
+    };
+
+    return processObservations(observations);
+  }),
+}));
+
 
 describe('consultationBundleService', () => {
   afterAll(() => {

@@ -1,4 +1,3 @@
-import { transformToFhir } from '@bahmni/form2-controls';
 import {
   ConditionInputEntry,
   DiagnosisInputEntry,
@@ -20,6 +19,7 @@ import {
 } from '../utils/fhir/conditionResourceCreator';
 import { createBundleEntry } from '../utils/fhir/consultationBundleCreator';
 import { createMedicationRequestResource } from '../utils/fhir/medicationRequestResourceCreator';
+import { createObservationResources } from '../utils/fhir/observationResourceCreator';
 import {
   createPractitionerReference,
   createEncounterReferenceFromString,
@@ -372,7 +372,6 @@ export function createMedicationRequestEntries({
 
 /**
  * Creates bundle entries for observations from observation forms as part of consultation bundle
- * Uses transformToFhir function from form2-controls library for FHIR transformation.
  * @param params - Parameters required for creating observation bundle entries
  * @returns Array of BundleEntry for observations
  * @throws Error with specific message key for translation
@@ -409,22 +408,20 @@ export function createObservationBundleEntries({
       continue;
     }
 
-    // Create FHIR Observation resources using form2-controls transformer
-    // Returns array of { resource, fullUrl } objects
-    const observationResults = transformToFhir(observations, {
-      patientReference: encounterSubject as any,
-      encounterReference: createEncounterReferenceFromString(
-        encounterReference,
-      ) as any,
-      performerReference: createPractitionerReference(practitionerUUID) as any,
-    });
+    // Create FHIR Observation resources from the observation payloads
+    const observationResults = createObservationResources(
+      observations,
+      encounterSubject,
+      createEncounterReferenceFromString(encounterReference),
+      createPractitionerReference(practitionerUUID),
+    );
 
     // Create bundle entries for each observation resource
     // Use the pre-generated fullUrl so hasMember references work correctly
     for (const result of observationResults) {
       const observationBundleEntry = createBundleEntry(
         result.fullUrl,
-        result.resource as any,
+        result.resource,
         'POST',
       );
       observationEntries.push(observationBundleEntry);
