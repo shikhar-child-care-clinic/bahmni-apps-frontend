@@ -64,7 +64,6 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
       { key: 'result', header: t('LAB_TEST_RESULT') },
       { key: 'referenceRange', header: t('LAB_TEST_REFERENCE_RANGE') },
       { key: 'reportedOn', header: t('LAB_TEST_REPORTED_ON') },
-      { key: 'actions', header: t('LAB_TEST_ACTIONS') },
     ],
     [t],
   );
@@ -103,16 +102,6 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
         return row.referenceRange || '--';
       case 'reportedOn':
         return row.reportedOn || '--';
-      case 'actions':
-        return (
-          <Link
-            onClick={() => {
-              // TODO: Implement attachment view logic
-            }}
-          >
-            {t('LAB_TEST_VIEW_ATTACHMENT')}
-          </Link>
-        );
       default:
         return undefined;
     }
@@ -143,10 +132,7 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
     );
   };
 
-  const hasAttachments =
-    test.testType === 'Panel' &&
-    test.attachments &&
-    test.attachments.length > 0;
+  const hasAttachments = test.attachments && test.attachments.length > 0;
 
   return (
     <div className={styles.labTest}>
