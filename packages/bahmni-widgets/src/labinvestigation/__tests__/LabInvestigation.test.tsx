@@ -477,8 +477,6 @@ describe('LabInvestigation', () => {
 
   describe('consultation saved event subscription', () => {
     it('registers consultation saved event listener', async () => {
-      mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
-
       render(renderLabInvestigations());
 
       await waitFor(() => {
@@ -492,16 +490,14 @@ describe('LabInvestigation', () => {
         eventCallback = callback;
       });
 
-      mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
-
       render(renderLabInvestigations({ orderType: 'Lab Order' }));
 
       await waitFor(() => {
-        expect(screen.getByText('05/08/2025')).toBeInTheDocument();
+        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
       });
 
       // Clear the mock to track new calls
-      mockGetPatientLabInvestigations.mockClear();
+      mockGetLabInvestigationsBundle.mockClear();
 
       // Trigger the event with matching category
       eventCallback({
@@ -516,7 +512,7 @@ describe('LabInvestigation', () => {
 
       // Verify refetch was triggered (getPatientLabInvestigations called again)
       await waitFor(() => {
-        expect(mockGetPatientLabInvestigations).toHaveBeenCalled();
+        expect(mockGetLabInvestigationsBundle).toHaveBeenCalled();
       });
     });
 
@@ -526,16 +522,14 @@ describe('LabInvestigation', () => {
         eventCallback = callback;
       });
 
-      mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
-
       render(renderLabInvestigations({ orderType: 'Lab Order' }));
 
       await waitFor(() => {
-        expect(screen.getByText('05/08/2025')).toBeInTheDocument();
+        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
       });
 
       // Clear the mock to track new calls
-      mockGetPatientLabInvestigations.mockClear();
+      mockGetLabInvestigationsBundle.mockClear();
 
       // Trigger event for different patient
       eventCallback({
@@ -552,7 +546,7 @@ describe('LabInvestigation', () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify refetch was NOT triggered
-      expect(mockGetPatientLabInvestigations).not.toHaveBeenCalled();
+      expect(mockGetLabInvestigationsBundle).not.toHaveBeenCalled();
     });
 
     it('does not refetch when different category was updated', async () => {
@@ -561,16 +555,14 @@ describe('LabInvestigation', () => {
         eventCallback = callback;
       });
 
-      mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
-
       render(renderLabInvestigations({ orderType: 'Lab Order' }));
 
       await waitFor(() => {
-        expect(screen.getByText('05/08/2025')).toBeInTheDocument();
+        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
       });
 
       // Clear the mock to track new calls
-      mockGetPatientLabInvestigations.mockClear();
+      mockGetLabInvestigationsBundle.mockClear();
 
       // Trigger event with different category
       eventCallback({
@@ -587,7 +579,7 @@ describe('LabInvestigation', () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify refetch was NOT triggered
-      expect(mockGetPatientLabInvestigations).not.toHaveBeenCalled();
+      expect(mockGetLabInvestigationsBundle).not.toHaveBeenCalled();
     });
 
     it('does not refetch when serviceRequests is empty', async () => {
@@ -596,16 +588,14 @@ describe('LabInvestigation', () => {
         eventCallback = callback;
       });
 
-      mockGetPatientLabInvestigations.mockResolvedValue(mockFormattedLabTests);
-
       render(renderLabInvestigations({ orderType: 'Lab Order' }));
 
       await waitFor(() => {
-        expect(screen.getByText('05/08/2025')).toBeInTheDocument();
+        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
       });
 
       // Clear the mock to track new calls
-      mockGetPatientLabInvestigations.mockClear();
+      mockGetLabInvestigationsBundle.mockClear();
 
       // Trigger event with empty serviceRequests
       eventCallback({
@@ -622,7 +612,7 @@ describe('LabInvestigation', () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify refetch was NOT triggered
-      expect(mockGetPatientLabInvestigations).not.toHaveBeenCalled();
+      expect(mockGetLabInvestigationsBundle).not.toHaveBeenCalled();
     });
   });
 });
