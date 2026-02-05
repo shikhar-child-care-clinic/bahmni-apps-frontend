@@ -56,16 +56,10 @@ describe('AttachmentViewer', () => {
       };
 
       render(
-        <AttachmentViewer
-          attachment={pdfUpperCase}
-          index={1}
-          totalCount={1}
-        />,
+        <AttachmentViewer attachment={pdfUpperCase} index={1} totalCount={1} />,
       );
 
-      const iframe = screen.getByTitle(
-        'attachment-pdf-1',
-      ) as HTMLIFrameElement;
+      const iframe = screen.getByTitle('attachment-pdf-1') as HTMLIFrameElement;
       expect(iframe.src).toContain('#toolbar=0');
     });
   });
@@ -95,7 +89,9 @@ describe('AttachmentViewer', () => {
       );
 
       const img = screen.getByAltText('attachment-img-1') as HTMLImageElement;
-      expect(img.src).toContain(`${ATTACHMENTS_BASE_URL}${mockImageAttachment.url}`);
+      expect(img.src).toContain(
+        `${ATTACHMENTS_BASE_URL}${mockImageAttachment.url}`,
+      );
     });
 
     it('handles different image content types', () => {
@@ -211,7 +207,8 @@ describe('AttachmentViewer', () => {
       const docAttachment: Attachment = {
         id: 'attachment-doc-1',
         url: 'path/to/document.docx',
-        contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        contentType:
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       };
 
       render(
@@ -277,7 +274,9 @@ describe('AttachmentViewer', () => {
       );
 
       const img = screen.getByAltText('attachment-img-1') as HTMLImageElement;
-      expect(img.src).toContain('/openmrs/auth?requested_document=/uploaded_results/');
+      expect(img.src).toContain(
+        '/openmrs/auth?requested_document=/uploaded_results/',
+      );
       expect(img.src).toContain(mockImageAttachment.url);
     });
 
@@ -291,7 +290,9 @@ describe('AttachmentViewer', () => {
       );
 
       const iframe = screen.getByTitle('attachment-pdf-1') as HTMLIFrameElement;
-      expect(iframe.src).toContain('/openmrs/auth?requested_document=/uploaded_results/');
+      expect(iframe.src).toContain(
+        '/openmrs/auth?requested_document=/uploaded_results/',
+      );
       expect(iframe.src).toContain(mockPDFAttachment.url);
     });
 
@@ -312,7 +313,9 @@ describe('AttachmentViewer', () => {
 
       const iframe = screen.getByTitle('attachment-doc-1') as HTMLIFrameElement;
       expect(iframe.src).not.toContain('#toolbar=0');
-      expect(iframe.src).toContain(`${ATTACHMENTS_BASE_URL}${docAttachment.url}`);
+      expect(iframe.src).toContain(
+        `${ATTACHMENTS_BASE_URL}${docAttachment.url}`,
+      );
     });
   });
 });

@@ -299,9 +299,7 @@ describe('LabInvestigationItem', () => {
         />,
       );
 
-      expect(
-        screen.queryByText(/View Attachment/i),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText(/View Attachment/i)).not.toBeInTheDocument();
     });
 
     it('shows view attachments link with count when attachments exist', () => {
@@ -355,16 +353,14 @@ describe('LabInvestigationItem', () => {
         />,
       );
 
-      const viewAttachmentsLink = container.querySelector('.viewAttachmentsLink');
+      const viewAttachmentsLink = container.querySelector(
+        '.viewAttachmentsLink',
+      );
       expect(viewAttachmentsLink).toBeInTheDocument();
       await user.click(viewAttachmentsLink!);
 
-      expect(
-        screen.getByTestId('attachments-modal'),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId('attachments-modal')).toBeInTheDocument();
     });
-
-    
 
     it('displays modal with correct heading and attachment count', async () => {
       const user = userEvent.setup();
@@ -397,7 +393,9 @@ describe('LabInvestigationItem', () => {
         />,
       );
 
-      const viewAttachmentsLink = container.querySelector('.viewAttachmentsLink');
+      const viewAttachmentsLink = container.querySelector(
+        '.viewAttachmentsLink',
+      );
       expect(viewAttachmentsLink).toBeInTheDocument();
       await user.click(viewAttachmentsLink!);
 
@@ -432,7 +430,9 @@ describe('LabInvestigationItem', () => {
         />,
       );
 
-      const viewAttachmentsLink = container.querySelector('.viewAttachmentsLink');
+      const viewAttachmentsLink = container.querySelector(
+        '.viewAttachmentsLink',
+      );
       expect(viewAttachmentsLink).toBeInTheDocument();
       await user.click(viewAttachmentsLink!);
 
