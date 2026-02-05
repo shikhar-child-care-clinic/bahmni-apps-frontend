@@ -1,4 +1,7 @@
-import { formatDateTime } from '@bahmni/services';
+import {
+  formatDateTime,
+  FHIR_OBSERVATION_COMPLEX_DATA_URL,
+} from '@bahmni/services';
 import { Observation, Bundle, Encounter, Reference } from 'fhir/r4';
 import {
   EncounterDetails,
@@ -204,6 +207,20 @@ function extractObservationValue(
       type: 'integer',
       isAbnormal,
     };
+  }
+
+  // Extract value from extension.valueAttachment for complex observations (images/videos)
+  if (observation.extension?.length) {
+    const complexDataExtension = observation.extension.find(
+      (ext) => ext.url === FHIR_OBSERVATION_COMPLEX_DATA_URL,
+    );
+    if (complexDataExtension?.valueAttachment?.url) {
+      return {
+        value: complexDataExtension.valueAttachment.url,
+        type: 'attachment',
+        isAbnormal,
+      };
+    }
   }
 
   return undefined;

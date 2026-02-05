@@ -810,3 +810,53 @@ export const mockObservationWithoutObservationValue = {
   display: 'Notes Only',
   observationValue: undefined,
 };
+
+export const mockBundleWithValueAttachment: Bundle<Observation | Encounter> = {
+  resourceType: 'Bundle',
+  type: 'searchset',
+  entry: [
+    {
+      resource: {
+        resourceType: 'Encounter',
+        id: 'enc-1',
+        status: 'finished',
+        class: { code: 'AMB' },
+        period: { start: '2026-01-19T10:00:00+00:00' },
+      },
+    },
+    {
+      resource: {
+        resourceType: 'Observation',
+        id: 'obs-image',
+        status: 'final',
+        code: { text: 'Examination Image' },
+        encounter: { reference: 'Encounter/enc-1' },
+        extension: [
+          {
+            url: 'http://fhir.bahmni.org/ext/observation/complex-data',
+            valueAttachment: {
+              url: '100/72-Consultation-image.jpg',
+            },
+          },
+        ],
+      },
+    },
+    {
+      resource: {
+        resourceType: 'Observation',
+        id: 'obs-video',
+        status: 'final',
+        code: { text: 'Examination Video' },
+        encounter: { reference: 'Encounter/enc-1' },
+        extension: [
+          {
+            url: 'http://fhir.bahmni.org/ext/observation/complex-data',
+            valueAttachment: {
+              url: '100/72-Consultation-video.mp4',
+            },
+          },
+        ],
+      },
+    },
+  ],
+};

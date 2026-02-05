@@ -31,7 +31,8 @@ export interface ObservationValue {
     | 'time'
     | 'dateTime'
     | 'period'
-    | 'sampledData';
+    | 'sampledData'
+    | 'attachment';
   referenceRange?: ReferenceRange;
   isAbnormal?: boolean;
 }

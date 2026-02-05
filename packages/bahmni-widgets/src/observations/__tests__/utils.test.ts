@@ -28,6 +28,7 @@ import {
   mockObservationWithEmptyReferenceRange,
   mockObservationWithNoUnits,
   mockObservationWithoutObservationValue,
+  mockBundleWithValueAttachment,
 } from '../__mocks__/observationTestData';
 import { ExtractedObservation, EncounterDetails } from '../models';
 import {
@@ -267,6 +268,30 @@ describe('observationUtils', () => {
       const result = extractObservationsFromBundle(bundle);
       expect(result.observations[0].observationValue?.value).toBe(5);
       expect(result.observations[0].observationValue?.type).toBe('integer');
+    });
+
+    it('should extract observation with valueAttachment in extension', () => {
+      const result = extractObservationsFromBundle(
+        mockBundleWithValueAttachment,
+      );
+
+      expect(result.observations).toHaveLength(2);
+
+      // Test image with valueAttachment
+      expect(result.observations[0].display).toBe('Examination Image');
+      expect(result.observations[0].observationValue?.value).toBe(
+        '100/72-Consultation-image.jpg',
+      );
+      expect(result.observations[0].observationValue?.type).toBe('attachment');
+      expect(result.observations[0].observationValue?.isAbnormal).toBe(false);
+
+      // Test video with valueAttachment
+      expect(result.observations[1].display).toBe('Examination Video');
+      expect(result.observations[1].observationValue?.value).toBe(
+        '100/72-Consultation-video.mp4',
+      );
+      expect(result.observations[1].observationValue?.type).toBe('attachment');
+      expect(result.observations[1].observationValue?.isAbnormal).toBe(false);
     });
   });
 
