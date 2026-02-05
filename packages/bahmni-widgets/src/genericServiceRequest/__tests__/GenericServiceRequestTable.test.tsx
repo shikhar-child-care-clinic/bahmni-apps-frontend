@@ -254,7 +254,9 @@ describe('GenericServiceRequestTable', () => {
         },
       );
 
-      expect(screen.getByTestId('sortable-table-skeleton')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('generic-service-request-table-skeleton'),
+      ).toBeInTheDocument();
     });
 
     it('renders loading state while fetching service requests', async () => {
@@ -271,7 +273,7 @@ describe('GenericServiceRequestTable', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByTestId('sortable-table-skeleton'),
+          screen.getByTestId('generic-service-request-table-skeleton'),
         ).toBeInTheDocument();
       });
     });
@@ -553,7 +555,11 @@ describe('GenericServiceRequestTable', () => {
 
       await waitFor(() => {
         expect(screen.getAllByTestId('accordian-table-title')).toHaveLength(2);
-        expect(screen.getAllByTestId('sortable-data-table')).toHaveLength(2);
+        // Each accordion item has a unique table with date suffix
+        const tables = document.querySelectorAll(
+          '[data-testid^="generic-service-request-table-"]',
+        );
+        expect(tables).toHaveLength(2);
       });
     });
 

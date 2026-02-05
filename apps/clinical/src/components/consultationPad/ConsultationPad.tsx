@@ -441,6 +441,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
   return (
     <>
       <ActionArea
+        data-testid="consultation-pad-action-area"
         title={isError ? '' : t('CONSULTATION_ACTION_NEW')}
         primaryButtonText={t('CONSULTATION_PAD_DONE_BUTTON')}
         onPrimaryButtonClick={handleOnPrimaryButtonClick}
