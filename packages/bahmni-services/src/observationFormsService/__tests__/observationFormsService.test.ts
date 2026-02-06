@@ -66,7 +66,7 @@ describe('observationFormsService', () => {
 
       const result = await fetchObservationForms();
 
-      expect(mockFetch).toHaveBeenCalledWith(OBSERVATION_FORMS_URL);
+      expect(mockFetch).toHaveBeenCalledWith(OBSERVATION_FORMS_URL());
       expect(result).toEqual([
         {
           uuid: 'form-uuid-1',
@@ -264,6 +264,39 @@ describe('observationFormsService', () => {
       const result = await fetchObservationForms();
 
       expect(result).toEqual([]);
+    });
+
+    it('should append episodeUuid as query param when provided', async () => {
+      const episodeUuid = 'episode-uuid-123';
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
+      });
+
+      (getUserPreferredLocale as jest.Mock).mockReturnValue('en');
+
+      await fetchObservationForms(episodeUuid);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        OBSERVATION_FORMS_URL(episodeUuid),
+      );
+      expect(mockFetch.mock.calls[0][0]).toContain(
+        `?episodeUuid=${episodeUuid}`,
+      );
+    });
+
+    it('should use base URL without query params when episodeUuid is not provided', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
+      });
+
+      (getUserPreferredLocale as jest.Mock).mockReturnValue('en');
+
+      await fetchObservationForms();
+
+      expect(mockFetch).toHaveBeenCalledWith(OBSERVATION_FORMS_URL());
+      expect(mockFetch.mock.calls[0][0]).not.toContain('?');
     });
   });
 
