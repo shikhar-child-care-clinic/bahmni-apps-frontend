@@ -1,6 +1,6 @@
-# Bahmni Clinical Frontend
+# Bahmni Apps Frontend
 
-A React TypeScript application for the Bahmni Clinical module, built with Webpack and Carbon Design System. This application includes PWA support for offline capabilities.
+A React TypeScript monorepo application for Bahmni's Clinical and Registration modules, built with Nx, Webpack, and Carbon Design System. This application includes PWA support for offline capabilities.
 
 ## Features
 
@@ -34,7 +34,7 @@ For a comprehensive setup guide including development environments, Docker confi
 
 ### Additional Documentation
 
-- [Frontend Architecture](docs/architecture.md) - A comprehensive overview of the Bahmni Clinical Frontend architecture
+- [Frontend Architecture](docs/architecture.md) - A comprehensive overview of the Bahmni Apps Frontend architecture
 - [Project Structure](docs/project-structure.md) - A high-level overview of the project structure
 - [i18n Guide](docs/i18n-guide.md) - Internationalization implementation details
 - [Sortable Data Table Guide](docs/sortable-data-table-guide.md) - Usage of the sortable data table component
@@ -71,58 +71,77 @@ yarn lint:fix
 ## Project Structure
 
 ```text
-bahmni-clinical-frontend/
+bahmni-apps-frontend/
+├── apps/                    # Micro-frontend applications
+│   ├── clinical/            # Clinical consultation module
+│   │   ├── src/             # Source code
+│   │   │   ├── components/  # UI components
+│   │   │   ├── hooks/       # Custom hooks
+│   │   │   ├── pages/       # Page components
+│   │   │   ├── providers/   # Context providers
+│   │   │   ├── stores/      # Zustand stores
+│   │   │   └── ClinicalApp.tsx
+│   │   ├── public/          # Static assets
+│   │   │   └── locales/     # Translation files
+│   │   └── project.json     # Nx project configuration
+│   ├── registration/        # Patient registration module
+│   │   ├── src/             # Source code
+│   │   │   ├── components/  # UI components
+│   │   │   ├── hooks/       # Custom hooks
+│   │   │   ├── pages/       # Page components
+│   │   │   └── RegistrationApp.tsx
+│   │   ├── public/          # Static assets
+│   │   │   └── locales/     # Translation files
+│   │   └── project.json     # Nx project configuration
+│   └── sample-app-module/   # Example extensible app
+├── packages/                # Shared libraries
+│   ├── bahmni-design-system/ # Reusable UI components (Carbon-based)
+│   │   ├── src/
+│   │   │   ├── atoms/       # Basic UI components
+│   │   │   ├── molecules/   # Composite components
+│   │   │   └── organisms/   # Complex components
+│   │   └── project.json
+│   ├── bahmni-services/     # API integration & business logic
+│   │   ├── src/
+│   │   │   ├── api/         # HTTP client & interceptors
+│   │   │   ├── patientService/
+│   │   │   ├── medicationService/
+│   │   │   ├── allergyService/
+│   │   │   ├── observationService/
+│   │   │   ├── i18n/        # Translation utilities
+│   │   │   ├── date/        # Date utilities
+│   │   │   └── utils/       # Common utilities
+│   │   └── project.json
+│   └── bahmni-widgets/      # Domain-specific display controls
+│       ├── src/
+│       │   ├── AllergiesTable/
+│       │   ├── MedicationsTable/
+│       │   ├── PatientDetails/
+│       │   └── providers/   # Context providers
+│       └── project.json
+├── distro/                  # Shell application (entry point)
+│   ├── src/
+│   │   ├── app/             # Root routing
+│   │   ├── main.tsx         # Application entry
+│   │   └── index.html       # HTML template
+│   ├── webpack.config.js    # Webpack configuration
+│   └── project.json
 ├── docs/                    # Project documentation
+│   ├── architecture.md
+│   ├── project-structure.md
+│   ├── i18n-guide.md
 │   ├── sortable-data-table-guide.md
 │   ├── global-notification-guide.md
-│   ├── i18n-guide.md
 │   └── setup-guide.md
-├── public/                  # Static assets
-│   ├── favicon.ico          # Favicon
-│   ├── logo192.png          # Logo for PWA (192x192)
-│   ├── logo512.png          # Logo for PWA (512x512)
-│   ├── manifest.json        # PWA manifest
-│   ├── robots.txt           # Robots file
-│   ├── index.html           # HTML template
-│   └── locales/             # Translation files
-│       ├── locale_en.json   # English translations
-│       └── locale_es.json   # Spanish translations
-├── src/
-│   ├── components/          # Reusable UI components
-│   │   └── common/          # Shared components
-│   │       ├── sortableDataTable/  # Composite data table component
-│   │       └── notification/         # Notification components
-│   ├── constants/           # Application constants
-│   ├── contexts/            # React contexts
-│   ├── displayControls/     # Clinical data display components
-│   │   ├── allergies/       # Allergies display
-│   │   ├── conditions/      # Conditions display
-│   │   └── patient/         # Patient details display
-│   ├── hooks/               # Custom React hooks
-│   ├── layouts/             # Layout components
-│   │   └── clinical/        # Clinical layout
-│   ├── pages/               # Page components
-│   ├── providers/           # Context providers
-│   ├── schemas/             # JSON schemas
-│   ├── services/            # API services
-│   ├── styles/              # Global styles
-│   ├── types/               # TypeScript type definitions
-│   ├── utils/               # Utility functions
-│   ├── __mocks__/           # Test mocks
-│   ├── __tests__/           # Test files
-│   ├── App.tsx              # Main App component
-│   ├── i18n.ts              # i18n configuration
-│   └── index.tsx            # Application entry point
-├── .babelrc                 # Babel configuration
-├── .editorconfig            # Editor configuration
-├── .gitignore               # Git ignore file
-├── .prettierrc.json         # Prettier configuration
+├── docker/                  # Docker configuration
+├── helm/                    # Kubernetes Helm charts
+├── .github/                 # GitHub actions & workflows
+├── nx.json                  # Nx configuration
+├── tsconfig.base.json       # Shared TypeScript config
 ├── eslint.config.ts         # ESLint configuration
 ├── jest.config.ts           # Jest configuration
-├── package.json             # Project dependencies and scripts
-├── README.md                # Project documentation
-├── tsconfig.json            # TypeScript configuration
-└── webpack.config.js        # Webpack configuration
+├── package.json             # Root dependencies
+└── README.md                # Project documentation
 ```
 
 For a more detailed explanation of the project architecture, see [Architecture Documentation](docs/architecture.md).
