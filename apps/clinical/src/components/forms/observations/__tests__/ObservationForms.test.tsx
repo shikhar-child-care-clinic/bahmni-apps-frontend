@@ -1,5 +1,6 @@
 import { ObservationForm } from '@bahmni/services';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import ObservationForms from '../ObservationForms';
 
 // Mock the translation hook
@@ -54,13 +55,27 @@ jest.mock('@carbon/react', () => ({
 jest.mock('@bahmni/design-system', () => ({
   ...jest.requireActual('@bahmni/design-system'),
   ComboBox: jest.fn(
-    ({ items, onChange, onInputChange, disabled, placeholder }) => (
+    ({
+      items,
+      onChange,
+      onInputChange,
+      disabled,
+      placeholder,
+      clearInputOnSelect,
+    }) => (
       <div data-testid="combobox">
         <input
           data-testid="combobox-input"
           placeholder={placeholder}
           disabled={disabled}
-          onChange={(e) => onInputChange?.(e.target.value)}
+          onChange={(e) => {
+            onInputChange?.(e.target.value);
+          }}
+          onBlur={(e) => {
+            if (clearInputOnSelect) {
+              e.target.value = '';
+            }
+          }}
         />
         <div data-testid="combobox-items">
           {items?.map(
@@ -69,7 +84,17 @@ jest.mock('@bahmni/design-system', () => ({
                 key={item.id}
                 data-testid={`combobox-item-${item.id}`}
                 disabled={item.disabled}
-                onClick={() => onChange?.({ selectedItem: item })}
+                onClick={(e) => {
+                  const input = e.currentTarget
+                    .closest('[data-testid="combobox"]')
+                    ?.querySelector(
+                      '[data-testid="combobox-input"]',
+                    ) as HTMLInputElement | null;
+                  onChange?.({ selectedItem: item });
+                  if (clearInputOnSelect && input) {
+                    input.value = '';
+                  }
+                }}
               >
                 {item.label}
               </button>
@@ -576,6 +601,31 @@ describe('ObservationForms', () => {
       expect(input).toHaveValue(longSearchTerm);
     });
   });
+  describe('Input Clearing on Selection', () => {
+    it('should clear input field after selecting form (clearInputOnSelect)', async () => {
+      const user = userEvent.setup();
+      const mockOnFormSelect = jest.fn();
+      render(
+        <ObservationForms {...defaultProps} onFormSelect={mockOnFormSelect} />,
+      );
+
+      const searchInput = getSearchInput();
+      await user.type(searchInput, 'Admission');
+
+      await waitFor(() => {
+        expect(screen.getByTestId('combobox-item-form-1')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByTestId('combobox-item-form-1'));
+
+      expect(mockOnFormSelect).toHaveBeenCalledWith(mockForms[0]);
+
+      await waitFor(() => {
+        expect(searchInput).toHaveValue('');
+      });
+    });
+  });
+
   describe('Internationalization Support', () => {
     it('should use translation keys for all user-facing text', () => {
       render(<ObservationForms {...defaultProps} />);

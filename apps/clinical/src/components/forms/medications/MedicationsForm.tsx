@@ -158,6 +158,7 @@ const MedicationsForm: React.FC = React.memo(() => {
           itemToString={(item) => (item ? item.displayName : '')}
           onChange={(data) => handleOnChange(data.selectedItem!)}
           onInputChange={(searchQuery: string) => handleSearch(searchQuery)}
+          clearInputOnSelect
           size="md"
           autoAlign
           aria-label={t('MEDICATIONS_SEARCH_PLACEHOLDER')}

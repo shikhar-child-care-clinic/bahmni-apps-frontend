@@ -207,10 +207,12 @@ describe('InvestigationsForm Integration Tests', () => {
         removeServiceRequest: jest.fn((category, code) => {
           const requests =
             mockStore.selectedServiceRequests.get(category) ?? [];
-          mockStore.selectedServiceRequests.set(
-            category,
-            requests.filter((req) => req.id !== code),
-          );
+          const filtered = requests.filter((req) => req.id !== code);
+          if (filtered.length === 0) {
+            mockStore.selectedServiceRequests.delete(category);
+          } else {
+            mockStore.selectedServiceRequests.set(category, filtered);
+          }
         }),
       });
       mockStore.reset();
@@ -330,6 +332,8 @@ describe('InvestigationsForm Integration Tests', () => {
 
       const removeButton = screen.getByRole('button', { name: /close/i });
       await user.click(removeButton);
+
+      await user.type(combobox, 'test');
 
       await waitFor(() => {
         expect(screen.queryByText('Lipid Profile')).not.toBeInTheDocument();
@@ -457,7 +461,7 @@ describe('InvestigationsForm Integration Tests', () => {
       expect(mockStore.addServiceRequest).toHaveBeenCalledTimes(2);
     });
 
-    test('should maintain search input value after selection', async () => {
+    test('should clear search input after selection', async () => {
       const user = userEvent.setup();
       render(<InvestigationsForm />, { wrapper: createWrapper() });
 
@@ -475,7 +479,7 @@ describe('InvestigationsForm Integration Tests', () => {
         screen.getByRole('option', { name: 'Blood Glucose Test' }),
       );
 
-      expect(combobox).toHaveValue('Blood Glucose Test');
+      expect(combobox).toHaveValue('');
     });
 
     test('should display panel indicator for LabSet concept class', async () => {

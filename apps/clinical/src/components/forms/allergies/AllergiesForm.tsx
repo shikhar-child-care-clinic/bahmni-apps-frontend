@@ -234,6 +234,7 @@ const AllergiesForm: React.FC = React.memo(() => {
           handleOnChange(data.selectedItem as AllergenConcept | null)
         }
         onInputChange={(searchQuery: string) => handleSearch(searchQuery)}
+        clearInputOnSelect
         size="md"
         autoAlign
         aria-label={t('ALLERGIES_SEARCH_ARIA_LABEL')}

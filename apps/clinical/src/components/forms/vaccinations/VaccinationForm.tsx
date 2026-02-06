@@ -182,6 +182,7 @@ const VaccinationForm: React.FC = React.memo(() => {
           itemToString={(item) => (item ? item.displayName : '')}
           onChange={(data) => handleOnChange(data.selectedItem!)}
           onInputChange={(searchQuery: string) => handleSearch(searchQuery)}
+          clearInputOnSelect
           size="md"
           autoAlign
           aria-label={t('VACCINATION_SEARCH_PLACEHOLDER')}

@@ -13,7 +13,13 @@ import {
   QueryClientProvider,
   useQuery,
 } from '@tanstack/react-query';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  within,
+  waitFor,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Condition } from 'fhir/r4';
 import { axe, toHaveNoViolations } from 'jest-axe';
@@ -832,6 +838,37 @@ describe('ConditionsAndDiagnoses', () => {
       expect(addDiagnosisMock).not.toHaveBeenCalled();
     });
   });
+  describe('Input Clearing on Selection', () => {
+    test('clears input field after selecting diagnosis (clearInputOnSelect)', async () => {
+      const user = userEvent.setup();
+      renderComponent([], [], mockConcepts);
+
+      const searchInput = screen.getByPlaceholderText(
+        'Search to add new diagnosis',
+      );
+      await user.type(searchInput, 'hypertension');
+
+      await waitFor(() => {
+        expect(screen.getByText('Hypertension')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Hypertension'));
+
+      await waitFor(() => {
+        expect(addDiagnosisMock).toHaveBeenCalled();
+        // Verify the first argument is the concept with the expected properties
+        const callArg = addDiagnosisMock.mock.calls[0][0];
+        expect(callArg.conceptName).toBe('Hypertension');
+        expect(callArg.conceptUuid).toBe('uuid-1');
+      });
+
+      const input = searchInput as HTMLInputElement;
+      await waitFor(() => {
+        expect(input.value).toBe('');
+      });
+    });
+  });
+
   describe('Snapshot Tests', () => {
     it('empty form matches snapshot', () => {
       const { container } = renderComponent();

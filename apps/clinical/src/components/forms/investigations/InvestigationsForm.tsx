@@ -295,6 +295,7 @@ const InvestigationsForm: React.FC = React.memo(() => {
         itemToString={(item) => item?.display ?? ''}
         onChange={({ selectedItem }) => handleChange(selectedItem)}
         onInputChange={(input) => setSearchTerm(input)}
+        clearInputOnSelect
         autoAlign
         aria-label={t('INVESTIGATIONS_SEARCH_ARIA_LABEL')}
         size="md"

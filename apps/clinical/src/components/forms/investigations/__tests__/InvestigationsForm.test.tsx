@@ -1116,6 +1116,41 @@ describe('InvestigationsForm', () => {
     });
   });
 
+  describe('Input Clearing on Selection', () => {
+    test('clears input field after selecting investigation (clearInputOnSelect)', async () => {
+      const user = userEvent.setup();
+      (useInvestigationsSearch as jest.Mock).mockReturnValue({
+        investigations: mockInvestigations,
+        isLoading: false,
+        error: null,
+      });
+
+      render(<InvestigationsForm />);
+
+      const combobox = screen.getByRole('combobox');
+      await user.type(combobox, 'complete');
+
+      await waitFor(() => {
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Complete Blood Count'));
+
+      await waitFor(() => {
+        expect(mockStore.addServiceRequest).toHaveBeenCalledWith(
+          'Laboratory',
+          'cbc-001',
+          'Complete Blood Count',
+        );
+      });
+
+      const input = combobox as HTMLInputElement;
+      await waitFor(() => {
+        expect(input.value).toBe('');
+      });
+    });
+  });
+
   describe('Accessibility', () => {
     test('has no accessibility violations', async () => {
       let container: HTMLElement;

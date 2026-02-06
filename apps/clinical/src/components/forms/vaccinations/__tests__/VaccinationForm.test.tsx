@@ -355,6 +355,36 @@ describe('VaccinationForm', () => {
       });
     });
   });
+  describe('Input Clearing on Selection', () => {
+    test('clears input field after selecting vaccination (clearInputOnSelect)', async () => {
+      const user = userEvent.setup();
+      render(<VaccinationForm />, { wrapper: createWrapper() });
+      const searchBox = screen.getByRole('combobox', {
+        name: /search to add vaccination/i,
+      });
+
+      await user.type(searchBox, 'covid');
+
+      await waitFor(() => {
+        expect(screen.getByText('COVID-19 Vaccine')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('COVID-19 Vaccine'));
+
+      await waitFor(() => {
+        expect(mockStore.addVaccination).toHaveBeenCalledWith(
+          mockVaccination,
+          'COVID-19 Vaccine',
+        );
+      });
+
+      const input = searchBox as HTMLInputElement;
+      await waitFor(() => {
+        expect(input.value).toBe('');
+      });
+    });
+  });
+
   describe('Edge Cases', () => {
     test('handles missing medication config gracefully', () => {
       (useMedicationConfig as jest.Mock).mockReturnValue({

@@ -239,6 +239,7 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
             selectedItem={selectedItem}
             onChange={handleOnChange}
             onInputChange={handleSearch}
+            clearInputOnSelect
             size="md"
             autoAlign
             disabled={isSearchLoading}

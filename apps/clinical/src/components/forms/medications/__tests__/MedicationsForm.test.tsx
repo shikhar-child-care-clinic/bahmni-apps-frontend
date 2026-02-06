@@ -545,5 +545,41 @@ describe('MedicationsForm', () => {
       const { container } = render(<MedicationsForm />);
       expect(container).toMatchSnapshot();
     });
+
+    test('clears input field after selecting medication (clearInputOnSelect)', async () => {
+      const user = userEvent.setup();
+      (useMedicationSearch as jest.Mock).mockReturnValue({
+        ...mockMedicationSearchHook,
+        searchResults: [mockMedication],
+      });
+
+      render(<MedicationsForm />);
+
+      const searchBox = screen.getByRole('combobox', {
+        name: /search to add medication/i,
+      });
+
+      // Type medication name
+      await user.type(searchBox, 'paracetamol');
+
+      // Wait for search results to appear
+      await waitFor(() => {
+        expect(screen.getByText('Paracetamol 500mg')).toBeInTheDocument();
+      });
+
+      // Select the medication
+      await user.click(screen.getByText('Paracetamol 500mg'));
+
+      // Verify medication was added
+      await waitFor(() => {
+        expect(mockStore.addMedication).toHaveBeenCalled();
+      });
+
+      // Verify the input field is cleared
+      const input = searchBox as HTMLInputElement;
+      await waitFor(() => {
+        expect(input.value).toBe('');
+      });
+    });
   });
 });

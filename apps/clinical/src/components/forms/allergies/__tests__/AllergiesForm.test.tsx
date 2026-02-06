@@ -676,5 +676,32 @@ describe('AllergiesForm', () => {
       });
       expect(container).toMatchSnapshot();
     });
+
+    it('should clear input field after selecting allergy (clearInputOnSelect)', async () => {
+      const user = userEvent.setup();
+      (
+        useAllergyStore as jest.MockedFunction<typeof useAllergyStore>
+      ).mockReturnValue({
+        ...mockAllergyStore,
+        addAllergy: jest.fn(),
+      });
+      mockAllergenSearchHook({ allergens: [mockAllergen] });
+
+      renderAllergiesForm();
+
+      const searchBox = getSearchCombobox();
+      await user.type(searchBox, 'peanut');
+
+      await waitFor(() => {
+        expect(screen.getByText('Peanut Allergy [Food]')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Peanut Allergy [Food]'));
+
+      const input = searchBox as HTMLInputElement;
+      await waitFor(() => {
+        expect(input.value).toBe('');
+      });
+    });
   });
 });
