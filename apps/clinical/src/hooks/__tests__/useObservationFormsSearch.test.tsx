@@ -227,7 +227,7 @@ describe('useObservationFormsSearch', () => {
   });
 
   describe('episodeUuids filtering', () => {
-    it('should pass episodeUuids as comma-separated string to fetchObservationForms', async () => {
+    it('should pass episodeUuids array to fetchObservationForms', async () => {
       const episodeUuids = ['uuid-1', 'uuid-2'];
 
       const wrapper = createWrapper();
@@ -240,10 +240,10 @@ describe('useObservationFormsSearch', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(fetchObservationForms).toHaveBeenCalledWith('uuid-1,uuid-2');
+      expect(fetchObservationForms).toHaveBeenCalledWith(['uuid-1', 'uuid-2']);
     });
 
-    it('should pass undefined when episodeUuids is empty', async () => {
+    it('should pass empty array when episodeUuids is empty', async () => {
       const wrapper = createWrapper();
       const { result } = renderHook(() => useObservationFormsSearch('', []), {
         wrapper,
@@ -253,7 +253,7 @@ describe('useObservationFormsSearch', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(fetchObservationForms).toHaveBeenCalledWith(undefined);
+      expect(fetchObservationForms).toHaveBeenCalledWith([]);
     });
 
     it('should pass undefined when episodeUuids is not provided', async () => {

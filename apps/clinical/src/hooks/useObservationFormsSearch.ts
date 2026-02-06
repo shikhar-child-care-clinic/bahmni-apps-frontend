@@ -25,18 +25,13 @@ const useObservationFormsSearch = (
   const debouncedSearchTerm = useDebounce(searchTerm);
   const { userPrivileges } = useUserPrivilege();
 
-  const episodeUuid =
-    episodeUuids && episodeUuids.length > 0
-      ? episodeUuids.join(',')
-      : undefined;
-
   const {
     data: allForms = [],
     isLoading,
     error,
   } = useQuery<ObservationForm[], Error>({
-    queryKey: ['observationForms', episodeUuid],
-    queryFn: () => fetchObservationForms(episodeUuid),
+    queryKey: ['observationForms', episodeUuids],
+    queryFn: () => fetchObservationForms(episodeUuids),
   });
 
   // Filter forms based on user privileges and search term
