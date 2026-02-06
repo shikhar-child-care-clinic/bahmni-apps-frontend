@@ -14,6 +14,7 @@ interface UseActiveVisitResult {
 }
 
 /**
+ * Custom hook to fetch and manage the current active visit for a patient
  * @param patientUUID - The UUID of the patient
  * @returns Object containing active visit, loading state, error state, and refetch function
  */
