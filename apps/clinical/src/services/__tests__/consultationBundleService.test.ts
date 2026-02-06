@@ -34,7 +34,7 @@ jest.mock('@bahmni/services', () => ({
   post: jest.fn(),
 }));
 jest.mock('@bahmni/form2-controls', () => ({
-  transformToFhir: jest.fn().mockImplementation((observations: any[]) => {
+  getFhirObservations: jest.fn().mockImplementation((observations: any[]) => {
     let idCounter = 0;
 
     const processObservations = (obs: any[]): any[] => {

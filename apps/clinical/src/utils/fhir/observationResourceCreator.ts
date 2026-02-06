@@ -1,4 +1,4 @@
-import { transformToFhir, FhirReference } from '@bahmni/form2-controls';
+import { getFhirObservations, FhirReference } from '@bahmni/form2-controls';
 import { Form2Observation } from '@bahmni/services';
 import { Observation, Reference } from 'fhir/r4';
 
@@ -9,7 +9,7 @@ export const createObservationResources = (
   performerReference: Reference,
 ): Array<{ resource: Observation; fullUrl: string }> => {
   try {
-    return transformToFhir(observations, {
+    return getFhirObservations(observations, {
       patientReference: subjectReference as FhirReference,
       encounterReference: encounterReference as FhirReference,
       performerReference: performerReference as FhirReference,
