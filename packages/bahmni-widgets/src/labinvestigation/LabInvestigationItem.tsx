@@ -120,6 +120,10 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
 
   const hasAttachments = test.attachments && test.attachments.length > 0;
 
+  const viewAttachmentText =
+    test.attachments &&
+    t('LAB_TEST_VIEW_ATTACHMENT', { count: test.attachments!.length });
+
   return (
     <div className={styles.labTest}>
       <div className={styles.labTestHeader}>
@@ -135,7 +139,7 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
               onClick={() => setIsAttachmentsModalOpen(true)}
               className={styles.viewAttachmentsLink}
             >
-              {t('LAB_TEST_VIEW_ATTACHMENT')} ({test.attachments!.length})
+              {viewAttachmentText}
             </Link>
           )}
           {test.note && (
@@ -162,7 +166,7 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
           open={isAttachmentsModalOpen}
           onRequestClose={() => setIsAttachmentsModalOpen(false)}
           passiveModal
-          modalHeading={`${t('LAB_TEST_VIEW_ATTACHMENT')} (${test.attachments!.length})`}
+          modalHeading={viewAttachmentText}
           testId="attachments-modal"
           size="lg"
         >
