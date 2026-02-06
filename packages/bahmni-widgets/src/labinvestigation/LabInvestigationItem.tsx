@@ -74,35 +74,20 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
 
     switch (cellId) {
       case 'testName':
-        return <span className={styles.testName}>{row.testName || '--'}</span>;
+        return <span className={styles.testName}>{row.testName ?? '--'}</span>;
       case 'result':
         return row.value ? (
-          <>
-            <span
-              className={
-                isAbnormal ? styles.abnormalResultValue : styles.resultValue
-              }
-            >
-              {row.value}
-            </span>
-            {row.unit && (
-              <span
-                className={
-                  isAbnormal ? styles.abnormalResultUnit : styles.resultUnit
-                }
-              >
-                {' '}
-                {row.unit}
-              </span>
-            )}
-          </>
+          <div className={isAbnormal ? styles.abnormalResult : styles.result}>
+            <span>{row.value}</span>
+            {row.unit && <span> {row.unit}</span>}
+          </div>
         ) : (
           '--'
         );
       case 'referenceRange':
-        return row.referenceRange || '--';
+        return row.referenceRange ?? '--';
       case 'reportedOn':
-        return row.reportedOn || '--';
+        return row.reportedOn ?? '--';
       default:
         return undefined;
     }
