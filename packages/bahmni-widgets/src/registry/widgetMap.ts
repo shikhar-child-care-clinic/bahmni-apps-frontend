@@ -29,22 +29,6 @@ export const builtInWidgets: WidgetConfig[] = [
   {
     type: 'observations',
     component: lazy(() => import('../observations/Observations')),
-    type: 'pacsOrders',
-    component: lazy(
-      () => import('../radiologyInvestigation/RadiologyInvestigationTable'),
-    ),
-  },
-  {
-    type: 'treatment',
-    component: lazy(() => import('../medications/MedicationsTable')),
-  },
-  {
-    type: 'appointments',
-    component: lazy(() => import('../appointments/AppointmentsTable')),
-  },
-  {
-    type: 'flowSheet',
-    component: lazy(() => import('../vitalFlowSheet/VitalFlowSheet')),
   },
   {
     type: 'ordersControl',
@@ -65,5 +49,9 @@ export const builtInWidgets: WidgetConfig[] = [
   {
     type: 'treatment',
     component: lazy(() => import('../medications/MedicationsTable')),
+  },
+  {
+    type: 'appointments',
+    component: lazy(() => import('../appointments/AppointmentsTable')),
   },
 ];
