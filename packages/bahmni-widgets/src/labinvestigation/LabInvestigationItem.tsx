@@ -8,6 +8,7 @@ import {
 import { useTranslation, getDiagnosticReportBundle } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import React, { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import AttachmentViewer from './AttachmentViewer';
 import { FormattedLabInvestigations, LabInvestigationPriority } from './models';
 import styles from './styles/LabInvestigation.module.scss';
@@ -161,29 +162,32 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
       </div>
       {renderTestResults()}
 
-      {hasAttachments && (
-        <Modal
-          open={isAttachmentsModalOpen}
-          onRequestClose={() => setIsAttachmentsModalOpen(false)}
-          passiveModal
-          modalHeading={viewAttachmentText}
-          testId="attachments-modal"
-          size="lg"
-        >
-          <Modal.Body>
-            <div className={styles.attachmentsContainer}>
-              {test.attachments!.map((attachment, index) => (
-                <AttachmentViewer
-                  key={attachment.id || index}
-                  attachment={attachment}
-                  index={index + 1}
-                  totalCount={test.attachments!.length}
-                />
-              ))}
-            </div>
-          </Modal.Body>
-        </Modal>
-      )}
+      {hasAttachments &&
+        isAttachmentsModalOpen &&
+        createPortal(
+          <Modal
+            open={isAttachmentsModalOpen}
+            onRequestClose={() => setIsAttachmentsModalOpen(false)}
+            passiveModal
+            modalHeading={viewAttachmentText}
+            testId="attachments-modal"
+            size="lg"
+          >
+            <Modal.Body>
+              <div className={styles.attachmentsContainer}>
+                {test.attachments!.map((attachment, index) => (
+                  <AttachmentViewer
+                    key={attachment.id || index}
+                    attachment={attachment}
+                    index={index + 1}
+                    totalCount={test.attachments!.length}
+                  />
+                ))}
+              </div>
+            </Modal.Body>
+          </Modal>,
+          document.getElementById('actionAreaLayout') ?? document.body,
+        )}
     </div>
   );
 };
