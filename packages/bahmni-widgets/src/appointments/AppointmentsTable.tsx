@@ -238,8 +238,11 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
         case 'appointmentNumber':
           return (record.appointmentNumber as string | undefined) ?? '-';
         case 'service':
-          // Service name from API
-          return row.service?.name ?? '-';
+          return row.service?.name ? (
+            <p className={styles.columnDataBold}>{row.service.name}</p>
+          ) : (
+            '-'
+          );
         case 'reason':
           return (record.reason as string | undefined) ?? '-';
         case 'appointmentDate':

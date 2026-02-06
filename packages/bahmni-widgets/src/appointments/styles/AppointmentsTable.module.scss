@@ -122,3 +122,7 @@
     background-color: #f4f4f4;
   }
 }
+
+.columnDataBold {
+  @include type-style("heading-compact-01");
+}
