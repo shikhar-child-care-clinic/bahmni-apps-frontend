@@ -74,7 +74,7 @@ describe('LabInvestigationItem', () => {
           LAB_TEST_REFERENCE_RANGE: 'Reference Range',
           LAB_TEST_REPORTED_ON: 'Reported On',
           LAB_TEST_ACTIONS: 'Actions',
-          LAB_TEST_VIEW_ATTACHMENT: 'View Attachment',
+          LAB_TEST_VIEW_ATTACHMENT: 'View Attachment (2)',
           LAB_TEST_ERROR_LOADING: 'Error loading results',
         };
         return translations[key] || key;
@@ -383,11 +383,6 @@ describe('LabInvestigationItem', () => {
             url: 'path/to/report2.jpg',
             contentType: 'image/jpeg',
           },
-          {
-            id: 'attachment-3',
-            url: 'path/to/report3.png',
-            contentType: 'image/png',
-          },
         ],
       };
 
@@ -406,7 +401,7 @@ describe('LabInvestigationItem', () => {
       await user.click(viewAttachmentsLink!);
 
       expect(
-        screen.getByRole('heading', { name: /View Attachment \(3\)/i }),
+        screen.getByRole('heading', { name: /View Attachment \(2\)/i }),
       ).toBeInTheDocument();
     });
 
@@ -458,6 +453,11 @@ describe('LabInvestigationItem', () => {
             url: 'path/to/panel-report.pdf',
             contentType: 'application/pdf',
           },
+          {
+            id: 'attachment-2',
+            url: 'path/to/panel-report.pdf',
+            contentType: 'application/pdf',
+          },
         ],
       };
 
@@ -472,7 +472,7 @@ describe('LabInvestigationItem', () => {
       expect(screen.getByText('Panel')).toBeInTheDocument();
       const link = container.querySelector('.viewAttachmentsLink');
       expect(link).toBeInTheDocument();
-      expect(link).toHaveTextContent('View Attachment (1)');
+      expect(link).toHaveTextContent('View Attachment (2)');
     });
   });
 });
