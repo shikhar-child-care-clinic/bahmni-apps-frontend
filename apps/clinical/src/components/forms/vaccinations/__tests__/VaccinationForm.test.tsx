@@ -15,6 +15,7 @@ jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   getVaccinations: jest.fn(),
 }));
+
 jest.mock('../../../../services/medicationService', () => ({
   getMedicationDisplay: jest.fn(
     (medication) =>
@@ -29,7 +30,9 @@ jest.mock('../styles/VaccinationForm.module.scss', () => ({
   vaccinationFormTitle: 'vaccinationFormTitle',
   vaccinationBox: 'vaccinationBox',
   selectedVaccinationItem: 'selectedVaccinationItem',
+  duplicateNotification: 'duplicateNotification',
 }));
+
 const mockVaccination: Medication = {
   id: 'test-vaccination-1',
   resourceType: 'Medication',

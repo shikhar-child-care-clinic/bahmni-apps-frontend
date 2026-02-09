@@ -71,24 +71,40 @@ const doDateRangesOverlap = (
 };
 
 /**
- * Extract base medication name for comparison
- * Handles two formats:
- * 1. Search display: "Drug Name (Form)- Code Name" → extracts "Code Name"
- * 2. Backend name: "Code Name" (e.g., "Albendazole 400 mg")
- *
- * Returns lowercase normalized name for comparison
+ * Extract base medication name for comparison (ignores concentration/dosage)
+ * Example: "Vitamin A 5000 IU" → "vitamin a"
  */
 const getBaseMedicationName = (fullName: string): string => {
-  // Check for search display format: "Drug Name (Form)- Code Name"
-  // Note: The hyphen may or may not have spaces around it
-  const hyphenMatch = fullName.match(/\)\s*-\s*(.+)$/);
-  if (hyphenMatch) {
-    // Extract the code name part after the hyphen
-    return hyphenMatch[1].trim().toLowerCase();
+  // Handle null/undefined/non-string values
+  if (!fullName || typeof fullName !== 'string') {
+    return '';
   }
 
-  // For backend format, just normalize and return
-  // Remove any trailing/leading whitespace and lowercase
+  // Check for display format with ")- " separator
+  const separatorMatch = fullName.match(/\)-\s*(.+)$/);
+  if (separatorMatch) {
+    return separatorMatch[1].trim().toLowerCase();
+  }
+
+  // Fallback: Extract name before parentheses
+  const parenthesesMatch = fullName.match(/^(.+?)\s*\(/);
+  if (parenthesesMatch) {
+    const nameBeforeParens = parenthesesMatch[1].trim();
+    const baseNameMatch = nameBeforeParens.match(
+      /^([A-Za-z0-9-\s]+?)(?:\s+\d+.*)?$/,
+    );
+    if (baseNameMatch) {
+      return baseNameMatch[1].trim().toLowerCase();
+    }
+    return nameBeforeParens.toLowerCase();
+  }
+
+  // If no parentheses, remove trailing numbers
+  const baseNameMatch = fullName.match(/^([A-Za-z0-9-\s]+?)(?:\s+\d+.*)?$/);
+  if (baseNameMatch) {
+    return baseNameMatch[1].trim().toLowerCase();
+  }
+
   return fullName.trim().toLowerCase();
 };
 
@@ -158,11 +174,12 @@ const MedicationsForm: React.FC = React.memo(() => {
   // Filter to only active/scheduled medications
   const activeMedications = useMemo(() => {
     if (!existingMedications) return [];
-    return existingMedications.filter(
+    const filtered = existingMedications.filter(
       (med: MedicationRequest) =>
         med.status === MedicationStatus.Active ||
         med.status === MedicationStatus.OnHold,
     );
+    return filtered;
   }, [existingMedications]);
 
   /**
@@ -191,21 +208,31 @@ const MedicationsForm: React.FC = React.memo(() => {
         medicationDisplayName,
       );
 
-      // Check against existing active/scheduled medications from backend
       const isExistingDuplicate = activeMedications.some(
         (med: MedicationRequest) => {
+          if (!med.name) {
+            return false;
+          }
+
           const existingBaseName = getBaseMedicationName(med.name);
 
-          // Check if same medication by comparing base names
+          if (!existingBaseName || !newMedicationBaseName) {
+            return false;
+          }
+
           if (existingBaseName !== newMedicationBaseName) {
             return false;
           }
 
-          // Get duration from MedicationRequest
-          // STAT (immediate) medications have no duration - use 1 day
-          // Regular medications without duration default to 7 days
-          const existingDuration =
-            med.duration?.duration ?? (med.isImmediate ? 1 : 7);
+          if (med.isImmediate) {
+            return true;
+          }
+
+          if (!med.startDate) {
+            return false;
+          }
+
+          const existingDuration = med.duration?.duration ?? 7;
           const existingDurationUnit = med.duration?.durationUnit ?? 'd';
 
           const existingStartDate = new Date(med.startDate);
@@ -215,32 +242,31 @@ const MedicationsForm: React.FC = React.memo(() => {
             existingDurationUnit,
           );
 
-          // Check date overlap
-          return doDateRangesOverlap(
+          const overlaps = doDateRangesOverlap(
             existingStartDate,
             existingEndDate,
             newStartDate,
             newEndDate,
           );
+
+          return overlaps;
         },
       );
 
-      // Check against currently selected medications in the form (by ID)
       const isSelectedDuplicate = selectedMedications.some(
-        (selected: MedicationInputEntry) => selected.id === medicationId,
+        (selected: MedicationInputEntry) => {
+          const selectedBaseName = getBaseMedicationName(selected.display);
+          if (!selectedBaseName || !newMedicationBaseName) {
+            return false;
+          }
+          return selectedBaseName === newMedicationBaseName;
+        },
       );
 
       return isExistingDuplicate || isSelectedDuplicate;
     },
     [activeMedications, selectedMedications],
   );
-
-  // Clear notification when search term is cleared
-  useEffect(() => {
-    if (showDuplicateNotification && searchMedicationTerm === '') {
-      setShowDuplicateNotification(false);
-    }
-  }, [searchMedicationTerm, showDuplicateNotification]);
 
   const handleSearch = (searchTerm: string) => {
     // Only update search term if we're not in the process of selecting an item
@@ -267,13 +293,8 @@ const MedicationsForm: React.FC = React.memo(() => {
       'd',
     );
 
-    if (isDuplicate) {
-      setShowDuplicateNotification(true);
-      return; // Don't add duplicate
-    }
-
-    // Successfully added, clear any previous duplicate notification
-    setShowDuplicateNotification(false);
+    // Show notification if duplicate, but still allow adding
+    setShowDuplicateNotification(isDuplicate);
 
     // Set flag to prevent search when ComboBox updates its input
     isSelectingRef.current = true;
@@ -318,16 +339,20 @@ const MedicationsForm: React.FC = React.memo(() => {
     }
 
     return searchResults.map((item) => {
-      // Check if this medication is already selected
-      const isAlreadySelected = selectedMedications.some(
-        (selected) => selected.id === item.id,
-      );
+      const itemDisplayName = getMedicationDisplay(item);
+      const itemBaseName = getBaseMedicationName(itemDisplayName);
+      // Check if this medication is already selected (by base name, not ID)
+      // This catches different concentrations of the same medication
+      const isAlreadySelected = selectedMedications.some((selected) => {
+        const selectedBaseName = getBaseMedicationName(selected.display);
+        return selectedBaseName === itemBaseName;
+      });
 
       return {
         medication: item,
         displayName: isAlreadySelected
-          ? `${getMedicationDisplay(item)} (${t('MEDICATIONS_ALREADY_ADDED')})`
-          : getMedicationDisplay(item),
+          ? `${itemDisplayName} (${t('MEDICATIONS_ALREADY_ADDED')})`
+          : itemDisplayName,
         disabled: isAlreadySelected,
       };
     });

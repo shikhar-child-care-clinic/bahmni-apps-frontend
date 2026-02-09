@@ -350,6 +350,76 @@ describe('medicationRequestService', () => {
         });
       });
 
+      it('should extract doseForm from contained Medication resource', async () => {
+        const mockMedication = createMockMedicationRequest({
+          id: 'doseform-test',
+          contained: [
+            {
+              resourceType: 'Medication',
+              id: 'med-contained-1',
+              form: {
+                text: 'Tablet',
+                coding: [
+                  {
+                    system: 'http://snomed.info/sct',
+                    code: '385055001',
+                    display: 'Tablet dose form',
+                  },
+                ],
+              },
+            },
+          ],
+        });
+        const mockBundle = createMockBundle([mockMedication]);
+
+        (get as jest.Mock).mockResolvedValueOnce(mockBundle);
+
+        const result = await getPatientMedications(patientUUID);
+
+        expect(result[0].doseForm).toBe('Tablet');
+      });
+
+      it('should use coding display when form text is not available', async () => {
+        const mockMedication = createMockMedicationRequest({
+          id: 'doseform-coding-test',
+          contained: [
+            {
+              resourceType: 'Medication',
+              id: 'med-contained-2',
+              form: {
+                coding: [
+                  {
+                    system: 'http://snomed.info/sct',
+                    code: '385049006',
+                    display: 'Capsule',
+                  },
+                ],
+              },
+            },
+          ],
+        });
+        const mockBundle = createMockBundle([mockMedication]);
+
+        (get as jest.Mock).mockResolvedValueOnce(mockBundle);
+
+        const result = await getPatientMedications(patientUUID);
+
+        expect(result[0].doseForm).toBe('Capsule');
+      });
+
+      it('should return empty string when no contained Medication resource', async () => {
+        const mockMedication = createMockMedicationRequest({
+          id: 'no-doseform-test',
+        });
+        const mockBundle = createMockBundle([mockMedication]);
+
+        (get as jest.Mock).mockResolvedValueOnce(mockBundle);
+
+        const result = await getPatientMedications(patientUUID);
+
+        expect(result[0].doseForm).toBe('');
+      });
+
       it('should extract notes from parsed JSON text', async () => {
         const mockMedication = createMockMedicationRequest({
           id: 'notes-test',

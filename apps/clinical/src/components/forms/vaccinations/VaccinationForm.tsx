@@ -4,10 +4,19 @@ import {
   ComboBox,
   DropdownSkeleton,
   Tile,
+  InlineNotification,
 } from '@bahmni/design-system';
-import { useTranslation, getVaccinations } from '@bahmni/services';
+import {
+  useTranslation,
+  getVaccinations,
+  getPatientMedications,
+  MedicationStatus,
+  MedicationRequest,
+} from '@bahmni/services';
+import { usePatientUUID } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
-import React, { useState, useMemo, useRef } from 'react';
+import { addDays } from 'date-fns';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 
 import useMedicationConfig from '../../../hooks/useMedicationConfig';
 import { MedicationFilterResult } from '../../../models/medication';
@@ -20,14 +29,78 @@ import SelectedVaccinationItem from './SelectedVaccinationItem';
 import styles from './styles/VaccinationForm.module.scss';
 
 /**
- * VaccinationForm component
- *
- * A component that displays a search interface for vaccinations and a list of selected vaccinations.
- * It allows users to search for vaccinations, select them, and specify dosage, frequency, route, timing, and duration.
+ * Extract base vaccination name for comparison (ignores concentration/dosage)
+ * Example: "Vitamin A 5000 IU" → "vitamin a"
  */
+const getBaseVaccinationName = (fullName: string): string => {
+  // Handle null/undefined/non-string values
+  if (!fullName || typeof fullName !== 'string') {
+    return '';
+  }
+
+  // Check for display format with ")- " separator
+  const separatorMatch = fullName.match(/\)-\s*(.+)$/);
+  if (separatorMatch) {
+    return separatorMatch[1].trim().toLowerCase();
+  }
+
+  // Fallback: Extract name before parentheses
+  const parenthesesMatch = fullName.match(/^(.+?)\s*\(/);
+  if (parenthesesMatch) {
+    const nameBeforeParens = parenthesesMatch[1].trim();
+    const baseNameMatch = nameBeforeParens.match(
+      /^([A-Za-z0-9-\s]+?)(?:\s+\d+.*)?$/,
+    );
+    if (baseNameMatch) {
+      return baseNameMatch[1].trim().toLowerCase();
+    }
+    return nameBeforeParens.toLowerCase();
+  }
+
+  // If no parentheses, remove trailing numbers
+  const baseNameMatch = fullName.match(/^([A-Za-z0-9-\s]+?)(?:\s+\d+.*)?$/);
+  if (baseNameMatch) {
+    return baseNameMatch[1].trim().toLowerCase();
+  }
+
+  return fullName.trim().toLowerCase();
+};
+
+const DURATION_UNIT_TO_DAYS: Record<string, number> = {
+  d: 1,
+  wk: 7,
+  mo: 30,
+  a: 365,
+  h: 1 / 24,
+  min: 1 / 1440,
+  s: 1 / 86400,
+};
+
+const calculateEndDate = (
+  startDate: Date | string,
+  duration: number,
+  durationUnit: string,
+): Date => {
+  const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
+  const daysMultiplier = DURATION_UNIT_TO_DAYS[durationUnit] ?? 1;
+  const totalDays = duration * daysMultiplier;
+  return addDays(start, totalDays);
+};
+
+const doDateRangesOverlap = (
+  start1: Date,
+  end1: Date,
+  start2: Date,
+  end2: Date,
+): boolean => {
+  return start1 <= end2 && start2 <= end1;
+};
 const VaccinationForm: React.FC = React.memo(() => {
   const { t } = useTranslation();
+  const patientUUID = usePatientUUID();
   const [searchVaccinationTerm, setSearchVaccinationTerm] = useState('');
+  const [showDuplicateNotification, setShowDuplicateNotification] =
+    useState(false);
   const isSelectingRef = useRef(false);
   const {
     medicationConfig,
@@ -45,9 +118,30 @@ const VaccinationForm: React.FC = React.memo(() => {
   });
 
   // Extract medications from bundle
-  const searchResults = vaccinationsBundle
-    ? getMedicationsFromBundle(vaccinationsBundle)
-    : [];
+  const searchResults = useMemo(
+    () =>
+      vaccinationsBundle ? getMedicationsFromBundle(vaccinationsBundle) : [],
+    [vaccinationsBundle],
+  );
+
+  // Fetch existing vaccinations from backend using TanStack Query
+  const { data: existingVaccinations, isLoading: existingVaccinationsLoading } =
+    useQuery({
+      queryKey: ['patientVaccinations', patientUUID],
+      enabled: !!patientUUID,
+      queryFn: () => getPatientMedications(patientUUID!, [], undefined),
+    });
+
+  const activeVaccinations = useMemo(() => {
+    if (!existingVaccinations || !Array.isArray(existingVaccinations)) {
+      return [];
+    }
+    return existingVaccinations.filter(
+      (vac: MedicationRequest) =>
+        vac.status === MedicationStatus.Active ||
+        vac.status === MedicationStatus.OnHold,
+    );
+  }, [existingVaccinations]);
 
   const {
     selectedVaccinations,
@@ -67,6 +161,81 @@ const VaccinationForm: React.FC = React.memo(() => {
     updateNote,
   } = useVaccinationStore();
 
+  const isDuplicateVaccination = useCallback(
+    (
+      vaccinationDisplayName: string,
+      newStartDate: Date,
+      newDuration: number,
+      newDurationUnit: string,
+    ): boolean => {
+      const effectiveDuration = newDuration > 0 ? newDuration : 7;
+      const effectiveUnit = newDurationUnit ?? 'd';
+      const newEndDate = calculateEndDate(
+        newStartDate,
+        effectiveDuration,
+        effectiveUnit,
+      );
+
+      const newVaccinationBaseName = getBaseVaccinationName(
+        vaccinationDisplayName,
+      );
+
+      const isExistingDuplicate = activeVaccinations.some(
+        (vac: MedicationRequest) => {
+          if (!vac.name) {
+            return false;
+          }
+
+          const existingBaseName = getBaseVaccinationName(vac.name);
+
+          if (!existingBaseName || !newVaccinationBaseName) {
+            return false;
+          }
+
+          if (existingBaseName !== newVaccinationBaseName) {
+            return false;
+          }
+
+          if (vac.isImmediate) {
+            return true;
+          }
+
+          if (!vac.startDate) {
+            return false;
+          }
+
+          const existingDuration = vac.duration?.duration ?? 7;
+          const existingDurationUnit = vac.duration?.durationUnit ?? 'd';
+
+          const existingStartDate = new Date(vac.startDate);
+          const existingEndDate = calculateEndDate(
+            existingStartDate,
+            existingDuration,
+            existingDurationUnit,
+          );
+
+          return doDateRangesOverlap(
+            existingStartDate,
+            existingEndDate,
+            newStartDate,
+            newEndDate,
+          );
+        },
+      );
+
+      const isSelectedDuplicate = selectedVaccinations.some((selected) => {
+        const selectedBaseName = getBaseVaccinationName(selected.display);
+        if (!selectedBaseName || !newVaccinationBaseName) {
+          return false;
+        }
+        return selectedBaseName === newVaccinationBaseName;
+      });
+
+      return isExistingDuplicate || isSelectedDuplicate;
+    },
+    [activeVaccinations, selectedVaccinations],
+  );
+
   const handleSearch = (searchTerm: string) => {
     // Only update search term if we're not in the process of selecting an item
     if (!isSelectingRef.current) {
@@ -75,13 +244,25 @@ const VaccinationForm: React.FC = React.memo(() => {
   };
 
   const handleOnChange = (selectedItem: MedicationFilterResult) => {
-    if (!selectedItem) {
+    if (!selectedItem?.medication?.id) {
       return;
     }
+
+    const displayName = getMedicationDisplay(selectedItem.medication);
+
+    const newStartDate = new Date();
+    const isDuplicate = isDuplicateVaccination(
+      displayName,
+      newStartDate,
+      7,
+      'd',
+    );
+
+    setShowDuplicateNotification(isDuplicate);
+
     isSelectingRef.current = true;
-    addVaccination(selectedItem.medication!, selectedItem.displayName);
+    addVaccination(selectedItem.medication, displayName);
     setSearchVaccinationTerm('');
-    // Reset the flag after a short delay to allow ComboBox to update
     setTimeout(() => {
       isSelectingRef.current = false;
     }, 100);
@@ -91,7 +272,7 @@ const VaccinationForm: React.FC = React.memo(() => {
     if (!searchVaccinationTerm || searchVaccinationTerm.trim() === '') {
       return [];
     }
-    if (loading) {
+    if (loading || existingVaccinationsLoading) {
       return [
         {
           displayName: t('LOADING_VACCINATIONS'),
@@ -134,20 +315,26 @@ const VaccinationForm: React.FC = React.memo(() => {
     }
 
     return filtered.map((item) => {
-      const isAlreadySelected = selectedVaccinations.some(
-        (v) => v.id === item.id,
-      );
+      const itemDisplayName = getMedicationDisplay(item);
+      const itemBaseName = getBaseVaccinationName(itemDisplayName);
+
+      const isAlreadySelected = selectedVaccinations.some((selected) => {
+        const selectedBaseName = getBaseVaccinationName(selected.display);
+        return selectedBaseName === itemBaseName;
+      });
+
       return {
         medication: item,
         displayName: isAlreadySelected
-          ? `${getMedicationDisplay(item)} (${t('VACCINATION_ALREADY_SELECTED')})`
-          : getMedicationDisplay(item),
+          ? `${itemDisplayName} (${t('VACCINATION_ALREADY_SELECTED')})`
+          : itemDisplayName,
         disabled: isAlreadySelected,
       };
     });
   }, [
     searchVaccinationTerm,
     loading,
+    existingVaccinationsLoading,
     error,
     searchResults,
     selectedVaccinations,
@@ -185,6 +372,16 @@ const VaccinationForm: React.FC = React.memo(() => {
           size="md"
           autoAlign
           aria-label={t('VACCINATION_SEARCH_PLACEHOLDER')}
+        />
+      )}
+      {showDuplicateNotification && (
+        <InlineNotification
+          kind="error"
+          lowContrast
+          subtitle={t('ERROR_DUPLICATE_ACTIVE_VACCINATION')}
+          onClose={() => setShowDuplicateNotification(false)}
+          hideCloseButton={false}
+          className={styles.duplicateNotification}
         />
       )}
       {medicationConfig &&
