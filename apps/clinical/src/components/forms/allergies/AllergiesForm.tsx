@@ -218,6 +218,7 @@ const AllergiesForm: React.FC = React.memo(() => {
         {t('ALLERGIES_FORM_TITLE')}
       </div>
       <ComboBox
+        key={`allergies-search-${selectedAllergies.length}`}
         id="allergies-search"
         data-testid="allergies-search-combobox"
         placeholder={t('ALLERGIES_SEARCH_PLACEHOLDER')}
@@ -234,7 +235,6 @@ const AllergiesForm: React.FC = React.memo(() => {
           handleOnChange(data.selectedItem as AllergenConcept | null)
         }
         onInputChange={(searchQuery: string) => handleSearch(searchQuery)}
-        clearInputOnSelect
         size="md"
         autoAlign
         aria-label={t('ALLERGIES_SEARCH_ARIA_LABEL')}

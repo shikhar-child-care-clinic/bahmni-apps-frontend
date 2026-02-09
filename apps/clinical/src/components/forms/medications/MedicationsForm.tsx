@@ -151,6 +151,7 @@ const MedicationsForm: React.FC = React.memo(() => {
       )}
       {!medicationConfigLoading && !medicationConfigError && (
         <ComboBox
+          key={`medications-search-${selectedMedications.length}`}
           id="medications-search"
           data-testid="medications-search-combobox"
           placeholder={t('MEDICATIONS_SEARCH_PLACEHOLDER')}
@@ -158,7 +159,6 @@ const MedicationsForm: React.FC = React.memo(() => {
           itemToString={(item) => (item ? item.displayName : '')}
           onChange={(data) => handleOnChange(data.selectedItem!)}
           onInputChange={(searchQuery: string) => handleSearch(searchQuery)}
-          clearInputOnSelect
           size="md"
           autoAlign
           aria-label={t('MEDICATIONS_SEARCH_PLACEHOLDER')}

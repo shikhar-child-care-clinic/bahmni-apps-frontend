@@ -232,6 +232,7 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
 
         <div data-testid="observation-forms-search-section">
           <ComboBox
+            key={`observation-forms-search-${selectedForms.length}`}
             id="observation-forms-search"
             placeholder={t('OBSERVATION_FORMS_SEARCH_PLACEHOLDER')}
             items={searchResults}
@@ -239,7 +240,6 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
             selectedItem={selectedItem}
             onChange={handleOnChange}
             onInputChange={handleSearch}
-            clearInputOnSelect
             size="md"
             autoAlign
             disabled={isSearchLoading}

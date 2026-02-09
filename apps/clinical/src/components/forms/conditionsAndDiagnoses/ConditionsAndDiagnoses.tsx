@@ -121,6 +121,7 @@ const ConditionsAndDiagnoses: React.FC = React.memo(() => {
   );
 
   const handleOnChange = (selectedItem: ConceptSearch | null) => {
+    setShowDuplicateNotification(false);
     if (!selectedItem?.conceptUuid || !selectedItem.conceptName) {
       return;
     }
@@ -134,7 +135,6 @@ const ConditionsAndDiagnoses: React.FC = React.memo(() => {
     }
 
     // Successfully added, clear any previous duplicate notification
-    setShowDuplicateNotification(false);
     addDiagnosis(selectedItem);
   };
 
@@ -224,6 +224,7 @@ const ConditionsAndDiagnoses: React.FC = React.memo(() => {
         {t('CONDITIONS_AND_DIAGNOSES_FORM_TITLE')}
       </div>
       <ComboBox
+        key={`diagnoses-search-${selectedDiagnoses.length}`}
         id="diagnoses-search"
         data-testid="diagnoses-search-combobox"
         placeholder={t('DIAGNOSES_SEARCH_PLACEHOLDER')}
@@ -231,7 +232,6 @@ const ConditionsAndDiagnoses: React.FC = React.memo(() => {
         itemToString={(item) => item?.conceptName ?? ''}
         onChange={(data) => handleOnChange(data.selectedItem ?? null)}
         onInputChange={(searchQuery: string) => handleSearch(searchQuery)}
-        clearInputOnSelect
         size="md"
         autoAlign
         aria-label={t('DIAGNOSES_SEARCH_ARIA_LABEL')}

@@ -288,6 +288,7 @@ const InvestigationsForm: React.FC = React.memo(() => {
         {t('INVESTIGATIONS_FORM_TITLE')}
       </div>
       <ComboBox
+        key={`investigations-search-${selectedServiceRequests.size}`}
         id="investigations-procedures-search"
         data-testid="investigations-search-combobox"
         placeholder={t('INVESTIGATIONS_SEARCH_PLACEHOLDER')}
@@ -295,7 +296,6 @@ const InvestigationsForm: React.FC = React.memo(() => {
         itemToString={(item) => item?.display ?? ''}
         onChange={({ selectedItem }) => handleChange(selectedItem)}
         onInputChange={(input) => setSearchTerm(input)}
-        clearInputOnSelect
         autoAlign
         aria-label={t('INVESTIGATIONS_SEARCH_ARIA_LABEL')}
         size="md"
