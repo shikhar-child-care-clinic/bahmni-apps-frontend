@@ -172,6 +172,7 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
             modalHeading={viewAttachmentText}
             testId="attachments-modal"
             size="lg"
+            id="modalIdForActionAreaLayout"
           >
             <Modal.Body>
               <div className={styles.attachmentsContainer}>

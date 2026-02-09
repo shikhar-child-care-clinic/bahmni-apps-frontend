@@ -21,7 +21,6 @@
   // Constrain the modal backdrop to left panel only
   :global(#modalIdForActionAreaLayout) {
     position: absolute;
-    top: 3rem;
     width: 40%;
   }
 
