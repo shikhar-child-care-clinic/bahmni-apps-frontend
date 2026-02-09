@@ -458,11 +458,11 @@ describe('MedicationsTable', () => {
     );
   });
 
-  describe('Medication name parsing and display', () => {
-    it('displays medication form below name when name contains parentheses format', () => {
-      const medicationWithForm: MedicationRequest = {
+  describe('Medication doseForm display', () => {
+    it('displays doseForm with quantity when doseForm is provided', () => {
+      const medicationWithDoseForm: MedicationRequest = {
         id: '4',
-        name: 'Paracetamol (Tablet)- Paracetamol 500 mg',
+        name: 'Paracetamol 500 mg',
         dose: { value: 500, unit: 'mg' },
         quantity: { value: 10, unit: 'Tablets' },
         startDate: '2024-01-15T10:00:00Z',
@@ -473,6 +473,7 @@ describe('MedicationsTable', () => {
         asNeeded: false,
         priority: 'routine',
         instructions: 'Take with food',
+        doseForm: 'Tablet',
       };
 
       mockFormatMedicationRequest.mockImplementation(
@@ -489,11 +490,12 @@ describe('MedicationsTable', () => {
           status: med.status,
           asNeeded: med.asNeeded,
           isImmediate: med.isImmediate,
+          doseForm: med.doseForm,
         }),
       );
 
       mockUseQuery.mockReturnValue({
-        data: [medicationWithForm],
+        data: [medicationWithDoseForm],
         isLoading: false,
         isError: false,
         error: null,
@@ -502,14 +504,14 @@ describe('MedicationsTable', () => {
 
       render(<MedicationsTable />);
 
-      // Should display the code name (after hyphen)
+      // Should display the medication name
       expect(screen.getByText('Paracetamol 500 mg')).toBeInTheDocument();
-      // Should display form and quantity with | separator
+      // Should display doseForm and quantity with | separator
       expect(screen.getByText('Tablet | 10 Tablets')).toBeInTheDocument();
     });
 
-    it('displays only quantity when medication name has no parentheses', () => {
-      const simpleNameMedication: MedicationRequest = {
+    it('displays only quantity when doseForm is not provided', () => {
+      const medicationWithoutDoseForm: MedicationRequest = {
         id: '5',
         name: 'Aspirin 100mg',
         dose: { value: 100, unit: 'mg' },
@@ -542,7 +544,7 @@ describe('MedicationsTable', () => {
       );
 
       mockUseQuery.mockReturnValue({
-        data: [simpleNameMedication],
+        data: [medicationWithoutDoseForm],
         isLoading: false,
         isError: false,
         error: null,
@@ -553,57 +555,8 @@ describe('MedicationsTable', () => {
 
       // Should display the full medication name
       expect(screen.getByText('Aspirin 100mg')).toBeInTheDocument();
-      // Should display only quantity (no form, no | separator)
+      // Should display only quantity (no doseForm, no | separator)
       expect(screen.getByText('14 tablets')).toBeInTheDocument();
-    });
-
-    it('parses medication with form but no code name after hyphen', () => {
-      const medicationWithFormNoCode: MedicationRequest = {
-        id: '6',
-        name: 'Ibuprofen (Capsule)',
-        dose: { value: 200, unit: 'mg' },
-        quantity: { value: 20, unit: 'Capsules' },
-        startDate: '2024-01-08T14:00:00Z',
-        orderDate: '2024-01-08T13:45:00Z',
-        orderedBy: 'Dr. Wilson',
-        status: MedicationStatus.Active,
-        isImmediate: false,
-        asNeeded: false,
-        priority: 'routine',
-        instructions: 'As needed',
-      };
-
-      mockFormatMedicationRequest.mockImplementation(
-        (med: MedicationRequest) => ({
-          id: med.id,
-          name: med.name,
-          dosage: `${med.dose?.value} ${med.dose?.unit}`,
-          dosageUnit: med.dose?.unit ?? '',
-          quantity: `${med.quantity.value} ${med.quantity.unit}`,
-          instruction: med.instructions,
-          startDate: med.startDate,
-          orderDate: med.orderDate,
-          orderedBy: med.orderedBy,
-          status: med.status,
-          asNeeded: med.asNeeded,
-          isImmediate: med.isImmediate,
-        }),
-      );
-
-      mockUseQuery.mockReturnValue({
-        data: [medicationWithFormNoCode],
-        isLoading: false,
-        isError: false,
-        error: null,
-        refetch: jest.fn(),
-      } as any);
-
-      render(<MedicationsTable />);
-
-      // Should display the drug name (before parentheses) when no code name exists
-      expect(screen.getByText('Ibuprofen')).toBeInTheDocument();
-      // Should display form and quantity with | separator
-      expect(screen.getByText('Capsule | 20 Capsules')).toBeInTheDocument();
     });
   });
 });

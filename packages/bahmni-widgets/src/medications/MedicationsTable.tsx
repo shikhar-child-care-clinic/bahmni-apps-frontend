@@ -80,36 +80,6 @@ const getMedicationStatusKey = (status: string): string => {
   }
 };
 
-/**
- * Parse medication name to extract drug name and form
- * Handles format: "Drug Name (Form)- Code Name" or "Drug Name (Form) - Code Name"
- * Also handles simple format: "Code Name" (no parentheses)
- *
- * @returns { drugName: string, form: string | null }
- */
-const parseMedicationName = (
-  fullName: string,
-): { drugName: string; form: string | null } => {
-  // Check for format with parentheses: "Drug Name (Form)- Code Name"
-  const parenthesesMatch = fullName.match(/^(.+?)\s*\(([^)]+)\)\s*-?\s*(.*)$/);
-
-  if (parenthesesMatch) {
-    const [, drugName, form, codeName] = parenthesesMatch;
-    // If there's a code name after the hyphen, prefer it as the display name
-    // Otherwise use the drug name before parentheses
-    return {
-      drugName: codeName?.trim() || drugName.trim(),
-      form: form.trim(),
-    };
-  }
-
-  // Simple format without parentheses - just return the name as-is
-  return {
-    drugName: fullName.trim(),
-    form: null,
-  };
-};
-
 const MedicationsTable: React.FC<WidgetProps> = ({
   config,
   episodeOfCareUuids,
@@ -258,16 +228,11 @@ const MedicationsTable: React.FC<WidgetProps> = ({
 
   const renderCell = (row: FormattedMedicationRequest, key: string) => {
     switch (key) {
-      case 'name': {
-        // Parse medication name to extract drug name and form
-        const { drugName, form } = parseMedicationName(row.name);
-        // Build details line: "Form | Quantity" or just "Quantity"
-        const detailsLine = form ? `${form} | ${row.quantity}` : row.quantity;
-
+      case 'name':
         return (
           <>
             <div className={styles.medicationName}>
-              <span>{drugName}</span>
+              <span>{row.name}</span>
               {row.note && (
                 <TooltipIcon
                   iconName="fa-file-lines"
@@ -276,12 +241,15 @@ const MedicationsTable: React.FC<WidgetProps> = ({
                 />
               )}
             </div>
-            <p className={styles.medicineDetails}>{detailsLine}</p>
+            <p className={styles.medicineDetails}>
+              {row.doseForm
+                ? `${row.doseForm} | ${row.quantity}`
+                : row.quantity}
+            </p>
             {row.isImmediate && <Tag className={styles.STAT}>STAT</Tag>}
             {row.asNeeded && <Tag className={styles.PRN}>PRN</Tag>}
           </>
         );
-      }
       case 'dosage': {
         if (typeof row.dosage === 'string') {
           return <p className={styles.columnDataBold}>{row.dosage}</p>;

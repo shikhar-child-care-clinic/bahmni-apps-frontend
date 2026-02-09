@@ -176,6 +176,22 @@ function getNote(note: FhirMedicationRequest['note']): string {
     .filter(Boolean)
     .join(' ');
 }
+
+/**
+ * Helper to get dose form from contained Medication resource
+ */
+function getDoseForm(medication: FhirMedicationRequest): string {
+  // Check contained resources for Medication with form
+  const containedMedication = medication.contained?.find(
+    (r) => r.resourceType === 'Medication',
+  ) as Medication | undefined;
+
+  return (
+    containedMedication?.form?.text ??
+    containedMedication?.form?.coding?.[0]?.display ??
+    ''
+  );
+}
 /**
  * Formats FHIR medication requests into a more user-friendly format
  * @param bundle - The FHIR bundle containing medication requests
@@ -214,6 +230,7 @@ function formatMedications(bundle: Bundle): MedicationRequest[] {
         medication.dosageInstruction,
       ),
       note: getNote(medication.note),
+      doseForm: getDoseForm(medication),
     };
   });
 }
