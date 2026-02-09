@@ -85,7 +85,6 @@ jest.mock('@bahmni/form2-controls', () => ({
   }),
 }));
 
-
 describe('consultationBundleService', () => {
   afterAll(() => {
     jest.resetAllMocks();
