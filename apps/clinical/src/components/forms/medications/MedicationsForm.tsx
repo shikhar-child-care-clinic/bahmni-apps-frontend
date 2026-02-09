@@ -14,7 +14,6 @@ import {
 } from '@bahmni/services';
 import { useNotification, usePatientUUID } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
-import { addDays } from 'date-fns';
 import React, {
   useState,
   useMemo,
@@ -22,6 +21,7 @@ import React, {
   useCallback,
   useEffect,
 } from 'react';
+
 import useMedicationConfig from '../../../hooks/useMedicationConfig';
 import { useMedicationSearch } from '../../../hooks/useMedicationSearch';
 import {
@@ -29,84 +29,14 @@ import {
   MedicationInputEntry,
 } from '../../../models/medication';
 import { getMedicationDisplay } from '../../../services/medicationService';
+import {
+  calculateEndDate,
+  doDateRangesOverlap,
+  getBaseName,
+} from '../../../services/medicationUtilities';
 import { useMedicationStore } from '../../../stores/medicationsStore';
 import SelectedMedicationItem from './SelectedMedicationItem';
 import styles from './styles/MedicationsForm.module.scss';
-
-// Duration unit to days multiplier mapping
-const DURATION_UNIT_TO_DAYS: Record<string, number> = {
-  d: 1,
-  wk: 7,
-  mo: 30,
-  a: 365,
-  h: 1 / 24,
-  min: 1 / 1440,
-  s: 1 / 86400,
-};
-
-/**
- * Calculate end date from start date and duration
- */
-const calculateEndDate = (
-  startDate: Date | string,
-  duration: number,
-  durationUnit: string,
-): Date => {
-  const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
-  const daysMultiplier = DURATION_UNIT_TO_DAYS[durationUnit] ?? 1;
-  const totalDays = duration * daysMultiplier;
-  return addDays(start, totalDays);
-};
-
-/**
- * Check if two date ranges overlap
- */
-const doDateRangesOverlap = (
-  start1: Date,
-  end1: Date,
-  start2: Date,
-  end2: Date,
-): boolean => {
-  return start1 <= end2 && start2 <= end1;
-};
-
-/**
- * Extract base medication name for comparison (ignores concentration/dosage)
- * Example: "Vitamin A 5000 IU" → "vitamin a"
- */
-const getBaseMedicationName = (fullName: string): string => {
-  // Handle null/undefined/non-string values
-  if (!fullName || typeof fullName !== 'string') {
-    return '';
-  }
-
-  // Check for display format with ")- " separator
-  const separatorMatch = fullName.match(/\)-\s*(.+)$/);
-  if (separatorMatch) {
-    return separatorMatch[1].trim().toLowerCase();
-  }
-
-  // Fallback: Extract name before parentheses
-  const parenthesesMatch = fullName.match(/^(.+?)\s*\(/);
-  if (parenthesesMatch) {
-    const nameBeforeParens = parenthesesMatch[1].trim();
-    const baseNameMatch = nameBeforeParens.match(
-      /^([A-Za-z0-9-\s]+?)(?:\s+\d+.*)?$/,
-    );
-    if (baseNameMatch) {
-      return baseNameMatch[1].trim().toLowerCase();
-    }
-    return nameBeforeParens.toLowerCase();
-  }
-
-  // If no parentheses, remove trailing numbers
-  const baseNameMatch = fullName.match(/^([A-Za-z0-9-\s]+?)(?:\s+\d+.*)?$/);
-  if (baseNameMatch) {
-    return baseNameMatch[1].trim().toLowerCase();
-  }
-
-  return fullName.trim().toLowerCase();
-};
 
 /**
  * MedicationsForm component
@@ -151,12 +81,13 @@ const MedicationsForm: React.FC = React.memo(() => {
   } = useMedicationStore();
 
   // Fetch existing medications from backend using TanStack Query
+  // Always fetch for STAT duplicate detection, even on new consultation
   const {
     data: existingMedications,
     isLoading: existingMedicationsLoading,
     error: existingMedicationsError,
   } = useQuery({
-    queryKey: ['medications', patientUUID!, [], undefined],
+    queryKey: ['medications', patientUUID!],
     enabled: !!patientUUID,
     queryFn: () => getPatientMedications(patientUUID!, [], undefined),
   });
@@ -204,9 +135,7 @@ const MedicationsForm: React.FC = React.memo(() => {
         effectiveUnit,
       );
 
-      const newMedicationBaseName = getBaseMedicationName(
-        medicationDisplayName,
-      );
+      const newMedicationBaseName = getBaseName(medicationDisplayName);
 
       const isExistingDuplicate = activeMedications.some(
         (med: MedicationRequest) => {
@@ -214,7 +143,7 @@ const MedicationsForm: React.FC = React.memo(() => {
             return false;
           }
 
-          const existingBaseName = getBaseMedicationName(med.name);
+          const existingBaseName = getBaseName(med.name);
 
           if (!existingBaseName || !newMedicationBaseName) {
             return false;
@@ -255,7 +184,7 @@ const MedicationsForm: React.FC = React.memo(() => {
 
       const isSelectedDuplicate = selectedMedications.some(
         (selected: MedicationInputEntry) => {
-          const selectedBaseName = getBaseMedicationName(selected.display);
+          const selectedBaseName = getBaseName(selected.display);
           if (!selectedBaseName || !newMedicationBaseName) {
             return false;
           }
@@ -340,11 +269,11 @@ const MedicationsForm: React.FC = React.memo(() => {
 
     return searchResults.map((item) => {
       const itemDisplayName = getMedicationDisplay(item);
-      const itemBaseName = getBaseMedicationName(itemDisplayName);
+      const itemBaseName = getBaseName(itemDisplayName);
       // Check if this medication is already selected (by base name, not ID)
       // This catches different concentrations of the same medication
       const isAlreadySelected = selectedMedications.some((selected) => {
-        const selectedBaseName = getBaseMedicationName(selected.display);
+        const selectedBaseName = getBaseName(selected.display);
         return selectedBaseName === itemBaseName;
       });
 
@@ -396,6 +325,7 @@ const MedicationsForm: React.FC = React.memo(() => {
           onInputChange={(searchQuery: string) => handleSearch(searchQuery)}
           size="md"
           autoAlign
+          disabled={existingMedicationsLoading}
           aria-label={t('MEDICATIONS_SEARCH_PLACEHOLDER')}
         />
       )}

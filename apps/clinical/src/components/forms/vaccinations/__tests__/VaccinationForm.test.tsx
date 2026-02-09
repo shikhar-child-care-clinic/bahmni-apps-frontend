@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Medication } from 'fhir/r4';
+
 import useMedicationConfig from '../../../../hooks/useMedicationConfig';
 import { MedicationInputEntry } from '../../../../models/medication';
 import { MedicationConfig } from '../../../../models/medicationConfig';
@@ -25,6 +26,7 @@ jest.mock('../../../../services/medicationService', () => ({
     (bundle) => bundle?.entry?.map((e: any) => e.resource) ?? [],
   ),
 }));
+
 jest.mock('../styles/VaccinationForm.module.scss', () => ({
   vaccinationFormTile: 'vaccinationFormTile',
   vaccinationFormTitle: 'vaccinationFormTitle',
@@ -107,7 +109,6 @@ const mockStore = {
   updateDuration: jest.fn(),
   updateDurationUnit: jest.fn(),
   updateInstruction: jest.fn(),
-  updateisPRN: jest.fn(),
   updateisSTAT: jest.fn(),
   updateDispenseQuantity: jest.fn(),
   updateDispenseUnit: jest.fn(),
