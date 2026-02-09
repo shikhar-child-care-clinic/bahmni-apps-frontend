@@ -1,4 +1,16 @@
+import type { Appointment as FhirAppointment, Bundle } from 'fhir/r4';
 import { PatientSearchResult } from '../patientService/models';
+
+// FHIR Appointment Bundle type
+export type AppointmentBundle = Bundle<FhirAppointment>;
+
+// Participant helper interface
+export interface AppointmentParticipant {
+  readonly reference: string;
+  readonly display?: string;
+  readonly type?: string; // "Patient" | "Practitioner" | "Location"
+  readonly status?: string;
+}
 
 export interface AppointmentSearchResult extends PatientSearchResult {
   appointmentUuid?: string;
@@ -8,18 +20,28 @@ export interface AppointmentSearchResult extends PatientSearchResult {
   appointmentStatus?: string;
 }
 
+// FHIR status constants
+export const FHIR_APPOINTMENT_STATUSES = {
+  BOOKED: 'booked',
+  FULFILLED: 'fulfilled',
+  CANCELLED: 'cancelled',
+  NOSHOW: 'noshow',
+  CHECKED_IN: 'checked-in',
+  WAITLIST: 'waitlist',
+} as const;
+
 export interface Appointment {
   uuid: string;
   appointmentNumber: string;
-  dateCreated: number;
-  dateAppointmentScheduled: number;
+  dateCreated?: number;
+  dateAppointmentScheduled?: number;
   patient: Patient;
   service: AppointmentService;
   serviceType: ServiceType | null;
   provider: Provider | null;
   location: Location;
-  startDateTime: number;
-  endDateTime: number;
+  startDateTime: string; // Changed from number to string (ISO 8601 format)
+  endDateTime: string; // Changed from number to string (ISO 8601 format)
   appointmentKind: string;
   status: string;
   comments: string | null;

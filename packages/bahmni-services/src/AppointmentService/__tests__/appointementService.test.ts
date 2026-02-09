@@ -1,186 +1,75 @@
-import { post, get } from '../../api';
+import type { Appointment as FhirAppointment } from 'fhir/r4';
+import { get } from '../../api';
 import {
-  searchAppointmentsByAttribute,
   getAppointmentById,
   getUpcomingAppointments,
   getPastAppointments,
-} from '../appointmmetService';
+} from '../appointmentService';
 import {
-  APPOINTMENTS_SEARCH_URL,
-  APPOINTMENTS_URL,
-  BAHMNI_SQL_URL,
+  APPOINTMENT_BY_ID_URL,
+  UPCOMING_APPOINTMENTS_URL,
+  PAST_APPOINTMENTS_URL,
 } from '../constants';
 import { Appointment } from '../models';
 
 jest.mock('../../api');
-const mockedPost = post as jest.MockedFunction<typeof post>;
 const mockedGet = get as jest.MockedFunction<typeof get>;
 
-describe('Appointment Service', () => {
-  const mockAppointment: Appointment = {
-    uuid: 'appt-uuid-1',
-    appointmentNumber: 'APT-12345',
-    patient: {
-      uuid: 'patient-uuid-1',
-      identifier: 'ABC200001',
-      name: 'John Doe',
-      gender: 'M',
-      birthDate: 631152000000,
-      age: 0,
-      PatientIdentifier: '',
-      customAttributes: [],
-    },
-    service: {
-      uuid: 'service-uuid',
-      name: 'Consultation',
-      appointmentServiceId: 0,
-      description: null,
-      speciality: null,
-      startTime: '',
-      endTime: '',
-      location: {
-        name: '',
-        uuid: '',
-      },
-      color: '',
-      initialAppointmentStatus: null,
-    },
-    serviceType: {
-      uuid: 'service-type-uuid',
-      name: 'General',
-    },
-    provider: {
-      uuid: 'provider-uuid',
-      name: 'Dr. Smith',
-    },
-    location: {
-      uuid: 'location-uuid',
-      name: 'OPD',
-    },
-    startDateTime: 1737024600000,
-    endDateTime: 1737026400000,
-    appointmentKind: 'Scheduled',
-    status: 'Scheduled',
-    comments: 'Follow-up visit',
-    reasons: [
+describe('Appointment Service - FHIR Implementation', () => {
+  const mockFhirAppointment: FhirAppointment = {
+    resourceType: 'Appointment',
+    id: 'appt-uuid-1',
+    identifier: [
       {
-        conceptUuid: 'reason-uuid',
-        name: 'Consultation',
+        system: 'urn:system:bahmni:appointments',
+        value: 'APT-12345',
       },
     ],
-    dateCreated: 1737024000000,
-    length: 0,
-    dateAppointmentScheduled: 0,
+    status: 'booked',
+    serviceType: [
+      {
+        coding: [
+          {
+            code: 'consultation',
+            display: 'Consultation',
+          },
+        ],
+        text: 'Consultation',
+      },
+    ],
+    start: '2025-02-15T10:30:00+05:30',
+    end: '2025-02-15T10:46:00+05:30',
+    comment: 'Follow-up visit',
+    participant: [
+      {
+        actor: {
+          reference: 'Patient/patient-uuid-1',
+          display: 'John Doe (Patient Identifier: ABC200001)',
+        },
+        type: 'Patient',
+        status: 'accepted',
+      },
+      {
+        actor: {
+          reference: 'Practitioner/provider-uuid',
+          display: 'Dr. Smith',
+        },
+        type: 'Practitioner',
+        status: 'accepted',
+      },
+      {
+        actor: {
+          reference: 'Location/location-uuid',
+          display: 'OPD-1',
+        },
+        type: 'Location',
+        status: 'accepted',
+      },
+    ],
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  describe('searchAppointmentsByAttribute', () => {
-    it('should call post with the correct URL and search term', async () => {
-      const searchTerm = { appointmentNumber: 'APT-12345' };
-      const mockAppointments: Appointment[] = [mockAppointment];
-
-      mockedPost.mockResolvedValue(mockAppointments);
-
-      const result = await searchAppointmentsByAttribute(searchTerm);
-
-      expect(mockedPost).toHaveBeenCalledWith(
-        APPOINTMENTS_SEARCH_URL,
-        searchTerm,
-      );
-      expect(result).toEqual(mockAppointments);
-    });
-
-    it('should handle multiple search criteria', async () => {
-      const searchTerm = {
-        appointmentNumber: 'APT-12345',
-        startDate: '2025-01-15T00:00:00.000Z',
-      };
-      const mockAppointments: Appointment[] = [mockAppointment];
-
-      mockedPost.mockResolvedValue(mockAppointments);
-
-      const result = await searchAppointmentsByAttribute(searchTerm);
-
-      expect(mockedPost).toHaveBeenCalledWith(
-        APPOINTMENTS_SEARCH_URL,
-        searchTerm,
-      );
-      expect(result).toEqual(mockAppointments);
-    });
-
-    it('should return empty array when no appointments found', async () => {
-      const searchTerm = { appointmentNumber: 'NON-EXISTENT' };
-      const mockAppointments: Appointment[] = [];
-
-      mockedPost.mockResolvedValue(mockAppointments);
-
-      const result = await searchAppointmentsByAttribute(searchTerm);
-
-      expect(result).toEqual([]);
-      expect(result).toHaveLength(0);
-    });
-
-    it('should return multiple appointments when found', async () => {
-      const searchTerm = { startDate: '2025-01-15T00:00:00.000Z' };
-      const mockAppointment2: Appointment = {
-        ...mockAppointment,
-        uuid: 'appt-uuid-2',
-        appointmentNumber: 'APT-67890',
-        patient: {
-          ...mockAppointment.patient,
-          uuid: 'patient-uuid-2',
-          identifier: 'ABC200002',
-          name: 'Jane Smith',
-          gender: 'F',
-        },
-        startDateTime: 1737028200000,
-        endDateTime: 1737030000000,
-      };
-      const mockAppointments: Appointment[] = [
-        mockAppointment,
-        mockAppointment2,
-      ];
-
-      mockedPost.mockResolvedValue(mockAppointments);
-
-      const result = await searchAppointmentsByAttribute(searchTerm);
-
-      expect(result).toEqual(mockAppointments);
-      expect(result).toHaveLength(2);
-    });
-
-    it('should propagate API errors', async () => {
-      const searchTerm = { appointmentNumber: 'APT-12345' };
-      const mockError = new Error('API Error: Network failure');
-
-      mockedPost.mockRejectedValue(mockError);
-
-      await expect(searchAppointmentsByAttribute(searchTerm)).rejects.toThrow(
-        'API Error: Network failure',
-      );
-      expect(mockedPost).toHaveBeenCalledWith(
-        APPOINTMENTS_SEARCH_URL,
-        searchTerm,
-      );
-    });
-
-    it('should handle empty search term object', async () => {
-      const searchTerm = {};
-      const mockAppointments: Appointment[] = [];
-
-      mockedPost.mockResolvedValue(mockAppointments);
-
-      const result = await searchAppointmentsByAttribute(searchTerm);
-
-      expect(mockedPost).toHaveBeenCalledWith(
-        APPOINTMENTS_SEARCH_URL,
-        searchTerm,
-      );
-      expect(result).toEqual([]);
-    });
   });
 
   describe('getAppointmentById', () => {
@@ -188,144 +77,174 @@ describe('Appointment Service', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      mockedGet.mockResolvedValue(mockAppointment);
+      mockedGet.mockResolvedValue(mockFhirAppointment);
     });
 
-    it('should call API with correct appointment URL', async () => {
+    it('should call API with correct FHIR appointment URL', async () => {
       await getAppointmentById(mockUUID);
 
-      expect(mockedGet).toHaveBeenCalledWith(`${APPOINTMENTS_URL}/${mockUUID}`);
-      expect(mockedGet).toHaveBeenCalledWith(
-        `/openmrs/ws/rest/v1/appointments/${mockUUID}`,
-      );
+      expect(mockedGet).toHaveBeenCalledWith(APPOINTMENT_BY_ID_URL(mockUUID));
     });
 
-    it('should return Appointment from API response', async () => {
+    it('should return transformed Appointment from FHIR response', async () => {
       const result = await getAppointmentById(mockUUID);
 
-      expect(result).toEqual(mockAppointment);
-      expect(result.uuid).toBe(mockUUID);
+      expect(result.uuid).toBe('appt-uuid-1');
       expect(result.appointmentNumber).toBe('APT-12345');
-      expect(result.patient.name).toBe('John Doe');
+      expect(result.status).toBe('booked');
+      expect(result.startDateTime).toBe('2025-02-15T10:30:00+05:30');
+      expect(result.endDateTime).toBe('2025-02-15T10:46:00+05:30');
     });
 
-    it('should handle 404 not found errors', async () => {
-      const notFoundError = new Error('Appointment not found');
-      notFoundError.name = 'NotFoundError';
-      mockedGet.mockRejectedValue(notFoundError);
-
-      await expect(getAppointmentById('invalid-uuid')).rejects.toThrow(
-        notFoundError,
-      );
-    });
-
-    it('should work with different UUID formats', async () => {
-      const shortUUID = '12345';
-      await getAppointmentById(shortUUID);
-
-      expect(mockedGet).toHaveBeenCalledWith(
-        `${APPOINTMENTS_URL}/${shortUUID}`,
-      );
-    });
-
-    it('should handle empty UUID', async () => {
-      const emptyUUID = '';
-      await getAppointmentById(emptyUUID);
-
-      expect(mockedGet).toHaveBeenCalledWith(
-        `${APPOINTMENTS_URL}/${emptyUUID}`,
-      );
-    });
-
-    it('should return appointment with complete patient information', async () => {
+    it('should extract patient details from FHIR participant', async () => {
       const result = await getAppointmentById(mockUUID);
 
-      expect(result.patient).toBeDefined();
-      expect(result.patient.uuid).toBe('patient-uuid-1');
+      expect(result.patient.name).toBe('John Doe');
       expect(result.patient.identifier).toBe('ABC200001');
-      expect(result.patient.name).toBe('John Doe');
-      expect(result.patient.gender).toBe('M');
+      expect(result.patient.uuid).toBe('patient-uuid-1');
     });
 
-    it('should return appointment with service details', async () => {
+    it('should extract provider details from FHIR participant', async () => {
       const result = await getAppointmentById(mockUUID);
 
-      expect(result.service).toBeDefined();
-      expect(result.service.uuid).toBe('service-uuid');
+      expect(result.provider).not.toBeNull();
+      expect(result.provider?.name).toBe('Dr. Smith');
+      expect(result.provider?.uuid).toBe('provider-uuid');
+    });
+
+    it('should extract location details from FHIR participant', async () => {
+      const result = await getAppointmentById(mockUUID);
+
+      expect(result.location.name).toBe('OPD-1');
+      expect(result.location.uuid).toBe('location-uuid');
+    });
+
+    it('should extract service details from serviceType', async () => {
+      const result = await getAppointmentById(mockUUID);
+
       expect(result.service.name).toBe('Consultation');
     });
 
-    it('should return appointment with status information', async () => {
+    it('should extract reason from comment field', async () => {
       const result = await getAppointmentById(mockUUID);
 
-      expect(result.status).toBe('Scheduled');
-      expect(result.appointmentKind).toBe('Scheduled');
+      expect(result.comments).toBe('Follow-up visit');
+      expect(result.reasons).toHaveLength(1);
+      expect(result.reasons[0].name).toBe('Follow-up visit');
     });
 
-    it('should return appointment with reasons when present', async () => {
+    it('should handle appointment without provider', async () => {
+      const appointmentWithoutProvider: FhirAppointment = {
+        ...mockFhirAppointment,
+        participant: mockFhirAppointment.participant?.filter(
+          (p) => p.type !== 'Practitioner',
+        ),
+      };
+      mockedGet.mockResolvedValue(appointmentWithoutProvider);
+
       const result = await getAppointmentById(mockUUID);
 
-      expect(result.reasons).toHaveLength(1);
-      expect(result.reasons[0].conceptUuid).toBe('reason-uuid');
-      expect(result.reasons[0].name).toBe('Consultation');
+      expect(result.provider).toBeNull();
+    });
+
+    it('should handle appointment without comment/reason', async () => {
+      const appointmentWithoutComment: FhirAppointment = {
+        ...mockFhirAppointment,
+        comment: undefined,
+      };
+      mockedGet.mockResolvedValue(appointmentWithoutComment);
+
+      const result = await getAppointmentById(mockUUID);
+
+      expect(result.comments).toBeNull();
+      expect(result.reasons).toHaveLength(0);
+    });
+
+    it('should preserve FHIR instant format in startDateTime and endDateTime', async () => {
+      const result = await getAppointmentById(mockUUID);
+
+      // FHIR instant format includes timezone
+      expect(result.startDateTime).toContain('T');
+      expect(result.startDateTime).toContain('+05:30');
+      expect(result.endDateTime).toContain('T');
+      expect(result.endDateTime).toContain('+05:30');
     });
   });
 
   describe('getUpcomingAppointments', () => {
     const patientUUID = 'patient-uuid-123';
-    const mockSqlResponse = {
-      uuid: 'appt-uuid-1',
-      DASHBOARD_APPOINTMENTS_START_DATE_IN_UTC_KEY: [2025, 2, 15, 10, 30],
-      DASHBOARD_APPOINTMENTS_SLOT_KEY: '10:30 AM - 10:46 AM',
-      DASHBOARD_APPOINTMENTS_APPOINTMENT_NUMBER_KEY: 'APT-001',
-      DASHBOARD_APPOINTMENTS_REASON_KEY: 'Follow-up',
-      DASHBOARD_APPOINTMENTS_SERVICE_KEY: 'Consultation',
-      DASHBOARD_APPOINTMENTS_SERVICE_TYPE_KEY: 'General',
-      DASHBOARD_APPOINTMENTS_PROVIDER_KEY: 'Dr. Smith',
-      DASHBOARD_APPOINTMENTS_LOCATION_KEY: 'OPD-1',
-      DASHBOARD_APPOINTMENTS_STATUS_KEY: 'Scheduled',
+    const mockFutureFhirAppointment: FhirAppointment = {
+      ...mockFhirAppointment,
+      id: 'future-appt-1',
+      start: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+      end: new Date(Date.now() + 86400000 + 960000).toISOString(),
+      status: 'booked',
     };
 
-    it('should call GET with correct SQL endpoint for upcoming appointments', async () => {
-      const mockAppointments = [mockSqlResponse];
-      mockedGet.mockResolvedValue(mockAppointments);
+    const mockFhirBundle = {
+      resourceType: 'Bundle' as const,
+      type: 'searchset' as const,
+      entry: [
+        {
+          resource: mockFutureFhirAppointment,
+        },
+      ],
+    };
+
+    it('should call GET with correct FHIR endpoint', async () => {
+      mockedGet.mockResolvedValue(mockFhirBundle);
 
       await getUpcomingAppointments(patientUUID);
 
-      const expectedUrl = `${BAHMNI_SQL_URL}?patientUuid=${patientUUID}&q=bahmni.sqlGet.upComingAppointments&v=full`;
-      expect(mockedGet).toHaveBeenCalledWith(expectedUrl);
-      expect(mockedGet).toHaveBeenCalledTimes(1);
+      expect(mockedGet).toHaveBeenCalledWith(
+        UPCOMING_APPOINTMENTS_URL(patientUUID),
+      );
     });
 
-    it('should return array of upcoming appointments from SQL response', async () => {
-      const mockAppointments = [mockSqlResponse];
-      mockedGet.mockResolvedValue(mockAppointments);
+    it('should return transformed upcoming appointments', async () => {
+      mockedGet.mockResolvedValue(mockFhirBundle);
 
       const result = await getUpcomingAppointments(patientUUID);
 
-      expect(result).toEqual(mockAppointments);
       expect(result).toHaveLength(1);
+      expect(result[0].uuid).toBe('future-appt-1');
+      expect(result[0].status).toBe('booked');
     });
 
-    it('should handle multiple upcoming appointments', async () => {
-      const mockAppointment2 = {
-        ...mockSqlResponse,
-        uuid: 'appt-uuid-2',
-        DASHBOARD_APPOINTMENTS_APPOINTMENT_NUMBER_KEY: 'APT-002',
-        DASHBOARD_APPOINTMENTS_START_DATE_IN_UTC_KEY: [2025, 2, 20, 14, 0],
+    it('should return appointments with any valid status from server', async () => {
+      const cancelledAppointment: FhirAppointment = {
+        ...mockFhirAppointment,
+        id: 'cancelled-appt-1',
+        start: mockFutureFhirAppointment.start,
+        end: mockFutureFhirAppointment.end,
+        status: 'cancelled',
       };
-      const mockAppointments = [mockSqlResponse, mockAppointment2];
-      mockedGet.mockResolvedValue(mockAppointments);
+
+      const bundleWithCancelled = {
+        resourceType: 'Bundle' as const,
+        type: 'searchset' as const,
+        entry: [
+          { resource: mockFutureFhirAppointment },
+          { resource: cancelledAppointment },
+        ],
+      };
+
+      mockedGet.mockResolvedValue(bundleWithCancelled);
 
       const result = await getUpcomingAppointments(patientUUID);
 
+      // Server returns all appointments regardless of status
       expect(result).toHaveLength(2);
-      expect(result[0].uuid).toBe('appt-uuid-1');
-      expect(result[1].uuid).toBe('appt-uuid-2');
     });
 
     it('should return empty array when no upcoming appointments', async () => {
-      mockedGet.mockResolvedValue([]);
+      const emptyBundle = {
+        resourceType: 'Bundle' as const,
+        type: 'searchset' as const,
+        entry: [],
+      };
+
+      mockedGet.mockResolvedValue(emptyBundle);
 
       const result = await getUpcomingAppointments(patientUUID);
 
@@ -333,95 +252,103 @@ describe('Appointment Service', () => {
       expect(result).toHaveLength(0);
     });
 
+    it('should handle missing entry in bundle', async () => {
+      const bundleWithoutEntry = {
+        resourceType: 'Bundle' as const,
+        type: 'searchset' as const,
+      };
+
+      mockedGet.mockResolvedValue(bundleWithoutEntry);
+
+      const result = await getUpcomingAppointments(patientUUID);
+
+      expect(result).toEqual([]);
+    });
+
     it('should propagate API errors', async () => {
-      const mockError = new Error('SQL Query Error');
+      const mockError = new Error('FHIR API Error');
       mockedGet.mockRejectedValue(mockError);
 
       await expect(getUpcomingAppointments(patientUUID)).rejects.toThrow(
-        'SQL Query Error',
+        'FHIR API Error',
       );
-      expect(mockedGet).toHaveBeenCalledWith(
-        expect.stringContaining('upComingAppointments'),
-      );
-    });
-
-    it('should include patientUuid in query string', async () => {
-      mockedGet.mockResolvedValue([]);
-
-      await getUpcomingAppointments(patientUUID);
-
-      const callArg = mockedGet.mock.calls[0][0];
-      expect(callArg).toContain(`patientUuid=${patientUUID}`);
-      expect(callArg).toContain('q=bahmni.sqlGet.upComingAppointments');
-      expect(callArg).toContain('v=full');
-    });
-
-    it('should handle different patient UUIDs', async () => {
-      const differentUUID = 'patient-uuid-456';
-      mockedGet.mockResolvedValue([]);
-
-      await getUpcomingAppointments(differentUUID);
-
-      const callArg = mockedGet.mock.calls[0][0];
-      expect(callArg).toContain(`patientUuid=${differentUUID}`);
     });
   });
 
   describe('getPastAppointments', () => {
-    const patientUUID = 'patient-uuid-123';
-    const mockSqlResponse = {
-      uuid: 'appt-uuid-past-1',
-      DASHBOARD_APPOINTMENTS_START_DATE_IN_UTC_KEY: [2025, 1, 10, 10, 30],
-      DASHBOARD_APPOINTMENTS_SLOT_KEY: '10:30 AM - 10:46 AM',
-      DASHBOARD_APPOINTMENTS_APPOINTMENT_NUMBER_KEY: 'APT-OLD-001',
-      DASHBOARD_APPOINTMENTS_REASON_KEY: 'Consultation',
-      DASHBOARD_APPOINTMENTS_SERVICE_KEY: 'Consultation',
-      DASHBOARD_APPOINTMENTS_SERVICE_TYPE_KEY: 'General',
-      DASHBOARD_APPOINTMENTS_PROVIDER_KEY: 'Dr. Johnson',
-      DASHBOARD_APPOINTMENTS_LOCATION_KEY: 'OPD-2',
-      DASHBOARD_APPOINTMENTS_STATUS_KEY: 'Completed',
+    const patientUUID = 'patient-uuid-456';
+    const mockPastFhirAppointment: FhirAppointment = {
+      ...mockFhirAppointment,
+      id: 'past-appt-1',
+      start: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+      end: new Date(Date.now() - 86400000 + 960000).toISOString(),
+      status: 'fulfilled',
     };
 
-    it('should call GET with correct SQL endpoint for past appointments', async () => {
-      const mockAppointments = [mockSqlResponse];
-      mockedGet.mockResolvedValue(mockAppointments);
+    const mockFhirBundle = {
+      resourceType: 'Bundle' as const,
+      type: 'searchset' as const,
+      entry: [
+        {
+          resource: mockPastFhirAppointment,
+        },
+      ],
+    };
+
+    it('should call GET with correct FHIR endpoint', async () => {
+      mockedGet.mockResolvedValue(mockFhirBundle);
 
       await getPastAppointments(patientUUID);
 
-      const expectedUrl = `${BAHMNI_SQL_URL}?patientUuid=${patientUUID}&q=bahmni.sqlGet.pastAppointments&v=full`;
-      expect(mockedGet).toHaveBeenCalledWith(expectedUrl);
-      expect(mockedGet).toHaveBeenCalledTimes(1);
+      expect(mockedGet).toHaveBeenCalledWith(
+        PAST_APPOINTMENTS_URL(patientUUID),
+      );
     });
 
-    it('should return array of past appointments from SQL response', async () => {
-      const mockAppointments = [mockSqlResponse];
-      mockedGet.mockResolvedValue(mockAppointments);
+    it('should return transformed past appointments', async () => {
+      mockedGet.mockResolvedValue(mockFhirBundle);
 
       const result = await getPastAppointments(patientUUID);
 
-      expect(result).toEqual(mockAppointments);
       expect(result).toHaveLength(1);
+      expect(result[0].uuid).toBe('past-appt-1');
+      expect(result[0].status).toBe('fulfilled');
     });
 
-    it('should handle multiple past appointments', async () => {
-      const mockAppointment2 = {
-        ...mockSqlResponse,
-        uuid: 'appt-uuid-past-2',
-        DASHBOARD_APPOINTMENTS_APPOINTMENT_NUMBER_KEY: 'APT-OLD-002',
-        DASHBOARD_APPOINTMENTS_START_DATE_IN_UTC_KEY: [2025, 1, 5, 11, 0],
+    it('should return appointments from server bundle', async () => {
+      const futureAppointment: FhirAppointment = {
+        ...mockFhirAppointment,
+        id: 'future-appt-1',
+        start: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+        end: new Date(Date.now() + 86400000 + 960000).toISOString(),
+        status: 'booked',
       };
-      const mockAppointments = [mockSqlResponse, mockAppointment2];
-      mockedGet.mockResolvedValue(mockAppointments);
+
+      const bundleWithMixed = {
+        resourceType: 'Bundle' as const,
+        type: 'searchset' as const,
+        entry: [
+          { resource: mockPastFhirAppointment },
+          { resource: futureAppointment },
+        ],
+      };
+
+      mockedGet.mockResolvedValue(bundleWithMixed);
 
       const result = await getPastAppointments(patientUUID);
 
+      // Server returns all appointments in the bundle
       expect(result).toHaveLength(2);
-      expect(result[0].uuid).toBe('appt-uuid-past-1');
-      expect(result[1].uuid).toBe('appt-uuid-past-2');
     });
 
     it('should return empty array when no past appointments', async () => {
-      mockedGet.mockResolvedValue([]);
+      const emptyBundle = {
+        resourceType: 'Bundle' as const,
+        type: 'searchset' as const,
+        entry: [],
+      };
+
+      mockedGet.mockResolvedValue(emptyBundle);
 
       const result = await getPastAppointments(patientUUID);
 
@@ -429,61 +356,48 @@ describe('Appointment Service', () => {
       expect(result).toHaveLength(0);
     });
 
+    it('should handle multiple past appointments', async () => {
+      const secondPastAppointment: FhirAppointment = {
+        ...mockFhirAppointment,
+        id: 'past-appt-2',
+        start: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+        end: new Date(Date.now() - 172800000 + 960000).toISOString(),
+        status: 'fulfilled',
+      };
+
+      const bundleWithMultiple = {
+        resourceType: 'Bundle' as const,
+        type: 'searchset' as const,
+        entry: [
+          { resource: mockPastFhirAppointment },
+          { resource: secondPastAppointment },
+        ],
+      };
+
+      mockedGet.mockResolvedValue(bundleWithMultiple);
+
+      const result = await getPastAppointments(patientUUID);
+
+      expect(result).toHaveLength(2);
+    });
+
     it('should propagate API errors', async () => {
-      const mockError = new Error('SQL Query Error');
+      const mockError = new Error('FHIR API Error');
       mockedGet.mockRejectedValue(mockError);
 
       await expect(getPastAppointments(patientUUID)).rejects.toThrow(
-        'SQL Query Error',
-      );
-      expect(mockedGet).toHaveBeenCalledWith(
-        expect.stringContaining('pastAppointments'),
-      );
-    });
-
-    it('should include patientUuid in query string', async () => {
-      mockedGet.mockResolvedValue([]);
-
-      await getPastAppointments(patientUUID);
-
-      const callArg = mockedGet.mock.calls[0][0];
-      expect(callArg).toContain(`patientUuid=${patientUUID}`);
-      expect(callArg).toContain('q=bahmni.sqlGet.pastAppointments');
-      expect(callArg).toContain('v=full');
-    });
-
-    it('should handle network errors', async () => {
-      const networkError = new Error('Network timeout');
-      mockedGet.mockRejectedValue(networkError);
-
-      await expect(getPastAppointments(patientUUID)).rejects.toThrow(
-        'Network timeout',
+        'FHIR API Error',
       );
     });
 
     it('should work with different patient UUIDs', async () => {
       const differentUUID = 'patient-uuid-789';
-      mockedGet.mockResolvedValue([]);
+      mockedGet.mockResolvedValue(mockFhirBundle);
 
       await getPastAppointments(differentUUID);
 
-      const callArg = mockedGet.mock.calls[0][0];
-      expect(callArg).toContain(`patientUuid=${differentUUID}`);
-    });
-
-    it('should return appointment with all SQL response fields', async () => {
-      mockedGet.mockResolvedValue([mockSqlResponse]);
-
-      const result = await getPastAppointments(patientUUID);
-
-      expect(result[0]).toHaveProperty('uuid', 'appt-uuid-past-1');
-      expect(result[0]).toHaveProperty(
-        'DASHBOARD_APPOINTMENTS_STATUS_KEY',
-        'Completed',
-      );
-      expect(result[0]).toHaveProperty(
-        'DASHBOARD_APPOINTMENTS_PROVIDER_KEY',
-        'Dr. Johnson',
+      expect(mockedGet).toHaveBeenCalledWith(
+        PAST_APPOINTMENTS_URL(differentUUID),
       );
     });
   });

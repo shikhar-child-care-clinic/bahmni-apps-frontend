@@ -71,7 +71,7 @@ export {
   getAppointmentById,
   getUpcomingAppointments,
   getPastAppointments,
-} from './AppointmentService/appointmmetService';
+} from './AppointmentService/appointmentService';
 export {
   type Appointment,
   type AppointmentSearchResult,
@@ -79,6 +79,9 @@ export {
   type AppointmentService,
   type Location,
   type Reason,
+  type AppointmentBundle,
+  type AppointmentParticipant,
+  FHIR_APPOINTMENT_STATUSES,
 } from './AppointmentService/models';
 export { getFormattedError } from './errorHandling';
 export {

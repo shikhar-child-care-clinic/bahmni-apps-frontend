@@ -4,9 +4,12 @@ export {
   getAppointmentById,
   getUpcomingAppointments,
   getPastAppointments,
-} from './appointmmetService';
+} from './appointmentService';
 export {
   type Appointment,
   type AppointmentSearchResult,
   type Reason,
+  type AppointmentBundle,
+  type AppointmentParticipant,
+  FHIR_APPOINTMENT_STATUSES,
 } from './models';
