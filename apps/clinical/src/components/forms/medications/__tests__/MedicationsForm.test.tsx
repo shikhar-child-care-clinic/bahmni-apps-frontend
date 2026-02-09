@@ -4,6 +4,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Medication } from 'fhir/r4';
 import { axe, toHaveNoViolations } from 'jest-axe';
+
 import useMedicationConfig from '../../../../hooks/useMedicationConfig';
 import { useMedicationSearch } from '../../../../hooks/useMedicationSearch';
 import { MedicationInputEntry } from '../../../../models/medication';
@@ -26,10 +27,14 @@ jest.mock('../../../../services/medicationService', () => ({
 }));
 
 // Mock @bahmni/widgets hooks
-jest.mock('@bahmni/widgets', () => ({
-  useNotification: jest.fn(),
-  usePatientUUID: jest.fn(),
-}));
+jest.mock('@bahmni/widgets', () => {
+  const widgets = jest.requireActual('@bahmni/widgets');
+  return {
+    ...widgets,
+    useNotification: jest.fn(),
+    usePatientUUID: jest.fn(),
+  };
+});
 
 // Mock TanStack Query
 jest.mock('@tanstack/react-query', () => ({
