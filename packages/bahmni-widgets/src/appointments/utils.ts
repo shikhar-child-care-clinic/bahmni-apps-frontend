@@ -9,97 +9,6 @@ export interface FormattedAppointment extends Appointment {
 }
 
 /**
- * Transforms SQL endpoint response to Appointment interface format
- * SQL response has flat keys like DASHBOARD_APPOINTMENTS_*_KEY
- */
-export const transformSqlAppointmentResponse = (
-  sqlResponse: Record<string, unknown>,
-): Appointment & {
-  appointmentSlot?: string;
-  appointmentNumber?: string;
-  reason?: string;
-} => {
-  return {
-    uuid: sqlResponse.uuid as string,
-    startDateTime:
-      sqlResponse.DASHBOARD_APPOINTMENTS_START_DATE_IN_UTC_KEY as number,
-    endDateTime:
-      sqlResponse.DASHBOARD_APPOINTMENTS_END_DATE_IN_UTC_KEY as number,
-    appointmentSlot: sqlResponse.DASHBOARD_APPOINTMENTS_SLOT_KEY as
-      | string
-      | undefined,
-    appointmentNumber:
-      sqlResponse.DASHBOARD_APPOINTMENTS_APPOINTMENT_NUMBER_KEY as
-        | string
-        | undefined,
-    reason: sqlResponse.DASHBOARD_APPOINTMENTS_REASON_KEY as string | undefined,
-    service: {
-      appointmentServiceId: 0,
-      name:
-        (sqlResponse.DASHBOARD_APPOINTMENTS_SERVICE_KEY as
-          | string
-          | undefined) ?? '-',
-      description: null,
-      speciality: null,
-      startTime: '',
-      endTime: '',
-      location: {
-        name:
-          (sqlResponse.DASHBOARD_APPOINTMENTS_LOCATION_KEY as
-            | string
-            | undefined) ?? '-',
-        uuid: '',
-      },
-      uuid: '',
-      color: '',
-      initialAppointmentStatus: null,
-    },
-    serviceType: {
-      id: undefined,
-      name:
-        (sqlResponse.DASHBOARD_APPOINTMENTS_SERVICE_TYPE_KEY as
-          | string
-          | undefined) ?? '-',
-      description: undefined,
-      uuid: '',
-    },
-    provider: {
-      id: undefined,
-      name:
-        (sqlResponse.DASHBOARD_APPOINTMENTS_PROVIDER_KEY as
-          | string
-          | undefined) ?? '-',
-      uuid: '',
-    },
-    location: {
-      name:
-        (sqlResponse.DASHBOARD_APPOINTMENTS_LOCATION_KEY as
-          | string
-          | undefined) ?? '-',
-      uuid: '',
-    },
-    status:
-      (sqlResponse.DASHBOARD_APPOINTMENTS_STATUS_KEY as string | undefined) ??
-      'Unknown',
-    appointmentKind: '',
-    comments: null,
-    reasons: [],
-    dateCreated: 0,
-    dateAppointmentScheduled: 0,
-    patient: {
-      uuid: '',
-      identifier: '',
-      name: '',
-      gender: '',
-      birthDate: 0,
-      age: 0,
-      PatientIdentifier: '',
-      customAttributes: [],
-    },
-  };
-};
-
-/**
  * Converts UTC array [year, month, day, hour, minute] to formatted date string
  * This ensures UTC time is converted to local timezone before formatting
  */
@@ -153,6 +62,7 @@ const formatTimeFromUtcArray = (dateTimeArray: number[]): string => {
  * Formats an appointment object for display by converting UTC timestamps to readable date and time strings
  *
  * NOTE: Time slot is reconstructed from UTC arrays (not from response) to ensure proper timezone conversion
+ * This function handles display-layer formatting only. Service layer has already transformed SQL data to domain objects.
  */
 export const formatAppointment = (
   appointment: Appointment & {
@@ -209,9 +119,22 @@ export const sortAppointmentsByDate = (
   appointments: FormattedAppointment[],
 ): FormattedAppointment[] => {
   return [...appointments].sort((a, b) => {
+    // Handle invalid date strings (e.g., "-")
+    if (a.appointmentDate === '-' || b.appointmentDate === '-') {
+      if (a.appointmentDate === b.appointmentDate) return 0;
+      return a.appointmentDate === '-' ? 1 : -1;
+    }
+
     // Parse date strings in dd/MM/yyyy format and compare
     const dateA = new Date(a.appointmentDate.split('/').reverse().join('-'));
     const dateB = new Date(b.appointmentDate.split('/').reverse().join('-'));
-    return dateA.getTime() - dateB.getTime();
+
+    const timeA = dateA.getTime();
+    const timeB = dateB.getTime();
+
+    // Handle NaN dates
+    if (isNaN(timeA) || isNaN(timeB)) return 0;
+
+    return timeA - timeB;
   });
 };

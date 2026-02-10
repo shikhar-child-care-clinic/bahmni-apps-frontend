@@ -19,11 +19,7 @@ import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
 import styles from './styles/AppointmentsTable.module.scss';
-import {
-  formatAppointment,
-  FormattedAppointment,
-  transformSqlAppointmentResponse,
-} from './utils';
+import { formatAppointment, FormattedAppointment } from './utils';
 
 // Field name to translation key mapping
 const FIELD_TRANSLATION_MAP: Record<string, string> = {
@@ -175,34 +171,32 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
   // Table headers - built from config fields
   const headers = useMemo(
     () =>
-      (config?.fields ?? DEFAULT_FIELDS).map((fieldKey: string) => ({
+      configuredFields.map((fieldKey: string) => ({
         key: fieldKey,
         header: t(FIELD_TRANSLATION_MAP[fieldKey] || fieldKey),
       })),
-    [config?.fields, t],
+    [configuredFields, t],
   );
 
   const sortable = useMemo(
     () =>
-      (config?.fields ?? DEFAULT_FIELDS).map((fieldKey: string) => ({
+      configuredFields.map((fieldKey: string) => ({
         key: fieldKey,
         sortable: true,
       })),
-    [config?.fields],
+    [configuredFields],
   );
 
   // Format upcoming appointments for display
   const formattedUpcomingAppointments = useMemo(() => {
     if (!upcomingAppointments) return [];
-    return upcomingAppointments.map(
-      (sqlResponse: Record<string, unknown>, index: number) => {
-        // Transform SQL response to Appointment format, then format for display
-        const appointment = transformSqlAppointmentResponse(sqlResponse);
-        // Add a generated uuid if API didn't provide one
-        appointment.uuid ??= `upcoming-${index}`;
-        return formatAppointment(appointment);
-      },
-    );
+    return upcomingAppointments.map((appointment, index: number) => {
+      // Service has already transformed SQL response to Appointment format
+      // Add a generated uuid if API didn't provide one
+      appointment.uuid ??= `upcoming-${index}`;
+      // Format for display (handles date/time formatting)
+      return formatAppointment(appointment);
+    });
   }, [upcomingAppointments]);
 
   // Format past appointments for display
@@ -210,18 +204,18 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
     if (!pastAppointments || pastAppointments.length === 0) {
       return [];
     }
-    const formatted = pastAppointments.map(
-      (sqlResponse: Record<string, unknown>, index: number) => {
-        if (!sqlResponse) {
+    const formatted = pastAppointments
+      .map((appointment, index: number) => {
+        if (!appointment) {
           return undefined;
         }
-        // Transform SQL response to Appointment format, then format for display
-        const appointment = transformSqlAppointmentResponse(sqlResponse);
+        // Service has already transformed SQL response to Appointment format
         // Add a generated uuid if API didn't provide one
         appointment.uuid ??= `past-${index}`;
+        // Format for display (handles date/time formatting)
         return formatAppointment(appointment);
-      },
-    );
+      })
+      .filter((item): item is FormattedAppointment => item !== undefined);
     return formatted;
   }, [pastAppointments]);
 
@@ -235,22 +229,32 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
 
       const record = row as unknown as Record<string, unknown>;
       switch (key) {
-        case 'appointmentNumber':
-          return (record.appointmentNumber as string | undefined) ?? '-';
+        case 'appointmentNumber': {
+          const appointmentNum = (
+            record.appointmentNumber as string | undefined
+          )?.trim();
+          return appointmentNum ?? '-';
+        }
         case 'service':
-          return row.service?.name ? (
+          return row.service?.name?.trim() ? (
             <p className={styles.columnDataBold}>{row.service.name}</p>
           ) : (
             '-'
           );
-        case 'reason':
-          return (record.reason as string | undefined) ?? '-';
-        case 'appointmentDate':
+        case 'reason': {
+          const reasonVal = (record.reason as string | undefined)?.trim();
+          return reasonVal ?? '-';
+        }
+        case 'appointmentDate': {
           // Date is already formatted as DD/MM/YYYY
-          return row.appointmentDate ?? '-';
-        case 'appointmentSlot':
+          const dateVal = row.appointmentDate?.trim();
+          return dateVal ?? '-';
+        }
+        case 'appointmentSlot': {
           // Slot/Time range from SQL (e.g., "11:30 PM - 11:46 PM")
-          return row.appointmentTime ?? '-';
+          const timeVal = row.appointmentTime?.trim();
+          return timeVal ?? '-';
+        }
         case 'status':
           return (
             <div
@@ -260,8 +264,11 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
               {t(getAppointmentStatusKey(row.status))}
             </div>
           );
-        case 'provider':
-          return row.provider?.name ?? '-';
+        case 'provider': {
+          const providerName = row.provider?.name?.trim();
+
+          return providerName?.length ? providerName : '-';
+        }
         default:
           return null;
       }

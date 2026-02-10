@@ -303,8 +303,11 @@ describe('Appointment Service', () => {
 
       const result = await getUpcomingAppointments(patientUUID);
 
-      expect(result).toEqual(mockAppointments);
+      // Service transforms SQL response to Appointment objects
       expect(result).toHaveLength(1);
+      expect(result[0].uuid).toBe('appt-uuid-1');
+      expect(result[0].status).toBe('Scheduled');
+      expect(result[0].provider?.name).toBe('Dr. Smith');
     });
 
     it('should handle multiple upcoming appointments', async () => {
@@ -399,8 +402,11 @@ describe('Appointment Service', () => {
 
       const result = await getPastAppointments(patientUUID);
 
-      expect(result).toEqual(mockAppointments);
+      // Service transforms SQL response to Appointment objects
       expect(result).toHaveLength(1);
+      expect(result[0].uuid).toBe('appt-uuid-past-1');
+      expect(result[0].status).toBe('Completed');
+      expect(result[0].provider?.name).toBe('Dr. Johnson');
     });
 
     it('should handle multiple past appointments', async () => {
@@ -476,15 +482,13 @@ describe('Appointment Service', () => {
 
       const result = await getPastAppointments(patientUUID);
 
+      // Service transforms SQL response keys to Appointment properties
       expect(result[0]).toHaveProperty('uuid', 'appt-uuid-past-1');
-      expect(result[0]).toHaveProperty(
-        'DASHBOARD_APPOINTMENTS_STATUS_KEY',
-        'Completed',
-      );
-      expect(result[0]).toHaveProperty(
-        'DASHBOARD_APPOINTMENTS_PROVIDER_KEY',
-        'Dr. Johnson',
-      );
+      expect(result[0]).toHaveProperty('status', 'Completed');
+      expect(result[0]).toHaveProperty('provider');
+      expect(result[0].provider?.name).toBe('Dr. Johnson');
+      expect(result[0]).toHaveProperty('appointmentNumber', 'APT-OLD-001');
+      expect(result[0]).toHaveProperty('reason', 'Consultation');
     });
   });
 });
