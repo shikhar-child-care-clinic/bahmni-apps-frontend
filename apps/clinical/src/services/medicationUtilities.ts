@@ -23,8 +23,9 @@ export const getBaseName = (fullName: string): string => {
     return '';
   }
 
-  // Check for display format with ")- " separator
-  const separatorMatch = fullName.match(/\)-\s*(.+)$/);
+  // Check for display format with ")- " separator (handles "Code (123)- Medication Name")
+  // Allows optional whitespace around ) and -
+  const separatorMatch = fullName.match(/\)\s*-\s*(.+)$/);
   if (separatorMatch) {
     return separatorMatch[1].trim().toLowerCase();
   }
@@ -32,23 +33,28 @@ export const getBaseName = (fullName: string): string => {
   // Fallback: Extract name before parentheses
   const parenthesesMatch = fullName.match(/^(.+?)\s*\(/);
   if (parenthesesMatch) {
-    const nameBeforeParens = parenthesesMatch[1].trim();
-    const baseNameMatch = nameBeforeParens.match(
-      /^([A-Za-z0-9-\s]+?)(?:\s+\d+.*)?$/,
-    );
-    if (baseNameMatch) {
-      return baseNameMatch[1].trim().toLowerCase();
+    let baseName = parenthesesMatch[1].trim();
+    // Remove trailing numbers/dosage: space followed by digits/decimals OR digits at the end
+    baseName = baseName.replace(/\s+[\d.]+.*$/g, '').trim();
+    baseName = baseName.replace(/\d+$/g, '').trim();
+    // Only lowercase if it contains non-digit characters (handles "only numbers" case)
+    if (baseName && !/^\d+$/.test(baseName)) {
+      return baseName.toLowerCase();
     }
-    return nameBeforeParens.toLowerCase();
+    return '';
   }
 
-  // If no parentheses, remove trailing numbers
-  const baseNameMatch = fullName.match(/^([A-Za-z0-9-\s]+?)(?:\s+\d+.*)?$/);
-  if (baseNameMatch) {
-    return baseNameMatch[1].trim().toLowerCase();
+  // If no parentheses, remove trailing numbers (handles "Vitamin A 5000 IU" → "vitamin a")
+  let baseName = fullName;
+  // Remove anything that looks like dosage: space followed by numbers/decimals
+  baseName = baseName.replace(/\s+[\d.]+.*$/g, '').trim();
+  // Also remove trailing digits even if not preceded by space (handles "B12" → "B")
+  baseName = baseName.replace(/\d+$/g, '').trim();
+  // Only lowercase if it contains non-digit characters (handles "only numbers" case)
+  if (baseName && !/^\d+$/.test(baseName)) {
+    return baseName.toLowerCase();
   }
-
-  return fullName.trim().toLowerCase();
+  return '';
 };
 
 /**
@@ -60,6 +66,10 @@ export const calculateEndDate = (
   durationUnit: string,
 ): Date => {
   const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
+  // Validate that the date is valid
+  if (isNaN(start.getTime())) {
+    throw new Error(`Invalid date: ${startDate}`);
+  }
   const daysMultiplier = DURATION_UNIT_TO_DAYS[durationUnit] ?? 1;
   const totalDays = duration * daysMultiplier;
   return addDays(start, totalDays);

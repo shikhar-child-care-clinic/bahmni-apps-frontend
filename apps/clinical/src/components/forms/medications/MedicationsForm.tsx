@@ -120,7 +120,7 @@ const MedicationsForm: React.FC = React.memo(() => {
    */
   const isDuplicateMedication = useCallback(
     (
-      medicationId: string,
+      _medicationId: string, // Currently unused, may be needed for future enhancement
       medicationDisplayName: string,
       newStartDate: Date,
       newDuration: number,
