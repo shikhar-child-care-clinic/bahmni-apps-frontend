@@ -92,16 +92,6 @@ const MedicationsForm: React.FC = React.memo(() => {
     queryFn: () => getPatientMedications(patientUUID!, [], undefined),
   });
 
-  useEffect(() => {
-    if (existingMedicationsError) {
-      addNotification({
-        title: t('ERROR_DEFAULT_TITLE'),
-        message: existingMedicationsError.message,
-        type: 'error',
-      });
-    }
-  }, [existingMedicationsError, addNotification, t]);
-
   // Filter to only active/scheduled medications
   const activeMedications = useMemo(() => {
     if (!existingMedications) return [];
@@ -112,6 +102,137 @@ const MedicationsForm: React.FC = React.memo(() => {
     );
     return filtered;
   }, [existingMedications]);
+
+  useEffect(() => {
+    if (existingMedicationsError) {
+      addNotification({
+        title: t('ERROR_DEFAULT_TITLE'),
+        message: existingMedicationsError.message,
+        type: 'error',
+      });
+    }
+  }, [existingMedicationsError, addNotification, t]);
+
+  /**
+   * Check if there are any overlapping medications among the currently selected medications
+   * and with existing medications from the backend
+   */
+  const checkMedicationsOverlap = useCallback((): boolean => {
+    // Check overlaps between selected medications
+    for (let i = 0; i < selectedMedications.length; i++) {
+      const current = selectedMedications[i];
+      const currentBaseName = getBaseName(current.display);
+
+      if (!currentBaseName) continue;
+
+      // Check against other selected medications
+      for (let j = i + 1; j < selectedMedications.length; j++) {
+        const other = selectedMedications[j];
+        const otherBaseName = getBaseName(other.display);
+
+        if (!otherBaseName) continue;
+
+        if (currentBaseName === otherBaseName) {
+          // Same medication - check date overlap
+          if (
+            !current.isSTAT &&
+            !current.isPRN &&
+            !other.isSTAT &&
+            !other.isPRN
+          ) {
+            const currentStart = new Date(current.startDate);
+            const currentEnd = calculateEndDate(
+              currentStart,
+              current.duration,
+              current.durationUnit,
+            );
+
+            const otherStart = new Date(other.startDate);
+            const otherEnd = calculateEndDate(
+              otherStart,
+              other.duration,
+              other.durationUnit,
+            );
+
+            if (
+              doDateRangesOverlap(
+                currentStart,
+                currentEnd,
+                otherStart,
+                otherEnd,
+              )
+            ) {
+              return true;
+            }
+          } else if (
+            current.isSTAT ||
+            current.isPRN ||
+            other.isSTAT ||
+            other.isPRN
+          ) {
+            // STAT/PRN medications are considered overlapping with same medication name
+            return true;
+          }
+        }
+      }
+
+      // Check against existing medications
+      const isExistingOverlap = activeMedications.some(
+        (med: MedicationRequest) => {
+          if (!med.name) return false;
+
+          const existingBaseName = getBaseName(med.name);
+          if (!existingBaseName || existingBaseName !== currentBaseName)
+            return false;
+
+          // STAT medications always overlap with existing
+          if (med.isImmediate || current.isSTAT) return true;
+
+          // PRN medications don't cause overlaps with schedule-based
+          if (med.isPRN || current.isPRN) return false;
+
+          if (!med.startDate || !current.startDate) return false;
+
+          const existingStart = new Date(med.startDate);
+          const existingEnd = calculateEndDate(
+            existingStart,
+            med.duration?.duration ?? 7,
+            med.duration?.durationUnit ?? 'd',
+          );
+
+          const currentStart = new Date(current.startDate);
+          const currentEnd = calculateEndDate(
+            currentStart,
+            current.duration,
+            current.durationUnit,
+          );
+
+          return doDateRangesOverlap(
+            existingStart,
+            existingEnd,
+            currentStart,
+            currentEnd,
+          );
+        },
+      );
+
+      if (isExistingOverlap) return true;
+    }
+
+    return false;
+  }, [selectedMedications, activeMedications]);
+
+  /**
+   * Monitor selected medications and clear notification when overlaps are resolved
+   */
+  useEffect(() => {
+    if (!showDuplicateNotification) return;
+
+    const hasOverlaps = checkMedicationsOverlap();
+    if (!hasOverlaps) {
+      setShowDuplicateNotification(false);
+    }
+  }, [selectedMedications, showDuplicateNotification, checkMedicationsOverlap]);
 
   /**
    * Check if a medication is a duplicate based on:
@@ -348,7 +469,11 @@ const MedicationsForm: React.FC = React.memo(() => {
           >
             {selectedMedications.map((medication) => (
               <SelectedItem
-                onClose={() => removeMedication(medication.id)}
+                onClose={() => {
+                  removeMedication(medication.id);
+                  // Clear notification when medication is removed
+                  setShowDuplicateNotification(false);
+                }}
                 className={styles.selectedMedicationItem}
                 key={medication.id}
               >

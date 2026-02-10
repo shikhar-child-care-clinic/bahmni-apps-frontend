@@ -15,6 +15,12 @@
   .medicineDetails {
     @include type-style("body-short-02");
   }
+  .doseForm {
+    @include type-style("body-short-02");
+    color: $text-secondary;
+    display: block;
+    margin-top: $spacing-02;
+  }
 }
 
 .medicationActions {
