@@ -439,7 +439,7 @@ const SelectedMedicationItem: React.FC<SelectedMedicationItemProps> =
                 value={startDate}
                 minDate={getTodayDate()}
                 onChange={(date) => {
-                  if (date?.[0] && date[0] > getTodayDate()) {
+                  if (date?.[0] && date[0] >= getTodayDate()) {
                     updateStartDate(id, date[0]);
                   }
                 }}

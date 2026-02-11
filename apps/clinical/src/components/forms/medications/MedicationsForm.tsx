@@ -6,14 +6,14 @@ import {
   Tile,
   InlineNotification,
 } from '@bahmni/design-system';
-import {
-  useTranslation,
-  getPatientMedications,
-  MedicationRequest,
-  MedicationStatus,
-} from '@bahmni/services';
+import { useTranslation, getPatientMedicationBundle } from '@bahmni/services';
 import { useNotification, usePatientUUID } from '@bahmni/widgets';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Bundle,
+  Medication,
+  MedicationRequest as FhirMedicationRequest,
+} from 'fhir/r4';
 import React, {
   useState,
   useMemo,
@@ -33,6 +33,8 @@ import {
   calculateEndDate,
   doDateRangesOverlap,
   getBaseName,
+  extractMedicationCodes,
+  medicationsMatchByCode,
 } from '../../../services/medicationUtilities';
 import { useMedicationStore } from '../../../stores/medicationsStore';
 import SelectedMedicationItem from './SelectedMedicationItem';
@@ -44,10 +46,12 @@ import styles from './styles/MedicationsForm.module.scss';
  * A component that displays a search interface for medications and a list of selected medications.
  * It allows users to search for medications, select them, and specify dosage, frequency, route, timing, and duration.
  */
+
 const MedicationsForm: React.FC = React.memo(() => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
   const { addNotification } = useNotification();
+  const queryClient = useQueryClient();
   const [searchMedicationTerm, setSearchMedicationTerm] = useState('');
   const [showDuplicateNotification, setShowDuplicateNotification] =
     useState(false);
@@ -81,27 +85,47 @@ const MedicationsForm: React.FC = React.memo(() => {
   } = useMedicationStore();
 
   // Fetch existing medications from backend using TanStack Query
-  // Always fetch for STAT duplicate detection, even on new consultation
+  // Use includeRelated=true to get full Medication details via _include parameter
+  // This returns a Bundle with both MedicationRequest and Medication resources
   const {
-    data: existingMedications,
+    data: medicationBundle,
     isLoading: existingMedicationsLoading,
     error: existingMedicationsError,
-  } = useQuery({
+  } = useQuery<Bundle>({
     queryKey: ['medications', patientUUID!],
     enabled: !!patientUUID,
-    queryFn: () => getPatientMedications(patientUUID!, [], undefined),
+    queryFn: () =>
+      getPatientMedicationBundle(patientUUID!, [], undefined, true),
   });
 
-  // Filter to only active/scheduled medications
-  const activeMedications = useMemo(() => {
-    if (!existingMedications) return [];
-    const filtered = existingMedications.filter(
-      (med: MedicationRequest) =>
-        med.status === MedicationStatus.Active ||
-        med.status === MedicationStatus.OnHold,
-    );
-    return filtered;
-  }, [existingMedications]);
+  // Extract MedicationRequest entries and build Medication map from Bundle
+  const { activeMedications, medicationMap } = useMemo(() => {
+    if (!medicationBundle) return { activeMedications: [], medicationMap: {} };
+
+    const requests: FhirMedicationRequest[] = [];
+    const medications: Record<string, Medication> = {};
+
+    // Bundle.entry contains both MedicationRequest and Medication resources
+    if (medicationBundle.entry && Array.isArray(medicationBundle.entry)) {
+      medicationBundle.entry.forEach((entry) => {
+        if (!entry?.resource) return;
+
+        if (entry.resource.resourceType === 'MedicationRequest') {
+          const med = entry.resource as FhirMedicationRequest;
+          const status = med.status?.toLowerCase();
+          // Include active and on-hold medications
+          if (status === 'active' || status === 'on-hold') {
+            requests.push(med);
+          }
+        } else if (entry.resource.resourceType === 'Medication') {
+          // Store Medication by its ID for lookup via medicationReference
+          medications[entry.resource.id!] = entry.resource;
+        }
+      });
+    }
+
+    return { activeMedications: requests, medicationMap: medications };
+  }, [medicationBundle]);
 
   useEffect(() => {
     if (existingMedicationsError) {
@@ -121,18 +145,12 @@ const MedicationsForm: React.FC = React.memo(() => {
     // Check overlaps between selected medications
     for (let i = 0; i < selectedMedications.length; i++) {
       const current = selectedMedications[i];
-      const currentBaseName = getBaseName(current.display);
-
-      if (!currentBaseName) continue;
 
       // Check against other selected medications
       for (let j = i + 1; j < selectedMedications.length; j++) {
         const other = selectedMedications[j];
-        const otherBaseName = getBaseName(other.display);
 
-        if (!otherBaseName) continue;
-
-        if (currentBaseName === otherBaseName) {
+        if (medicationsMatchByCode(current.medication, other.medication)) {
           // Same medication - check date overlap
           if (
             !current.isSTAT &&
@@ -144,14 +162,14 @@ const MedicationsForm: React.FC = React.memo(() => {
             const currentEnd = calculateEndDate(
               currentStart,
               current.duration,
-              current.durationUnit,
+              current.durationUnit?.code ?? 'd',
             );
 
             const otherStart = new Date(other.startDate);
             const otherEnd = calculateEndDate(
               otherStart,
               other.duration,
-              other.durationUnit,
+              other.durationUnit?.code ?? 'd',
             );
 
             if (
@@ -170,7 +188,6 @@ const MedicationsForm: React.FC = React.memo(() => {
             other.isSTAT ||
             other.isPRN
           ) {
-            // STAT/PRN medications are considered overlapping with same medication name
             return true;
           }
         }
@@ -178,33 +195,52 @@ const MedicationsForm: React.FC = React.memo(() => {
 
       // Check against existing medications
       const isExistingOverlap = activeMedications.some(
-        (med: MedicationRequest) => {
-          if (!med.name) return false;
+        (med: FhirMedicationRequest) => {
+          // Resolve medicationReference to get the Medication resource with codes
+          const medicationResource = med.medicationReference
+            ? medicationMap[
+                med.medicationReference.reference?.split('/')[1] ?? ''
+              ]
+            : null;
 
-          const existingBaseName = getBaseName(med.name);
-          if (!existingBaseName || existingBaseName !== currentBaseName)
+          // Compare using FHIR codes
+          if (
+            !medicationResource ||
+            !medicationsMatchByCode(current.medication, medicationResource)
+          ) {
             return false;
+          }
+
+          // Extract properties from FHIR MedicationRequest
+          const isImmediate = med.priority === 'stat';
+          const isPRN = med.dosageInstruction?.[0]?.asNeededBoolean ?? false;
+          const startDate =
+            med.dosageInstruction?.[0]?.timing?.event?.[0] ?? med.authoredOn;
+          const duration =
+            med.dosageInstruction?.[0]?.timing?.repeat?.duration ?? 7;
+          const durationUnit =
+            med.dosageInstruction?.[0]?.timing?.repeat?.durationUnit ?? 'd';
 
           // STAT medications always overlap with existing
-          if (med.isImmediate || current.isSTAT) return true;
+          if (isImmediate || current.isSTAT) return true;
 
           // PRN medications don't cause overlaps with schedule-based
-          if (med.isPRN || current.isPRN) return false;
+          if (isPRN || current.isPRN) return false;
 
-          if (!med.startDate || !current.startDate) return false;
+          if (!startDate || !current.startDate) return false;
 
-          const existingStart = new Date(med.startDate);
+          const existingStart = new Date(startDate);
           const existingEnd = calculateEndDate(
             existingStart,
-            med.duration?.duration ?? 7,
-            med.duration?.durationUnit ?? 'd',
+            duration,
+            durationUnit,
           );
 
           const currentStart = new Date(current.startDate);
           const currentEnd = calculateEndDate(
             currentStart,
             current.duration,
-            current.durationUnit,
+            current.durationUnit?.code ?? 'd',
           );
 
           return doDateRangesOverlap(
@@ -220,29 +256,27 @@ const MedicationsForm: React.FC = React.memo(() => {
     }
 
     return false;
-  }, [selectedMedications, activeMedications]);
+  }, [selectedMedications, activeMedications, medicationMap]);
 
   /**
-   * Monitor selected medications and clear notification when overlaps are resolved
+   * Monitor selected medications and update notification based on current overlap status
+   * Shows notification when overlaps exist, hides when no overlaps detected
    */
   useEffect(() => {
-    if (!showDuplicateNotification) return;
-
     const hasOverlaps = checkMedicationsOverlap();
-    if (!hasOverlaps) {
-      setShowDuplicateNotification(false);
-    }
-  }, [selectedMedications, showDuplicateNotification, checkMedicationsOverlap]);
+    setShowDuplicateNotification(hasOverlaps);
+  }, [checkMedicationsOverlap]);
 
   /**
    * Check if a medication is a duplicate based on:
-   * 1. Same medication name AND
+   * 1. Same medication code (SNOMED preferred, with fallback to base name) AND
    * 2. Overlapping date ranges (for active/scheduled medications)
    */
   const isDuplicateMedication = useCallback(
     (
       _medicationId: string, // Currently unused, may be needed for future enhancement
       medicationDisplayName: string,
+      newMedication: Medication,
       newStartDate: Date,
       newDuration: number,
       newDurationUnit: string,
@@ -256,36 +290,48 @@ const MedicationsForm: React.FC = React.memo(() => {
         effectiveUnit,
       );
 
-      const newMedicationBaseName = getBaseName(medicationDisplayName);
+      // Check if new medication has any codes to match against
+      const newMedicationCodes = extractMedicationCodes(newMedication);
+      if (newMedicationCodes.length === 0) {
+        return false;
+      }
 
       const isExistingDuplicate = activeMedications.some(
-        (med: MedicationRequest) => {
-          if (!med.name) {
+        (med: FhirMedicationRequest) => {
+          // Resolve medicationReference to get the Medication resource with codes
+          const medicationResource = med.medicationReference
+            ? medicationMap[
+                med.medicationReference.reference?.split('/')[1] ?? ''
+              ]
+            : null;
+
+          // Compare using FHIR codes only
+          if (
+            !medicationResource ||
+            !medicationsMatchByCode(newMedication, medicationResource)
+          ) {
             return false;
           }
 
-          const existingBaseName = getBaseName(med.name);
+          // Extract properties from FHIR MedicationRequest
+          const isImmediate = med.priority === 'stat';
+          const startDate =
+            med.dosageInstruction?.[0]?.timing?.event?.[0] ?? med.authoredOn;
 
-          if (!existingBaseName || !newMedicationBaseName) {
-            return false;
-          }
-
-          if (existingBaseName !== newMedicationBaseName) {
-            return false;
-          }
-
-          if (med.isImmediate) {
+          if (isImmediate) {
             return true;
           }
 
-          if (!med.startDate) {
+          if (!startDate) {
             return false;
           }
 
-          const existingDuration = med.duration?.duration ?? 7;
-          const existingDurationUnit = med.duration?.durationUnit ?? 'd';
+          const existingDuration =
+            med.dosageInstruction?.[0]?.timing?.repeat?.duration ?? 7;
+          const existingDurationUnit =
+            med.dosageInstruction?.[0]?.timing?.repeat?.durationUnit ?? 'd';
 
-          const existingStartDate = new Date(med.startDate);
+          const existingStartDate = new Date(startDate);
           const existingEndDate = calculateEndDate(
             existingStartDate,
             existingDuration,
@@ -305,17 +351,13 @@ const MedicationsForm: React.FC = React.memo(() => {
 
       const isSelectedDuplicate = selectedMedications.some(
         (selected: MedicationInputEntry) => {
-          const selectedBaseName = getBaseName(selected.display);
-          if (!selectedBaseName || !newMedicationBaseName) {
-            return false;
-          }
-          return selectedBaseName === newMedicationBaseName;
+          return medicationsMatchByCode(newMedication, selected.medication);
         },
       );
 
       return isExistingDuplicate || isSelectedDuplicate;
     },
-    [activeMedications, selectedMedications],
+    [activeMedications, selectedMedications, medicationMap],
   );
 
   const handleSearch = (searchTerm: string) => {
@@ -338,6 +380,7 @@ const MedicationsForm: React.FC = React.memo(() => {
     const isDuplicate = isDuplicateMedication(
       selectedItem.medication.id,
       displayName,
+      selectedItem.medication,
       newStartDate,
       7,
       'd',
@@ -349,6 +392,12 @@ const MedicationsForm: React.FC = React.memo(() => {
     // Set flag to prevent search when ComboBox updates its input
     isSelectingRef.current = true;
     addMedication(selectedItem.medication, displayName);
+
+    // Invalidate medications cache to ensure fresh data for overlap detection
+    queryClient.invalidateQueries({
+      queryKey: ['medications', patientUUID!],
+    });
+
     // Clear the search term after selection
     setSearchMedicationTerm('');
     // Reset the flag after a short delay to allow ComboBox to update
@@ -473,6 +522,10 @@ const MedicationsForm: React.FC = React.memo(() => {
                   removeMedication(medication.id);
                   // Clear notification when medication is removed
                   setShowDuplicateNotification(false);
+                  // Invalidate medications cache to ensure fresh data
+                  queryClient.invalidateQueries({
+                    queryKey: ['medications', patientUUID!],
+                  });
                 }}
                 className={styles.selectedMedicationItem}
                 key={medication.id}

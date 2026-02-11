@@ -14,6 +14,114 @@ export const DURATION_UNIT_TO_DAYS: Record<string, number> = {
 };
 
 /**
+ * Represents a FHIR code from CodeableConcept
+ */
+export interface FHIRCode {
+  system?: string;
+  code: string;
+}
+
+/**
+ * Generic type for FHIR resources or objects with optional code properties
+ */
+interface CodeableResource {
+  code?: {
+    coding?: Array<{
+      system?: string;
+      code?: string;
+    }>;
+  };
+  medicationCodeableConcept?: {
+    coding?: Array<{
+      system?: string;
+      code?: string;
+    }>;
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
+/**
+ * Extract all medication codes from FHIR CodeableConcept
+ * Uses actual FHIR code data - no string parsing
+ * Handles both Medication.code and MedicationRequest.medicationCodeableConcept
+ */
+export const extractMedicationCodes = (
+  medication: CodeableResource | unknown,
+): FHIRCode[] => {
+  const codes: FHIRCode[] = [];
+  const resource = medication as CodeableResource;
+
+  // Extract from code field (Medication resource)
+  if (resource?.code?.coding && Array.isArray(resource.code.coding)) {
+    resource.code.coding.forEach((coding) => {
+      if (coding.code) {
+        codes.push({
+          system: coding.system,
+          code: coding.code,
+        });
+      }
+    });
+  }
+
+  // Extract from medicationCodeableConcept (MedicationRequest)
+  if (
+    resource?.medicationCodeableConcept?.coding &&
+    Array.isArray(resource.medicationCodeableConcept.coding)
+  ) {
+    resource.medicationCodeableConcept.coding.forEach((coding) => {
+      if (coding.code) {
+        codes.push({
+          system: coding.system,
+          code: coding.code,
+        });
+      }
+    });
+  }
+
+  return codes;
+};
+
+/**
+ * Check if two medications match by comparing FHIR codes
+ * Returns true if any code matches (same system + code value)
+ * For OpenMRS concepts (no system), matches by code value alone
+ */
+export const medicationsMatchByCode = (
+  medication1: CodeableResource | unknown,
+  medication2: CodeableResource | unknown,
+): boolean => {
+  const codes1 = extractMedicationCodes(medication1);
+  const codes2 = extractMedicationCodes(medication2);
+
+  if (codes1.length === 0 || codes2.length === 0) {
+    return false;
+  }
+
+  // Check for exact code matches (same system + code)
+  for (const c1 of codes1) {
+    for (const c2 of codes2) {
+      if (c1.code === c2.code && c1.system === c2.system) {
+        return true;
+      }
+    }
+  }
+
+  // For OpenMRS concept codes (no system), match by code value alone
+  for (const c1 of codes1) {
+    if (!c1.system) {
+      for (const c2 of codes2) {
+        if (!c2.system && c1.code === c2.code) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+};
+
+/**
  * Extract base medication/vaccination name for comparison (ignores concentration/dosage)
  * Example: "Vitamin A 5000 IU" → "vitamin a"
  */

@@ -1,5 +1,5 @@
 import { useNotification, usePatientUUID } from '@bahmni/widgets';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Medication } from 'fhir/r4';
@@ -39,6 +39,7 @@ jest.mock('@bahmni/widgets', () => {
 // Mock TanStack Query
 jest.mock('@tanstack/react-query', () => ({
   useQuery: jest.fn(),
+  useQueryClient: jest.fn(),
 }));
 
 // Mock CSS modules
@@ -56,6 +57,9 @@ const mockUsePatientUUID = usePatientUUID as jest.MockedFunction<
   typeof usePatientUUID
 >;
 const mockUseQuery = useQuery as jest.MockedFunction<typeof useQuery>;
+const mockUseQueryClient = useQueryClient as jest.MockedFunction<
+  typeof useQueryClient
+>;
 
 // Mock data
 const mockMedication: Medication = {
@@ -179,6 +183,11 @@ describe('MedicationsForm', () => {
       isLoading: false,
       error: null,
     } as ReturnType<typeof useQuery>);
+
+    // Mock TanStack Query client
+    mockUseQueryClient.mockReturnValue({
+      invalidateQueries: jest.fn(),
+    } as unknown as ReturnType<typeof useQueryClient>);
   });
 
   // HAPPY PATH TESTS
