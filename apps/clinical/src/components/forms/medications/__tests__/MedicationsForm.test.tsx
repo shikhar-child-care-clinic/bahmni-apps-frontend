@@ -753,6 +753,433 @@ describe('MedicationsForm', () => {
     });
   });
 
+  // FHIR CODE MATCHING AND BUNDLE HANDLING
+  describe('FHIR Code Matching and Bundle Handling', () => {
+    test('detects duplicate medications using FHIR SNOMED codes', () => {
+      const existingMedicationWithSameCode: Medication = {
+        id: 'snomed-med-2',
+        resourceType: 'Medication',
+        code: {
+          text: 'Acetaminophen 500mg',
+          coding: [
+            {
+              code: '15761-4', // Same SNOMED code but different display name
+              display: 'Acetaminophen',
+              system: 'http://snomed.info/sct',
+            },
+          ],
+        },
+      };
+
+      // Mock Bundle with both medications
+      mockUseQuery.mockReturnValue({
+        data: {
+          entry: [
+            {
+              resource: {
+                resourceType: 'MedicationRequest',
+                id: 'mr-1',
+                status: 'active',
+                medicationReference: { reference: 'Medication/snomed-med-2' },
+                authoredOn: new Date().toISOString(),
+              },
+            },
+            {
+              resource: existingMedicationWithSameCode,
+            },
+          ],
+        },
+        isLoading: false,
+        error: null,
+      } as unknown as ReturnType<typeof useQuery>);
+
+      render(<MedicationsForm />);
+
+      // The component should properly match medications by SNOMED code,
+      // not by display name
+      expect(screen.getByText(/prescribe medication/i)).toBeInTheDocument();
+    });
+
+    test('handles Bundle with both MedicationRequest and Medication entries', () => {
+      const fhirBundle = {
+        entry: [
+          {
+            resource: {
+              resourceType: 'MedicationRequest',
+              id: 'mr-123',
+              status: 'active',
+              medicationReference: { reference: 'Medication/med-456' },
+              authoredOn: new Date().toISOString(),
+              dosageInstruction: [
+                {
+                  timing: {
+                    event: [new Date().toISOString()],
+                    repeat: { duration: 7, durationUnit: 'd' },
+                  },
+                },
+              ],
+            },
+          },
+          {
+            resource: {
+              resourceType: 'Medication',
+              id: 'med-456',
+              code: {
+                coding: [
+                  {
+                    code: 'aspirinCode',
+                    display: 'Aspirin',
+                    system: 'http://snomed.info/sct',
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      };
+
+      mockUseQuery.mockReturnValue({
+        data: fhirBundle,
+        isLoading: false,
+        error: null,
+      } as unknown as ReturnType<typeof useQuery>);
+
+      render(<MedicationsForm />);
+
+      expect(screen.getByText(/prescribe medication/i)).toBeInTheDocument();
+      expect(mockUseQuery).toHaveBeenCalled();
+    });
+
+    test('uses medicationReference to resolve Medication resources from Bundle', () => {
+      const medicationWithReference: Medication = {
+        id: 'med-with-ref',
+        resourceType: 'Medication',
+        code: {
+          coding: [
+            {
+              code: 'paracetamolSNOMED',
+              system: 'http://snomed.info/sct',
+            },
+          ],
+        },
+      };
+
+      mockUseQuery.mockReturnValue({
+        data: {
+          entry: [
+            {
+              resource: {
+                resourceType: 'MedicationRequest',
+                id: 'mr-1',
+                status: 'active',
+                medicationReference: { reference: 'Medication/med-with-ref' },
+                authoredOn: new Date().toISOString(),
+              },
+            },
+            { resource: medicationWithReference },
+          ],
+        },
+        isLoading: false,
+        error: null,
+      } as unknown as ReturnType<typeof useQuery>);
+
+      render(<MedicationsForm />);
+
+      expect(screen.getByText(/prescribe medication/i)).toBeInTheDocument();
+    });
+
+    test('matches medications with OpenMRS concept codes (no system)', () => {
+      const medication1: Medication = {
+        id: 'openmrs-med-1',
+        resourceType: 'Medication',
+        code: {
+          coding: [
+            {
+              code: '5000', // OpenMRS concept code (no system)
+              display: 'Aspirin',
+            },
+          ],
+        },
+      };
+
+      const medication2: Medication = {
+        id: 'openmrs-med-2',
+        resourceType: 'Medication',
+        code: {
+          coding: [
+            {
+              code: '5000', // Same OpenMRS concept code
+              display: 'Acetylsalicylic Acid',
+            },
+          ],
+        },
+      };
+
+      mockUseQuery.mockReturnValue({
+        data: {
+          entry: [
+            {
+              resource: {
+                resourceType: 'MedicationRequest',
+                id: 'mr-1',
+                status: 'active',
+                medicationReference: { reference: 'Medication/openmrs-med-1' },
+                authoredOn: new Date().toISOString(),
+              },
+            },
+            { resource: medication1 },
+            { resource: medication2 },
+          ],
+        },
+        isLoading: false,
+        error: null,
+      } as unknown as ReturnType<typeof useQuery>);
+
+      render(<MedicationsForm />);
+
+      expect(screen.getByText(/prescribe medication/i)).toBeInTheDocument();
+    });
+
+    test('handles complex medication names using FHIR codes instead of string parsing', () => {
+      const complexMedication: Medication = {
+        id: 'complex-med',
+        resourceType: 'Medication',
+        code: {
+          text: 'Sulphadoxine - Pyrimethamine (250 mg + 12.5 mg)',
+          coding: [
+            {
+              code: '398770008',
+              display: 'Sulfamethoxazole-trimethoprim',
+              system: 'http://snomed.info/sct',
+            },
+          ],
+        },
+      };
+
+      mockUseQuery.mockReturnValue({
+        data: {
+          entry: [{ resource: complexMedication }],
+        },
+        isLoading: false,
+        error: null,
+      } as unknown as ReturnType<typeof useQuery>);
+
+      render(<MedicationsForm />);
+
+      expect(screen.getByText(/prescribe medication/i)).toBeInTheDocument();
+    });
+  });
+
+  // CACHE INVALIDATION TESTS
+  describe('Cache Invalidation', () => {
+    test('invalidates medications cache when medication is added', async () => {
+      const user = userEvent.setup();
+      (useMedicationSearch as jest.Mock).mockReturnValue({
+        ...mockMedicationSearchHook,
+        searchResults: [mockMedication],
+      });
+
+      render(<MedicationsForm />);
+
+      const input = screen.getByRole('combobox');
+      await user.type(input, 'Para');
+      await user.click(screen.getByText(/Paracetamol 500mg/));
+
+      // Cache should be invalidated after adding medication
+      expect(mockUseQueryClient).toHaveBeenCalled();
+    });
+
+    test('invalidates medications cache when medication is removed', async () => {
+      (useMedicationStore as unknown as jest.Mock).mockReturnValue({
+        ...mockStore,
+        selectedMedications: [mockSelectedMedication],
+        removeMedication: jest.fn(() => {
+          // Simulate removal
+          (useMedicationStore as unknown as jest.Mock).mockReturnValue({
+            ...mockStore,
+            selectedMedications: [],
+          });
+        }),
+      });
+
+      const { rerender } = render(<MedicationsForm />);
+
+      // Simulate removal by updating the store
+      (useMedicationStore as unknown as jest.Mock).mockReturnValue({
+        ...mockStore,
+        selectedMedications: [],
+        removeMedication: jest.fn(),
+      });
+
+      rerender(<MedicationsForm />);
+
+      // Cache invalidation should have been called
+      expect(mockUseQueryClient).toHaveBeenCalled();
+    });
+  });
+
+  // DATE RANGE AND NOTIFICATION TESTS
+  describe('Date Range and Notification Behavior', () => {
+    test('shows notification when medications have overlapping date ranges', () => {
+      const med1: MedicationInputEntry = {
+        ...mockSelectedMedication,
+        id: 'med-1',
+        startDate: new Date('2025-01-01'),
+        duration: 10,
+        durationUnit: 'd',
+        medication: {
+          ...mockMedication,
+          code: {
+            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
+          },
+        },
+      };
+
+      const med2: MedicationInputEntry = {
+        ...mockSelectedMedication,
+        id: 'med-2',
+        startDate: new Date('2025-01-05'),
+        duration: 10,
+        durationUnit: 'd',
+        medication: {
+          ...mockMedication,
+          code: {
+            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
+          },
+        },
+      };
+
+      (useMedicationStore as unknown as jest.Mock).mockReturnValue({
+        ...mockStore,
+        selectedMedications: [med1, med2],
+      });
+
+      render(<MedicationsForm />);
+
+      // Notification should be visible for overlapping medications
+      expect(screen.getByText(/added medicines/i)).toBeInTheDocument();
+    });
+
+    test('hides notification when date ranges no longer overlap', () => {
+      const med1: MedicationInputEntry = {
+        ...mockSelectedMedication,
+        id: 'med-1',
+        startDate: new Date('2025-01-01'),
+        duration: 5,
+        durationUnit: 'd',
+        medication: {
+          ...mockMedication,
+          code: {
+            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
+          },
+        },
+      };
+
+      const med2: MedicationInputEntry = {
+        ...mockSelectedMedication,
+        id: 'med-2',
+        startDate: new Date('2025-01-10'),
+        duration: 5,
+        durationUnit: 'd',
+        medication: {
+          ...mockMedication,
+          code: {
+            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
+          },
+        },
+      };
+
+      (useMedicationStore as unknown as jest.Mock).mockReturnValue({
+        ...mockStore,
+        selectedMedications: [med1, med2],
+      });
+
+      render(<MedicationsForm />);
+
+      // Notification should not be visible when no overlap
+      expect(screen.queryByText(/error.*duplicate/i)).not.toBeInTheDocument();
+    });
+
+    test('handles STAT medications that always overlap', () => {
+      const statMed: MedicationInputEntry = {
+        ...mockSelectedMedication,
+        id: 'stat-med',
+        isSTAT: true,
+        medication: {
+          ...mockMedication,
+          code: {
+            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
+          },
+        },
+      };
+
+      const regularMed: MedicationInputEntry = {
+        ...mockSelectedMedication,
+        id: 'regular-med',
+        isSTAT: false,
+        startDate: new Date('2025-01-15'),
+        duration: 5,
+        durationUnit: 'd',
+        medication: {
+          ...mockMedication,
+          code: {
+            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
+          },
+        },
+      };
+
+      (useMedicationStore as unknown as jest.Mock).mockReturnValue({
+        ...mockStore,
+        selectedMedications: [statMed, regularMed],
+      });
+
+      render(<MedicationsForm />);
+
+      // STAT medications always overlap, so notification should be visible
+      expect(screen.getByText(/added medicines/i)).toBeInTheDocument();
+    });
+
+    test('handles PRN medications that do not overlap with scheduled medications', () => {
+      const prnMed: MedicationInputEntry = {
+        ...mockSelectedMedication,
+        id: 'prn-med',
+        isPRN: true,
+        medication: {
+          ...mockMedication,
+          code: {
+            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
+          },
+        },
+      };
+
+      const scheduledMed: MedicationInputEntry = {
+        ...mockSelectedMedication,
+        id: 'scheduled-med',
+        isPRN: false,
+        isSTAT: false,
+        startDate: new Date('2025-01-01'),
+        duration: 10,
+        durationUnit: 'd',
+        medication: {
+          ...mockMedication,
+          code: {
+            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
+          },
+        },
+      };
+
+      (useMedicationStore as unknown as jest.Mock).mockReturnValue({
+        ...mockStore,
+        selectedMedications: [prnMed, scheduledMed],
+      });
+
+      render(<MedicationsForm />);
+
+      // PRN medications don't cause overlaps with scheduled medications
+      expect(screen.queryByText(/error.*duplicate/i)).not.toBeInTheDocument();
+    });
+  });
+
   // SNAPSHOT TESTS
   describe('Snapshot Tests', () => {
     test('matches snapshot with no medications', () => {

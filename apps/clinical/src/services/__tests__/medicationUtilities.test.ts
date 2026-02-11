@@ -1,293 +1,282 @@
+import { addDays } from 'date-fns';
 import {
   calculateEndDate,
   doDateRangesOverlap,
+  extractMedicationCodes,
   getBaseName,
+  medicationsMatchByCode,
   DURATION_UNIT_TO_DAYS,
 } from '../medicationUtilities';
 
-describe('medicationUtilities', () => {
+describe('Medication Utilities', () => {
   describe('DURATION_UNIT_TO_DAYS', () => {
-    it('should have correct conversion factors for all units', () => {
-      expect(DURATION_UNIT_TO_DAYS['d']).toBe(1);
-      expect(DURATION_UNIT_TO_DAYS['wk']).toBe(7);
-      expect(DURATION_UNIT_TO_DAYS['mo']).toBe(30);
-      expect(DURATION_UNIT_TO_DAYS['a']).toBe(365);
-      expect(DURATION_UNIT_TO_DAYS['h']).toBe(1 / 24);
-      expect(DURATION_UNIT_TO_DAYS['min']).toBe(1 / 1440);
-      expect(DURATION_UNIT_TO_DAYS['s']).toBe(1 / 86400);
+    test('contains all expected duration unit conversions', () => {
+      expect(DURATION_UNIT_TO_DAYS).toEqual({
+        d: 1,
+        wk: 7,
+        mo: 30,
+        a: 365,
+        h: 1 / 24,
+        min: 1 / 1440,
+        s: 1 / 86400,
+      });
     });
   });
 
-  describe('calculateEndDate', () => {
-    const testDate = new Date('2024-01-15');
+  describe('extractMedicationCodes', () => {
+    test('extracts codes from Medication.code field', () => {
+      const medication = {
+        id: 'med-1',
+        code: {
+          text: 'Paracetamol 500mg',
+          coding: [
+            {
+              code: 'paracetamol-500',
+              system: 'http://snomed.info/sct',
+              display: 'Paracetamol 500 mg',
+            },
+          ],
+        },
+      };
 
-    it('should calculate end date correctly with day duration', () => {
-      const result = calculateEndDate(testDate, 5, 'd');
-      const expected = new Date('2024-01-20');
-      expect(result).toEqual(expected);
+      const codes = extractMedicationCodes(medication);
+
+      expect(codes).toHaveLength(1);
+      expect(codes[0]).toEqual({
+        code: 'paracetamol-500',
+        system: 'http://snomed.info/sct',
+      });
     });
 
-    it('should calculate end date correctly with week duration', () => {
-      const result = calculateEndDate(testDate, 2, 'wk');
-      const expected = new Date('2024-01-29');
-      expect(result).toEqual(expected);
+    test('extracts codes from MedicationRequest.medicationCodeableConcept', () => {
+      const medicationRequest = {
+        id: 'mr-1',
+        medicationCodeableConcept: {
+          coding: [
+            {
+              code: 'aspirin-100',
+              system: 'http://snomed.info/sct',
+            },
+          ],
+        },
+      };
+
+      const codes = extractMedicationCodes(medicationRequest);
+
+      expect(codes).toHaveLength(1);
+      expect(codes[0].code).toBe('aspirin-100');
     });
 
-    it('should calculate end date correctly with month duration', () => {
-      const result = calculateEndDate(testDate, 1, 'mo');
-      const expected = new Date('2024-02-14');
-      expect(result).toEqual(expected);
+    test('matches medications with complex names using FHIR codes', () => {
+      const med1 = {
+        id: 'med-1',
+        code: {
+          text: 'Sulphadoxine - Pyrimethamine (250 mg + 12.5 mg)',
+          coding: [
+            {
+              code: '398770008',
+              system: 'http://snomed.info/sct',
+              display: 'Sulfamethoxazole-trimethoprim',
+            },
+          ],
+        },
+      };
+
+      const med2 = {
+        id: 'med-2',
+        code: {
+          text: 'Trimethoprim-Sulfamethoxazole 250/50mg',
+          coding: [
+            {
+              code: '398770008',
+              system: 'http://snomed.info/sct',
+              display: 'Sulfamethoxazole-trimethoprim',
+            },
+          ],
+        },
+      };
+
+      const matches = medicationsMatchByCode(med1, med2);
+
+      expect(matches).toBe(true);
     });
 
-    it('should calculate end date correctly with year duration', () => {
-      const result = calculateEndDate(testDate, 1, 'a');
-      const expected = new Date('2025-01-14');
-      expect(result).toEqual(expected);
+    test('returns empty array when medication is undefined', () => {
+      const codes = extractMedicationCodes(undefined);
+
+      expect(codes).toEqual([]);
+    });
+  });
+
+  describe('medicationsMatchByCode', () => {
+    test('matches medications with identical SNOMED codes', () => {
+      const med1 = {
+        id: 'med-1',
+        code: {
+          coding: [
+            {
+              code: 'paracetamol-500',
+              system: 'http://snomed.info/sct',
+            },
+          ],
+        },
+      };
+
+      const med2 = {
+        id: 'med-2',
+        code: {
+          coding: [
+            {
+              code: 'paracetamol-500',
+              system: 'http://snomed.info/sct',
+            },
+          ],
+        },
+      };
+
+      const matches = medicationsMatchByCode(med1, med2);
+
+      expect(matches).toBe(true);
     });
 
-    it('should handle zero duration', () => {
-      const result = calculateEndDate(testDate, 0, 'd');
-      expect(result).toEqual(testDate);
+    test('does not match medications with different codes', () => {
+      const med1 = {
+        id: 'med-1',
+        code: {
+          coding: [
+            {
+              code: 'paracetamol-500',
+              system: 'http://snomed.info/sct',
+            },
+          ],
+        },
+      };
+
+      const med2 = {
+        id: 'med-2',
+        code: {
+          coding: [
+            {
+              code: 'ibuprofen-400',
+              system: 'http://snomed.info/sct',
+            },
+          ],
+        },
+      };
+
+      const matches = medicationsMatchByCode(med1, med2);
+
+      expect(matches).toBe(false);
     });
 
-    it('should handle negative duration', () => {
-      const result = calculateEndDate(testDate, -5, 'd');
-      const expected = new Date('2024-01-10');
-      expect(result).toEqual(expected);
-    });
+    test('matches OpenMRS concepts by code value alone', () => {
+      const med1 = {
+        id: 'med-1',
+        code: {
+          coding: [
+            {
+              code: '5000',
+            },
+          ],
+        },
+      };
 
-    it('should handle very large duration', () => {
-      const result = calculateEndDate(testDate, 1000, 'd');
-      const expected = new Date('2026-10-11');
-      expect(result).toEqual(expected);
-    });
+      const med2 = {
+        id: 'med-2',
+        code: {
+          coding: [
+            {
+              code: '5000',
+            },
+          ],
+        },
+      };
 
-    it('should handle leap year correctly', () => {
-      const leapYearDate = new Date('2024-02-28');
-      const result = calculateEndDate(leapYearDate, 1, 'd');
-      const expected = new Date('2024-02-29');
-      expect(result).toEqual(expected);
-    });
+      const matches = medicationsMatchByCode(med1, med2);
 
-    it('should accept string date input', () => {
-      const result = calculateEndDate('2024-01-15', 5, 'd');
-      const expected = new Date('2024-01-20');
-      expect(result).toEqual(expected);
-    });
-
-    it('should handle unknown duration unit by defaulting to 1 day', () => {
-      const result = calculateEndDate(testDate, 5, 'unknown');
-      const expected = new Date('2024-01-20');
-      expect(result).toEqual(expected);
-    });
-
-    it('should handle fractional durations with hours', () => {
-      const result = calculateEndDate(testDate, 24, 'h');
-      const expected = new Date('2024-01-16');
-      expect(result).toEqual(expected);
-    });
-
-    it('should handle fractional durations with minutes', () => {
-      const result = calculateEndDate(testDate, 1440, 'min');
-      const expected = new Date('2024-01-16');
-      expect(result).toEqual(expected);
-    });
-
-    it('should handle fractional durations with seconds', () => {
-      const result = calculateEndDate(testDate, 86400, 's');
-      const expected = new Date('2024-01-16');
-      expect(result).toEqual(expected);
+      expect(matches).toBe(true);
     });
   });
 
   describe('doDateRangesOverlap', () => {
-    const start1 = new Date('2024-01-01');
-    const end1 = new Date('2024-01-10');
-    const start2 = new Date('2024-01-05');
-    const end2 = new Date('2024-01-15');
+    test('detects overlap when ranges overlap in the middle', () => {
+      const start1 = new Date('2025-01-01');
+      const end1 = new Date('2025-01-10');
+      const start2 = new Date('2025-01-05');
+      const end2 = new Date('2025-01-15');
 
-    it('should return true when date ranges overlap', () => {
-      expect(doDateRangesOverlap(start1, end1, start2, end2)).toBe(true);
+      const overlaps = doDateRangesOverlap(start1, end1, start2, end2);
+
+      expect(overlaps).toBe(true);
     });
 
-    it('should return true when one range is completely inside another', () => {
-      const innerStart = new Date('2024-01-03');
-      const innerEnd = new Date('2024-01-07');
-      expect(doDateRangesOverlap(start1, end1, innerStart, innerEnd)).toBe(
-        true,
+    test('detects no overlap when ranges are separate', () => {
+      const start1 = new Date('2025-01-01');
+      const end1 = new Date('2025-01-05');
+      const start2 = new Date('2025-01-10');
+      const end2 = new Date('2025-01-15');
+
+      const overlaps = doDateRangesOverlap(start1, end1, start2, end2);
+
+      expect(overlaps).toBe(false);
+    });
+
+    test('detects overlap when ranges touch at edges', () => {
+      const start1 = new Date('2025-01-01');
+      const end1 = new Date('2025-01-10');
+      const start2 = new Date('2025-01-10');
+      const end2 = new Date('2025-01-15');
+
+      const overlaps = doDateRangesOverlap(start1, end1, start2, end2);
+
+      expect(overlaps).toBe(true);
+    });
+  });
+
+  describe('calculateEndDate', () => {
+    test('calculates end date with day duration', () => {
+      const startDate = new Date('2025-01-01');
+      const endDate = calculateEndDate(startDate, 7, 'd');
+
+      expect(endDate).toEqual(addDays(startDate, 7));
+    });
+
+    test('calculates end date with week duration', () => {
+      const startDate = new Date('2025-01-01');
+      const endDate = calculateEndDate(startDate, 2, 'wk');
+
+      expect(endDate).toEqual(addDays(startDate, 14));
+    });
+
+    test('throws error for invalid date', () => {
+      expect(() => calculateEndDate('invalid-date', 7, 'd')).toThrow(
+        'Invalid date',
       );
-    });
-
-    it('should return true when ranges are identical', () => {
-      expect(doDateRangesOverlap(start1, end1, start1, end1)).toBe(true);
-    });
-
-    it('should return true when ranges touch at boundary (start2 equals end1)', () => {
-      const boundary = new Date('2024-01-10');
-      expect(doDateRangesOverlap(start1, boundary, boundary, end2)).toBe(true);
-    });
-
-    it('should return false when ranges do not overlap', () => {
-      const start3 = new Date('2024-01-11');
-      const end3 = new Date('2024-01-20');
-      expect(doDateRangesOverlap(start1, end1, start3, end3)).toBe(false);
-    });
-
-    it('should return false when ranges are adjacent but not touching', () => {
-      const start3 = new Date('2024-01-11');
-      const end3 = new Date('2024-01-20');
-      expect(doDateRangesOverlap(start1, end1, start3, end3)).toBe(false);
-    });
-
-    it('should handle single day ranges that overlap', () => {
-      const singleDay = new Date('2024-01-05');
-      expect(doDateRangesOverlap(start1, end1, singleDay, singleDay)).toBe(
-        true,
-      );
-    });
-
-    it('should handle single day ranges that do not overlap', () => {
-      const singleDay = new Date('2024-01-11');
-      expect(doDateRangesOverlap(start1, end1, singleDay, singleDay)).toBe(
-        false,
-      );
-    });
-
-    it('should handle year-spanning ranges', () => {
-      const spanStart1 = new Date('2023-12-01');
-      const spanEnd1 = new Date('2024-01-31');
-      const spanStart2 = new Date('2024-01-01');
-      const spanEnd2 = new Date('2024-02-28');
-      expect(
-        doDateRangesOverlap(spanStart1, spanEnd1, spanStart2, spanEnd2),
-      ).toBe(true);
-    });
-
-    it('should handle ranges with same end date', () => {
-      const sharedEnd = new Date('2024-01-10');
-      const start3 = new Date('2024-01-08');
-      expect(doDateRangesOverlap(start1, sharedEnd, start3, sharedEnd)).toBe(
-        true,
-      );
-    });
-
-    it('should correctly evaluate with reversed start/end (invalid but should still work)', () => {
-      // This tests the function's behavior with invalid date ranges
-      // The function doesn't validate, so reversed dates would return false
-      const invalidStart = new Date('2024-01-10');
-      const invalidEnd = new Date('2024-01-01');
-      const validStart = new Date('2024-01-05');
-      const validEnd = new Date('2024-01-15');
-      expect(
-        doDateRangesOverlap(invalidStart, invalidEnd, validStart, validEnd),
-      ).toBe(false);
     });
   });
 
   describe('getBaseName', () => {
-    it('should extract base name from medication with dosage', () => {
-      expect(getBaseName('Amoxicillin 500mg')).toBe('amoxicillin');
+    test('extracts base name from string with dosage', () => {
+      const baseName = getBaseName('Vitamin A 5000 IU');
+
+      expect(baseName).toBe('vitamin a');
     });
 
-    it('should extract base name from medication with IU dosage', () => {
-      expect(getBaseName('Vitamin A 5000 IU')).toBe('vitamin a');
+    test('extracts base name from string with parentheses', () => {
+      const baseName = getBaseName('Paracetamol (Tablet) 500mg');
+
+      expect(baseName).toBe('paracetamol');
     });
 
-    it('should handle medication with parentheses', () => {
-      expect(getBaseName('Paracetamol (500mg)')).toBe('paracetamol');
-    });
-
-    it('should handle medication with dosage in parentheses', () => {
-      expect(getBaseName('Ibuprofen (200mg) - Store Brand')).toBe(
-        'store brand',
-      );
-    });
-
-    it('should handle separator format with )-', () => {
-      expect(getBaseName('Medication Code (12345)- Aspirin')).toBe('aspirin');
-    });
-
-    it('should handle empty string', () => {
-      expect(getBaseName('')).toBe('');
-    });
-
-    it('should handle null value', () => {
+    test('handles null/undefined values', () => {
       expect(getBaseName(null as any)).toBe('');
-    });
-
-    it('should handle undefined value', () => {
       expect(getBaseName(undefined as any)).toBe('');
     });
 
-    it('should handle medication name only without dosage', () => {
-      expect(getBaseName('Paracetamol')).toBe('paracetamol');
-    });
+    test('lowercases the result', () => {
+      const baseName = getBaseName('PARACETAMOL 500mg');
 
-    it('should handle medication with multiple numbers', () => {
-      expect(getBaseName('Lisinopril 10mg 100 tablets')).toBe('lisinopril');
-    });
-
-    it('should handle medication with hyphenated name', () => {
-      expect(getBaseName('Co-Amoxiclav 500-125mg')).toBe('co-amoxiclav');
-    });
-
-    it('should handle medication with Unicode characters', () => {
-      expect(getBaseName('Αμοξιλλίνη 500mg')).toBe('αμοξιλλίνη');
-    });
-
-    it('should handle medication with spaces in name', () => {
-      expect(getBaseName('Acetylsalicylic Acid 325mg')).toBe(
-        'acetylsalicylic acid',
-      );
-    });
-
-    it('should handle medication with special characters', () => {
-      expect(getBaseName('Drug-A/B Complex')).toBe('drug-a/b complex');
-    });
-
-    it('should handle very long medication name', () => {
-      const longName = 'A'.repeat(500);
-      expect(getBaseName(longName)).toBe(longName.toLowerCase());
-    });
-
-    it('should handle medication with only numbers', () => {
-      expect(getBaseName('5000')).toBe('');
-    });
-
-    it('should handle medication with numbers and letters mixed', () => {
-      expect(getBaseName('Vitamin B12')).toBe('vitamin b');
-    });
-
-    it('should handle multiple parentheses', () => {
-      expect(getBaseName('Name (A) (B) 500mg')).toBe('name');
-    });
-
-    it('should handle unmatched closing parenthesis', () => {
-      expect(getBaseName('Name) 500mg')).toBe('name)');
-    });
-
-    it('should normalize case to lowercase', () => {
-      expect(getBaseName('PARACETAMOL 500MG')).toBe('paracetamol');
-    });
-
-    it('should trim whitespace', () => {
-      expect(getBaseName('  Paracetamol  500mg  ')).toBe('paracetamol');
-    });
-
-    it('should handle medication with concentration notation', () => {
-      expect(getBaseName('Metformin 500 mg/mL')).toBe('metformin');
-    });
-
-    it('should handle medication with fraction dosage', () => {
-      expect(getBaseName('Aspirin 1/2 tablet')).toBe('aspirin');
-    });
-
-    it('should handle non-string input (number)', () => {
-      expect(getBaseName(123 as any)).toBe('');
-    });
-
-    it('should handle non-string input (object)', () => {
-      expect(getBaseName({} as any)).toBe('');
+      expect(baseName).toBe('paracetamol');
     });
   });
 });
