@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { Concept } from '../models/encounterConcepts';
 import { DurationUnitOption, MedicationInputEntry } from '../models/medication';
 import { Frequency } from '../models/medicationConfig';
+import { extractDoseForm } from '../utils/fhir/medicationUtilities';
 
 export interface MedicationState {
   selectedMedications: MedicationInputEntry[];
@@ -34,26 +35,7 @@ export const useMedicationStore = create<MedicationState>((set, get) => ({
   selectedMedications: [],
 
   addMedication: (medication: Medication, displayName: string) => {
-    // Extract dose form from Medication resource's form property
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const medicationAny = medication as any;
-    let doseForm =
-      medicationAny?.form?.text ??
-      medicationAny?.form?.coding?.[0]?.display ??
-      undefined;
-
-    // Fallback: extract from displayName if form info is embedded there
-    // e.g., "Paracetamol (Tablet) - 500mg" -> extract "Tablet"
-    if (!doseForm && displayName) {
-      const formMatch = displayName.match(/\(([^)]+)\)/);
-      if (formMatch?.[1]) {
-        const extracted = formMatch[1].trim();
-        // Only use if it looks like a form (not a dosage like "500mg")
-        if (!/^\d+/.test(extracted)) {
-          doseForm = extracted;
-        }
-      }
-    }
+    const doseForm = extractDoseForm(medication, displayName);
 
     const newMedication: MedicationInputEntry = {
       id: medication.id!,

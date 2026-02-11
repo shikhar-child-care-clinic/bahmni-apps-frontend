@@ -15,7 +15,13 @@ import {
 } from '@bahmni/services';
 import { usePatientUUID } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
-import React, { useState, useMemo, useRef, useCallback } from 'react';
+import React, {
+  useState,
+  useMemo,
+  useRef,
+  useCallback,
+  useEffect,
+} from 'react';
 
 import useMedicationConfig from '../../../hooks/useMedicationConfig';
 import { MedicationFilterResult } from '../../../models/medication';
@@ -23,16 +29,23 @@ import {
   getMedicationDisplay,
   getMedicationsFromBundle,
 } from '../../../services/medicationService';
+import { useVaccinationStore } from '../../../stores/vaccinationsStore';
 import {
   calculateEndDate,
   doDateRangesOverlap,
   getBaseName,
-} from '../../../services/medicationUtilities';
-import { useVaccinationStore } from '../../../stores/vaccinationsStore';
+} from '../../../utils/fhir/medicationUtilities';
 
 import SelectedVaccinationItem from './SelectedVaccinationItem';
 import styles from './styles/VaccinationForm.module.scss';
 
+/**
+ * VaccinationForm component
+ *
+ * Note: Vaccinations are always STAT (immediate, single-time administration).
+ * Unlike medications, they don't support scheduled administration, so overlap
+ * detection is simpler (string-based name matching is sufficient).
+ */
 const VaccinationForm: React.FC = React.memo(() => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
@@ -172,6 +185,126 @@ const VaccinationForm: React.FC = React.memo(() => {
     },
     [activeVaccinations, selectedVaccinations],
   );
+
+  /**
+   * Check if there are any overlapping vaccinations among the currently selected vaccinations
+   * and with existing vaccinations from the backend
+   */
+  const checkVaccinationsOverlap = useCallback((): boolean => {
+    // Check overlaps between selected vaccinations
+    for (let i = 0; i < selectedVaccinations.length; i++) {
+      const current = selectedVaccinations[i];
+
+      // Check against other selected vaccinations
+      for (let j = i + 1; j < selectedVaccinations.length; j++) {
+        const other = selectedVaccinations[j];
+
+        const currentBaseName = getBaseName(current.display);
+        const otherBaseName = getBaseName(other.display);
+
+        if (
+          currentBaseName &&
+          otherBaseName &&
+          currentBaseName === otherBaseName
+        ) {
+          // Same vaccination - check date overlap
+          if (!current.isSTAT && !other.isSTAT) {
+            const currentStart = new Date(current.startDate);
+            const currentEnd = calculateEndDate(
+              currentStart,
+              current.duration,
+              current.durationUnit?.code ?? 'd',
+            );
+
+            const otherStart = new Date(other.startDate);
+            const otherEnd = calculateEndDate(
+              otherStart,
+              other.duration,
+              other.durationUnit?.code ?? 'd',
+            );
+
+            if (
+              doDateRangesOverlap(
+                currentStart,
+                currentEnd,
+                otherStart,
+                otherEnd,
+              )
+            ) {
+              return true;
+            }
+          } else if (current.isSTAT || other.isSTAT) {
+            return true;
+          }
+        }
+      }
+
+      // Check against existing vaccinations
+      const isExistingOverlap = activeVaccinations.some(
+        (vac: MedicationRequest) => {
+          if (!vac.name) {
+            return false;
+          }
+
+          const currentBaseName = getBaseName(current.display);
+          const existingBaseName = getBaseName(vac.name);
+
+          if (!currentBaseName || !existingBaseName) {
+            return false;
+          }
+
+          if (currentBaseName !== existingBaseName) {
+            return false;
+          }
+
+          // Extract properties from FHIR MedicationRequest
+          const isImmediate = vac.isImmediate;
+          const startDate = vac.startDate;
+
+          // STAT vaccinations always overlap with existing
+          if (isImmediate || current.isSTAT) return true;
+
+          if (!startDate || !current.startDate) return false;
+
+          const existingStart = new Date(startDate);
+          const existingDuration = vac.duration?.duration ?? 7;
+          const existingDurationUnit = vac.duration?.durationUnit ?? 'd';
+          const existingEnd = calculateEndDate(
+            existingStart,
+            existingDuration,
+            existingDurationUnit,
+          );
+
+          const currentStart = new Date(current.startDate);
+          const currentEnd = calculateEndDate(
+            currentStart,
+            current.duration,
+            current.durationUnit?.code ?? 'd',
+          );
+
+          return doDateRangesOverlap(
+            existingStart,
+            existingEnd,
+            currentStart,
+            currentEnd,
+          );
+        },
+      );
+
+      if (isExistingOverlap) return true;
+    }
+
+    return false;
+  }, [selectedVaccinations, activeVaccinations]);
+
+  /**
+   * Monitor selected vaccinations and update notification based on current overlap status
+   * Shows notification when overlaps exist, hides when no overlaps detected
+   */
+  useEffect(() => {
+    const hasOverlaps = checkVaccinationsOverlap();
+    setShowDuplicateNotification(hasOverlaps);
+  }, [checkVaccinationsOverlap]);
 
   const handleSearch = (searchTerm: string) => {
     // Only update search term if we're not in the process of selecting an item
@@ -331,7 +464,11 @@ const VaccinationForm: React.FC = React.memo(() => {
           >
             {selectedVaccinations.map((vaccination) => (
               <SelectedItem
-                onClose={() => removeVaccination(vaccination.id)}
+                onClose={() => {
+                  removeVaccination(vaccination.id);
+                  // Clear notification when vaccination is removed
+                  setShowDuplicateNotification(false);
+                }}
                 className={styles.selectedVaccinationItem}
                 key={vaccination.id}
               >

@@ -1,4 +1,17 @@
 import { addDays } from 'date-fns';
+import { FHIRCode, extractCodesFromConcept } from './codeUtilities';
+
+/**
+ * Medication Utilities
+ *
+ * This module provides utility functions for working with FHIR Medication resources.
+ * It builds upon the generic codeUtilities module to provide medication-specific
+ * functionality including:
+ * - Code extraction from Medication and MedicationRequest resources
+ * - Medication matching by FHIR codes
+ * - Date range calculations for medication duration
+ * - Dose form extraction
+ */
 
 /**
  * Maps duration units to their equivalent in days
@@ -12,14 +25,6 @@ export const DURATION_UNIT_TO_DAYS: Record<string, number> = {
   min: 1 / 1440,
   s: 1 / 86400,
 };
-
-/**
- * Represents a FHIR code from CodeableConcept
- */
-export interface FHIRCode {
-  system?: string;
-  code: string;
-}
 
 /**
  * Generic type for FHIR resources or objects with optional code properties
@@ -53,30 +58,13 @@ export const extractMedicationCodes = (
   const resource = medication as CodeableResource;
 
   // Extract from code field (Medication resource)
-  if (resource?.code?.coding && Array.isArray(resource.code.coding)) {
-    resource.code.coding.forEach((coding) => {
-      if (coding.code) {
-        codes.push({
-          system: coding.system,
-          code: coding.code,
-        });
-      }
-    });
+  if (resource?.code) {
+    codes.push(...extractCodesFromConcept(resource.code));
   }
 
   // Extract from medicationCodeableConcept (MedicationRequest)
-  if (
-    resource?.medicationCodeableConcept?.coding &&
-    Array.isArray(resource.medicationCodeableConcept.coding)
-  ) {
-    resource.medicationCodeableConcept.coding.forEach((coding) => {
-      if (coding.code) {
-        codes.push({
-          system: coding.system,
-          code: coding.code,
-        });
-      }
-    });
+  if (resource?.medicationCodeableConcept) {
+    codes.push(...extractCodesFromConcept(resource.medicationCodeableConcept));
   }
 
   return codes;
@@ -193,4 +181,41 @@ export const doDateRangesOverlap = (
   end2: Date,
 ): boolean => {
   return start1 <= end2 && start2 <= end1;
+};
+
+/**
+ * Extract dose form from Medication resource or display name
+ *
+ * Tries to extract from Medication.form property first, then falls back to
+ * extracting from parentheses in the display name (e.g., "Paracetamol (Tablet) - 500mg" → "Tablet")
+ *
+ * @param medication - FHIR Medication resource
+ * @param displayName - Display name that may contain form in parentheses
+ * @returns Dose form string or undefined
+ */
+export const extractDoseForm = (
+  medication: Record<string, unknown>,
+  displayName: string,
+): string | undefined => {
+  // Try to extract from Medication resource's form property
+  const form = medication?.form as Record<string, unknown>;
+  const coding = form?.coding as Array<Record<string, unknown>>;
+  let doseForm =
+    (form?.text as string | undefined) ??
+    (coding?.[0]?.display as string | undefined) ??
+    undefined;
+
+  // Fallback: extract from displayName if form info is embedded there
+  if (!doseForm && displayName) {
+    const formMatch = displayName.match(/\(([^)]+)\)/);
+    if (formMatch?.[1]) {
+      const extracted = formMatch[1].trim();
+      // Only use if it looks like a form (not a dosage like "500mg")
+      if (!/^\d+/.test(extracted)) {
+        doseForm = extracted;
+      }
+    }
+  }
+
+  return doseForm;
 };

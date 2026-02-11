@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { Concept } from '../models/encounterConcepts';
 import { DurationUnitOption, MedicationInputEntry } from '../models/medication';
 import { Frequency } from '../models/medicationConfig';
+import { extractDoseForm } from '../utils/fhir/medicationUtilities';
 
 export interface VaccinationState {
   selectedVaccinations: MedicationInputEntry[];
@@ -34,26 +35,7 @@ export const useVaccinationStore = create<VaccinationState>((set, get) => ({
   selectedVaccinations: [],
 
   addVaccination: (vaccination: Medication, displayName: string) => {
-    // Extract dose form from Medication resource's form property
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const vaccinationAny = vaccination as any;
-    let doseForm =
-      vaccinationAny?.form?.text ??
-      vaccinationAny?.form?.coding?.[0]?.display ??
-      undefined;
-
-    // Fallback: extract from displayName if form info is embedded there
-    // e.g., "Vaccine Name (Vial) - Code" -> extract "Vial"
-    if (!doseForm && displayName) {
-      const formMatch = displayName.match(/\(([^)]+)\)/);
-      if (formMatch?.[1]) {
-        const extracted = formMatch[1].trim();
-        // Only use if it looks like a form (not a dosage like "500mg")
-        if (!/^\d+/.test(extracted)) {
-          doseForm = extracted;
-        }
-      }
-    }
+    const doseForm = extractDoseForm(vaccination, displayName);
 
     const newVaccination: MedicationInputEntry = {
       id: vaccination.id!,

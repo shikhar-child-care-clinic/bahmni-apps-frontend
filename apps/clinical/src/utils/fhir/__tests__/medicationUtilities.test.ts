@@ -6,6 +6,7 @@ import {
   getBaseName,
   medicationsMatchByCode,
   DURATION_UNIT_TO_DAYS,
+  extractDoseForm,
 } from '../medicationUtilities';
 
 describe('Medication Utilities', () => {
@@ -277,6 +278,35 @@ describe('Medication Utilities', () => {
       const baseName = getBaseName('PARACETAMOL 500mg');
 
       expect(baseName).toBe('paracetamol');
+    });
+  });
+
+  describe('extractDoseForm', () => {
+    test('extracts from form.text', () => {
+      const medication = { form: { text: 'Tablet' } };
+      expect(extractDoseForm(medication, 'Paracetamol')).toBe('Tablet');
+    });
+
+    test('extracts from form.coding[0].display', () => {
+      const medication = { form: { coding: [{ display: 'Capsule' }] } };
+      expect(extractDoseForm(medication, 'Aspirin')).toBe('Capsule');
+    });
+
+    test('extracts from display name as fallback', () => {
+      expect(extractDoseForm({}, 'Paracetamol (Tablet) - 500mg')).toBe(
+        'Tablet',
+      );
+    });
+
+    test('does not extract numeric values', () => {
+      expect(extractDoseForm({}, 'Medication (500mg)')).toBeUndefined();
+    });
+
+    test('prefers form property over display name', () => {
+      const medication = { form: { text: 'Capsule' } };
+      expect(extractDoseForm(medication, 'Paracetamol (Tablet) - 500mg')).toBe(
+        'Capsule',
+      );
     });
   });
 });

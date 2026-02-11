@@ -970,54 +970,6 @@ describe('MedicationsForm', () => {
     });
   });
 
-  // CACHE INVALIDATION TESTS
-  describe('Cache Invalidation', () => {
-    test('invalidates medications cache when medication is added', async () => {
-      const user = userEvent.setup();
-      (useMedicationSearch as jest.Mock).mockReturnValue({
-        ...mockMedicationSearchHook,
-        searchResults: [mockMedication],
-      });
-
-      render(<MedicationsForm />);
-
-      const input = screen.getByRole('combobox');
-      await user.type(input, 'Para');
-      await user.click(screen.getByText(/Paracetamol 500mg/));
-
-      // Cache should be invalidated after adding medication
-      expect(mockUseQueryClient).toHaveBeenCalled();
-    });
-
-    test('invalidates medications cache when medication is removed', async () => {
-      (useMedicationStore as unknown as jest.Mock).mockReturnValue({
-        ...mockStore,
-        selectedMedications: [mockSelectedMedication],
-        removeMedication: jest.fn(() => {
-          // Simulate removal
-          (useMedicationStore as unknown as jest.Mock).mockReturnValue({
-            ...mockStore,
-            selectedMedications: [],
-          });
-        }),
-      });
-
-      const { rerender } = render(<MedicationsForm />);
-
-      // Simulate removal by updating the store
-      (useMedicationStore as unknown as jest.Mock).mockReturnValue({
-        ...mockStore,
-        selectedMedications: [],
-        removeMedication: jest.fn(),
-      });
-
-      rerender(<MedicationsForm />);
-
-      // Cache invalidation should have been called
-      expect(mockUseQueryClient).toHaveBeenCalled();
-    });
-  });
-
   // DATE RANGE AND NOTIFICATION TESTS
   describe('Date Range and Notification Behavior', () => {
     test('shows notification when medications have overlapping date ranges', () => {

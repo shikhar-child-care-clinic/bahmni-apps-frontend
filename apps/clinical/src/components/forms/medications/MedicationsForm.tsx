@@ -8,7 +8,7 @@ import {
 } from '@bahmni/design-system';
 import { useTranslation, getPatientMedicationBundle } from '@bahmni/services';
 import { useNotification, usePatientUUID } from '@bahmni/widgets';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   Bundle,
   Medication,
@@ -29,14 +29,14 @@ import {
   MedicationInputEntry,
 } from '../../../models/medication';
 import { getMedicationDisplay } from '../../../services/medicationService';
+import { useMedicationStore } from '../../../stores/medicationsStore';
 import {
   calculateEndDate,
   doDateRangesOverlap,
   getBaseName,
   extractMedicationCodes,
   medicationsMatchByCode,
-} from '../../../services/medicationUtilities';
-import { useMedicationStore } from '../../../stores/medicationsStore';
+} from '../../../utils/fhir/medicationUtilities';
 import SelectedMedicationItem from './SelectedMedicationItem';
 import styles from './styles/MedicationsForm.module.scss';
 
@@ -51,7 +51,8 @@ const MedicationsForm: React.FC = React.memo(() => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
   const { addNotification } = useNotification();
-  const queryClient = useQueryClient();
+  // Note: Cache invalidation is handled by consultation submission, not add/remove operations.
+  // Add/remove only update the local Zustand store, not server state.
   const [searchMedicationTerm, setSearchMedicationTerm] = useState('');
   const [showDuplicateNotification, setShowDuplicateNotification] =
     useState(false);
@@ -393,11 +394,6 @@ const MedicationsForm: React.FC = React.memo(() => {
     isSelectingRef.current = true;
     addMedication(selectedItem.medication, displayName);
 
-    // Invalidate medications cache to ensure fresh data for overlap detection
-    queryClient.invalidateQueries({
-      queryKey: ['medications', patientUUID!],
-    });
-
     // Clear the search term after selection
     setSearchMedicationTerm('');
     // Reset the flag after a short delay to allow ComboBox to update
@@ -522,10 +518,6 @@ const MedicationsForm: React.FC = React.memo(() => {
                   removeMedication(medication.id);
                   // Clear notification when medication is removed
                   setShowDuplicateNotification(false);
-                  // Invalidate medications cache to ensure fresh data
-                  queryClient.invalidateQueries({
-                    queryKey: ['medications', patientUUID!],
-                  });
                 }}
                 className={styles.selectedMedicationItem}
                 key={medication.id}
