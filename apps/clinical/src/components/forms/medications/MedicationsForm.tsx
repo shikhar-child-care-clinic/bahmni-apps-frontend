@@ -275,7 +275,6 @@ const MedicationsForm: React.FC = React.memo(() => {
    */
   const isDuplicateMedication = useCallback(
     (
-      _medicationId: string, // Currently unused, may be needed for future enhancement
       medicationDisplayName: string,
       newMedication: Medication,
       newStartDate: Date,
@@ -375,11 +374,8 @@ const MedicationsForm: React.FC = React.memo(() => {
 
     const displayName = getMedicationDisplay(selectedItem.medication);
 
-    // Check for duplicate with date overlap
-    // New medications start today with default 7 day duration
     const newStartDate = new Date();
     const isDuplicate = isDuplicateMedication(
-      selectedItem.medication.id,
       displayName,
       selectedItem.medication,
       newStartDate,
@@ -387,16 +383,12 @@ const MedicationsForm: React.FC = React.memo(() => {
       'd',
     );
 
-    // Show notification if duplicate, but still allow adding
     setShowDuplicateNotification(isDuplicate);
 
-    // Set flag to prevent search when ComboBox updates its input
     isSelectingRef.current = true;
     addMedication(selectedItem.medication, displayName);
 
-    // Clear the search term after selection
     setSearchMedicationTerm('');
-    // Reset the flag after a short delay to allow ComboBox to update
     setTimeout(() => {
       isSelectingRef.current = false;
     }, 100);
@@ -516,7 +508,6 @@ const MedicationsForm: React.FC = React.memo(() => {
               <SelectedItem
                 onClose={() => {
                   removeMedication(medication.id);
-                  // Clear notification when medication is removed
                   setShowDuplicateNotification(false);
                 }}
                 className={styles.selectedMedicationItem}

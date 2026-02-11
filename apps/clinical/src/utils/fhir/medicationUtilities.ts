@@ -1,21 +1,6 @@
 import { addDays } from 'date-fns';
 import { FHIRCode, extractCodesFromConcept } from './codeUtilities';
 
-/**
- * Medication Utilities
- *
- * This module provides utility functions for working with FHIR Medication resources.
- * It builds upon the generic codeUtilities module to provide medication-specific
- * functionality including:
- * - Code extraction from Medication and MedicationRequest resources
- * - Medication matching by FHIR codes
- * - Date range calculations for medication duration
- * - Dose form extraction
- */
-
-/**
- * Maps duration units to their equivalent in days
- */
 export const DURATION_UNIT_TO_DAYS: Record<string, number> = {
   d: 1,
   wk: 7,
@@ -46,11 +31,6 @@ interface CodeableResource {
   [key: string]: any;
 }
 
-/**
- * Extract all medication codes from FHIR CodeableConcept
- * Uses actual FHIR code data - no string parsing
- * Handles both Medication.code and MedicationRequest.medicationCodeableConcept
- */
 export const extractMedicationCodes = (
   medication: CodeableResource | unknown,
 ): FHIRCode[] => {
@@ -70,11 +50,6 @@ export const extractMedicationCodes = (
   return codes;
 };
 
-/**
- * Check if two medications match by comparing FHIR codes
- * Returns true if any code matches (same system + code value)
- * For OpenMRS concepts (no system), matches by code value alone
- */
 export const medicationsMatchByCode = (
   medication1: CodeableResource | unknown,
   medication2: CodeableResource | unknown,
@@ -153,9 +128,6 @@ export const getBaseName = (fullName: string): string => {
   return '';
 };
 
-/**
- * Calculate end date from start date and duration
- */
 export const calculateEndDate = (
   startDate: Date | string,
   duration: number,
@@ -171,9 +143,6 @@ export const calculateEndDate = (
   return addDays(start, totalDays);
 };
 
-/**
- * Check if two date ranges overlap
- */
 export const doDateRangesOverlap = (
   start1: Date,
   end1: Date,
