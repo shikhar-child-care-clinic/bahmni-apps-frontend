@@ -18,10 +18,13 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
+import {
+  APPOINTMENT_STATUS_CLASS_MAP,
+  APPOINTMENT_STATUS_TRANSLATION_MAP,
+} from './constants';
 import styles from './styles/AppointmentsTable.module.scss';
 import { formatAppointment, FormattedAppointment } from './utils';
 
-// Field name to translation key mapping
 const FIELD_TRANSLATION_MAP: Record<string, string> = {
   appointmentNumber: 'APPOINTMENTS_NUMBER',
   service: 'APPOINTMENTS_SERVICE',
@@ -32,7 +35,6 @@ const FIELD_TRANSLATION_MAP: Record<string, string> = {
   provider: 'APPOINTMENTS_PROVIDER',
 };
 
-// Default fields to display in the table
 const DEFAULT_FIELDS = [
   'appointmentNumber',
   'service',
@@ -43,46 +45,18 @@ const DEFAULT_FIELDS = [
   'provider',
 ];
 
-// Helper function to get appointment status CSS class
 const getAppointmentStatusClassName = (status: string): string => {
-  switch (status?.toLowerCase()) {
-    case 'scheduled':
-    case 'confirmed':
-      return styles.scheduledStatus;
-    case 'completed':
-      return styles.completedStatus;
-    case 'cancelled':
-      return styles.cancelledStatus;
-    case 'missed':
-      return styles.missedStatus;
-    case 'waitlist':
-      return styles.waitListStatus;
-    case 'checkedin':
-      return styles.checkedInStatus;
-    default:
-      return styles.unknownStatus;
-  }
+  const statusKey = status?.toLowerCase();
+  const classNameKey = APPOINTMENT_STATUS_CLASS_MAP[statusKey];
+  return classNameKey ? styles[classNameKey] : styles.unknownStatus;
 };
 
-// Helper function to get translation key for appointment status
 const getAppointmentStatusKey = (status: string): string => {
-  switch (status?.toLowerCase()) {
-    case 'scheduled':
-    case 'confirmed':
-      return 'APPOINTMENTS_STATUS_SCHEDULED';
-    case 'completed':
-      return 'APPOINTMENTS_STATUS_COMPLETED';
-    case 'cancelled':
-      return 'APPOINTMENTS_STATUS_CANCELLED';
-    case 'missed':
-      return 'APPOINTMENTS_STATUS_MISSED';
-    case 'waitlist':
-      return 'APPOINTMENTS_STATUS_WAITLIST';
-    case 'checkedin':
-      return 'APPOINTMENTS_STATUS_CHECKEDIN';
-    default:
-      return 'APPOINTMENTS_STATUS_UNKNOWN';
-  }
+  const statusKey = status?.toLowerCase();
+  return (
+    APPOINTMENT_STATUS_TRANSLATION_MAP[statusKey] ??
+    'APPOINTMENTS_STATUS_UNKNOWN'
+  );
 };
 
 const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
@@ -91,7 +65,6 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
   const { addNotification } = useNotification();
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // Fetch upcoming appointments using TanStack Query
   const {
     data: upcomingData,
     isLoading: upcomingLoading,
@@ -104,7 +77,6 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
     queryFn: () => getUpcomingAppointments(patientUUID!),
   });
 
-  // Fetch past appointments using TanStack Query
   const {
     data: pastData,
     isLoading: pastLoading,
@@ -117,7 +89,6 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
     queryFn: () => getPastAppointments(patientUUID!),
   });
 
-  // Handle errors with notifications
   useEffect(() => {
     if (upcomingError) {
       addNotification({
@@ -138,11 +109,9 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
     }
   }, [pastError, pastErrorObj, addNotification, t]);
 
-  // Subscribe to consultation saved events and refetch if appointments were updated
   useSubscribeConsultationSaved(
     (payload: ConsultationSavedEventPayload) => {
       if (payload.patientUUID === patientUUID) {
-        // Refetch both appointment lists when consultation is saved
         refetchUpcoming();
         refetchPast();
       }
@@ -152,7 +121,6 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
 
   const upcomingAppointments = upcomingData ?? [];
 
-  // Limit past appointments to the configured number
   const pastAppointmentsData = pastData ?? [];
   const numberOfPastAppointments =
     config?.numberOfPastAppointments ?? pastAppointmentsData.length;
@@ -165,10 +133,8 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
     setSelectedIndex(selectedIndex);
   };
 
-  // Get configured fields from config, or use default if not provided
   const configuredFields = config?.fields ?? DEFAULT_FIELDS;
 
-  // Table headers - built from config fields
   const headers = useMemo(
     () =>
       configuredFields.map((fieldKey: string) => ({
@@ -187,19 +153,14 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
     [configuredFields],
   );
 
-  // Format upcoming appointments for display
   const formattedUpcomingAppointments = useMemo(() => {
     if (!upcomingAppointments) return [];
     return upcomingAppointments.map((appointment, index: number) => {
-      // Service has already transformed SQL response to Appointment format
-      // Add a generated uuid if API didn't provide one
       appointment.uuid ??= `upcoming-${index}`;
-      // Format for display (handles date/time formatting)
       return formatAppointment(appointment);
     });
   }, [upcomingAppointments]);
 
-  // Format past appointments for display
   const formattedPastAppointments = useMemo(() => {
     if (!pastAppointments || pastAppointments.length === 0) {
       return [];
@@ -209,20 +170,15 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
         if (!appointment) {
           return undefined;
         }
-        // Service has already transformed SQL response to Appointment format
-        // Add a generated uuid if API didn't provide one
         appointment.uuid ??= `past-${index}`;
-        // Format for display (handles date/time formatting)
         return formatAppointment(appointment);
       })
       .filter((item): item is FormattedAppointment => item !== undefined);
     return formatted;
   }, [pastAppointments]);
 
-  // Custom cell renderer for table cells
   const renderCell = useCallback(
     (row: FormattedAppointment, key: string) => {
-      // Safety check for undefined row
       if (!row) {
         return '-';
       }
@@ -246,12 +202,10 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
           return reasonVal ?? '-';
         }
         case 'appointmentDate': {
-          // Date is already formatted as DD/MM/YYYY
           const dateVal = row.appointmentDate?.trim();
           return dateVal ?? '-';
         }
         case 'appointmentSlot': {
-          // Slot/Time range from SQL (e.g., "11:30 PM - 11:46 PM")
           const timeVal = row.appointmentTime?.trim();
           return timeVal ?? '-';
         }
@@ -302,7 +256,6 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
           <Tab tabIndex={1}>{t('APPOINTMENTS_TAB_PAST')}</Tab>
         </TabList>
         <TabPanels>
-          {/* Tab 1: Upcoming Appointments (from SQL endpoint - already filtered) */}
           <TabPanel className={styles.appointmentTabs}>
             {formattedUpcomingAppointments.length > 0 ? (
               <SortableDataTable
@@ -325,7 +278,6 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
             )}
           </TabPanel>
 
-          {/* Tab 2: Past Appointments (simple table view, same as upcoming) */}
           <TabPanel className={styles.appointmentTabs}>
             {formattedPastAppointments.length > 0 ? (
               <SortableDataTable

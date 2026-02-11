@@ -18,17 +18,9 @@ export const searchAppointmentsByAttribute = async (
   return appointments;
 };
 
-/**
- * Transforms SQL endpoint response to Appointment interface format
- * SQL response has flat keys like DASHBOARD_APPOINTMENTS_*_KEY
- * This is a private helper to convert raw SQL data to domain objects
- */
 const transformSqlAppointmentResponse = (
   sqlResponse: Record<string, unknown>,
-): Appointment & {
-  appointmentSlot?: string;
-  reason?: string;
-} => {
+): Appointment => {
   return {
     uuid: sqlResponse.uuid as string,
     startDateTime:
@@ -111,47 +103,21 @@ const transformSqlAppointmentResponse = (
   };
 };
 
-/**
- * Fetch upcoming appointments for a patient using SQL Report endpoint
- * Upcoming appointments are those scheduled for today and future dates
- * Returns transformed domain objects (Appointment[])
- */
 export const getUpcomingAppointments = async (
   patientUuid: string,
-): Promise<
-  Array<
-    Appointment & {
-      appointmentSlot?: string;
-      reason?: string;
-    }
-  >
-> => {
+): Promise<Appointment[]> => {
   const sqlResults = await get<Record<string, unknown>[]>(
     `${BAHMNI_SQL_URL}?patientUuid=${patientUuid}&q=${UPCOMING_APPOINTMENTS_SQL_QUERY}&v=full`,
   );
-  // Transform SQL response to domain objects
   return (sqlResults || []).map(transformSqlAppointmentResponse);
 };
 
-/**
- * Fetch past appointments for a patient using SQL Report endpoint
- * Past appointments are those that occurred before today
- * Returns transformed domain objects (Appointment[])
- */
 export const getPastAppointments = async (
   patientUuid: string,
-): Promise<
-  Array<
-    Appointment & {
-      appointmentSlot?: string;
-      reason?: string;
-    }
-  >
-> => {
+): Promise<Appointment[]> => {
   const sqlResults = await get<Record<string, unknown>[]>(
     `${BAHMNI_SQL_URL}?patientUuid=${patientUuid}&q=${PAST_APPOINTMENTS_SQL_QUERY}&v=full`,
   );
-  // Transform SQL response to domain objects
   return (sqlResults || []).map(transformSqlAppointmentResponse);
 };
 

@@ -303,7 +303,6 @@ describe('Appointment Service', () => {
 
       const result = await getUpcomingAppointments(patientUUID);
 
-      // Service transforms SQL response to Appointment objects
       expect(result).toHaveLength(1);
       expect(result[0].uuid).toBe('appt-uuid-1');
       expect(result[0].status).toBe('Scheduled');
@@ -402,7 +401,6 @@ describe('Appointment Service', () => {
 
       const result = await getPastAppointments(patientUUID);
 
-      // Service transforms SQL response to Appointment objects
       expect(result).toHaveLength(1);
       expect(result[0].uuid).toBe('appt-uuid-past-1');
       expect(result[0].status).toBe('Completed');
@@ -482,7 +480,6 @@ describe('Appointment Service', () => {
 
       const result = await getPastAppointments(patientUUID);
 
-      // Service transforms SQL response keys to Appointment properties
       expect(result[0]).toHaveProperty('uuid', 'appt-uuid-past-1');
       expect(result[0]).toHaveProperty('status', 'Completed');
       expect(result[0]).toHaveProperty('provider');
