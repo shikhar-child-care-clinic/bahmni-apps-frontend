@@ -25,7 +25,6 @@ export interface Appointment {
   comments: string | null;
   reasons: Reason[];
   appointmentSlot?: string;
-  reason?: string;
 }
 
 export interface Patient {

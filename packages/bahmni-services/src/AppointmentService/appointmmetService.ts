@@ -1,19 +1,22 @@
 import { post, get } from '../api';
+import { BAHMNI_SQL_URL } from '../constants/app';
 import {
   APPOINTMENTS_SEARCH_URL,
-  APPOINTMENTS_URL,
-  BAHMNI_SQL_URL,
   UPCOMING_APPOINTMENTS_SQL_QUERY,
   PAST_APPOINTMENTS_SQL_QUERY,
+  getAppointmentByIdUrl,
+  getUpcomingAppointmentsUrl,
+  getPastAppointmentsUrl,
+  updateAppointmentStatusUrl,
 } from './constants';
 import { Appointment } from './models';
 
 export const searchAppointmentsByAttribute = async (
-  searchTerm: Record<string, string>,
+  searchParam: Record<string, string>,
 ): Promise<Appointment[]> => {
   const appointments = await post<Appointment[]>(
     APPOINTMENTS_SEARCH_URL,
-    searchTerm,
+    searchParam,
   );
   return appointments;
 };
@@ -21,6 +24,11 @@ export const searchAppointmentsByAttribute = async (
 const transformSqlAppointmentResponse = (
   sqlResponse: Record<string, unknown>,
 ): Appointment => {
+  const reasonString = sqlResponse.DASHBOARD_APPOINTMENTS_REASON_KEY ?? '';
+  const reasons = reasonString
+    ? [{ conceptUuid: '', name: reasonString as string }]
+    : [];
+
   return {
     uuid: sqlResponse.uuid as string,
     startDateTime:
@@ -28,33 +36,23 @@ const transformSqlAppointmentResponse = (
     endDateTime:
       sqlResponse.DASHBOARD_APPOINTMENTS_END_DATE_IN_UTC_KEY as number,
     appointmentNumber:
-      (sqlResponse.DASHBOARD_APPOINTMENTS_APPOINTMENT_NUMBER_KEY as
-        | string
-        | undefined) ?? '-',
-    appointmentSlot:
-      (sqlResponse.DASHBOARD_APPOINTMENTS_SLOT_KEY as string | undefined) ??
-      '-',
-    reason:
-      (sqlResponse.DASHBOARD_APPOINTMENTS_REASON_KEY as string | undefined) ??
-      '-',
+      (sqlResponse.DASHBOARD_APPOINTMENTS_APPOINTMENT_NUMBER_KEY ??
+        '-') as string,
+    appointmentSlot: (sqlResponse.DASHBOARD_APPOINTMENTS_SLOT_KEY ??
+      '-') as string,
     dateCreated: 0,
     dateAppointmentScheduled: 0,
     appointmentKind: '',
     service: {
       appointmentServiceId: 0,
-      name:
-        (sqlResponse.DASHBOARD_APPOINTMENTS_SERVICE_KEY as
-          | string
-          | undefined) ?? '-',
+      name: (sqlResponse.DASHBOARD_APPOINTMENTS_SERVICE_KEY ?? '-') as string,
       description: null,
       speciality: null,
       startTime: '',
       endTime: '',
       location: {
-        name:
-          (sqlResponse.DASHBOARD_APPOINTMENTS_LOCATION_KEY as
-            | string
-            | undefined) ?? '-',
+        name: (sqlResponse.DASHBOARD_APPOINTMENTS_LOCATION_KEY ??
+          '-') as string,
         uuid: '',
       },
       uuid: '',
@@ -63,33 +61,24 @@ const transformSqlAppointmentResponse = (
     },
     serviceType: {
       id: undefined,
-      name:
-        (sqlResponse.DASHBOARD_APPOINTMENTS_SERVICE_TYPE_KEY as
-          | string
-          | undefined) ?? '-',
+      name: (sqlResponse.DASHBOARD_APPOINTMENTS_SERVICE_TYPE_KEY ??
+        '-') as string,
       description: undefined,
       uuid: '',
     },
     provider: {
       id: undefined,
-      name:
-        (sqlResponse.DASHBOARD_APPOINTMENTS_PROVIDER_KEY as
-          | string
-          | undefined) ?? '-',
+      name: (sqlResponse.DASHBOARD_APPOINTMENTS_PROVIDER_KEY ?? '-') as string,
       uuid: '',
     },
     location: {
-      name:
-        (sqlResponse.DASHBOARD_APPOINTMENTS_LOCATION_KEY as
-          | string
-          | undefined) ?? '-',
+      name: (sqlResponse.DASHBOARD_APPOINTMENTS_LOCATION_KEY ?? '-') as string,
       uuid: '',
     },
-    status:
-      (sqlResponse.DASHBOARD_APPOINTMENTS_STATUS_KEY as string | undefined) ??
-      'Unknown',
+    status: (sqlResponse.DASHBOARD_APPOINTMENTS_STATUS_KEY ??
+      'Unknown') as string,
     comments: null,
-    reasons: [],
+    reasons,
     patient: {
       uuid: '',
       identifier: '',
@@ -107,7 +96,7 @@ export const getUpcomingAppointments = async (
   patientUuid: string,
 ): Promise<Appointment[]> => {
   const sqlResults = await get<Record<string, unknown>[]>(
-    `${BAHMNI_SQL_URL}?patientUuid=${patientUuid}&q=${UPCOMING_APPOINTMENTS_SQL_QUERY}&v=full`,
+    getUpcomingAppointmentsUrl(patientUuid),
   );
   return (sqlResults || []).map(transformSqlAppointmentResponse);
 };
@@ -116,7 +105,7 @@ export const getPastAppointments = async (
   patientUuid: string,
 ): Promise<Appointment[]> => {
   const sqlResults = await get<Record<string, unknown>[]>(
-    `${BAHMNI_SQL_URL}?patientUuid=${patientUuid}&q=${PAST_APPOINTMENTS_SQL_QUERY}&v=full`,
+    getPastAppointmentsUrl(patientUuid),
   );
   return (sqlResults || []).map(transformSqlAppointmentResponse);
 };
@@ -127,12 +116,12 @@ export const updateAppointmentStatus = async (
   onDate?: Date,
 ): Promise<Appointment> => {
   const updatedAppointment = await post<Appointment>(
-    `${APPOINTMENTS_URL}/${appointmentUuid}/status-change`,
+    updateAppointmentStatusUrl(appointmentUuid),
     { toStatus, onDate },
   );
   return updatedAppointment;
 };
 
 export async function getAppointmentById(uuid: string): Promise<Appointment> {
-  return await get<Appointment>(`${APPOINTMENTS_URL}/${uuid}`);
+  return await get<Appointment>(getAppointmentByIdUrl(uuid));
 }

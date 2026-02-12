@@ -256,17 +256,17 @@ describe('Widget Registry', () => {
       const types = getAllWidgetTypes();
       const expectedTypes = [
         'allergies',
-        'programs',
+        'appointments',
         'conditions',
         'diagnoses',
-        'labOrders',
-        'pacsOrders',
-        'treatment',
-        'appointments',
         'flowSheet',
-        'ordersControl',
-        'observations',
         'forms',
+        'labOrders',
+        'observations',
+        'ordersControl',
+        'pacsOrders',
+        'programs',
+        'treatment',
       ];
 
       expect(types).toHaveLength(expectedTypes.length);

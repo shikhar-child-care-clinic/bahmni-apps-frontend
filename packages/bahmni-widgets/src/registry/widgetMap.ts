@@ -7,6 +7,10 @@ export const builtInWidgets: WidgetConfig[] = [
     component: lazy(() => import('../allergies/AllergiesTable')),
   },
   {
+    type: 'appointments',
+    component: lazy(() => import('../appointments/AppointmentsTable')),
+  },
+  {
     type: 'conditions',
     component: lazy(() => import('../conditions/ConditionsTable')),
   },
@@ -49,9 +53,5 @@ export const builtInWidgets: WidgetConfig[] = [
   {
     type: 'treatment',
     component: lazy(() => import('../medications/MedicationsTable')),
-  },
-  {
-    type: 'appointments',
-    component: lazy(() => import('../appointments/AppointmentsTable')),
   },
 ];

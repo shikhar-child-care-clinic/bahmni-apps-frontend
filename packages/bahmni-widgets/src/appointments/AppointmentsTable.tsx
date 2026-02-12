@@ -1,5 +1,6 @@
 import {
   SortableDataTable,
+  StatusTag,
   Tab,
   TabList,
   TabPanel,
@@ -56,6 +57,42 @@ const getAppointmentStatusKey = (status: string): string => {
   return (
     APPOINTMENT_STATUS_TRANSLATION_MAP[statusKey] ??
     'APPOINTMENTS_STATUS_UNKNOWN'
+  );
+};
+
+interface AppointmentTabContentProps {
+  appointments: Array<Record<string, unknown>>;
+  isLoading: boolean;
+  emptyMessageKey: string;
+  headers: Array<{ key: string; header: string }>;
+  sortable: Array<{ key: string; sortable: boolean }>;
+  renderCell: (row: FormattedAppointment, key: string) => React.ReactNode;
+}
+
+const AppointmentTabContent: React.FC<AppointmentTabContentProps> = ({
+  appointments,
+  isLoading,
+  emptyMessageKey,
+  headers,
+  sortable,
+  renderCell,
+}) => {
+  const { t } = useTranslation();
+
+  if (appointments.length === 0) {
+    return <p className={styles.appointmentTableEmpty}>{t(emptyMessageKey)}</p>;
+  }
+
+  return (
+    <SortableDataTable
+      headers={headers}
+      ariaLabel={t('APPOINTMENTS_TABLE_ARIA_LABEL')}
+      rows={appointments}
+      loading={isLoading}
+      sortable={sortable}
+      renderCell={renderCell}
+      className={styles.appointmentsTableBody}
+    />
   );
 };
 
@@ -211,12 +248,11 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
         }
         case 'status':
           return (
-            <div
-              className={`${styles.statusChip} ${getAppointmentStatusClassName(row.status)}`}
-              data-testid={`appointment-status-${row.uuid}`}
-            >
-              {t(getAppointmentStatusKey(row.status))}
-            </div>
+            <StatusTag
+              label={t(getAppointmentStatusKey(row.status))}
+              dotClassName={getAppointmentStatusClassName(row.status)}
+              testId={`appointment-status-${row.uuid}`}
+            />
           );
         case 'provider': {
           const providerName = row.provider?.name?.trim();
@@ -257,47 +293,25 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
         </TabList>
         <TabPanels>
           <TabPanel className={styles.appointmentTabs}>
-            {formattedUpcomingAppointments.length > 0 ? (
-              <SortableDataTable
-                headers={headers}
-                ariaLabel={t('APPOINTMENTS_TABLE_ARIA_LABEL')}
-                rows={
-                  formattedUpcomingAppointments as unknown as Array<
-                    Record<string, unknown>
-                  >
-                }
-                loading={upcomingLoading}
-                sortable={sortable}
-                renderCell={renderCell}
-                className={styles.appointmentsTableBody}
-              />
-            ) : (
-              <p className={styles.appointmentTableEmpty}>
-                {t('DASHBOARD_NO_UPCOMING_APPOINTMENTS_KEY')}
-              </p>
-            )}
+            <AppointmentTabContent
+              appointments={formattedUpcomingAppointments}
+              isLoading={upcomingLoading}
+              emptyMessageKey="DASHBOARD_NO_UPCOMING_APPOINTMENTS_KEY"
+              headers={headers}
+              sortable={sortable}
+              renderCell={renderCell}
+            />
           </TabPanel>
 
           <TabPanel className={styles.appointmentTabs}>
-            {formattedPastAppointments.length > 0 ? (
-              <SortableDataTable
-                headers={headers}
-                ariaLabel={t('APPOINTMENTS_TABLE_ARIA_LABEL')}
-                rows={
-                  formattedPastAppointments as unknown as Array<
-                    Record<string, unknown>
-                  >
-                }
-                loading={pastLoading}
-                sortable={sortable}
-                renderCell={renderCell}
-                className={styles.appointmentsTableBody}
-              />
-            ) : (
-              <p className={styles.appointmentTableEmpty}>
-                {t('DASHBOARD_NO_PAST_APPOINTMENTS_KEY')}
-              </p>
-            )}
+            <AppointmentTabContent
+              appointments={formattedPastAppointments}
+              isLoading={pastLoading}
+              emptyMessageKey="DASHBOARD_NO_PAST_APPOINTMENTS_KEY"
+              headers={headers}
+              sortable={sortable}
+              renderCell={renderCell}
+            />
           </TabPanel>
         </TabPanels>
       </Tabs>

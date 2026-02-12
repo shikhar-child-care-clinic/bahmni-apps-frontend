@@ -6,6 +6,7 @@ export interface FormattedAppointment extends Appointment {
   appointmentDate: string;
   appointmentTime: string;
   appointmentSlot?: string;
+  reason?: string;
 }
 
 const formatDateFromUtcArray = (dateTimeArray: number[]): string => {
@@ -44,7 +45,6 @@ export const formatAppointment = (
   appointment: Appointment & {
     appointmentSlot?: string;
     appointmentNumber?: string;
-    reason?: string;
   },
 ): FormattedAppointment => {
   let appointmentDate = '-';
@@ -74,11 +74,17 @@ export const formatAppointment = (
     appointmentTime = '-';
   }
 
+  const reason =
+    appointment.reasons && appointment.reasons.length > 0
+      ? appointment.reasons.map((r) => r.name).join(', ')
+      : undefined;
+
   return {
     ...appointment,
     id: appointment.uuid,
     appointmentDate,
     appointmentTime,
+    ...(reason && { reason }),
   };
 };
 

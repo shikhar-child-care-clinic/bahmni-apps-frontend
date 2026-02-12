@@ -9,13 +9,11 @@ describe('formatAppointment', () => {
   const mockAppointment: Appointment & {
     appointmentSlot?: string;
     appointmentNumber?: string;
-    reason?: string;
   } = {
     uuid: 'appt-uuid-123',
     appointmentNumber: 'APT-12345',
     startDateTime: [2025, 2, 15, 10, 30],
     appointmentSlot: '10:30 AM - 10:46 AM',
-    reason: 'Follow-up',
     service: { name: 'Consultation' },
     serviceType: { name: 'General' },
     provider: { name: 'Dr. Smith' },
@@ -26,7 +24,7 @@ describe('formatAppointment', () => {
     endDateTime: 0,
     appointmentKind: '',
     comments: null,
-    reasons: [],
+    reasons: [{ conceptUuid: 'uuid-1', name: 'Follow-up' }],
     patient: {
       uuid: '',
       identifier: '',
@@ -137,6 +135,9 @@ describe('formatAppointment', () => {
     expect(result.uuid).toBe('appt-uuid-123');
     expect(result.appointmentNumber).toBe('APT-12345');
     expect(result.reason).toBe('Follow-up');
+    expect(result.reasons).toEqual([
+      { conceptUuid: 'uuid-1', name: 'Follow-up' },
+    ]);
     expect(result.service).toEqual({ name: 'Consultation' });
     expect(result.status).toBe('Scheduled');
   });
