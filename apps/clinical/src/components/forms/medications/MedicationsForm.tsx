@@ -34,11 +34,24 @@ import {
   calculateEndDate,
   doDateRangesOverlap,
   getBaseName,
-  extractMedicationCodes,
   medicationsMatchByCode,
 } from '../../../utils/fhir/medicationUtilities';
 import SelectedMedicationItem from './SelectedMedicationItem';
 import styles from './styles/MedicationsForm.module.scss';
+
+/**
+ * Safely extract medication ID from FHIR medicationReference
+ * Returns undefined if reference is malformed or missing
+ */
+const extractMedicationRefId = (
+  reference: string | undefined,
+): string | undefined => {
+  if (!reference) return undefined;
+  const parts = reference.split('/');
+  // Expected format: "Medication/123" - need exactly 2 parts
+  if (parts.length !== 2 || !parts[1]) return undefined;
+  return parts[1];
+};
 
 /**
  * MedicationsForm component
@@ -147,50 +160,49 @@ const MedicationsForm: React.FC = React.memo(() => {
     for (let i = 0; i < selectedMedications.length; i++) {
       const current = selectedMedications[i];
 
+      // Skip if current has no startDate (required for overlap check)
+      if (!current.startDate) continue;
+
       // Check against other selected medications
       for (let j = i + 1; j < selectedMedications.length; j++) {
         const other = selectedMedications[j];
 
-        if (medicationsMatchByCode(current.medication, other.medication)) {
-          // Same medication - check date overlap
-          if (
-            !current.isSTAT &&
-            !current.isPRN &&
-            !other.isSTAT &&
-            !other.isPRN
-          ) {
-            const currentStart = new Date(current.startDate);
-            const currentEnd = calculateEndDate(
-              currentStart,
-              current.duration,
-              current.durationUnit?.code ?? 'd',
-            );
+        if (!medicationsMatchByCode(current.medication, other.medication)) {
+          continue;
+        }
 
-            const otherStart = new Date(other.startDate);
-            const otherEnd = calculateEndDate(
-              otherStart,
-              other.duration,
-              other.durationUnit?.code ?? 'd',
-            );
+        // Same medication found - determine overlap based on type
+        // STAT medications always overlap with same medication
+        if (current.isSTAT || other.isSTAT) {
+          return true;
+        }
 
-            if (
-              doDateRangesOverlap(
-                currentStart,
-                currentEnd,
-                otherStart,
-                otherEnd,
-              )
-            ) {
-              return true;
-            }
-          } else if (
-            current.isSTAT ||
-            current.isPRN ||
-            other.isSTAT ||
-            other.isPRN
-          ) {
-            return true;
-          }
+        // PRN medications don't overlap with scheduled or other PRN
+        if (current.isPRN || other.isPRN) {
+          continue;
+        }
+
+        // Both are scheduled - check date overlap
+        if (!other.startDate) continue;
+
+        const currentStart = new Date(current.startDate);
+        const currentEnd = calculateEndDate(
+          currentStart,
+          current.duration,
+          current.durationUnit?.code ?? 'd',
+        );
+
+        const otherStart = new Date(other.startDate);
+        const otherEnd = calculateEndDate(
+          otherStart,
+          other.duration,
+          other.durationUnit?.code ?? 'd',
+        );
+
+        if (
+          doDateRangesOverlap(currentStart, currentEnd, otherStart, otherEnd)
+        ) {
+          return true;
         }
       }
 
@@ -198,11 +210,10 @@ const MedicationsForm: React.FC = React.memo(() => {
       const isExistingOverlap = activeMedications.some(
         (med: FhirMedicationRequest) => {
           // Resolve medicationReference to get the Medication resource with codes
-          const medicationResource = med.medicationReference
-            ? medicationMap[
-                med.medicationReference.reference?.split('/')[1] ?? ''
-              ]
-            : null;
+          const refId = extractMedicationRefId(
+            med.medicationReference?.reference,
+          );
+          const medicationResource = refId ? medicationMap[refId] : null;
 
           // Compare using FHIR codes
           if (
@@ -290,22 +301,15 @@ const MedicationsForm: React.FC = React.memo(() => {
         effectiveUnit,
       );
 
-      // Check if new medication has any codes to match against
-      const newMedicationCodes = extractMedicationCodes(newMedication);
-      if (newMedicationCodes.length === 0) {
-        return false;
-      }
-
       const isExistingDuplicate = activeMedications.some(
         (med: FhirMedicationRequest) => {
           // Resolve medicationReference to get the Medication resource with codes
-          const medicationResource = med.medicationReference
-            ? medicationMap[
-                med.medicationReference.reference?.split('/')[1] ?? ''
-              ]
-            : null;
+          const refId = extractMedicationRefId(
+            med.medicationReference?.reference,
+          );
+          const medicationResource = refId ? medicationMap[refId] : null;
 
-          // Compare using FHIR codes only
+          // Compare using FHIR codes - returns false if either has no codes
           if (
             !medicationResource ||
             !medicationsMatchByCode(newMedication, medicationResource)
@@ -506,10 +510,7 @@ const MedicationsForm: React.FC = React.memo(() => {
           >
             {selectedMedications.map((medication) => (
               <SelectedItem
-                onClose={() => {
-                  removeMedication(medication.id);
-                  setShowDuplicateNotification(false);
-                }}
+                onClose={() => removeMedication(medication.id)}
                 className={styles.selectedMedicationItem}
                 key={medication.id}
               >

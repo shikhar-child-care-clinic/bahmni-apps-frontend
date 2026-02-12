@@ -195,6 +195,9 @@ const VaccinationForm: React.FC = React.memo(() => {
     for (let i = 0; i < selectedVaccinations.length; i++) {
       const current = selectedVaccinations[i];
 
+      // Skip if current has no startDate (required for overlap check)
+      if (!current.startDate) continue;
+
       // Check against other selected vaccinations
       for (let j = i + 1; j < selectedVaccinations.length; j++) {
         const other = selectedVaccinations[j];
@@ -202,71 +205,55 @@ const VaccinationForm: React.FC = React.memo(() => {
         const currentBaseName = getBaseName(current.display);
         const otherBaseName = getBaseName(other.display);
 
+        if (!currentBaseName || !otherBaseName) continue;
+        if (currentBaseName !== otherBaseName) continue;
+
+        // Same vaccination found - STAT always overlaps
+        if (current.isSTAT || other.isSTAT) {
+          return true;
+        }
+
+        // Both are scheduled - check date overlap
+        if (!other.startDate) continue;
+
+        const currentStart = new Date(current.startDate);
+        const currentEnd = calculateEndDate(
+          currentStart,
+          current.duration,
+          current.durationUnit?.code ?? 'd',
+        );
+
+        const otherStart = new Date(other.startDate);
+        const otherEnd = calculateEndDate(
+          otherStart,
+          other.duration,
+          other.durationUnit?.code ?? 'd',
+        );
+
         if (
-          currentBaseName &&
-          otherBaseName &&
-          currentBaseName === otherBaseName
+          doDateRangesOverlap(currentStart, currentEnd, otherStart, otherEnd)
         ) {
-          // Same vaccination - check date overlap
-          if (!current.isSTAT && !other.isSTAT) {
-            const currentStart = new Date(current.startDate);
-            const currentEnd = calculateEndDate(
-              currentStart,
-              current.duration,
-              current.durationUnit?.code ?? 'd',
-            );
-
-            const otherStart = new Date(other.startDate);
-            const otherEnd = calculateEndDate(
-              otherStart,
-              other.duration,
-              other.durationUnit?.code ?? 'd',
-            );
-
-            if (
-              doDateRangesOverlap(
-                currentStart,
-                currentEnd,
-                otherStart,
-                otherEnd,
-              )
-            ) {
-              return true;
-            }
-          } else if (current.isSTAT || other.isSTAT) {
-            return true;
-          }
+          return true;
         }
       }
 
       // Check against existing vaccinations
       const isExistingOverlap = activeVaccinations.some(
         (vac: MedicationRequest) => {
-          if (!vac.name) {
-            return false;
-          }
+          if (!vac.name) return false;
 
           const currentBaseName = getBaseName(current.display);
           const existingBaseName = getBaseName(vac.name);
 
-          if (!currentBaseName || !existingBaseName) {
-            return false;
-          }
+          if (!currentBaseName || !existingBaseName) return false;
+          if (currentBaseName !== existingBaseName) return false;
 
-          if (currentBaseName !== existingBaseName) {
-            return false;
-          }
+          // STAT vaccinations always overlap with existing same vaccination
+          if (vac.isImmediate || current.isSTAT) return true;
 
-          // Extract properties from FHIR MedicationRequest
-          const isImmediate = vac.isImmediate;
-          const startDate = vac.startDate;
+          if (!vac.startDate || !current.startDate) return false;
 
-          // STAT vaccinations always overlap with existing
-          if (isImmediate || current.isSTAT) return true;
-
-          if (!startDate || !current.startDate) return false;
-
-          const existingStart = new Date(startDate);
+          const existingStart = new Date(vac.startDate);
           const existingDuration = vac.duration?.duration ?? 7;
           const existingDurationUnit = vac.duration?.durationUnit ?? 'd';
           const existingEnd = calculateEndDate(
@@ -464,11 +451,7 @@ const VaccinationForm: React.FC = React.memo(() => {
           >
             {selectedVaccinations.map((vaccination) => (
               <SelectedItem
-                onClose={() => {
-                  removeVaccination(vaccination.id);
-                  // Clear notification when vaccination is removed
-                  setShowDuplicateNotification(false);
-                }}
+                onClose={() => removeVaccination(vaccination.id)}
                 className={styles.selectedVaccinationItem}
                 key={vaccination.id}
               >
