@@ -138,7 +138,7 @@ describe('formatAppointment', () => {
     expect(result.reasons).toEqual([
       { conceptUuid: 'uuid-1', name: 'Follow-up' },
     ]);
-    expect(result.service).toEqual({ name: 'Consultation' });
+    expect(result.service).toBe('Consultation');
     expect(result.status).toBe('Scheduled');
   });
 

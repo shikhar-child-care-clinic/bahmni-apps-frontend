@@ -85,6 +85,7 @@ export const formatAppointment = (
     appointmentDate,
     appointmentTime,
     ...(reason && { reason }),
+    service: appointment.service?.name || '-',
   };
 };
 

@@ -4,7 +4,7 @@
 @use "@carbon/react/scss/spacing" as *;
 
 .appointmentsTable {
-  margin-top: 1rem;
+  margin-top: $spacing-05;
 }
 
 .appointmentTabList {
@@ -37,53 +37,38 @@
 
 // Status color styles for StatusTag dot indicator
 .scheduledStatus {
-  color: #0043CE;
+  color: $blue-70;
 }
 
 .completedStatus {
-  color: #0E6027;
+  color: $green-60;
 }
 
 .cancelledStatus {
-  color: #A2191F;
+  color: $red-70;
 }
 
 .missedStatus {
-  color: #A2191F;
+  color: $red-70;
 }
 
 .waitListStatus {
-  color: #161616;
+  color: $gray-100;
 }
 
 .checkedInStatus {
-  color: #684E00;
+  color: $yellow-70;
 }
 
 .unknownStatus {
-  color: #8d8d8d;
+  color: $gray-50;
 }
 
 // Accordion styles
 .customAccordianItem {
-  margin-bottom: 0.5rem;
-  border: 1px solid #e0e0e0;
+  margin-bottom: $spacing-03;
+  border: 1px solid $border-subtle;
   border-radius: 2px;
-}
-
-.rowSeperator {
-  border-top: 1px solid #e0e0e0;
-}
-
-.appointmentHeader {
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
-.appointmentRow {
-  &:hover {
-    background-color: #f4f4f4;
-  }
 }
 
 .columnDataBold {

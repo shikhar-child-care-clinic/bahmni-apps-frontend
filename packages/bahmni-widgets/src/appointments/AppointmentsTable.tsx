@@ -229,8 +229,8 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
           return appointmentNum ?? '-';
         }
         case 'service':
-          return row.service?.name?.trim() ? (
-            <p className={styles.columnDataBold}>{row.service.name}</p>
+          return row.service?.trim ? (
+            <p className={styles.columnDataBold}>{row.service}</p>
           ) : (
             '-'
           );
