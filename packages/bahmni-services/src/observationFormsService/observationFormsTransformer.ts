@@ -364,7 +364,32 @@ export function transformContainerObservationsToForm2Observations(
     return observation;
   };
 
-  return containerObservations.map(transform);
+  const nonVoidedObservations =
+    containerObservations?.filter((obs) => {
+      if (obs.voided) {
+        const concept = obs.concept as
+          | Record<string, unknown>
+          | string
+          | undefined;
+        return false;
+      }
+
+      if (
+        obs.value &&
+        typeof obs.value === 'string' &&
+        obs.value.includes('voided')
+      ) {
+        const concept = obs.concept as
+          | Record<string, unknown>
+          | string
+          | undefined;
+        return false;
+      }
+
+      return true;
+    }) ?? [];
+
+  return nonVoidedObservations.map(transform);
 }
 
 /**
