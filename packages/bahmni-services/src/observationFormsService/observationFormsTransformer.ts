@@ -366,14 +366,17 @@ export function transformContainerObservationsToForm2Observations(
 
   const nonVoidedObservations =
     containerObservations?.filter((obs) => {
-      if (obs.voided) {
+      if (obs.uuid && obs.voided) {
+        return true;
+      }
+      if (!obs.uuid && obs.voided) {
         return false;
       }
 
       if (
         obs.value &&
         typeof obs.value === 'string' &&
-        obs.value.includes('voided')
+        obs.value.endsWith('voided')
       ) {
         return false;
       }

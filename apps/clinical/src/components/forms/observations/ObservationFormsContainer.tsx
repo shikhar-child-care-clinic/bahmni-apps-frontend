@@ -7,7 +7,7 @@ import {
 } from '@bahmni/design-system';
 import {
   Container,
-  FormMetadata as Form2FormMetadata,
+  FormMetadata as Form2FormMetadata, // Aliased to disambiguate from FormMetadata type exported by @bahmni/services
 } from '@bahmni/form2-controls';
 import '@bahmni/form2-controls/dist/bundle.css';
 import './styles/form2-controls-fixes.scss';

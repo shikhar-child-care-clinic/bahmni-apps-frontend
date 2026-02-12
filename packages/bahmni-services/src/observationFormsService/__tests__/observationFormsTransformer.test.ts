@@ -998,10 +998,12 @@ describe('observationFormsTransformer', () => {
         containerObservations,
       );
 
-      // Current implementation filters all voided observations regardless of UUID
-      expect(result).toHaveLength(1);
-      expect(result[0].concept.uuid).toBe('text-concept-uuid');
-      expect(result[0].value).toBe('Valid text');
+      // Current implementation keeps existing voided observations (with UUID) to track deletions
+      expect(result).toHaveLength(2);
+      expect(result[0].concept.uuid).toBe('image-concept-uuid');
+      expect(result[0].value).toBe('/previously-uploaded-image.jpg');
+      expect(result[1].concept.uuid).toBe('text-concept-uuid');
+      expect(result[1].value).toBe('Valid text');
     });
 
     it('should filter observations with "voided" suffix in value string', () => {
