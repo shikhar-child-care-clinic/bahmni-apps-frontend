@@ -116,6 +116,7 @@ const MedicationsForm: React.FC = React.memo(() => {
     enabled: !!patientUUID,
     queryFn: () =>
       getPatientMedicationBundle(patientUUID!, [], undefined, true),
+    refetchOnMount: 'always',
   });
 
   // Refetch existing medications when a consultation is saved
@@ -207,14 +208,14 @@ const MedicationsForm: React.FC = React.memo(() => {
         const currentStart = new Date(current.startDate);
         const currentEnd = calculateEndDate(
           currentStart,
-          current.duration,
+          current.duration > 0 ? current.duration : 1,
           current.durationUnit?.code ?? 'd',
         );
 
         const otherStart = new Date(other.startDate);
         const otherEnd = calculateEndDate(
           otherStart,
-          other.duration,
+          other.duration > 0 ? other.duration : 1,
           other.durationUnit?.code ?? 'd',
         );
 
@@ -270,7 +271,7 @@ const MedicationsForm: React.FC = React.memo(() => {
           const currentStart = new Date(current.startDate);
           const currentEnd = calculateEndDate(
             currentStart,
-            current.duration,
+            current.duration > 0 ? current.duration : 1,
             current.durationUnit?.code ?? 'd',
           );
 
@@ -312,7 +313,7 @@ const MedicationsForm: React.FC = React.memo(() => {
       newDurationUnit: string,
     ): boolean => {
       // Calculate new medication's date range (default 7 days if no duration)
-      const effectiveDuration = newDuration > 0 ? newDuration : 7;
+      const effectiveDuration = newDuration > 0 ? newDuration : 1;
       const effectiveUnit = newDurationUnit ?? 'd';
       const newEndDate = calculateEndDate(
         newStartDate,

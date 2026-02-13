@@ -87,6 +87,7 @@ const VaccinationForm: React.FC = React.memo(() => {
     queryKey: ['patientVaccinations', patientUUID],
     enabled: !!patientUUID,
     queryFn: () => getPatientMedications(patientUUID!, [], undefined),
+    refetchOnMount: 'always',
   });
 
   // Refetch existing vaccinations when a consultation is saved
@@ -138,7 +139,7 @@ const VaccinationForm: React.FC = React.memo(() => {
       newDuration: number,
       newDurationUnit: string,
     ): boolean => {
-      const effectiveDuration = newDuration > 0 ? newDuration : 7;
+      const effectiveDuration = newDuration > 0 ? newDuration : 1;
       const effectiveUnit = newDurationUnit ?? 'd';
       const newEndDate = calculateEndDate(
         newStartDate,
@@ -237,14 +238,14 @@ const VaccinationForm: React.FC = React.memo(() => {
         const currentStart = new Date(current.startDate);
         const currentEnd = calculateEndDate(
           currentStart,
-          current.duration,
+          current.duration > 0 ? current.duration : 1,
           current.durationUnit?.code ?? 'd',
         );
 
         const otherStart = new Date(other.startDate);
         const otherEnd = calculateEndDate(
           otherStart,
-          other.duration,
+          other.duration > 0 ? other.duration : 1,
           other.durationUnit?.code ?? 'd',
         );
 
@@ -283,7 +284,7 @@ const VaccinationForm: React.FC = React.memo(() => {
           const currentStart = new Date(current.startDate);
           const currentEnd = calculateEndDate(
             currentStart,
-            current.duration,
+            current.duration > 0 ? current.duration : 1,
             current.durationUnit?.code ?? 'd',
           );
 
