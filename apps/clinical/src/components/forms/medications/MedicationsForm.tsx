@@ -82,7 +82,7 @@ const MedicationsForm: React.FC = React.memo(() => {
     refetch: refetchMedications,
   } = useQuery<Bundle>({
     queryKey: ['medications', patientUUID!],
-    enabled: !!patientUUID,
+    enabled: !!patientUUID && patientUUID.trim().length > 0,
     queryFn: () =>
       getPatientMedicationBundle(patientUUID!, [], undefined, true),
     refetchOnMount: 'always',

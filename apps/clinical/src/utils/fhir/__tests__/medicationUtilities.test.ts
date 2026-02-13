@@ -1,4 +1,3 @@
-import { addDays } from 'date-fns';
 import {
   Medication,
   MedicationRequest as FhirMedicationRequest,
@@ -6,31 +5,14 @@ import {
 
 import { MedicationInputEntry } from '../../../models/medication';
 import {
-  calculateEndDate,
   checkMedicationsOverlap,
-  doDateRangesOverlap,
   extractMedicationCodes,
   isDuplicateMedication,
   medicationsMatchByCode,
-  DURATION_UNIT_TO_DAYS,
   extractDoseForm,
 } from '../medicationUtilities';
 
 describe('Medication Utilities', () => {
-  describe('DURATION_UNIT_TO_DAYS', () => {
-    test('contains all expected duration unit conversions', () => {
-      expect(DURATION_UNIT_TO_DAYS).toEqual({
-        d: 1,
-        wk: 7,
-        mo: 30,
-        a: 365,
-        h: 1 / 24,
-        min: 1 / 1440,
-        s: 1 / 86400,
-      });
-    });
-  });
-
   describe('extractMedicationCodes', () => {
     test('extracts codes from Medication.code field', () => {
       const medication = {
@@ -203,63 +185,6 @@ describe('Medication Utilities', () => {
       const matches = medicationsMatchByCode(med1, med2);
 
       expect(matches).toBe(true);
-    });
-  });
-
-  describe('doDateRangesOverlap', () => {
-    test('detects overlap when ranges overlap in the middle', () => {
-      const start1 = new Date('2025-01-01');
-      const end1 = new Date('2025-01-10');
-      const start2 = new Date('2025-01-05');
-      const end2 = new Date('2025-01-15');
-
-      const overlaps = doDateRangesOverlap(start1, end1, start2, end2);
-
-      expect(overlaps).toBe(true);
-    });
-
-    test('detects no overlap when ranges are separate', () => {
-      const start1 = new Date('2025-01-01');
-      const end1 = new Date('2025-01-05');
-      const start2 = new Date('2025-01-10');
-      const end2 = new Date('2025-01-15');
-
-      const overlaps = doDateRangesOverlap(start1, end1, start2, end2);
-
-      expect(overlaps).toBe(false);
-    });
-
-    test('detects overlap when ranges touch at edges', () => {
-      const start1 = new Date('2025-01-01');
-      const end1 = new Date('2025-01-10');
-      const start2 = new Date('2025-01-10');
-      const end2 = new Date('2025-01-15');
-
-      const overlaps = doDateRangesOverlap(start1, end1, start2, end2);
-
-      expect(overlaps).toBe(true);
-    });
-  });
-
-  describe('calculateEndDate', () => {
-    test('calculates end date with day duration', () => {
-      const startDate = new Date('2025-01-01');
-      const endDate = calculateEndDate(startDate, 7, 'd');
-
-      expect(endDate).toEqual(addDays(startDate, 7));
-    });
-
-    test('calculates end date with week duration', () => {
-      const startDate = new Date('2025-01-01');
-      const endDate = calculateEndDate(startDate, 2, 'wk');
-
-      expect(endDate).toEqual(addDays(startDate, 14));
-    });
-
-    test('throws error for invalid date', () => {
-      expect(() => calculateEndDate('invalid-date', 7, 'd')).toThrow(
-        'Invalid date',
-      );
     });
   });
 

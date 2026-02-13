@@ -74,7 +74,7 @@ const VaccinationForm: React.FC = React.memo(() => {
     refetch: refetchVaccinations,
   } = useQuery<Bundle>({
     queryKey: ['patientVaccinations', patientUUID],
-    enabled: !!patientUUID,
+    enabled: !!patientUUID && patientUUID.trim().length > 0,
     queryFn: () =>
       getPatientMedicationBundle(patientUUID!, [], undefined, true),
     refetchOnMount: 'always',

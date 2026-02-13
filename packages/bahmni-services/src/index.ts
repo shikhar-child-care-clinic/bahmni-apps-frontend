@@ -110,6 +110,9 @@ export {
   getTodayDate,
   calculateAgeinYearsAndMonths,
   formatDateAndTime,
+  DURATION_UNIT_TO_DAYS,
+  calculateEndDate,
+  doDateRangesOverlap,
 } from './date';
 export { type Notification, notificationService } from './notification';
 export {

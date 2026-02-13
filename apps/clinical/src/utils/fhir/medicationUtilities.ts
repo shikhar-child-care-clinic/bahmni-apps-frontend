@@ -1,4 +1,4 @@
-import { addDays } from 'date-fns';
+import { calculateEndDate, doDateRangesOverlap } from '@bahmni/services';
 import {
   Medication,
   MedicationRequest as FhirMedicationRequest,
@@ -7,16 +7,6 @@ import {
 import { MedicationInputEntry } from '../../models/medication';
 
 import { FHIRCode, extractCodesFromConcept } from './codeUtilities';
-
-export const DURATION_UNIT_TO_DAYS: Record<string, number> = {
-  d: 1,
-  wk: 7,
-  mo: 30,
-  a: 365,
-  h: 1 / 24,
-  min: 1 / 1440,
-  s: 1 / 86400,
-};
 
 /**
  * Generic type for FHIR resources or objects with optional code properties
@@ -61,6 +51,7 @@ export const medicationsMatchByCode = (
   medication1: CodeableResource | unknown,
   medication2: CodeableResource | unknown,
 ): boolean => {
+  if (!medication1 || !medication2) return false;
   const codes1 = extractMedicationCodes(medication1);
   const codes2 = extractMedicationCodes(medication2);
 
@@ -91,30 +82,6 @@ export const medicationsMatchByCode = (
   return false;
 };
 
-export const calculateEndDate = (
-  startDate: Date | string,
-  duration: number,
-  durationUnit: string,
-): Date => {
-  const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
-  // Validate that the date is valid
-  if (isNaN(start.getTime())) {
-    throw new Error(`Invalid date: ${startDate}`);
-  }
-  const daysMultiplier = DURATION_UNIT_TO_DAYS[durationUnit] ?? 1;
-  const totalDays = duration * daysMultiplier;
-  return addDays(start, totalDays);
-};
-
-export const doDateRangesOverlap = (
-  start1: Date,
-  end1: Date,
-  start2: Date,
-  end2: Date,
-): boolean => {
-  return start1 <= end2 && start2 <= end1;
-};
-
 /**
  * Safely extract medication ID from FHIR medicationReference
  * Returns undefined if reference is malformed or missing
@@ -124,8 +91,9 @@ export const extractMedicationRefId = (
 ): string | undefined => {
   if (!reference) return undefined;
   const parts = reference.split('/');
-  // Expected format: "Medication/123" - need exactly 2 parts
-  if (parts.length !== 2 || !parts[1]) return undefined;
+  // Expected format: "Medication/123"
+  if (parts.length !== 2 || parts[0] !== 'Medication' || !parts[1])
+    return undefined;
   return parts[1];
 };
 
