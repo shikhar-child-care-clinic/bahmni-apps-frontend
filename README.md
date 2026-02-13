@@ -34,7 +34,7 @@ For a comprehensive setup guide including development environments, Docker confi
 
 ### Additional Documentation
 
-- [Frontend Architecture](docs/architecture.md) - A comprehensive overview of the Bahmni Apps Frontend architecture
+- [Frontend Architecture](docs/architecture.md) - A comprehensive overview of the Bahmni Clinical Frontend architecture
 - [Project Structure](docs/project-structure.md) - A high-level overview of the project structure
 - [i18n Guide](docs/i18n-guide.md) - Internationalization implementation details
 - [Sortable Data Table Guide](docs/sortable-data-table-guide.md) - Usage of the sortable data table component

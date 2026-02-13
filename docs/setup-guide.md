@@ -111,7 +111,7 @@ This method allows you to build the application locally and mount it into the Do
    BAHMNI_APPS_FRONTEND_PATH=/path/to/your/bahmni-apps-frontend
    ```
 
-   **Important notes about `.env.dev`**:
+   **Uncomment Volumes in Docker Compose**:
 
    - The `BAHMNI_APPS_FRONTEND_PATH` must point to the **root directory** of your bahmni-apps-frontend repository (not to the distro subdirectory). The volume mount in docker-compose.yml will automatically append `/distro/dist/` to this path.
    - The `.env.dev` file uses `latest` image tags for development, while `.env` uses specific version tags for stable releases.
