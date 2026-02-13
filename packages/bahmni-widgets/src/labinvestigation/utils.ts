@@ -4,6 +4,7 @@ import {
   PROCESSED_REPORT_STATUSES,
 } from '@bahmni/services';
 import { Bundle, ServiceRequest, DiagnosticReport, Observation } from 'fhir/r4';
+import { RadiologyInvestigationViewModel } from '../radiologyInvestigation/models';
 import {
   FormattedLabInvestigations,
   LabInvestigationPriority,
@@ -162,9 +163,9 @@ export function sortLabInvestigationsByPriority(
  * @returns Enriched array of tests with reportId and attachments populated
  */
 export function updateInvestigationsWithReportInfo(
-  tests: FormattedLabInvestigations[],
+  tests: FormattedLabInvestigations[] | RadiologyInvestigationViewModel[],
   diagnosticReports: DiagnosticReport[] | undefined,
-): FormattedLabInvestigations[] {
+): FormattedLabInvestigations[] | RadiologyInvestigationViewModel[] {
   if (!diagnosticReports || diagnosticReports.length === 0) {
     return tests;
   }

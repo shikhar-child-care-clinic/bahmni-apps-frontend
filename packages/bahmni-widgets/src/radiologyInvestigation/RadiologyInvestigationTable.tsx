@@ -20,10 +20,16 @@ import {
   AUDIT_LOG_EVENT_DETAILS,
   AuditEventType,
   useSubscribeConsultationSaved,
+  getDiagnosticReports,
 } from '@bahmni/services';
-import { useQuery } from '@tanstack/react-query';
-import React, { useMemo, useEffect } from 'react';
+import { useQuery, useQueries } from '@tanstack/react-query';
+import type { DiagnosticReport } from 'fhir/r4';
+import React, { useMemo, useEffect, useState } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
+import {
+  extractDiagnosticReportsFromBundle,
+  updateInvestigationsWithReportInfo,
+} from '../labinvestigation/utils';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
 import { RadiologyInvestigationViewModel } from './models';
@@ -68,6 +74,9 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
   const categoryName = config?.orderType as string;
   const numberOfVisits = config?.numberOfVisits as number;
   const pacsViewerUrl = config?.pacsViewerUrl as string;
+  const [openAccordionIndices, setOpenAccordionIndices] = useState<Set<number>>(
+    new Set([0]),
+  );
 
   const emptyEncounterFilter = shouldEnableEncounterFilter(
     episodeOfCareUuids,
@@ -169,6 +178,42 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     }));
   }, [data, t]);
 
+  // Fetch diagnostic reports for each accordion separately to enable caching
+  const diagnosticReportQueries = useQueries({
+    queries: processedInvestigations.map((group, index) => {
+      const orderIds = group.investigations.map(
+        (investigation) => investigation.id,
+      );
+      return {
+        queryKey: ['diagnosticReports', patientUUID, index, orderIds],
+        queryFn: () => getDiagnosticReports(patientUUID!, orderIds),
+        enabled:
+          !!patientUUID &&
+          openAccordionIndices.has(index) &&
+          orderIds.length > 0,
+      };
+    }),
+  });
+
+  // Merge all diagnostic reports from open accordions
+  const diagnosticReports = useMemo<DiagnosticReport[]>(() => {
+    const reports = diagnosticReportQueries
+      .filter((query) => query.data)
+      .flatMap((query) => extractDiagnosticReportsFromBundle(query.data));
+    return reports;
+  }, [diagnosticReportQueries]);
+
+  // Enrich the grouped investigations with diagnostic report info (reportId)
+  const updatedRadiologyInvestigations = useMemo(() => {
+    return processedInvestigations.map((group) => ({
+      ...group,
+      investigations: updateInvestigationsWithReportInfo(
+        group.investigations,
+        diagnosticReports,
+      ),
+    }));
+  }, [processedInvestigations, diagnosticReports]);
+
   const handleRadiologyResultClick = () => {
     dispatchAuditEvent({
       eventType: AUDIT_LOG_EVENT_DETAILS.VIEWED_RADIOLOGY_RESULTS
@@ -183,32 +228,44 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     const availableStudies = getAvailableImagingStudies(
       investigation.imagingStudies,
     );
+    const hasViewImagesLink = availableStudies.length > 0 && pacsViewerUrl;
+    const hasViewReportLink = !!investigation.reportId;
 
-    if (availableStudies.length > 0 && pacsViewerUrl) {
+    if (hasViewImagesLink || hasViewReportLink) {
       return (
         <div
           id={`${investigation.id}-results`}
           data-testid={`${investigation.id}-results-test-id`}
+          className={styles.resultsCell}
         >
-          {availableStudies.map((study, index) => {
-            const viewerUrl = pacsViewerUrl.replace(
-              '{{StudyInstanceUIDs}}',
-              study.StudyInstanceUIDs,
-            );
-            return (
-              <Link
-                key={study.id}
-                href={viewerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                id={`${investigation.id}-result-link-${index}`}
-                testId={`${investigation.id}-result-link-${index}-test-id`}
-                onClick={() => handleRadiologyResultClick()}
-              >
-                {t('RADIOLOGY_VIEW_IMAGES')}
-              </Link>
-            );
-          })}
+          {hasViewImagesLink &&
+            availableStudies.map((study, index) => {
+              const viewerUrl = pacsViewerUrl.replace(
+                '{{StudyInstanceUIDs}}',
+                study.StudyInstanceUIDs,
+              );
+              return (
+                <Link
+                  key={study.id}
+                  href={viewerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  id={`${investigation.id}-result-link-${index}`}
+                  testId={`${investigation.id}-result-link-${index}-test-id`}
+                  onClick={() => handleRadiologyResultClick()}
+                >
+                  {t('RADIOLOGY_VIEW_IMAGES')}
+                </Link>
+              );
+            })}
+          {hasViewReportLink && (
+            <Link
+              id={`${investigation.id}-view-report-link`}
+              testId={`${investigation.id}-view-report-link-test-id`}
+            >
+              {t('RADIOLOGY_VIEW_REPORT')}
+            </Link>
+          )}
         </div>
       );
     }
@@ -303,7 +360,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       aria-label="radiology-investigations-table-aria-label"
     >
       <Accordion align="start">
-        {processedInvestigations.map((investigationsByDate, index) => {
+        {updatedRadiologyInvestigations.map((investigationsByDate, index) => {
           const { date, investigations } = investigationsByDate;
           const formattedDate = formatDate(
             date,
@@ -317,7 +374,18 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
               key={date}
               className={styles.customAccordianItem}
               testId={'accordian-table-title'}
-              open={index === 0}
+              open={openAccordionIndices.has(index)}
+              onHeadingClick={() => {
+                setOpenAccordionIndices((prev) => {
+                  const newSet = new Set(prev);
+                  if (newSet.has(index)) {
+                    newSet.delete(index);
+                  } else {
+                    newSet.add(index);
+                  }
+                  return newSet;
+                });
+              }}
             >
               <SortableDataTable
                 headers={headers}

@@ -13,4 +13,5 @@ export interface RadiologyInvestigationViewModel {
   readonly replaces?: string[];
   readonly imagingStudies?: ImagingStudy[];
   readonly note?: string;
+  readonly reportId?: string;
 }
