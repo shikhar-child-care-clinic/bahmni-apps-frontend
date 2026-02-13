@@ -24,6 +24,10 @@ jest.mock('../../../../services/medicationService', () => ({
     (medication) =>
       medication?.code?.text ?? medication?.code?.display ?? 'Test Medication',
   ),
+  getActiveMedicationsFromBundle: jest.fn(() => ({
+    activeMedications: [],
+    medicationMap: {},
+  })),
 }));
 
 // Mock @bahmni/widgets hooks
@@ -581,13 +585,16 @@ describe('MedicationsForm', () => {
 
   // DUPLICATE NOTIFICATION TESTS
   describe('Duplicate Notification Feature', () => {
-    test('renders with overlapping medications', () => {
+    const duplicateNotificationPattern =
+      /one or more drugs you are trying to order are already active/i;
+
+    test('shows duplicate notification when medications have overlapping dates', async () => {
       const med1: MedicationInputEntry = {
         ...mockSelectedMedication,
         id: 'med-1',
         startDate: new Date('2025-01-01'),
         duration: 10,
-        durationUnit: 'd',
+        durationUnit: { code: 'd', display: 'Days', daysMultiplier: 1 },
         medication: {
           ...mockMedication,
           code: {
@@ -601,7 +608,7 @@ describe('MedicationsForm', () => {
         id: 'med-2',
         startDate: new Date('2025-01-05'),
         duration: 10,
-        durationUnit: 'd',
+        durationUnit: { code: 'd', display: 'Days', daysMultiplier: 1 },
         medication: {
           ...mockMedication,
           code: {
@@ -615,19 +622,22 @@ describe('MedicationsForm', () => {
         selectedMedications: [med1, med2],
       });
 
-      const { container } = render(<MedicationsForm />);
+      render(<MedicationsForm />);
 
-      expect(container).toBeInTheDocument();
-      expect(screen.getByText(/prescribe medication/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.getByText(duplicateNotificationPattern),
+        ).toBeInTheDocument();
+      });
     });
 
-    test('renders with non-overlapping medications', () => {
+    test('does not show duplicate notification when medications have non-overlapping dates', async () => {
       const med1: MedicationInputEntry = {
         ...mockSelectedMedication,
         id: 'med-1',
         startDate: new Date('2025-01-01'),
         duration: 5,
-        durationUnit: 'd',
+        durationUnit: { code: 'd', display: 'Days', daysMultiplier: 1 },
         medication: {
           ...mockMedication,
           code: {
@@ -641,7 +651,7 @@ describe('MedicationsForm', () => {
         id: 'med-2',
         startDate: new Date('2025-01-10'),
         duration: 5,
-        durationUnit: 'd',
+        durationUnit: { code: 'd', display: 'Days', daysMultiplier: 1 },
         medication: {
           ...mockMedication,
           code: {
@@ -655,13 +665,16 @@ describe('MedicationsForm', () => {
         selectedMedications: [med1, med2],
       });
 
-      const { container } = render(<MedicationsForm />);
+      render(<MedicationsForm />);
 
-      expect(container).toBeInTheDocument();
-      expect(screen.getByText(/prescribe medication/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.queryByText(duplicateNotificationPattern),
+        ).not.toBeInTheDocument();
+      });
     });
 
-    test('renders with STAT medications', () => {
+    test('shows duplicate notification when STAT medication matches another with same code', async () => {
       const statMed: MedicationInputEntry = {
         ...mockSelectedMedication,
         id: 'stat-med',
@@ -680,7 +693,7 @@ describe('MedicationsForm', () => {
         isSTAT: false,
         startDate: new Date('2025-01-15'),
         duration: 5,
-        durationUnit: 'd',
+        durationUnit: { code: 'd', display: 'Days', daysMultiplier: 1 },
         medication: {
           ...mockMedication,
           code: {
@@ -694,13 +707,16 @@ describe('MedicationsForm', () => {
         selectedMedications: [statMed, regularMed],
       });
 
-      const { container } = render(<MedicationsForm />);
+      render(<MedicationsForm />);
 
-      expect(container).toBeInTheDocument();
-      expect(screen.getByText(/prescribe medication/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.getByText(duplicateNotificationPattern),
+        ).toBeInTheDocument();
+      });
     });
 
-    test('renders with PRN medications', () => {
+    test('does not show duplicate notification for PRN medications with same code', async () => {
       const prnMed: MedicationInputEntry = {
         ...mockSelectedMedication,
         id: 'prn-med',
@@ -720,7 +736,7 @@ describe('MedicationsForm', () => {
         isSTAT: false,
         startDate: new Date('2025-01-01'),
         duration: 10,
-        durationUnit: 'd',
+        durationUnit: { code: 'd', display: 'Days', daysMultiplier: 1 },
         medication: {
           ...mockMedication,
           code: {
@@ -734,10 +750,13 @@ describe('MedicationsForm', () => {
         selectedMedications: [prnMed, scheduledMed],
       });
 
-      const { container } = render(<MedicationsForm />);
+      render(<MedicationsForm />);
 
-      expect(container).toBeInTheDocument();
-      expect(screen.getByText(/prescribe medication/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.queryByText(duplicateNotificationPattern),
+        ).not.toBeInTheDocument();
+      });
     });
   });
 

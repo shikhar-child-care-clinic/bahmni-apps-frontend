@@ -25,6 +25,10 @@ jest.mock('../../../../services/medicationService', () => ({
   getMedicationsFromBundle: jest.fn(
     (bundle) => bundle?.entry?.map((e: any) => e.resource) ?? [],
   ),
+  getActiveMedicationsFromBundle: jest.fn(() => ({
+    activeMedications: [],
+    medicationMap: {},
+  })),
 }));
 
 jest.mock('../styles/VaccinationForm.module.scss', () => ({
