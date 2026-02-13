@@ -10,7 +10,6 @@ import {
   checkMedicationsOverlap,
   doDateRangesOverlap,
   extractMedicationCodes,
-  getBaseName,
   isDuplicateMedication,
   medicationsMatchByCode,
   DURATION_UNIT_TO_DAYS,
@@ -261,31 +260,6 @@ describe('Medication Utilities', () => {
       expect(() => calculateEndDate('invalid-date', 7, 'd')).toThrow(
         'Invalid date',
       );
-    });
-  });
-
-  describe('getBaseName', () => {
-    test('extracts base name from string with dosage', () => {
-      const baseName = getBaseName('Vitamin A 5000 IU');
-
-      expect(baseName).toBe('vitamin a');
-    });
-
-    test('extracts base name from string with parentheses', () => {
-      const baseName = getBaseName('Paracetamol (Tablet) 500mg');
-
-      expect(baseName).toBe('paracetamol');
-    });
-
-    test('handles null/undefined values', () => {
-      expect(getBaseName(null as any)).toBe('');
-      expect(getBaseName(undefined as any)).toBe('');
-    });
-
-    test('lowercases the result', () => {
-      const baseName = getBaseName('PARACETAMOL 500mg');
-
-      expect(baseName).toBe('paracetamol');
     });
   });
 

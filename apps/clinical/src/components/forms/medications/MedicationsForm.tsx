@@ -28,7 +28,7 @@ import { useMedicationStore } from '../../../stores/medicationsStore';
 import {
   checkMedicationsOverlap,
   isDuplicateMedication,
-  getBaseName,
+  medicationsMatchByCode,
 } from '../../../utils/fhir/medicationUtilities';
 import SelectedMedicationItem from './SelectedMedicationItem';
 import styles from './styles/MedicationsForm.module.scss';
@@ -193,11 +193,9 @@ const MedicationsForm: React.FC = React.memo(() => {
 
     return searchResults.map((item) => {
       const itemDisplayName = getMedicationDisplay(item);
-      const itemBaseName = getBaseName(itemDisplayName);
-      const isAlreadySelected = selectedMedications.some((selected) => {
-        const selectedBaseName = getBaseName(selected.display);
-        return selectedBaseName === itemBaseName;
-      });
+      const isAlreadySelected = selectedMedications.some((selected) =>
+        medicationsMatchByCode(item, selected.medication),
+      );
 
       return {
         medication: item,

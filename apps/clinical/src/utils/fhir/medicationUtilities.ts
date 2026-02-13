@@ -91,50 +91,6 @@ export const medicationsMatchByCode = (
   return false;
 };
 
-/**
- * Extract base medication/vaccination name for comparison (ignores concentration/dosage)
- * Example: "Vitamin A 5000 IU" → "vitamin a"
- */
-export const getBaseName = (fullName: string): string => {
-  // Handle null/undefined/non-string values
-  if (!fullName || typeof fullName !== 'string') {
-    return '';
-  }
-
-  // Check for display format with ")- " separator (handles "Code (123)- Medication Name")
-  // Allows optional whitespace around ) and -
-  const separatorMatch = fullName.match(/\)\s*-\s*(.+)$/);
-  if (separatorMatch) {
-    return separatorMatch[1].trim().toLowerCase();
-  }
-
-  // Fallback: Extract name before parentheses
-  const parenthesesMatch = fullName.match(/^(.+?)\s*\(/);
-  if (parenthesesMatch) {
-    let baseName = parenthesesMatch[1].trim();
-    // Remove trailing numbers/dosage: space followed by digits/decimals OR digits at the end
-    baseName = baseName.replace(/\s+[\d.]+.*$/g, '').trim();
-    baseName = baseName.replace(/\d+$/g, '').trim();
-    // Only lowercase if it contains non-digit characters (handles "only numbers" case)
-    if (baseName && !/^\d+$/.test(baseName)) {
-      return baseName.toLowerCase();
-    }
-    return '';
-  }
-
-  // If no parentheses, remove trailing numbers (handles "Vitamin A 5000 IU" → "vitamin a")
-  let baseName = fullName;
-  // Remove anything that looks like dosage: space followed by numbers/decimals
-  baseName = baseName.replace(/\s+[\d.]+.*$/g, '').trim();
-  // Also remove trailing digits even if not preceded by space (handles "B12" → "B")
-  baseName = baseName.replace(/\d+$/g, '').trim();
-  // Only lowercase if it contains non-digit characters (handles "only numbers" case)
-  if (baseName && !/^\d+$/.test(baseName)) {
-    return baseName.toLowerCase();
-  }
-  return '';
-};
-
 export const calculateEndDate = (
   startDate: Date | string,
   duration: number,
