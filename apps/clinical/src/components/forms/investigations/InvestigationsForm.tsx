@@ -299,11 +299,16 @@ const InvestigationsForm: React.FC = React.memo(() => {
         aria-label={t('INVESTIGATIONS_SEARCH_ARIA_LABEL')}
         size="md"
       />
+
       {showDuplicateNotification && (
         <InlineNotification
           kind="error"
           lowContrast
-          subtitle={t('INVESTIGATION_ALREADY_ADDED')}
+          subtitle={
+            duplicateCategory?.toLowerCase().includes('procedure')
+              ? t('PROCEDURE_ALREADY_ADDED')
+              : t('INVESTIGATION_ALREADY_ADDED')
+          }
           onClose={() => setShowDuplicateNotification(false)}
           hideCloseButton={false}
           className={styles.duplicateNotification}

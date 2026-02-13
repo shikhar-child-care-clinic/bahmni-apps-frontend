@@ -1080,6 +1080,51 @@ describe('InvestigationsForm', () => {
         ).not.toBeInTheDocument();
       });
     });
+
+    test('shows procedure-specific message when duplicate procedure is detected', async () => {
+      const procedureInvestigations = [
+        {
+          code: 'proc-001',
+          display: 'Blood Transfusion',
+          category: 'Procedure Order',
+          categoryCode: 'proc',
+        },
+      ];
+
+      (useInvestigationsSearch as jest.Mock).mockReturnValue({
+        investigations: procedureInvestigations,
+        isLoading: false,
+        error: null,
+      });
+
+      getExistingServiceRequestsForAllCategories.mockResolvedValue([
+        {
+          conceptCode: 'proc-001',
+          categoryUuid: 'proc',
+          display: 'Blood Transfusion',
+          requesterUuid: 'mock-practitioner-uuid',
+        },
+      ]);
+
+      const user = userEvent.setup();
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
+
+      const combobox = screen.getByRole('combobox');
+      await user.type(combobox, 'transfusion');
+
+      await waitFor(() => {
+        expect(screen.getByText('Blood Transfusion')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Blood Transfusion'));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Procedure is already ordered'),
+        ).toBeInTheDocument();
+      });
+      expect(mockStore.addServiceRequest).not.toHaveBeenCalled();
+    });
   });
 
   describe('Edge Cases', () => {
