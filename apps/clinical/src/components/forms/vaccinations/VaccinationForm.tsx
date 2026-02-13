@@ -12,6 +12,8 @@ import {
   getPatientMedications,
   MedicationStatus,
   MedicationRequest,
+  useSubscribeConsultationSaved,
+  ConsultationSavedEventPayload,
 } from '@bahmni/services';
 import { usePatientUUID } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
@@ -77,12 +79,28 @@ const VaccinationForm: React.FC = React.memo(() => {
 
   // Fetch existing vaccinations from backend using TanStack Query
   // Always fetch for STAT duplicate detection, even on new consultation
-  const { data: existingVaccinations, isLoading: existingVaccinationsLoading } =
-    useQuery({
-      queryKey: ['patientVaccinations', patientUUID],
-      enabled: !!patientUUID,
-      queryFn: () => getPatientMedications(patientUUID!, [], undefined),
-    });
+  const {
+    data: existingVaccinations,
+    isLoading: existingVaccinationsLoading,
+    refetch: refetchVaccinations,
+  } = useQuery({
+    queryKey: ['patientVaccinations', patientUUID],
+    enabled: !!patientUUID,
+    queryFn: () => getPatientMedications(patientUUID!, [], undefined),
+  });
+
+  // Refetch existing vaccinations when a consultation is saved
+  useSubscribeConsultationSaved(
+    (payload: ConsultationSavedEventPayload) => {
+      if (
+        payload.patientUUID === patientUUID &&
+        payload.updatedResources.medications
+      ) {
+        refetchVaccinations();
+      }
+    },
+    [patientUUID, refetchVaccinations],
+  );
 
   const activeVaccinations = useMemo(() => {
     if (!existingVaccinations || !Array.isArray(existingVaccinations)) {

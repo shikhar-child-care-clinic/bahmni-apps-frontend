@@ -6,7 +6,12 @@ import {
   Tile,
   InlineNotification,
 } from '@bahmni/design-system';
-import { useTranslation, getPatientMedicationBundle } from '@bahmni/services';
+import {
+  useTranslation,
+  getPatientMedicationBundle,
+  useSubscribeConsultationSaved,
+  ConsultationSavedEventPayload,
+} from '@bahmni/services';
 import { useNotification, usePatientUUID } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -105,12 +110,26 @@ const MedicationsForm: React.FC = React.memo(() => {
     data: medicationBundle,
     isLoading: existingMedicationsLoading,
     error: existingMedicationsError,
+    refetch: refetchMedications,
   } = useQuery<Bundle>({
     queryKey: ['medications', patientUUID!],
     enabled: !!patientUUID,
     queryFn: () =>
       getPatientMedicationBundle(patientUUID!, [], undefined, true),
   });
+
+  // Refetch existing medications when a consultation is saved
+  useSubscribeConsultationSaved(
+    (payload: ConsultationSavedEventPayload) => {
+      if (
+        payload.patientUUID === patientUUID &&
+        payload.updatedResources.medications
+      ) {
+        refetchMedications();
+      }
+    },
+    [patientUUID, refetchMedications],
+  );
 
   // Extract MedicationRequest entries and build Medication map from Bundle
   const { activeMedications, medicationMap } = useMemo(() => {
