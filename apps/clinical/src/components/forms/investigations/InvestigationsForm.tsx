@@ -13,7 +13,13 @@ import {
 } from '@bahmni/services';
 import { usePatientUUID, useActivePractitioner } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
-import React, { useMemo, useCallback, useState, useEffect } from 'react';
+import React, {
+  useMemo,
+  useCallback,
+  useState,
+  useEffect,
+  useRef,
+} from 'react';
 import { useEncounterSession } from '../../../hooks/useEncounterSession';
 import useInvestigationsSearch from '../../../hooks/useInvestigationsSearch';
 import type { FlattenedInvestigations } from '../../../models/investigations';
@@ -42,6 +48,7 @@ const InvestigationsForm: React.FC = React.memo(() => {
   const [duplicateCategoryCode, setDuplicateCategoryCode] = useState<
     string | null
   >(null);
+  const notificationDismissedRef = useRef(false);
 
   const { investigations, isLoading, error } =
     useInvestigationsSearch(searchTerm);
@@ -109,9 +116,7 @@ const InvestigationsForm: React.FC = React.memo(() => {
     if (showDuplicateNotification) {
       if (searchTerm === '') {
         setShowDuplicateNotification(false);
-        setDuplicateInvestigationId(null);
-        setDuplicateCategory(null);
-        setDuplicateCategoryCode(null);
+        notificationDismissedRef.current = false;
         return;
       }
 
@@ -130,6 +135,23 @@ const InvestigationsForm: React.FC = React.memo(() => {
         setDuplicateCategory(null);
         setDuplicateCategoryCode(null);
       }
+    } else if (
+      !notificationDismissedRef.current &&
+      searchTerm !== '' &&
+      duplicateInvestigationId &&
+      duplicateCategory &&
+      duplicateCategoryCode &&
+      isDuplicateInvestigation(
+        duplicateInvestigationId,
+        duplicateCategory,
+        duplicateCategoryCode,
+      )
+    ) {
+      setShowDuplicateNotification(true);
+    }
+
+    if (searchTerm === '') {
+      notificationDismissedRef.current = false;
     }
   }, [
     searchTerm,
@@ -309,7 +331,10 @@ const InvestigationsForm: React.FC = React.memo(() => {
               ? t('PROCEDURE_ALREADY_ADDED')
               : t('INVESTIGATION_ALREADY_ADDED')
           }
-          onClose={() => setShowDuplicateNotification(false)}
+          onClose={() => {
+            setShowDuplicateNotification(false);
+            notificationDismissedRef.current = true;
+          }}
           hideCloseButton={false}
           className={styles.duplicateNotification}
         />
