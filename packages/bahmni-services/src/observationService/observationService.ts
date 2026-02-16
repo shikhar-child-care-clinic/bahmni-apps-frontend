@@ -1,5 +1,6 @@
 import { Observation, Bundle, Encounter } from 'fhir/r4';
 import { get } from '../api';
+import { OPENMRS_FHIR_R4 } from '../constants/app';
 import {
   FHIR_OBSERVATION_URL,
   FHIR_OBSERVATION_WITH_ENCOUNTER_URL,
@@ -50,4 +51,16 @@ export async function getPatientObservations(
       .map((entry) => entry.resource as Observation) ?? [];
 
   return observations;
+}
+
+/**
+ * Fetch observations by encounter UUID from FHIR API
+ * @param encounterUUID - Encounter UUID
+ * @returns Promise resolving to FHIR observation bundle
+ */
+export async function getObservationsByEncounterUUID(
+  encounterUUID: string,
+): Promise<Bundle<Observation>> {
+  const url = `${OPENMRS_FHIR_R4}/Observation?encounter=${encounterUUID}`;
+  return await get<Bundle<Observation>>(url);
 }

@@ -17,11 +17,11 @@ import {
   getFormattedError,
   fetchObservationForms,
   ObservationForm,
-  FormsEncounter,
-  getFormsDataByEncounterUuid,
   shouldEnableEncounterFilter,
+  getObservationsByEncounterUUID,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
+import { Bundle, Observation } from 'fhir/r4';
 import React, { useCallback, useMemo, useState } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { WidgetProps } from '../registry/model';
@@ -32,6 +32,7 @@ import {
 } from './models';
 import ObservationItem from './ObservationItem';
 import styles from './styles/FormsTable.module.scss';
+import { transformFHIRObservationsToObservationData } from './utils/fhirObservationTransformer';
 
 /**
  * Component to display patient forms grouped by form name in accordion format
@@ -108,32 +109,29 @@ const FormsTable: React.FC<WidgetProps> = ({
   });
 
   const {
-    data: formsEncounterData,
+    data: fhirObservationBundle,
     isLoading: isLoadingEncounterData,
     error: formDataError,
-  } = useQuery<FormsEncounter>({
-    queryKey: ['formsEncounter', selectedRecord?.encounterUuid],
+  } = useQuery<Bundle<Observation>>({
+    queryKey: ['formsEncounterFHIR', selectedRecord?.encounterUuid],
     queryFn: () =>
-      getFormsDataByEncounterUuid(selectedRecord!.encounterUuid, true),
+      getObservationsByEncounterUUID(selectedRecord!.encounterUuid),
     enabled: !!selectedRecord?.encounterUuid && isModalOpen,
   });
 
-  // Filter observations to only include those belonging to the selected form
+  // Transform FHIR bundle to observations and filter by form name
   const filteredObservations = useMemo(() => {
-    if (!formsEncounterData?.observations || !selectedRecord?.formName) {
+    if (!fhirObservationBundle?.entry || !selectedRecord?.formName) {
       return [];
     }
 
-    // Filter observations by formFieldPath that includes the form name
-    const filtered = formsEncounterData.observations.filter(
-      (obs) =>
-        'formFieldPath' in obs &&
-        typeof obs.formFieldPath === 'string' &&
-        obs.formFieldPath.includes(selectedRecord.formName),
+    const observations = transformFHIRObservationsToObservationData(
+      fhirObservationBundle,
+      selectedRecord.formName,
     );
 
-    return filtered;
-  }, [formsEncounterData?.observations, selectedRecord?.formName]);
+    return observations;
+  }, [fhirObservationBundle, selectedRecord?.formName]);
 
   const headers = useMemo(
     () => [
@@ -299,7 +297,7 @@ const FormsTable: React.FC<WidgetProps> = ({
                 {filteredObservations.map((obs, index) => (
                   <ObservationItem
                     key={`${obs.concept.uuid}`}
-                    observation={obs as unknown as ObservationData}
+                    observation={obs}
                     index={index}
                     formName={selectedRecord.formName}
                   />

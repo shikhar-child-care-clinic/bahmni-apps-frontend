@@ -1,5 +1,7 @@
 import classNames from 'classnames';
 import React from 'react';
+import { ImageTile, VideoTile } from '@bahmni/design-system';
+import { getValueType } from '@bahmni/services';
 import { ObservationData } from './models';
 import styles from './styles/FormsTable.module.scss';
 
@@ -17,6 +19,30 @@ interface ObservationMemberProps {
 }
 
 const INTERPRETATION_ABNORMAL = 'ABNORMAL';
+
+/**
+ * Helper function to render value with media support (images/videos)
+ */
+const renderValueWithMedia = (valueAsString: string): React.ReactNode => {
+  const valueType = getValueType(valueAsString);
+
+  if (valueType === 'Image') {
+    return (
+      <ImageTile
+        imageSrc={valueAsString}
+        alt={valueAsString}
+        id={`${valueAsString}-img`}
+      />
+    );
+  }
+
+  if (valueType === 'Video') {
+    return <VideoTile id={`${valueAsString}-video`} videoSrc={valueAsString} />;
+  }
+
+  return valueAsString;
+};
+
 /**
  * Utility function to get range string and abnormal status for an observation
  */
@@ -95,35 +121,53 @@ const ObservationMember: React.FC<ObservationMemberProps> = ({
 
   // Render as a leaf node (value) at current depth
   const { units, rangeString, isAbnormal } = getObservationDisplayInfo(member);
+  const valueToDisplay = member.valueAsString
+    ? renderValueWithMedia(member.valueAsString)
+    : null;
 
   return (
-    <div
-      className={styles.memberRow}
-      data-testid={`${testIdPrefix}obs-member-row-${displayLabel}-${memberIndex}`}
-      // eslint-disable-next-line react/forbid-dom-props
-      style={{ paddingLeft: `${depth * 16}px` }}
-    >
-      <p
-        className={classNames(
-          styles.memberLabel,
-          isAbnormal ? styles.abnormalValue : '',
-        )}
-        data-testid={`${testIdPrefix}obs-member-label-${displayLabel}-${memberIndex}`}
+    <>
+      <div
+        className={styles.memberRow}
+        data-testid={`${testIdPrefix}obs-member-row-${displayLabel}-${memberIndex}`}
+        // eslint-disable-next-line react/forbid-dom-props
+        style={{ paddingLeft: `${depth * 16}px` }}
       >
-        {displayLabel}
-        {rangeString}
-      </p>
-      <p
-        className={classNames(
-          styles.memberValue,
-          isAbnormal ? styles.abnormalValue : '',
-        )}
-        data-testid={`${testIdPrefix}obs-member-value-${displayLabel}-${memberIndex}`}
-      >
-        {member.valueAsString}
-        {units && ` ${units}`}
-      </p>
-    </div>
+        <p
+          className={classNames(
+            styles.memberLabel,
+            isAbnormal ? styles.abnormalValue : '',
+          )}
+          data-testid={`${testIdPrefix}obs-member-label-${displayLabel}-${memberIndex}`}
+        >
+          {displayLabel}
+          {rangeString}
+        </p>
+        <div
+          className={classNames(
+            styles.memberValue,
+            isAbnormal ? styles.abnormalValue : '',
+          )}
+          data-testid={`${testIdPrefix}obs-member-value-${displayLabel}-${memberIndex}`}
+        >
+          {valueToDisplay}
+          {units && ` ${units}`}
+        </div>
+      </div>
+      {member.comment && (
+        <div
+          className={styles.commentSection}
+          data-testid={`${testIdPrefix}obs-member-comment-${displayLabel}-${memberIndex}`}
+          // eslint-disable-next-line react/forbid-dom-props
+          style={{ paddingLeft: `${depth * 16}px` }}
+        >
+          <span className={styles.commentText}>
+            {member.comment}
+            {member.providers?.[0]?.name && ` - by ${member.providers[0].name}`}
+          </span>
+        </div>
+      )}
+    </>
   );
 };
 
@@ -139,6 +183,9 @@ export const ObservationItem: React.FC<ObservationItemProps> = ({
     getObservationDisplayInfo(observation);
 
   const testIdPrefix = formName ? `${formName}-` : '';
+  const valueToDisplay = observation.valueAsString
+    ? renderValueWithMedia(observation.valueAsString)
+    : null;
 
   return (
     <div
@@ -180,16 +227,16 @@ export const ObservationItem: React.FC<ObservationItemProps> = ({
             ))}
           </div>
         ) : (
-          <p
+          <div
             className={classNames(
               styles.rowValue,
               isAbnormal ? styles.abnormalValue : '',
             )}
             data-testid={`${testIdPrefix}observation-value-${observation.conceptNameToDisplay}-${index}`}
           >
-            {observation.valueAsString}
+            {valueToDisplay}
             {units && ` ${units}`}
-          </p>
+          </div>
         )}
       </div>
       {observation.comment && (

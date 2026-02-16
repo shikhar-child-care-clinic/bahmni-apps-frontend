@@ -47,10 +47,9 @@ export async function getActiveVisit(
  * @returns Promise resolving to FormsEncounter
  */
 export async function getFormsDataByEncounterUuid(
-  encounterUUID: string,
-  includeAll: boolean = false,
+  encounterUUID: string
 ): Promise<FormsEncounter> {
   return await get<FormsEncounter>(
-    BAHMNI_ENCOUNTER_URL(encounterUUID, includeAll),
+    BAHMNI_ENCOUNTER_URL(encounterUUID),
   );
 }

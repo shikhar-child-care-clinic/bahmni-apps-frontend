@@ -1,0 +1,1 @@
+export { transformFHIRObservationsToObservationData } from './fhirObservationTransformer';

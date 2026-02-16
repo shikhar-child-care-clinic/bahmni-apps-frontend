@@ -6,10 +6,10 @@ import {
   fetchFormMetadata,
   fetchObservationForms,
   useTranslation,
-  getFormsDataByEncounterUuid,
-  FormsEncounter,
+  getObservationsByEncounterUUID,
 } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Bundle, Observation } from 'fhir/r4';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { toHaveNoViolations } from 'jest-axe';
@@ -27,7 +27,7 @@ jest.mock('@bahmni/services', () => ({
   fetchFormMetadata: jest.fn(),
   fetchObservationForms: jest.fn(),
   useTranslation: jest.fn(),
-  getFormsDataByEncounterUuid: jest.fn(),
+  getObservationsByEncounterUUID: jest.fn(),
   formatDate: jest.fn((date) => ({
     formattedResult: new Date(date).toLocaleDateString(),
   })),
@@ -64,9 +64,9 @@ const mockFetchFormMetadata = fetchFormMetadata as jest.MockedFunction<
 const mockFetchObservationForms = fetchObservationForms as jest.MockedFunction<
   typeof fetchObservationForms
 >;
-const mockGetFormsDataByEncounterUuid =
-  getFormsDataByEncounterUuid as jest.MockedFunction<
-    typeof getFormsDataByEncounterUuid
+const mockGetObservationsByEncounterUUID =
+  getObservationsByEncounterUUID as jest.MockedFunction<
+    typeof getObservationsByEncounterUUID
   >;
 const mockUsePatientUUID = usePatientUUID as jest.MockedFunction<
   typeof usePatientUUID
@@ -149,21 +149,37 @@ const mockFormMetadata: FormMetadata = {
   },
 };
 
-const mockFormsEncounterData: FormsEncounter = {
-  encounterUuid: 'encounter-3',
-  encounterDateTime: 1704499200000,
-  encounterType: 'Consultation',
-  observations: [
+const mockFhirObservationBundle: Bundle<Observation> = {
+  resourceType: 'Bundle',
+  type: 'searchset',
+  total: 1,
+  entry: [
     {
-      uuid: 'obs-1',
-      concept: {
-        uuid: 'concept-1',
-        name: 'Temperature',
-        dataType: 'Numeric',
+      resource: {
+        resourceType: 'Observation',
+        id: 'obs-1',
+        status: 'final',
+        code: {
+          text: 'Temperature',
+          coding: [
+            {
+              code: 'concept-1',
+              display: 'Temperature',
+            },
+          ],
+        },
+        valueQuantity: {
+          value: 98.6,
+          unit: '°F',
+        },
+        extension: [
+          {
+            url: 'http://fhir.bahmni.org/ext/observation/form-namespace-path',
+            valueString: 'History Form.1/1-0',
+          },
+        ],
       },
-      value: 98.6,
-      formFieldPath: 'History Form.1/1-0',
-    } as any,
+    },
   ],
 };
 
@@ -206,7 +222,9 @@ describe('FormsTable', () => {
 
     mockUsePatientUUID.mockReturnValue('patient-123');
     mockFetchObservationForms.mockResolvedValue(mockObservationForms);
-    mockGetFormsDataByEncounterUuid.mockResolvedValue(mockFormsEncounterData);
+    mockGetObservationsByEncounterUUID.mockResolvedValue(
+      mockFhirObservationBundle,
+    );
   });
 
   describe('Component States', () => {
