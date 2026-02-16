@@ -1,6 +1,6 @@
 # Bahmni Apps Frontend
 
-A React TypeScript monorepo application for Bahmni's Clinical and Registration modules, built with Nx, Webpack, and Carbon Design System. This application includes PWA support for offline capabilities.
+A React TypeScript monorepo application for Bahmni applications, built with Nx, Webpack, and Carbon Design System. This application includes PWA support for offline capabilities.
 
 ## Features
 

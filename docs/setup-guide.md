@@ -4,7 +4,7 @@ This guide provides comprehensive instructions for setting up the Bahmni Apps Fr
 
 ## Introduction
 
-Bahmni Apps Frontend is a React TypeScript monorepo application for Bahmni's Clinical and Registration modules, built with Nx, Webpack, and Carbon Design System. It includes Progressive Web App (PWA) support for offline capabilities.
+Bahmni Apps Frontend is a React TypeScript monorepo application for Bahmni's modules, built with Nx, Webpack, and Carbon Design System. It includes Progressive Web App (PWA) support for offline capabilities.
 
 ## Prerequisites
 
@@ -56,7 +56,6 @@ git clone git@github.com:bahnew/bahmni-docker.git
 cd bahmni-docker
 
 # Clone the Bahmni Apps Frontend repository (in a separate terminal)
-# Clone from the correct repository
 git clone https://github.com/Bahmni/bahmni-apps-frontend.git
 ```
 
@@ -111,7 +110,7 @@ This method allows you to build the application locally and mount it into the Do
    BAHMNI_APPS_FRONTEND_PATH=/path/to/your/bahmni-apps-frontend
    ```
 
-   **Uncomment Volumes in Docker Compose**:
+   **Configure Docker Compose and .env**:
 
    - The `BAHMNI_APPS_FRONTEND_PATH` must point to the **root directory** of your bahmni-apps-frontend repository (not to the distro subdirectory). The volume mount in docker-compose.yml will automatically append `/distro/dist/` to this path.
    - The `.env.dev` file uses `latest` image tags for development, while `.env` uses specific version tags for stable releases.
@@ -131,7 +130,10 @@ This method allows you to build the application locally and mount it into the Do
    # Install dependencies
    yarn
 
-   # Build the application
+   # Build the application for production (uses the workspace build script)
+   yarn build
+
+   # Alternatively build only the `distro` app via nx
    yarn nx build distro
    ```
 
