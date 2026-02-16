@@ -1,4 +1,5 @@
 import { QueryClient, QueryKey } from '@tanstack/react-query';
+import type { BundleEntry, Resource, ServiceRequest } from 'fhir/r4';
 
 /**
  * Refreshes React Query cache with advanced options
@@ -176,6 +177,52 @@ export function filterReplacementEntries<T>(
     const isReplacing = replacingIds.has(itemId);
     const isReplaced = replacedIds.has(itemId);
     return !isReplacing && !isReplaced;
+  });
+}
+
+/**
+ * Deduplicates FHIR ServiceRequest bundle entries based on concept code, encounter, and requester.
+ * When the backend returns duplicate ServiceRequests (same investigation/procedure ordered
+ * in the same encounter by the same practitioner), this function keeps only the first occurrence
+ * (most recent, assuming entries are sorted by -_lastUpdated).
+ *
+ * The deduplication key matches the existing duplicate detection logic in InvestigationsForm:
+ * conceptCode + encounterReference + requesterReference (all case-insensitive)
+ *
+ * Non-ServiceRequest resources (e.g., ImagingStudy from _revinclude) are always preserved.
+ *
+ * @param entries - Array of FHIR BundleEntry objects
+ * @returns Deduplicated array of BundleEntry objects
+ */
+export function getUniqueServiceRequests<T extends Resource>(
+  entries: BundleEntry<T>[],
+): BundleEntry<T>[] {
+  if (!entries || entries.length === 0) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+
+  return entries.filter((entry) => {
+    const resource = entry.resource;
+
+    if (!resource || resource.resourceType !== 'ServiceRequest') {
+      return true;
+    }
+
+    const sr = resource as unknown as ServiceRequest;
+    const conceptCode = sr.code?.coding?.[0]?.code?.toLowerCase() ?? '';
+    const encounterRef = sr.encounter?.reference?.toLowerCase() ?? '';
+    const requesterRef = sr.requester?.reference?.toLowerCase() ?? '';
+
+    const dedupeKey = `${conceptCode}|${encounterRef}|${requesterRef}`;
+
+    if (seen.has(dedupeKey)) {
+      return false;
+    }
+
+    seen.add(dedupeKey);
+    return true;
   });
 }
 

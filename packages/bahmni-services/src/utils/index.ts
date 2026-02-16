@@ -6,6 +6,7 @@ export {
   getPriorityByOrder,
   groupByDate,
   filterReplacementEntries,
+  getUniqueServiceRequests,
   refreshQueries,
   parseQueryParams,
   formatUrl,
