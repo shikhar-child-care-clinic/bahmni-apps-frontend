@@ -1,5 +1,11 @@
 # Bahmni Apps Frontend
 
+## About Bahmni
+
+Bahmni is an open-source healthcare information system designed to serve healthcare providers in resource-limited settings. It combines electronic medical records (EMR), hospital information management, and clinical workflows into a unified platform. Bahmni is built on OpenMRS and focuses on making healthcare delivery more efficient and patient-centric. The platform follows FHIR (Fast Healthcare Interoperability Resources) standards to ensure interoperability with other healthcare systems.
+
+## Project Overview
+
 A React TypeScript monorepo application for Bahmni applications, built with Nx, Webpack, and Carbon Design System. This application includes PWA support for offline capabilities.
 
 ## Features
@@ -68,83 +74,7 @@ yarn lint
 yarn lint:fix
 ```
 
-## Project Structure
-
-```text
-bahmni-apps-frontend/
-├── apps/                    # Micro-frontend applications
-│   ├── clinical/            # Clinical consultation module
-│   │   ├── src/             # Source code
-│   │   │   ├── components/  # UI components
-│   │   │   ├── hooks/       # Custom hooks
-│   │   │   ├── pages/       # Page components
-│   │   │   ├── providers/   # Context providers
-│   │   │   ├── stores/      # Zustand stores
-│   │   │   └── ClinicalApp.tsx
-│   │   ├── public/          # Static assets
-│   │   │   └── locales/     # Translation files
-│   │   └── project.json     # Nx project configuration
-│   ├── registration/        # Patient registration module
-│   │   ├── src/             # Source code
-│   │   │   ├── components/  # UI components
-│   │   │   ├── hooks/       # Custom hooks
-│   │   │   ├── pages/       # Page components
-│   │   │   └── RegistrationApp.tsx
-│   │   ├── public/          # Static assets
-│   │   │   └── locales/     # Translation files
-│   │   └── project.json     # Nx project configuration
-│   └── sample-app-module/   # Example extensible app
-├── packages/                # Shared libraries
-│   ├── bahmni-design-system/ # Reusable UI components (Carbon-based)
-│   │   ├── src/
-│   │   │   ├── atoms/       # Basic UI components
-│   │   │   ├── molecules/   # Composite components
-│   │   │   └── organisms/   # Complex components
-│   │   └── project.json
-│   ├── bahmni-services/     # API integration & business logic
-│   │   ├── src/
-│   │   │   ├── api/         # HTTP client & interceptors
-│   │   │   ├── patientService/
-│   │   │   ├── medicationService/
-│   │   │   ├── allergyService/
-│   │   │   ├── observationService/
-│   │   │   ├── i18n/        # Translation utilities
-│   │   │   ├── date/        # Date utilities
-│   │   │   └── utils/       # Common utilities
-│   │   └── project.json
-│   └── bahmni-widgets/      # Domain-specific display controls
-│       ├── src/
-│       │   ├── AllergiesTable/
-│       │   ├── MedicationsTable/
-│       │   ├── PatientDetails/
-│       │   └── providers/   # Context providers
-│       └── project.json
-├── distro/                  # Shell application (entry point)
-│   ├── src/
-│   │   ├── app/             # Root routing
-│   │   ├── main.tsx         # Application entry
-│   │   └── index.html       # HTML template
-│   ├── webpack.config.js    # Webpack configuration
-│   └── project.json
-├── docs/                    # Project documentation
-│   ├── architecture.md
-│   ├── project-structure.md
-│   ├── i18n-guide.md
-│   ├── sortable-data-table-guide.md
-│   ├── global-notification-guide.md
-│   └── setup-guide.md
-├── docker/                  # Docker configuration
-├── helm/                    # Kubernetes Helm charts
-├── .github/                 # GitHub actions & workflows
-├── nx.json                  # Nx configuration
-├── tsconfig.base.json       # Shared TypeScript config
-├── eslint.config.ts         # ESLint configuration
-├── jest.config.ts           # Jest configuration
-├── package.json             # Root dependencies
-└── README.md                # Project documentation
-```
-
-For a more detailed explanation of the project architecture, see [Architecture Documentation](docs/architecture.md).
+For a more detailed explanation of the project structure and architecture, see [Architecture Documentation](docs/architecture.md) and [Project Structure Documentation](docs/project-structure.md).
 
 ## Scripts
 

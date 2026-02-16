@@ -109,11 +109,11 @@ This method allows you to build the application locally and mount it into the Do
    # The volume mount will use distro/dist/ subdirectory from this path
    BAHMNI_APPS_FRONTEND_PATH=/path/to/your/bahmni-apps-frontend
    ```
+   For a more detailed configuration details, see [Docher Documentation](docs/architecture.md) and [Project Structure Documentation](docs/project-structure.md).
 
    **Configure Docker Compose and .env**:
 
    - The `BAHMNI_APPS_FRONTEND_PATH` must point to the **root directory** of your bahmni-apps-frontend repository (not to the distro subdirectory). The volume mount in docker-compose.yml will automatically append `/distro/dist/` to this path.
-   - The `.env.dev` file uses `latest` image tags for development, while `.env` uses specific version tags for stable releases.
    - If you're using a custom Bahmni configuration, update `CONFIG_VOLUME` to point to your config directory (e.g., `../bahmni-config/standard-config`).
    - The volume mount for bahmni-apps-frontend is **already active** in `docker-compose.yml` and does not need to be uncommented:
      ```yaml
@@ -155,7 +155,7 @@ This method allows you to build the application locally and mount it into the Do
 
 5. **Development Workflow**:
 
-   With this setup, every time you rebuild the application using `yarn nx build distro`, the changes will be automatically available in the browser without restarting the Docker container. Simply refresh your browser after the build completes.
+   With this setup, every time you rebuild the application using `yarn build`, the changes will be automatically available in the browser without restarting the Docker container. Simply refresh your browser after the build completes.
 
 ### Method 2: Using Hot Reload (Local Development Server)
 
