@@ -291,6 +291,9 @@ const InvestigationsForm: React.FC = React.memo(() => {
     }
 
     setShowDuplicateNotification(false);
+    setDuplicateInvestigationId(null);
+    setDuplicateCategory(null);
+    setDuplicateCategoryCode(null);
     addServiceRequest(
       selectedItem.category,
       selectedItem.code,
