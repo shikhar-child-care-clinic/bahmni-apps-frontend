@@ -21,6 +21,7 @@ import {
   AuditEventType,
   useSubscribeConsultationSaved,
   getDiagnosticReports,
+  getDiagnosticReportBundle,
 } from '@bahmni/services';
 import { useQuery, useQueries } from '@tanstack/react-query';
 import type { DiagnosticReport } from 'fhir/r4';
@@ -29,6 +30,7 @@ import { usePatientUUID } from '../hooks/usePatientUUID';
 import {
   extractDiagnosticReportsFromBundle,
   updateInvestigationsWithReportInfo,
+  mapDiagnosticReportBundleToTestResults,
 } from '../labinvestigation/utils';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
@@ -77,6 +79,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
   const [openAccordionIndices, setOpenAccordionIndices] = useState<Set<number>>(
     new Set([0]),
   );
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
 
   const emptyEncounterFilter = shouldEnableEncounterFilter(
     episodeOfCareUuids,
@@ -214,6 +217,31 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     }));
   }, [processedInvestigations, diagnosticReports]);
 
+  // Fetch diagnostic report bundle when a report is selected
+  const { data: diagnosticReportBundle, isLoading: isLoadingReportBundle } =
+    useQuery({
+      queryKey: ['diagnosticReportBundle', selectedReportId],
+      queryFn: () => getDiagnosticReportBundle(selectedReportId!),
+      enabled: !!selectedReportId,
+    });
+
+  // Format the report data (testName and result only)
+  const reportResults = useMemo(() => {
+    if (!diagnosticReportBundle) return undefined;
+    const results = mapDiagnosticReportBundleToTestResults(
+      diagnosticReportBundle,
+      t,
+    );
+    // Extract only testName and result (value + unit)
+    return results?.map((result) => ({
+      testName: result.TestName,
+      result:
+        result.value && result.unit
+          ? `${result.value} ${result.unit}`
+          : result.value || '--',
+    }));
+  }, [diagnosticReportBundle, t]);
+
   const handleRadiologyResultClick = () => {
     dispatchAuditEvent({
       eventType: AUDIT_LOG_EVENT_DETAILS.VIEWED_RADIOLOGY_RESULTS
@@ -262,6 +290,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
             <Link
               id={`${investigation.id}-view-report-link`}
               testId={`${investigation.id}-view-report-link-test-id`}
+              onClick={() => setSelectedReportId(investigation.reportId!)}
             >
               {t('RADIOLOGY_VIEW_REPORT')}
             </Link>
@@ -323,12 +352,14 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
             {investigation.orderedBy}
           </span>
         );
+      default:
+        return null;
     }
   };
 
   if (
     loading ||
-    !!hasError ||
+    hasError ||
     processedInvestigations.length === 0 ||
     emptyEncounterFilter
   ) {
