@@ -97,23 +97,9 @@ There are two methods for local development. Choose the one that best fits your 
 
 This method allows you to build the application locally and mount it into the Docker container:
 
-1. **Update Environment Variables**:
+1. **Configure Docker Compose and .env**:
 
-   In the `bahmni-docker/bahmni-standard` directory, edit the `.env.dev` file to configure the volume mount to your local bahmni-apps-frontend repository:
-
-   ```bash
-   # Open the .env.dev file
-   nano .env.dev
-
-   # Update the BAHMNI_APPS_FRONTEND_PATH variable to point to the root of your local repo
-   # The volume mount will use distro/dist/ subdirectory from this path
-   BAHMNI_APPS_FRONTEND_PATH=/path/to/your/bahmni-apps-frontend
-   ```
-   For a more detailed configuration details, see [Docher Documentation](docs/architecture.md) and [Project Structure Documentation](docs/project-structure.md).
-
-   **Configure Docker Compose and .env**:
-
-   - The `BAHMNI_APPS_FRONTEND_PATH` must point to the **root directory** of your bahmni-apps-frontend repository (not to the distro subdirectory). The volume mount in docker-compose.yml will automatically append `/distro/dist/` to this path.
+   - In the .env.dev, the `BAHMNI_APPS_FRONTEND_PATH` must point to the **root directory** of your bahmni-apps-frontend repository (not to the distro subdirectory). The volume mount in docker-compose.yml will automatically append `/distro/dist/` to this path.
    - If you're using a custom Bahmni configuration, update `CONFIG_VOLUME` to point to your config directory (e.g., `../bahmni-config/standard-config`).
    - The volume mount for bahmni-apps-frontend is **already active** in `docker-compose.yml` and does not need to be uncommented:
      ```yaml
