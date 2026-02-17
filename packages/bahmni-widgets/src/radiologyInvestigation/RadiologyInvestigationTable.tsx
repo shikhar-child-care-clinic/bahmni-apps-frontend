@@ -81,7 +81,8 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
   const [openAccordionIndices, setOpenAccordionIndices] = useState<Set<number>>(
     new Set([0]),
   );
-  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+  const [selectedInvestigation, setSelectedInvestigation] =
+    useState<RadiologyInvestigationViewModel | null>(null);
 
   const emptyEncounterFilter = shouldEnableEncounterFilter(
     episodeOfCareUuids,
@@ -219,12 +220,15 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     }));
   }, [processedInvestigations, diagnosticReports]);
 
+  console.log({ updatedRadiologyInvestigations });
+
   // Fetch diagnostic report bundle when a report is selected
   const { data: diagnosticReportBundle, isLoading: isLoadingReportBundle } =
     useQuery({
-      queryKey: ['diagnosticReportBundle', selectedReportId],
-      queryFn: () => getDiagnosticReportBundle(selectedReportId!),
-      enabled: !!selectedReportId,
+      queryKey: ['diagnosticReportBundle', selectedInvestigation?.reportId],
+      queryFn: () =>
+        getDiagnosticReportBundle(selectedInvestigation!.reportId!),
+      enabled: !!selectedInvestigation?.reportId,
     });
 
   const transformedObservations = useMemo(() => {
@@ -310,7 +314,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
             <Link
               id={`${investigation.id}-view-report-link`}
               testId={`${investigation.id}-view-report-link-test-id`}
-              onClick={() => setSelectedReportId(investigation.reportId!)}
+              onClick={() => setSelectedInvestigation(investigation)}
             >
               {t('RADIOLOGY_VIEW_REPORT')}
             </Link>
@@ -455,13 +459,13 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
         })}
       </Accordion>
 
-      {selectedReportId && (
+      {selectedInvestigation && (
         <Modal
-          open={!!selectedReportId}
-          onRequestClose={() => setSelectedReportId(null)}
+          open={!!selectedInvestigation}
+          onRequestClose={() => setSelectedInvestigation(null)}
           passiveModal
-          modalLabel={`RecordedOn : ${diagnosticReportMetadata.recordedOn} | RecordedBy: ${diagnosticReportMetadata.recordedBy}`}
-          modalHeading={diagnosticReportMetadata.formName}
+          modalLabel={`RecordedOn : ${selectedInvestigation.reportedDate} | RecordedBy: ${selectedInvestigation.reportedBy}`}
+          modalHeading={selectedInvestigation.testName}
           testId="diagnostic-report-modal"
           size="lg"
         >
@@ -469,7 +473,14 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
             {!isLoadingReportBundle && transformedObservations && (
               <Observations transformedObservations={transformedObservations} />
             )}
-            {isLoadingReportBundle && <div>Loading...</div>}
+            {isLoadingReportBundle && (
+              <SortableDataTable
+                headers={headers}
+                rows={[]}
+                loading
+                ariaLabel={''}
+              />
+            )}
           </Modal.Body>
         </Modal>
       )}

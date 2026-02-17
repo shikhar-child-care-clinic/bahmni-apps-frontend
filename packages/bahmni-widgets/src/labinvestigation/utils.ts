@@ -173,7 +173,12 @@ export function updateInvestigationsWithReportInfo(
   // Build a map of test IDs to report info in a single pass
   const testIdToReportInfo = new Map<
     string,
-    { reportId: string; attachments?: Attachment[] }
+    {
+      reportId: string;
+      attachments?: Attachment[];
+      reportedBy?: string;
+      reportedDate?: string;
+    }
   >();
 
   diagnosticReports
@@ -190,6 +195,8 @@ export function updateInvestigationsWithReportInfo(
       if (!reportId) return;
 
       const attachments = extractAttachmentsFromDiagnosticReport(report);
+      const { issued: reportedDate } = report;
+      const reportedBy = report.performer?.[0].display ?? '-';
 
       // Extract test IDs from basedOn references and map to report info
       report?.basedOn?.forEach((ref) => {
@@ -198,6 +205,8 @@ export function updateInvestigationsWithReportInfo(
           testIdToReportInfo.set(testId, {
             reportId,
             attachments,
+            reportedDate,
+            reportedBy,
           });
         }
       });
@@ -211,6 +220,8 @@ export function updateInvestigationsWithReportInfo(
         ...test,
         reportId: reportInfo.reportId,
         attachments: reportInfo.attachments,
+        reportedDate: reportInfo.reportedDate,
+        reportedBy: reportInfo.reportedBy,
       };
     }
     return test;

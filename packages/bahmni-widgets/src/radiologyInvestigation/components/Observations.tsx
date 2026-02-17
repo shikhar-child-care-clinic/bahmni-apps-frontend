@@ -5,6 +5,7 @@ import {
   ExtractedObservationsResult,
   GroupedObservation,
 } from '../../observations/models';
+import styles from './Observations.module.scss';
 
 export interface ObservationsProps {
   transformedObservations: ExtractedObservationsResult | null;
@@ -69,6 +70,7 @@ export const Observations: React.FC<ObservationsProps> = ({
       id="radiology-observations"
       data-testid="radiology-observations-test-id"
       aria-label="radiology-observations-aria-label"
+      className={styles.resultsContainer}
     >
       {observations.map((obs, index) => renderObservation(obs, index))}
       {groupedObservations.map((groupedObs, index) =>
