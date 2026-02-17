@@ -69,6 +69,8 @@ export {
   searchAppointmentsByAttribute,
   updateAppointmentStatus,
   getAppointmentById,
+  getUpcomingAppointments,
+  getPastAppointments,
 } from './AppointmentService/appointmmetService';
 export {
   type Appointment,
@@ -111,6 +113,9 @@ export {
   getTodayDate,
   calculateAgeinYearsAndMonths,
   formatDateAndTime,
+  DURATION_UNIT_TO_DAYS,
+  calculateEndDate,
+  doDateRangesOverlap,
 } from './date';
 export { type Notification, notificationService } from './notification';
 export {

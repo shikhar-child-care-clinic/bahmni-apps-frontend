@@ -358,13 +358,42 @@ export function transformContainerObservationsToForm2Observations(
     }
 
     if (obs.groupMembers && Array.isArray(obs.groupMembers)) {
-      observation.groupMembers = obs.groupMembers.map(transform);
+      // Filter out voided group members
+      const nonVoidedGroupMembers = obs.groupMembers.filter((member) => {
+        const isMemberVoided =
+          member.voided ??
+          (member.value &&
+            typeof member.value === 'string' &&
+            member.value.endsWith('voided'));
+        return !isMemberVoided;
+      });
+      observation.groupMembers = nonVoidedGroupMembers.map(transform);
     }
 
     return observation;
   };
 
-  return containerObservations.map(transform);
+  const nonVoidedObservations =
+    containerObservations?.filter((obs) => {
+      if (obs.uuid && obs.voided) {
+        return true;
+      }
+      if (!obs.uuid && obs.voided) {
+        return false;
+      }
+
+      if (
+        obs.value &&
+        typeof obs.value === 'string' &&
+        obs.value.endsWith('voided')
+      ) {
+        return false;
+      }
+
+      return true;
+    }) ?? [];
+
+  return nonVoidedObservations.map(transform);
 }
 
 /**
