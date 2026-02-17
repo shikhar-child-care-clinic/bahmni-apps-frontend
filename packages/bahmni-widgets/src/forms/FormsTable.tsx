@@ -19,6 +19,7 @@ import {
   ObservationForm,
   shouldEnableEncounterFilter,
   getObservationsByEncounterUUID,
+  FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import { Bundle, Observation } from 'fhir/r4';
@@ -31,8 +32,9 @@ import {
   GroupedFormRecords,
 } from './models';
 import ObservationItem from './ObservationItem';
+import { extractObservationsFromBundle } from '../observations/utils';
+import { ExtractedObservation } from '../observations/models';
 import styles from './styles/FormsTable.module.scss';
-import { transformFHIRObservationsToObservationData } from './utils/fhirObservationTransformer';
 
 /**
  * Component to display patient forms grouped by form name in accordion format
@@ -125,12 +127,82 @@ const FormsTable: React.FC<WidgetProps> = ({
       return [];
     }
 
-    const observations = transformFHIRObservationsToObservationData(
-      fhirObservationBundle,
-      selectedRecord.formName,
-    );
+    // Reuse ObsByEncounter extraction logic
+    const extractedResult = extractObservationsFromBundle(fhirObservationBundle);
 
-    return observations;
+    // Helper to extract formFieldPath and comments from FHIR Observation
+    const getFormFieldPathAndComment = (obsId: string): { formFieldPath?: string; comment?: string } => {
+      const fhirObs = fhirObservationBundle.entry?.find(
+        (entry) => entry.resource?.id === obsId,
+      )?.resource as Observation | undefined;
+
+      if (!fhirObs) return {};
+
+      const formPathExt = fhirObs.extension?.find(
+        (ext) => ext.url === FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
+      );
+      const comment = fhirObs.note?.[0]?.text;
+
+      return {
+        formFieldPath: formPathExt?.valueString,
+        comment,
+      };
+    };
+
+    // Helper to convert ExtractedObservation to ObservationData
+    const convertToObservationData = (
+      obs: ExtractedObservation,
+    ): ObservationData => {
+      const { formFieldPath, comment } = getFormFieldPathAndComment(obs.id);
+
+      // Recursively convert members
+      const groupMembers = obs.members?.map((member) =>
+        convertToObservationData(member),
+      );
+
+      return {
+        concept: {
+          name: obs.display,
+          uuid: obs.id,
+          shortName: obs.display,
+          units: obs.observationValue?.unit,
+          lowNormal: obs.observationValue?.referenceRange?.low?.value,
+          hiNormal: obs.observationValue?.referenceRange?.high?.value,
+        },
+        value: obs.observationValue?.value,
+        valueAsString: obs.observationValue?.value?.toString(),
+        conceptNameToDisplay: obs.display,
+        formFieldPath,
+        comment,
+        providers: obs.encounter?.provider
+          ? [
+              {
+                uuid: '',
+                name: obs.encounter.provider,
+              },
+            ]
+          : undefined,
+        interpretation: obs.observationValue?.isAbnormal ? 'ABNORMAL' : undefined,
+        groupMembers: groupMembers && groupMembers.length > 0 ? groupMembers : undefined,
+      };
+    };
+
+    // Convert all observations and grouped observations
+    const allObservations = [
+      ...extractedResult.observations.map(convertToObservationData),
+      ...extractedResult.groupedObservations.map((group) => {
+        const baseObs = convertToObservationData(group as ExtractedObservation);
+        return {
+          ...baseObs,
+          groupMembers: group.children.map(convertToObservationData),
+        };
+      }),
+    ];
+
+    // Filter by form name using formFieldPath
+    return allObservations.filter(
+      (obs) => obs.formFieldPath && obs.formFieldPath.includes(selectedRecord.formName),
+    );
   }, [fhirObservationBundle, selectedRecord?.formName]);
 
   const headers = useMemo(
