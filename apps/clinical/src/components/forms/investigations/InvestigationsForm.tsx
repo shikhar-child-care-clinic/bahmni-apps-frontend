@@ -10,6 +10,8 @@ import {
   getOrderTypes,
   getExistingServiceRequestsForAllCategories,
   ORDER_TYPE_QUERY_KEY,
+  useSubscribeConsultationSaved,
+  ConsultationSavedEventPayload,
 } from '@bahmni/services';
 import { usePatientUUID, useActivePractitioner } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
@@ -20,6 +22,7 @@ import React, {
   useEffect,
   useRef,
 } from 'react';
+import { useClinicalAppData } from '../../../hooks/useClinicalAppData';
 import { useEncounterSession } from '../../../hooks/useEncounterSession';
 import useInvestigationsSearch from '../../../hooks/useInvestigationsSearch';
 import type { FlattenedInvestigations } from '../../../models/investigations';
@@ -32,9 +35,22 @@ const InvestigationsForm: React.FC = React.memo(() => {
   const patientUUID = usePatientUUID();
   const { practitioner } = useActivePractitioner();
   const { activeEncounter } = useEncounterSession({ practitioner });
+  const { episodeOfCare, visit, encounter } = useClinicalAppData();
 
   const currentEncounterId = activeEncounter?.id;
   const currentPractitionerUuid = practitioner?.uuid;
+
+  const episodeEncounterUuids = useMemo(() => {
+    return Array.from(
+      new Set([
+        ...episodeOfCare.flatMap((eoc) => eoc.encounterUuids),
+        ...visit.flatMap((v) => v.encounterUuids),
+        ...encounter.map((enc) => enc.uuid),
+      ]),
+    );
+  }, [episodeOfCare, visit, encounter]);
+
+  const hasEpisodeContext = episodeEncounterUuids.length > 0;
 
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedInvestigationItem, setSelectedInvestigationItem] =
@@ -69,17 +85,43 @@ const InvestigationsForm: React.FC = React.memo(() => {
     queryFn: getOrderTypes,
   });
 
-  // Dynamic query for existing service requests - only re-fetches when patient/encounter changes
-  const { data: existingServiceRequests } = useQuery({
-    queryKey: ['existingServiceRequests', patientUUID, currentEncounterId],
+  // Determine encounter UUIDs: use active encounter if available, otherwise fall back to episode encounters
+  const effectiveEncounterUuids = useMemo(() => {
+    if (currentEncounterId) return [currentEncounterId];
+    if (hasEpisodeContext) return episodeEncounterUuids;
+    return undefined;
+  }, [currentEncounterId, hasEpisodeContext, episodeEncounterUuids]);
+
+  // Dynamic query for existing service requests - re-fetches when patient/encounter changes
+  const {
+    data: existingServiceRequests,
+    refetch: refetchExistingServiceRequests,
+  } = useQuery({
+    queryKey: ['existingServiceRequests', patientUUID, effectiveEncounterUuids],
     queryFn: () =>
       getExistingServiceRequestsForAllCategories(
         orderTypesData!.results,
         patientUUID!,
-        currentEncounterId ? [currentEncounterId] : undefined,
+        effectiveEncounterUuids,
       ),
-    enabled: !!patientUUID && !!currentEncounterId && !!orderTypesData,
+    enabled:
+      !!patientUUID &&
+      (!!currentEncounterId || hasEpisodeContext) &&
+      !!orderTypesData,
+    refetchOnMount: 'always',
   });
+
+  useSubscribeConsultationSaved(
+    (payload: ConsultationSavedEventPayload) => {
+      if (
+        payload.patientUUID === patientUUID &&
+        Object.keys(payload.updatedResources.serviceRequests).length > 0
+      ) {
+        refetchExistingServiceRequests();
+      }
+    },
+    [patientUUID, refetchExistingServiceRequests],
+  );
 
   const translateOrderType = useCallback(
     (category: string): string => {

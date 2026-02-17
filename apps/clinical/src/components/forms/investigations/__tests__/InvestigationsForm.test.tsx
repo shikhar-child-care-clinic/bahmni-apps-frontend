@@ -49,6 +49,16 @@ jest.mock('../../../../hooks/useEncounterSession', () => ({
   }),
 }));
 
+jest.mock('../../../../hooks/useClinicalAppData', () => ({
+  useClinicalAppData: jest.fn().mockReturnValue({
+    episodeOfCare: [],
+    visit: [],
+    encounter: [],
+    isLoading: false,
+    error: null,
+  }),
+}));
+
 jest.mock('@bahmni/design-system', () => ({
   ...jest.requireActual('@bahmni/design-system'),
   BoxHeader: ({ children, title, className }: any) => (
