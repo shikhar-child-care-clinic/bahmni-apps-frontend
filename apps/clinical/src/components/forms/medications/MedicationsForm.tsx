@@ -48,6 +48,8 @@ const MedicationsForm: React.FC = React.memo(() => {
   const [showDuplicateNotification, setShowDuplicateNotification] =
     useState(false);
   const isSelectingRef = useRef(false);
+  const [selectedMedicationItem, setSelectedMedicationItem] =
+    useState<MedicationFilterResult | null>(null);
   const {
     medicationConfig,
     loading: medicationConfigLoading,
@@ -158,6 +160,9 @@ const MedicationsForm: React.FC = React.memo(() => {
     setTimeout(() => {
       isSelectingRef.current = false;
     }, 100);
+    addMedication(selectedItem.medication, selectedItem.displayName);
+    setSearchMedicationTerm('');
+    setSelectedMedicationItem(selectedItem);
   };
 
   const filteredSearchResults = useMemo(() => {
@@ -243,6 +248,9 @@ const MedicationsForm: React.FC = React.memo(() => {
           itemToString={(item) => (item ? item.displayName : '')}
           onChange={(data) => handleOnChange(data.selectedItem!)}
           onInputChange={(searchQuery: string) => handleSearch(searchQuery)}
+          selectedItem={selectedMedicationItem}
+          clearSelectedOnChange
+          allowCustomValue
           size="md"
           autoAlign
           disabled={existingMedicationsLoading}

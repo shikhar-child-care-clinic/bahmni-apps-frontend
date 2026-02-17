@@ -47,6 +47,9 @@ const VaccinationForm: React.FC = React.memo(() => {
   const [showDuplicateNotification, setShowDuplicateNotification] =
     useState(false);
   const isSelectingRef = useRef(false);
+  const [selectedVaccinationItem] = useState<MedicationFilterResult | null>(
+    null,
+  );
   const {
     medicationConfig,
     loading: medicationConfigLoading,
@@ -257,6 +260,9 @@ const VaccinationForm: React.FC = React.memo(() => {
           itemToString={(item) => (item ? item.displayName : '')}
           onChange={(data) => handleOnChange(data.selectedItem!)}
           onInputChange={(searchQuery: string) => handleSearch(searchQuery)}
+          selectedItem={selectedVaccinationItem}
+          clearSelectedOnChange
+          allowCustomValue
           size="md"
           autoAlign
           disabled={existingVaccinationsLoading}

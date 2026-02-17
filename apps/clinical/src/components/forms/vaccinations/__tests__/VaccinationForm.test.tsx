@@ -1,14 +1,16 @@
 import { getVaccinations } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Medication } from 'fhir/r4';
-
+import { axe, toHaveNoViolations } from 'jest-axe';
 import useMedicationConfig from '../../../../hooks/useMedicationConfig';
 import { MedicationInputEntry } from '../../../../models/medication';
 import { MedicationConfig } from '../../../../models/medicationConfig';
 import { useVaccinationStore } from '../../../../stores/vaccinationsStore';
 import VaccinationForm from '../VaccinationForm';
+
+expect.extend(toHaveNoViolations);
 
 jest.mock('../../../../stores/vaccinationsStore');
 jest.mock('../../../../hooks/useMedicationConfig');
@@ -295,6 +297,77 @@ describe('VaccinationForm', () => {
         );
       });
     });
+    test('clears search term after selecting vaccination', async () => {
+      const user = userEvent.setup();
+      render(<VaccinationForm />, { wrapper: createWrapper() });
+      const searchBox = screen.getByRole('combobox', {
+        name: /search to add vaccination/i,
+      });
+      await user.type(searchBox, 'covid');
+      await waitFor(() => {
+        expect(screen.getByText('COVID-19 Vaccine')).toBeInTheDocument();
+      });
+      await user.click(screen.getByText('COVID-19 Vaccine'));
+      await waitFor(() => {
+        expect(mockStore.addVaccination).toHaveBeenCalledWith(
+          mockVaccination,
+          'COVID-19 Vaccine',
+        );
+      });
+    });
+    test('resets ComboBox selectedItem to null after selection to allow immediate re-search', async () => {
+      const user = userEvent.setup();
+      const hepatitisVaccine: Medication = {
+        id: 'test-vaccination-2',
+        resourceType: 'Medication',
+        code: {
+          text: 'Hepatitis B Vaccine',
+          coding: [
+            {
+              code: 'hep-b-vaccine',
+              display: 'Hepatitis B Vaccine',
+              system: 'http://snomed.info/sct',
+            },
+          ],
+        },
+      };
+      (getVaccinations as jest.Mock).mockResolvedValue({
+        resourceType: 'Bundle',
+        type: 'searchset',
+        entry: [{ resource: mockVaccination }, { resource: hepatitisVaccine }],
+      });
+      render(<VaccinationForm />, { wrapper: createWrapper() });
+      const searchBox = screen.getByRole('combobox', {
+        name: /search to add vaccination/i,
+      });
+
+      // First selection
+      await user.type(searchBox, 'covid');
+      await waitFor(() => {
+        expect(screen.getByText('COVID-19 Vaccine')).toBeInTheDocument();
+      });
+      await user.click(screen.getByText('COVID-19 Vaccine'));
+      await waitFor(() => {
+        expect(mockStore.addVaccination).toHaveBeenCalledTimes(1);
+      });
+
+      // Wait for isSelectingRef to reset (setTimeout 100ms in handleOnChange)
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      });
+
+      // Search for another item
+      await user.clear(searchBox);
+      await user.type(searchBox, 'hepatitis');
+      await waitFor(() => {
+        expect(screen.getByText('Hepatitis B Vaccine')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Hepatitis B Vaccine'));
+      await waitFor(() => {
+        expect(mockStore.addVaccination).toHaveBeenCalledTimes(2);
+      });
+    });
     test('displays selected vaccinations', () => {
       (useVaccinationStore as unknown as jest.Mock).mockReturnValue({
         ...mockStore,
@@ -363,6 +436,49 @@ describe('VaccinationForm', () => {
       });
     });
   });
+  describe('Keyboard Navigation', () => {
+    test('should support keyboard navigation and selection in ComboBox', async () => {
+      const user = userEvent.setup();
+
+      render(<VaccinationForm />, { wrapper: createWrapper() });
+
+      const searchBox = screen.getByRole('combobox', {
+        name: /search to add vaccination/i,
+      });
+
+      // Type to open dropdown
+      await user.type(searchBox, 'covid');
+
+      await waitFor(() => {
+        expect(screen.getByText('COVID-19 Vaccine')).toBeInTheDocument();
+      });
+
+      // Navigate with arrow key and select with Enter
+      await user.keyboard('{ArrowDown}');
+      await user.keyboard('{Enter}');
+
+      await waitFor(() => {
+        expect(mockStore.addVaccination).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Accessibility', () => {
+    test('has no accessibility violations', async () => {
+      let container: HTMLElement;
+
+      await act(async () => {
+        const rendered = render(<VaccinationForm />, {
+          wrapper: createWrapper(),
+        });
+        container = rendered.container;
+      });
+
+      const results = await axe(container!);
+      expect(results).toHaveNoViolations();
+    });
+  });
+
   describe('Edge Cases', () => {
     test('handles missing medication config gracefully', () => {
       (useMedicationConfig as jest.Mock).mockReturnValue({
