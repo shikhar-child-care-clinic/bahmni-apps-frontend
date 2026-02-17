@@ -5,6 +5,7 @@ import {
   Accordion,
   AccordionItem,
   Link,
+  Modal,
 } from '@bahmni/design-system';
 import {
   getPatientRadiologyInvestigationBundleWithImagingStudy,
@@ -24,16 +25,17 @@ import {
   getDiagnosticReportBundle,
 } from '@bahmni/services';
 import { useQuery, useQueries } from '@tanstack/react-query';
-import type { DiagnosticReport } from 'fhir/r4';
+import type { DiagnosticReport, Bundle, Observation, Encounter } from 'fhir/r4';
 import React, { useMemo, useEffect, useState } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import {
   extractDiagnosticReportsFromBundle,
   updateInvestigationsWithReportInfo,
-  mapDiagnosticReportBundleToTestResults,
 } from '../labinvestigation/utils';
 import { useNotification } from '../notification';
+import { extractObservationsFromBundle } from '../observations/utils';
 import { WidgetProps } from '../registry/model';
+import { Observations } from './components/Observations';
 import { RadiologyInvestigationViewModel } from './models';
 import styles from './styles/RadiologyInvestigationTable.module.scss';
 import {
@@ -225,21 +227,39 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       enabled: !!selectedReportId,
     });
 
-  // Format the report data (testName and result only)
-  const reportResults = useMemo(() => {
-    if (!diagnosticReportBundle) return undefined;
-    const results = mapDiagnosticReportBundleToTestResults(
-      diagnosticReportBundle,
-      t,
+  const transformedObservations = useMemo(() => {
+    if (!diagnosticReportBundle) return null;
+
+    return extractObservationsFromBundle(
+      diagnosticReportBundle as unknown as Bundle<Observation | Encounter>,
     );
-    // Extract only testName and result (value + unit)
-    return results?.map((result) => ({
-      testName: result.TestName,
-      result:
-        result.value && result.unit
-          ? `${result.value} ${result.unit}`
-          : result.value || '--',
-    }));
+  }, [diagnosticReportBundle]);
+
+  const diagnosticReportMetadata = useMemo(() => {
+    if (!diagnosticReportBundle) return { recordedOn: '', recordedBy: '' };
+
+    // Extract DiagnosticReport from bundle
+    const diagnosticReport = diagnosticReportBundle.entry?.find(
+      (entry) => entry.resource?.resourceType === 'DiagnosticReport',
+    )?.resource as DiagnosticReport | undefined;
+
+    if (!diagnosticReport) return { recordedOn: '', recordedBy: '' };
+
+    // Extract date (prefer issued, fallback to effectiveDateTime)
+    const dateStr =
+      diagnosticReport.issued ?? diagnosticReport.effectiveDateTime;
+    const recordedOn = dateStr
+      ? formatDate(dateStr, t, 'd-MMM-yyyy, h:mma').formattedResult
+      : '';
+    const formName = diagnosticReport.code.text;
+
+    // Extract provider/performer name
+    const recordedBy =
+      diagnosticReport.performer?.[0]?.display ??
+      diagnosticReport.resultsInterpreter?.[0]?.display ??
+      '';
+
+    return { recordedOn, recordedBy, formName };
   }, [diagnosticReportBundle, t]);
 
   const handleRadiologyResultClick = () => {
@@ -434,6 +454,25 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
           );
         })}
       </Accordion>
+
+      {selectedReportId && (
+        <Modal
+          open={!!selectedReportId}
+          onRequestClose={() => setSelectedReportId(null)}
+          passiveModal
+          modalLabel={`RecordedOn : ${diagnosticReportMetadata.recordedOn} | RecordedBy: ${diagnosticReportMetadata.recordedBy}`}
+          modalHeading={diagnosticReportMetadata.formName}
+          testId="diagnostic-report-modal"
+          size="lg"
+        >
+          <Modal.Body>
+            {!isLoadingReportBundle && transformedObservations && (
+              <Observations transformedObservations={transformedObservations} />
+            )}
+            {isLoadingReportBundle && <div>Loading...</div>}
+          </Modal.Body>
+        </Modal>
+      )}
     </div>
   );
 };
