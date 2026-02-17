@@ -6,7 +6,7 @@ import {
   fetchFormMetadata,
   fetchObservationForms,
   useTranslation,
-  getObservationsByEncounterUUID,
+  getFormsDataByEncounterUuid,
 } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Bundle, Observation } from 'fhir/r4';
@@ -65,8 +65,8 @@ const mockFetchObservationForms = fetchObservationForms as jest.MockedFunction<
   typeof fetchObservationForms
 >;
 const mockGetObservationsByEncounterUUID =
-  getObservationsByEncounterUUID as jest.MockedFunction<
-    typeof getObservationsByEncounterUUID
+  getFormsDataByEncounterUuid as jest.MockedFunction<
+    typeof getFormsDataByEncounterUuid
   >;
 const mockUsePatientUUID = usePatientUUID as jest.MockedFunction<
   typeof usePatientUUID

@@ -17,8 +17,8 @@ import {
   getFormattedError,
   fetchObservationForms,
   ObservationForm,
+  getFormsDataByEncounterUuid,
   shouldEnableEncounterFilter,
-  getObservationsByEncounterUUID,
   FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
@@ -117,7 +117,7 @@ const FormsTable: React.FC<WidgetProps> = ({
   } = useQuery<Bundle<Observation>>({
     queryKey: ['formsEncounterFHIR', selectedRecord?.encounterUuid],
     queryFn: () =>
-      getObservationsByEncounterUUID(selectedRecord!.encounterUuid),
+      getFormsDataByEncounterUuid(selectedRecord!.encounterUuid),
     enabled: !!selectedRecord?.encounterUuid && isModalOpen,
   });
 

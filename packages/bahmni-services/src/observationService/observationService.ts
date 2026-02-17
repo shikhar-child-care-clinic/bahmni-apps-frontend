@@ -52,15 +52,3 @@ export async function getPatientObservations(
 
   return observations;
 }
-
-/**
- * Fetch observations by encounter UUID from FHIR API
- * @param encounterUUID - Encounter UUID
- * @returns Promise resolving to FHIR observation bundle
- */
-export async function getObservationsByEncounterUUID(
-  encounterUUID: string,
-): Promise<Bundle<Observation>> {
-  const url = `${OPENMRS_FHIR_R4}/Observation?encounter=${encounterUUID}`;
-  return await get<Bundle<Observation>>(url);
-}
