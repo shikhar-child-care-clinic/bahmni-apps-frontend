@@ -27,7 +27,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { WidgetProps } from '../registry/model';
 import {
-  ObservationData,
   FormRecordViewModel,
   GroupedFormRecords,
 } from './models';
@@ -101,7 +100,6 @@ const FormsTable: React.FC<WidgetProps> = ({
 
   // Fetch form metadata when a record is selected
   const {
-    data: formMetadata,
     isLoading: isLoadingMetadata,
     error: metadataError,
   } = useQuery<FormMetadata>({
@@ -121,16 +119,16 @@ const FormsTable: React.FC<WidgetProps> = ({
     enabled: !!selectedRecord?.encounterUuid && isModalOpen,
   });
 
-  // Transform FHIR bundle to observations and filter by form name
+  // Extract observations from FHIR bundle and filter by form name
   const filteredObservations = useMemo(() => {
     if (!fhirObservationBundle?.entry || !selectedRecord?.formName) {
       return [];
     }
 
-    // Reuse ObsByEncounter extraction logic
+    // Use extraction logic from ObsByEncounter
     const extractedResult = extractObservationsFromBundle(fhirObservationBundle);
 
-    // Helper to extract formFieldPath and comments from FHIR Observation
+    // Helper to extract formFieldPath and comment from FHIR Observation
     const getFormFieldPathAndComment = (obsId: string): { formFieldPath?: string; comment?: string } => {
       const fhirObs = fhirObservationBundle.entry?.find(
         (entry) => entry.resource?.id === obsId,
@@ -149,59 +147,25 @@ const FormsTable: React.FC<WidgetProps> = ({
       };
     };
 
-    // Helper to convert ExtractedObservation to ObservationData
-    const convertToObservationData = (
-      obs: ExtractedObservation,
-    ): ObservationData => {
-      const { formFieldPath, comment } = getFormFieldPathAndComment(obs.id);
-
-      // Recursively convert members
-      const groupMembers = obs.members?.map((member) =>
-        convertToObservationData(member),
-      );
-
-      return {
-        concept: {
-          name: obs.display,
-          uuid: obs.id,
-          shortName: obs.display,
-          units: obs.observationValue?.unit,
-          lowNormal: obs.observationValue?.referenceRange?.low?.value,
-          hiNormal: obs.observationValue?.referenceRange?.high?.value,
-        },
-        value: obs.observationValue?.value,
-        valueAsString: obs.observationValue?.value?.toString(),
-        conceptNameToDisplay: obs.display,
-        formFieldPath,
-        comment,
-        providers: obs.encounter?.provider
-          ? [
-              {
-                uuid: '',
-                name: obs.encounter.provider,
-              },
-            ]
-          : undefined,
-        interpretation: obs.observationValue?.isAbnormal ? 'ABNORMAL' : undefined,
-        groupMembers: groupMembers && groupMembers.length > 0 ? groupMembers : undefined,
-      };
-    };
-
-    // Convert all observations and grouped observations
-    const allObservations = [
-      ...extractedResult.observations.map(convertToObservationData),
-      ...extractedResult.groupedObservations.map((group) => {
-        const baseObs = convertToObservationData(group as ExtractedObservation);
-        return {
-          ...baseObs,
-          groupMembers: group.children.map(convertToObservationData),
-        };
+    // Combine observations and grouped observations
+    const allObservations: Array<{ obs: ExtractedObservation; comment?: string; formFieldPath?: string }> = [
+      ...extractedResult.observations.map(obs => {
+        const { formFieldPath, comment } = getFormFieldPathAndComment(obs.id);
+        return { obs, formFieldPath, comment };
+      }),
+      ...extractedResult.groupedObservations.flatMap(group => {
+        const { formFieldPath, comment } = getFormFieldPathAndComment(group.id);
+        return group.children.map(child => ({
+          obs: child,
+          formFieldPath,
+          comment,
+        }));
       }),
     ];
 
     // Filter by form name using formFieldPath
     return allObservations.filter(
-      (obs) => obs.formFieldPath && obs.formFieldPath.includes(selectedRecord.formName),
+      ({ formFieldPath }) => formFieldPath && formFieldPath.includes(selectedRecord.formName),
     );
   }, [fhirObservationBundle, selectedRecord?.formName]);
 
@@ -366,12 +330,13 @@ const FormsTable: React.FC<WidgetProps> = ({
               </div>
             ) : filteredObservations.length > 0 ? (
               <div className={styles.formDetailsContainer}>
-                {filteredObservations.map((obs, index) => (
+                {filteredObservations.map(({ obs, comment }, index) => (
                   <ObservationItem
-                    key={`${obs.concept.uuid}`}
+                    key={`${obs.id}`}
                     observation={obs}
                     index={index}
                     formName={selectedRecord.formName}
+                    comment={comment}
                   />
                 ))}
               </div>

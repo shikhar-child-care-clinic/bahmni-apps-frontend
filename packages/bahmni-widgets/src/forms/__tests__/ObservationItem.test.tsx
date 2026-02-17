@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import { ObservationData } from '../models';
+import { ExtractedObservation } from '../../observations/models';
 import { ObservationItem } from '../ObservationItem';
 
 // Mock the design system components
@@ -33,26 +33,27 @@ jest.mock('@bahmni/services', () => ({
 }));
 
 describe('ObservationItem', () => {
-  const mockObservation: ObservationData = {
-    concept: {
-      name: 'Heart Rate',
-      uuid: 'hr-uuid',
-      shortName: 'HR',
+  const mockObservation: ExtractedObservation = {
+    id: 'hr-uuid',
+    display: 'HR',
+    observationValue: {
+      value: 75,
+      type: 'quantity',
     },
-    value: 75,
-    valueAsString: '75',
-    conceptNameToDisplay: 'HR',
   };
 
   describe('Range Display', () => {
     it('should display range when both low and high are present', () => {
-      const observation: ObservationData = {
+      const observation: ExtractedObservation = {
         ...mockObservation,
-        concept: {
-          ...mockObservation.concept,
-          lowNormal: 60,
-          hiNormal: 100,
-          units: 'beats/min',
+        observationValue: {
+          value: 75,
+          type: 'quantity',
+          unit: 'beats/min',
+          referenceRange: {
+            low: { value: 60 },
+            high: { value: 100 },
+          },
         },
       };
 
@@ -64,15 +65,17 @@ describe('ObservationItem', () => {
     });
 
     it('should display >low when only low is present', () => {
-      const observation: ObservationData = {
-        ...mockObservation,
-        concept: {
-          ...mockObservation.concept,
-          lowNormal: 95,
-          units: '%',
+      const observation: ExtractedObservation = {
+        id: 'spo2-uuid',
+        display: 'SpO2',
+        observationValue: {
+          value: 96,
+          type: 'quantity',
+          unit: '%',
+          referenceRange: {
+            low: { value: 95 },
+          },
         },
-        conceptNameToDisplay: 'SpO2',
-        valueAsString: '96',
       };
 
       render(<ObservationItem observation={observation} index={0} />);
@@ -83,15 +86,17 @@ describe('ObservationItem', () => {
     });
 
     it('should display <high when only high is present', () => {
-      const observation: ObservationData = {
-        ...mockObservation,
-        concept: {
-          ...mockObservation.concept,
-          hiNormal: 100,
-          units: 'mg/dL',
+      const observation: ExtractedObservation = {
+        id: 'bs-uuid',
+        display: 'Blood Sugar',
+        observationValue: {
+          value: 85,
+          type: 'quantity',
+          unit: 'mg/dL',
+          referenceRange: {
+            high: { value: 100 },
+          },
         },
-        conceptNameToDisplay: 'Blood Sugar',
-        valueAsString: '85',
       };
 
       render(<ObservationItem observation={observation} index={0} />);
@@ -102,11 +107,12 @@ describe('ObservationItem', () => {
     });
 
     it('should not display range when both low and high are null', () => {
-      const observation: ObservationData = {
+      const observation: ExtractedObservation = {
         ...mockObservation,
-        concept: {
-          ...mockObservation.concept,
-          units: 'beats/min',
+        observationValue: {
+          value: 75,
+          type: 'quantity',
+          unit: 'beats/min',
         },
       };
 
@@ -120,11 +126,12 @@ describe('ObservationItem', () => {
 
   describe('Units Display', () => {
     it('should display units when present', () => {
-      const observation: ObservationData = {
+      const observation: ExtractedObservation = {
         ...mockObservation,
-        concept: {
-          ...mockObservation.concept,
-          units: 'beats/min',
+        observationValue: {
+          value: 75,
+          type: 'quantity',
+          unit: 'beats/min',
         },
       };
 
@@ -134,10 +141,11 @@ describe('ObservationItem', () => {
     });
 
     it('should not display units when not present', () => {
-      const observation: ObservationData = {
+      const observation: ExtractedObservation = {
         ...mockObservation,
-        concept: {
-          ...mockObservation.concept,
+        observationValue: {
+          value: 75,
+          type: 'quantity',
         },
       };
 
@@ -150,14 +158,17 @@ describe('ObservationItem', () => {
 
   describe('Abnormal Value Highlighting', () => {
     it('should apply abnormal styling when interpretation is ABNORMAL', () => {
-      const observation: ObservationData = {
+      const observation: ExtractedObservation = {
         ...mockObservation,
-        interpretation: 'ABNORMAL',
-        concept: {
-          ...mockObservation.concept,
-          lowNormal: 60,
-          hiNormal: 100,
-          units: 'beats/min',
+        observationValue: {
+          value: 75,
+          type: 'quantity',
+          unit: 'beats/min',
+          referenceRange: {
+            low: { value: 60 },
+            high: { value: 100 },
+          },
+          isAbnormal: true,
         },
       };
 
@@ -171,12 +182,13 @@ describe('ObservationItem', () => {
     });
 
     it('should not apply abnormal styling when interpretation is not ABNORMAL', () => {
-      const observation: ObservationData = {
+      const observation: ExtractedObservation = {
         ...mockObservation,
-        interpretation: 'NORMAL',
-        concept: {
-          ...mockObservation.concept,
-          units: 'beats/min',
+        observationValue: {
+          value: 75,
+          type: 'quantity',
+          unit: 'beats/min',
+          isAbnormal: false,
         },
       };
 
@@ -189,35 +201,34 @@ describe('ObservationItem', () => {
 
   describe('Group Members', () => {
     it('should render group members recursively', () => {
-      const observation: ObservationData = {
-        concept: {
-          name: 'Vitals',
-          uuid: 'vitals-uuid',
-        },
-        conceptNameToDisplay: 'Vitals',
-        groupMembers: [
+      const observation: ExtractedObservation = {
+        id: 'vitals-uuid',
+        display: 'Vitals',
+        members: [
           {
-            concept: {
-              name: 'Heart Rate',
-              uuid: 'hr-uuid',
-              lowNormal: 60,
-              hiNormal: 100,
-              units: 'beats/min',
+            id: 'hr-uuid',
+            display: 'HR',
+            observationValue: {
+              value: 75,
+              type: 'quantity',
+              unit: 'beats/min',
+              referenceRange: {
+                low: { value: 60 },
+                high: { value: 100 },
+              },
             },
-            value: 75,
-            valueAsString: '75',
-            conceptNameToDisplay: 'HR',
           },
           {
-            concept: {
-              name: 'SpO2',
-              uuid: 'spo2-uuid',
-              lowNormal: 95,
-              units: '%',
+            id: 'spo2-uuid',
+            display: 'SpO2',
+            observationValue: {
+              value: 96,
+              type: 'quantity',
+              unit: '%',
+              referenceRange: {
+                low: { value: 95 },
+              },
             },
-            value: 96,
-            valueAsString: '96',
-            conceptNameToDisplay: 'SpO2',
           },
         ],
       };
@@ -234,25 +245,23 @@ describe('ObservationItem', () => {
     });
 
     it('should apply abnormal styling to group members', () => {
-      const observation: ObservationData = {
-        concept: {
-          name: 'Vitals',
-          uuid: 'vitals-uuid',
-        },
-        conceptNameToDisplay: 'Vitals',
-        groupMembers: [
+      const observation: ExtractedObservation = {
+        id: 'vitals-uuid',
+        display: 'Vitals',
+        members: [
           {
-            concept: {
-              name: 'Heart Rate',
-              uuid: 'hr-uuid',
-              lowNormal: 60,
-              hiNormal: 100,
-              units: 'beats/min',
+            id: 'hr-uuid',
+            display: 'HR',
+            observationValue: {
+              value: 120,
+              type: 'quantity',
+              unit: 'beats/min',
+              referenceRange: {
+                low: { value: 60 },
+                high: { value: 100 },
+              },
+              isAbnormal: true,
             },
-            value: 120,
-            valueAsString: '120',
-            conceptNameToDisplay: 'HR',
-            interpretation: 'ABNORMAL',
           },
         ],
       };
@@ -266,29 +275,27 @@ describe('ObservationItem', () => {
 
   describe('Comment Section', () => {
     it('should display comment when present', () => {
-      const observation: ObservationData = {
+      const observation: ExtractedObservation = {
         ...mockObservation,
-        comment: 'Patient was resting',
       };
 
-      render(<ObservationItem observation={observation} index={0} />);
+      render(<ObservationItem observation={observation} index={0} comment="Patient was resting" />);
 
       expect(screen.getByText('Patient was resting')).toBeInTheDocument();
     });
 
     it('should display comment with provider name', () => {
-      const observation: ObservationData = {
+      const observation: ExtractedObservation = {
         ...mockObservation,
-        comment: 'Patient was resting',
-        providers: [
-          {
-            uuid: 'provider-uuid',
-            name: 'Dr. Smith',
-          },
-        ],
+        encounter: {
+          id: 'enc-1',
+          type: 'visit',
+          date: '2024-01-01',
+          provider: 'Dr. Smith',
+        },
       };
 
-      render(<ObservationItem observation={observation} index={0} />);
+      render(<ObservationItem observation={observation} index={0} comment="Patient was resting" />);
 
       expect(
         screen.getByText(/Patient was resting - by Dr. Smith/),
@@ -296,7 +303,7 @@ describe('ObservationItem', () => {
     });
 
     it('should not display comment section when comment is not present', () => {
-      const observation: ObservationData = {
+      const observation: ExtractedObservation = {
         ...mockObservation,
       };
 
@@ -308,10 +315,13 @@ describe('ObservationItem', () => {
 
   describe('Media Rendering', () => {
     it('should render ImageTile for image URLs in top-level observations', () => {
-      const observation: ObservationData = {
-        ...mockObservation,
-        valueAsString: 'http://example.com/image.jpg',
-        conceptNameToDisplay: 'X-Ray',
+      const observation: ExtractedObservation = {
+        id: 'xray-uuid',
+        display: 'X-Ray',
+        observationValue: {
+          value: 'http://example.com/image.jpg',
+          type: 'string',
+        },
       };
 
       render(<ObservationItem observation={observation} index={0} />);
@@ -326,10 +336,13 @@ describe('ObservationItem', () => {
     });
 
     it('should render VideoTile for video URLs in top-level observations', () => {
-      const observation: ObservationData = {
-        ...mockObservation,
-        valueAsString: 'http://example.com/video.mp4',
-        conceptNameToDisplay: 'Procedure Video',
+      const observation: ExtractedObservation = {
+        id: 'video-uuid',
+        display: 'Procedure Video',
+        observationValue: {
+          value: 'http://example.com/video.mp4',
+          type: 'string',
+        },
       };
 
       render(<ObservationItem observation={observation} index={0} />);
@@ -344,10 +357,13 @@ describe('ObservationItem', () => {
     });
 
     it('should render plain text for non-media values', () => {
-      const observation: ObservationData = {
-        ...mockObservation,
-        valueAsString: 'Normal findings',
-        conceptNameToDisplay: 'Clinical Notes',
+      const observation: ExtractedObservation = {
+        id: 'notes-uuid',
+        display: 'Clinical Notes',
+        observationValue: {
+          value: 'Normal findings',
+          type: 'string',
+        },
       };
 
       render(<ObservationItem observation={observation} index={0} />);
@@ -358,20 +374,17 @@ describe('ObservationItem', () => {
     });
 
     it('should render ImageTile for image URLs in group members', () => {
-      const observation: ObservationData = {
-        concept: {
-          name: 'Images',
-          uuid: 'images-uuid',
-        },
-        conceptNameToDisplay: 'Medical Images',
-        groupMembers: [
+      const observation: ExtractedObservation = {
+        id: 'images-uuid',
+        display: 'Medical Images',
+        members: [
           {
-            concept: {
-              name: 'X-Ray',
-              uuid: 'xray-uuid',
+            id: 'xray-uuid',
+            display: 'Chest X-Ray',
+            observationValue: {
+              value: 'http://example.com/xray.png',
+              type: 'string',
             },
-            valueAsString: 'http://example.com/xray.png',
-            conceptNameToDisplay: 'Chest X-Ray',
           },
         ],
       };
@@ -387,20 +400,17 @@ describe('ObservationItem', () => {
     });
 
     it('should render VideoTile for video URLs in group members', () => {
-      const observation: ObservationData = {
-        concept: {
-          name: 'Videos',
-          uuid: 'videos-uuid',
-        },
-        conceptNameToDisplay: 'Procedure Videos',
-        groupMembers: [
+      const observation: ExtractedObservation = {
+        id: 'videos-uuid',
+        display: 'Procedure Videos',
+        members: [
           {
-            concept: {
-              name: 'Surgery',
-              uuid: 'surgery-uuid',
+            id: 'surgery-uuid',
+            display: 'Surgery Recording',
+            observationValue: {
+              value: 'http://example.com/surgery.avi',
+              type: 'string',
             },
-            valueAsString: 'http://example.com/surgery.avi',
-            conceptNameToDisplay: 'Surgery Recording',
           },
         ],
       };
@@ -417,85 +427,73 @@ describe('ObservationItem', () => {
   });
 
   describe('Group Member Comments', () => {
-    it('should display comment for group member leaf nodes', () => {
-      const observation: ObservationData = {
-        concept: {
-          name: 'Vitals',
-          uuid: 'vitals-uuid',
-        },
-        conceptNameToDisplay: 'Vitals',
-        groupMembers: [
+    it('should display comment for top-level observation with members', () => {
+      const observation: ExtractedObservation = {
+        id: 'vitals-uuid',
+        display: 'Vitals',
+        members: [
           {
-            concept: {
-              name: 'Heart Rate',
-              uuid: 'hr-uuid',
-              units: 'beats/min',
+            id: 'hr-uuid',
+            display: 'HR',
+            observationValue: {
+              value: 75,
+              type: 'quantity',
+              unit: 'beats/min',
             },
-            value: 75,
-            valueAsString: '75',
-            conceptNameToDisplay: 'HR',
-            comment: 'Patient was exercising',
           },
         ],
       };
 
-      render(<ObservationItem observation={observation} index={0} />);
+      render(<ObservationItem observation={observation} index={0} comment="Patient was exercising" />);
 
+      // Comment should be displayed at the parent level
       expect(screen.getByText('Patient was exercising')).toBeInTheDocument();
     });
 
-    it('should display comment with provider name for group members', () => {
-      const observation: ObservationData = {
-        concept: {
-          name: 'Vitals',
-          uuid: 'vitals-uuid',
-        },
-        conceptNameToDisplay: 'Vitals',
-        groupMembers: [
+    it('should display comment with provider name at top level', () => {
+      const observation: ExtractedObservation = {
+        id: 'vitals-uuid',
+        display: 'Vitals',
+        members: [
           {
-            concept: {
-              name: 'SpO2',
-              uuid: 'spo2-uuid',
-              units: '%',
+            id: 'spo2-uuid',
+            display: 'SpO2',
+            observationValue: {
+              value: 96,
+              type: 'quantity',
+              unit: '%',
             },
-            value: 96,
-            valueAsString: '96',
-            conceptNameToDisplay: 'SpO2',
-            comment: 'Patient on oxygen',
-            providers: [
-              {
-                uuid: 'provider-uuid',
-                name: 'Dr. Johnson',
-              },
-            ],
           },
         ],
+        encounter: {
+          id: 'enc-1',
+          type: 'visit',
+          date: '2024-01-01',
+          provider: 'Dr. Johnson',
+        },
       };
 
-      render(<ObservationItem observation={observation} index={0} />);
+      render(<ObservationItem observation={observation} index={0} comment="Patient on oxygen" />);
 
+      // Comment with provider should be displayed at the parent level
       expect(
         screen.getByText(/Patient on oxygen - by Dr. Johnson/),
       ).toBeInTheDocument();
     });
 
     it('should not display comment section for group members when comment is not present', () => {
-      const observation: ObservationData = {
-        concept: {
-          name: 'Vitals',
-          uuid: 'vitals-uuid',
-        },
-        conceptNameToDisplay: 'Vitals',
-        groupMembers: [
+      const observation: ExtractedObservation = {
+        id: 'vitals-uuid',
+        display: 'Vitals',
+        members: [
           {
-            concept: {
-              name: 'Heart Rate',
-              uuid: 'hr-uuid',
-              units: 'beats/min',
+            id: 'hr-uuid',
+            display: 'HR',
+            observationValue: {
+              value: 75,
+              type: 'quantity',
+              unit: 'beats/min',
             },
-            value: 75,
-            valueAsString: '75',
-            conceptNameToDisplay: 'HR',
           },
         ],
       };

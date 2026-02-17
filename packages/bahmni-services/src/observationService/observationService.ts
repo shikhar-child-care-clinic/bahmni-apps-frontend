@@ -1,6 +1,5 @@
 import { Observation, Bundle, Encounter } from 'fhir/r4';
 import { get } from '../api';
-import { OPENMRS_FHIR_R4 } from '../constants/app';
 import {
   FHIR_OBSERVATION_URL,
   FHIR_OBSERVATION_WITH_ENCOUNTER_URL,
