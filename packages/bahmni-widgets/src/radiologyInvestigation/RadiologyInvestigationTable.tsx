@@ -28,6 +28,7 @@ import {
 import { useQuery, useQueries } from '@tanstack/react-query';
 import type { DiagnosticReport, Bundle, Observation, Encounter } from 'fhir/r4';
 import React, { useMemo, useEffect, useState } from 'react';
+import { ServiceRequestStatus } from '../genericServiceRequest/models';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import {
   extractDiagnosticReportsFromBundle,
@@ -131,6 +132,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       { key: 'testName', header: t('RADIOLOGY_INVESTIGATION_NAME') },
       { key: 'results', header: t('RADIOLOGY_RESULTS') },
       { key: 'orderedBy', header: t('RADIOLOGY_ORDERED_BY') },
+      { key: 'status', header: t('SERVICE_REQUEST_ORDERED_STATUS') },
     ],
     [t],
   );
@@ -140,6 +142,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       { key: 'testName', sortable: true },
       { key: 'results', sortable: true },
       { key: 'orderedBy', sortable: true },
+      { key: 'status', sortable: true },
     ],
     [],
   );
@@ -346,6 +349,26 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
             data-testid={`${investigation.id}-ordered-by-test-id`}
           >
             {investigation.orderedBy}
+          </span>
+        );
+      case 'status':
+        return (
+          <span
+            id={`${investigation.id}-status`}
+            data-testid={`${investigation.id}-status-test-id`}
+          >
+            {investigation.status === ServiceRequestStatus.Active && (
+              <Tag type="outline">{t('IN_PROGRESS_STATUS')}</Tag>
+            )}
+            {investigation.status === ServiceRequestStatus.Completed && (
+              <Tag type="outline">{t('COMPLETED_STATUS')}</Tag>
+            )}
+            {investigation.status === ServiceRequestStatus.Revoked && (
+              <Tag type="outline">{t('REVOKED_STATUS')}</Tag>
+            )}
+            {investigation.status === ServiceRequestStatus.Unknown && (
+              <Tag type="outline">{t('UNKNOWN_STATUS')}</Tag>
+            )}
           </span>
         );
       default:
