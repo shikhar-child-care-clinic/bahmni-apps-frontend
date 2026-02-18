@@ -25,14 +25,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Bundle, Observation } from 'fhir/r4';
 import React, { useCallback, useMemo, useState } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
-import { WidgetProps } from '../registry/model';
-import {
-  FormRecordViewModel,
-  GroupedFormRecords,
-} from './models';
-import ObservationItem from './ObservationItem';
-import { extractObservationsFromBundle } from '../observations/utils';
 import { ExtractedObservation } from '../observations/models';
+import { extractObservationsFromBundle } from '../observations/utils';
+import { WidgetProps } from '../registry/model';
+import { FormRecordViewModel, GroupedFormRecords } from './models';
+import ObservationItem from './ObservationItem';
 import styles from './styles/FormsTable.module.scss';
 
 /**
@@ -99,14 +96,12 @@ const FormsTable: React.FC<WidgetProps> = ({
   }, [selectedRecord, getFormUuidByName]);
 
   // Fetch form metadata when a record is selected
-  const {
-    isLoading: isLoadingMetadata,
-    error: metadataError,
-  } = useQuery<FormMetadata>({
-    queryKey: ['formMetadata', selectedFormUuid],
-    queryFn: () => fetchFormMetadata(selectedFormUuid!),
-    enabled: !!selectedFormUuid && isModalOpen,
-  });
+  const { isLoading: isLoadingMetadata, error: metadataError } =
+    useQuery<FormMetadata>({
+      queryKey: ['formMetadata', selectedFormUuid],
+      queryFn: () => fetchFormMetadata(selectedFormUuid!),
+      enabled: !!selectedFormUuid && isModalOpen,
+    });
 
   const {
     data: fhirObservationBundle,
@@ -114,8 +109,7 @@ const FormsTable: React.FC<WidgetProps> = ({
     error: formDataError,
   } = useQuery<Bundle<Observation>>({
     queryKey: ['formsEncounterFHIR', selectedRecord?.encounterUuid],
-    queryFn: () =>
-      getFormsDataByEncounterUuid(selectedRecord!.encounterUuid),
+    queryFn: () => getFormsDataByEncounterUuid(selectedRecord!.encounterUuid),
     enabled: !!selectedRecord?.encounterUuid && isModalOpen,
   });
 
@@ -126,10 +120,14 @@ const FormsTable: React.FC<WidgetProps> = ({
     }
 
     // Use extraction logic from ObsByEncounter
-    const extractedResult = extractObservationsFromBundle(fhirObservationBundle);
+    const extractedResult = extractObservationsFromBundle(
+      fhirObservationBundle,
+    );
 
     // Helper to extract formFieldPath and comment from FHIR Observation
-    const getFormFieldPathAndComment = (obsId: string): { formFieldPath?: string; comment?: string } => {
+    const getFormFieldPathAndComment = (
+      obsId: string,
+    ): { formFieldPath?: string; comment?: string } => {
       const fhirObs = fhirObservationBundle.entry?.find(
         (entry) => entry.resource?.id === obsId,
       )?.resource as Observation | undefined;
@@ -148,17 +146,21 @@ const FormsTable: React.FC<WidgetProps> = ({
     };
 
     // Combine observations and grouped observations
-    const allObservations: Array<{ obs: ExtractedObservation; comment?: string; formFieldPath?: string }> = [
-      ...extractedResult.observations.map(obs => {
+    const allObservations: Array<{
+      obs: ExtractedObservation;
+      comment?: string;
+      formFieldPath?: string;
+    }> = [
+      ...extractedResult.observations.map((obs) => {
         const { formFieldPath, comment } = getFormFieldPathAndComment(obs.id);
         return { obs, formFieldPath, comment };
       }),
 
-      ...extractedResult.groupedObservations.flatMap(group => {
-    const { formFieldPath } = getFormFieldPathAndComment(group.id); // formFieldPath from parent
-    return group.children.map(child => {
-    const { comment } = getFormFieldPathAndComment(child.id); // comment from each child
-    return { obs: child, formFieldPath, comment };
+      ...extractedResult.groupedObservations.flatMap((group) => {
+        const { formFieldPath } = getFormFieldPathAndComment(group.id); // formFieldPath from parent
+        return group.children.map((child) => {
+          const { comment } = getFormFieldPathAndComment(child.id); // comment from each child
+          return { obs: child, formFieldPath, comment };
         });
       }),
     ];
@@ -166,7 +168,8 @@ const FormsTable: React.FC<WidgetProps> = ({
     // Filter by form name using formFieldPath
     // If formFieldPath is missing, include the observation (don't filter it out)
     return allObservations.filter(
-      ({ formFieldPath }) => !formFieldPath || formFieldPath.includes(selectedRecord.formName),
+      ({ formFieldPath }) =>
+        !formFieldPath || formFieldPath.includes(selectedRecord.formName),
     );
   }, [fhirObservationBundle, selectedRecord?.formName]);
 

@@ -6,7 +6,12 @@ import { ObservationItem } from '../ObservationItem';
 // Mock the design system components
 jest.mock('@bahmni/design-system', () => ({
   ImageTile: ({ imageSrc, alt, id }: any) => (
-    <div data-testid="image-tile" data-src={imageSrc} data-alt={alt} data-id={id}>
+    <div
+      data-testid="image-tile"
+      data-src={imageSrc}
+      data-alt={alt}
+      data-id={id}
+    >
       Image: {imageSrc}
     </div>
   ),
@@ -22,10 +27,18 @@ jest.mock('@bahmni/services', () => ({
   getValueType: (value: string) => {
     if (!value) return 'string';
     const lower = value.toLowerCase();
-    if (lower.endsWith('.jpg') || lower.endsWith('.png') || lower.endsWith('.jpeg')) {
+    if (
+      lower.endsWith('.jpg') ||
+      lower.endsWith('.png') ||
+      lower.endsWith('.jpeg')
+    ) {
       return 'Image';
     }
-    if (lower.endsWith('.mp4') || lower.endsWith('.avi') || lower.endsWith('.mov')) {
+    if (
+      lower.endsWith('.mp4') ||
+      lower.endsWith('.avi') ||
+      lower.endsWith('.mov')
+    ) {
       return 'Video';
     }
     return 'string';
@@ -279,7 +292,13 @@ describe('ObservationItem', () => {
         ...mockObservation,
       };
 
-      render(<ObservationItem observation={observation} index={0} comment="Patient was resting" />);
+      render(
+        <ObservationItem
+          observation={observation}
+          index={0}
+          comment="Patient was resting"
+        />,
+      );
 
       expect(screen.getByText('Patient was resting')).toBeInTheDocument();
     });
@@ -295,7 +314,13 @@ describe('ObservationItem', () => {
         },
       };
 
-      render(<ObservationItem observation={observation} index={0} comment="Patient was resting" />);
+      render(
+        <ObservationItem
+          observation={observation}
+          index={0}
+          comment="Patient was resting"
+        />,
+      );
 
       expect(
         screen.getByText(/Patient was resting - by Dr. Smith/),
@@ -332,7 +357,9 @@ describe('ObservationItem', () => {
         'data-src',
         'http://example.com/image.jpg',
       );
-      expect(screen.getByText(/Image: http:\/\/example.com\/image.jpg/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Image: http:\/\/example.com\/image.jpg/),
+      ).toBeInTheDocument();
     });
 
     it('should render VideoTile for video URLs in top-level observations', () => {
@@ -353,7 +380,9 @@ describe('ObservationItem', () => {
         'data-src',
         'http://example.com/video.mp4',
       );
-      expect(screen.getByText(/Video: http:\/\/example.com\/video.mp4/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Video: http:\/\/example.com\/video.mp4/),
+      ).toBeInTheDocument();
     });
 
     it('should render plain text for non-media values', () => {
@@ -444,7 +473,13 @@ describe('ObservationItem', () => {
         ],
       };
 
-      render(<ObservationItem observation={observation} index={0} comment="Patient was exercising" />);
+      render(
+        <ObservationItem
+          observation={observation}
+          index={0}
+          comment="Patient was exercising"
+        />,
+      );
 
       // Comment should be displayed at the parent level
       expect(screen.getByText('Patient was exercising')).toBeInTheDocument();
@@ -473,7 +508,13 @@ describe('ObservationItem', () => {
         },
       };
 
-      render(<ObservationItem observation={observation} index={0} comment="Patient on oxygen" />);
+      render(
+        <ObservationItem
+          observation={observation}
+          index={0}
+          comment="Patient on oxygen"
+        />,
+      );
 
       // Comment with provider should be displayed at the parent level
       expect(

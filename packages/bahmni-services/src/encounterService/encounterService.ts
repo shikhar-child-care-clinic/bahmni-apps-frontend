@@ -1,7 +1,7 @@
-import { Observation,Encounter, Bundle } from 'fhir/r4';
+import { Observation, Encounter, Bundle } from 'fhir/r4';
 import { get } from '../api';
-import { PATIENT_VISITS_URL } from './constants';
 import { OPENMRS_FHIR_R4 } from '../constants/app';
+import { PATIENT_VISITS_URL } from './constants';
 
 /**
  * Fetches visits for a given patient UUID from the FHIR R4 endpoint
@@ -64,12 +64,15 @@ export async function getFormsDataByEncounterUuid(
   // Fetch all pages following the "next" links
   while (nextUrl) {
     const normalizedUrl = normalizeUrl(nextUrl);
-    const bundle: Bundle<Observation> = await get<Bundle<Observation>>(normalizedUrl);
+    const bundle: Bundle<Observation> =
+      await get<Bundle<Observation>>(normalizedUrl);
     if (bundle.entry) {
       allEntries.push(...bundle.entry);
     }
     // Get the next page URL from the bundle links
-    nextUrl = bundle.link?.find((link: { relation?: string; url?: string }) => link.relation === 'next')?.url;
+    nextUrl = bundle.link?.find(
+      (link: { relation?: string; url?: string }) => link.relation === 'next',
+    )?.url;
   }
 
   // Return a combined bundle with all entries

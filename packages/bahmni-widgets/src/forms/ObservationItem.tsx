@@ -1,7 +1,7 @@
-import classNames from 'classnames';
-import React from 'react';
 import { ImageTile, VideoTile } from '@bahmni/design-system';
 import { getValueType } from '@bahmni/services';
+import classNames from 'classnames';
+import React from 'react';
 import { ExtractedObservation } from '../observations/models';
 import styles from './styles/FormsTable.module.scss';
 
@@ -176,8 +176,7 @@ export const ObservationItem: React.FC<ObservationItemProps> = ({
   formName = '',
   comment,
 }) => {
-  const hasGroupMembers =
-    observation.members && observation.members.length > 0;
+  const hasGroupMembers = observation.members && observation.members.length > 0;
 
   const { units, rangeString, isAbnormal } =
     getObservationDisplayInfo(observation);

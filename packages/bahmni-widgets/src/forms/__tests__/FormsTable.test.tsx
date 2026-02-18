@@ -9,13 +9,13 @@ import {
   getFormsDataByEncounterUuid,
 } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Bundle, Observation } from 'fhir/r4';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Bundle, Observation } from 'fhir/r4';
 import { toHaveNoViolations } from 'jest-axe';
 import { usePatientUUID } from '../../hooks/usePatientUUID';
-import FormsTable from '../FormsTable';
 import { ExtractedObservation } from '../../observations/models';
+import FormsTable from '../FormsTable';
 import ObservationItem from '../ObservationItem';
 
 expect.extend(toHaveNoViolations);
@@ -798,7 +798,13 @@ describe('FormsTable', () => {
           },
         };
 
-        render(<ObservationItem observation={observation} index={0} comment="Patient has fever" />);
+        render(
+          <ObservationItem
+            observation={observation}
+            index={0}
+            comment="Patient has fever"
+          />,
+        );
 
         expect(screen.getByText('Temperature')).toBeInTheDocument();
         expect(screen.getByText('102.5')).toBeInTheDocument();

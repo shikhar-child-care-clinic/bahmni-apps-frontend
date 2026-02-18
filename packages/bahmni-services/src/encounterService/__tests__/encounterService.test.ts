@@ -10,7 +10,7 @@ import {
   mockActiveVisit,
   mockFormsEncounter,
 } from '../__mocks__/mocks';
-import { PATIENT_VISITS_URL, BAHMNI_ENCOUNTER_URL } from '../constants';
+import { PATIENT_VISITS_URL } from '../constants';
 
 jest.mock('../../api');
 const mockedGet = get as jest.MockedFunction<typeof get>;
@@ -95,24 +95,43 @@ describe('encounterService', () => {
   describe('getFormsDataByEncounterUuid', () => {
     const encounterUUID = 'e8c5eeb5-86d9-44d4-b37a-9de74a122a6e';
 
-    it('should fetch forms encounter from the correct endpoint with includeAll=false', async () => {
+    it('should fetch forms encounter from the FHIR API endpoint', async () => {
       mockedGet.mockResolvedValueOnce(mockFormsEncounter);
 
       await getFormsDataByEncounterUuid(encounterUUID);
 
       expect(mockedGet).toHaveBeenCalledWith(
-        BAHMNI_ENCOUNTER_URL(encounterUUID, false),
+        expect.stringContaining(`/Observation?encounter=${encounterUUID}`),
       );
     });
 
-    it('should fetch forms encounter from the correct endpoint with includeAll=true', async () => {
-      mockedGet.mockResolvedValueOnce(mockFormsEncounter);
+    it('should handle pagination and combine all entries', async () => {
+      const page1 = {
+        resourceType: 'Bundle',
+        type: 'searchset',
+        total: 2,
+        entry: [mockFormsEncounter.entry![0]],
+        link: [
+          {
+            relation: 'next',
+            url: 'http://localhost:3000/Observation?encounter=uuid&page=2',
+          },
+        ],
+      };
 
-      await getFormsDataByEncounterUuid(encounterUUID, true);
+      const page2 = {
+        resourceType: 'Bundle',
+        type: 'searchset',
+        total: 2,
+        entry: [mockFormsEncounter.entry![0]],
+      };
 
-      expect(mockedGet).toHaveBeenCalledWith(
-        BAHMNI_ENCOUNTER_URL(encounterUUID, true),
-      );
+      mockedGet.mockResolvedValueOnce(page1).mockResolvedValueOnce(page2);
+
+      const result = await getFormsDataByEncounterUuid(encounterUUID);
+
+      expect(result.entry?.length).toBe(2);
+      expect(mockedGet).toHaveBeenCalledTimes(2);
     });
 
     it('should return the forms encounter data', async () => {
@@ -120,7 +139,8 @@ describe('encounterService', () => {
 
       const result = await getFormsDataByEncounterUuid(encounterUUID);
 
-      expect(result).toEqual(mockFormsEncounter);
+      expect(result.resourceType).toBe('Bundle');
+      expect(result.entry).toBeDefined();
     });
   });
 });
