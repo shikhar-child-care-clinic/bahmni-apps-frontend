@@ -1,6 +1,6 @@
 import { Observation,Encounter, Bundle } from 'fhir/r4';
 import { get } from '../api';
-import { PATIENT_VISITS_URL, BAHMNI_ENCOUNTER_URL } from './constants';
+import { PATIENT_VISITS_URL } from './constants';
 import { OPENMRS_FHIR_R4 } from '../constants/app';
 
 /**
@@ -42,12 +42,41 @@ export async function getActiveVisit(
 
 /**
  * Fetch observations by encounter UUID from FHIR API
+ * Handles pagination by fetching all pages and combining results
  * @param encounterUUID - Encounter UUID
- * @returns Promise resolving to FHIR observation bundle
+ * @returns Promise resolving to FHIR observation bundle with all entries from all pages
  */
 export async function getFormsDataByEncounterUuid(
   encounterUUID: string,
 ): Promise<Bundle<Observation>> {
   const url = `${OPENMRS_FHIR_R4}/Observation?encounter=${encounterUUID}`;
-  return await get<Bundle<Observation>>(url);
+  const allEntries: Bundle<Observation>['entry'] = [];
+  let nextUrl: string | undefined = url;
+
+  // Helper to normalize URLs and add port if missing
+  const normalizeUrl = (urlString: string): string => {
+    if (urlString.includes('localhost') && !urlString.includes('localhost:')) {
+      return urlString.replace('localhost', 'localhost:3000');
+    }
+    return urlString;
+  };
+
+  // Fetch all pages following the "next" links
+  while (nextUrl) {
+    const normalizedUrl = normalizeUrl(nextUrl);
+    const bundle: Bundle<Observation> = await get<Bundle<Observation>>(normalizedUrl);
+    if (bundle.entry) {
+      allEntries.push(...bundle.entry);
+    }
+    // Get the next page URL from the bundle links
+    nextUrl = bundle.link?.find((link: { relation?: string; url?: string }) => link.relation === 'next')?.url;
+  }
+
+  // Return a combined bundle with all entries
+  return {
+    resourceType: 'Bundle',
+    type: 'searchset',
+    total: allEntries.length,
+    entry: allEntries,
+  } as Bundle<Observation>;
 }

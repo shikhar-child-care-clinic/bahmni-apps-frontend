@@ -153,19 +153,20 @@ const FormsTable: React.FC<WidgetProps> = ({
         const { formFieldPath, comment } = getFormFieldPathAndComment(obs.id);
         return { obs, formFieldPath, comment };
       }),
+
       ...extractedResult.groupedObservations.flatMap(group => {
-        const { formFieldPath, comment } = getFormFieldPathAndComment(group.id);
-        return group.children.map(child => ({
-          obs: child,
-          formFieldPath,
-          comment,
-        }));
+    const { formFieldPath } = getFormFieldPathAndComment(group.id); // formFieldPath from parent
+    return group.children.map(child => {
+    const { comment } = getFormFieldPathAndComment(child.id); // comment from each child
+    return { obs: child, formFieldPath, comment };
+        });
       }),
     ];
 
     // Filter by form name using formFieldPath
+    // If formFieldPath is missing, include the observation (don't filter it out)
     return allObservations.filter(
-      ({ formFieldPath }) => formFieldPath && formFieldPath.includes(selectedRecord.formName),
+      ({ formFieldPath }) => !formFieldPath || formFieldPath.includes(selectedRecord.formName),
     );
   }, [fhirObservationBundle, selectedRecord?.formName]);
 
