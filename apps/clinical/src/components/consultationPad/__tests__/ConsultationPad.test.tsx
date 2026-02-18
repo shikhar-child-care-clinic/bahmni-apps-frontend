@@ -1190,6 +1190,43 @@ describe('ConsultationPad', () => {
         });
       });
 
+      it('should remove existingServiceRequests cache after successful submission to prevent stale duplicate detection', async () => {
+        (
+          consultationBundleService.postConsultationBundle as jest.Mock
+        ).mockResolvedValue({
+          id: 'bundle-123',
+          type: 'transaction-response',
+        });
+
+        renderWithProvider();
+
+        const doneButton = screen.getByTestId('primary-button');
+        await userEvent.click(doneButton);
+
+        await waitFor(() => {
+          expect(mockRemoveQueries).toHaveBeenCalledWith({
+            queryKey: ['existingServiceRequests'],
+          });
+        });
+      });
+
+      it('should not remove existingServiceRequests cache when submission fails', async () => {
+        (
+          consultationBundleService.postConsultationBundle as jest.Mock
+        ).mockRejectedValue(new Error('Network error'));
+
+        renderWithProvider();
+
+        const doneButton = screen.getByTestId('primary-button');
+        await userEvent.click(doneButton);
+
+        await waitFor(() => {
+          expect(mockOnClose).not.toHaveBeenCalled();
+        });
+
+        expect(mockRemoveQueries).not.toHaveBeenCalled();
+      });
+
       it('should disable button during submission', async () => {
         let resolveSubmission: any;
         (
