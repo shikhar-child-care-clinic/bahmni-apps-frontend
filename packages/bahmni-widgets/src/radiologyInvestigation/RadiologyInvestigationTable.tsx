@@ -380,6 +380,11 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     );
   }
 
+  const reportedOn =
+    selectedInvestigation?.reportedDate &&
+    formatDate(selectedInvestigation.reportedDate, t, DATE_TIME_FORMAT)
+      .formattedResult;
+
   return (
     <div
       id="radiology-investigations-table"
@@ -436,7 +441,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
           open={!!selectedInvestigation}
           onRequestClose={() => setSelectedInvestigation(null)}
           passiveModal
-          modalLabel={`Recorded On : ${formatDate(selectedInvestigation.reportedDate!, t, DATE_TIME_FORMAT)}  | Recorded By: ${selectedInvestigation.reportedBy}`}
+          modalLabel={`Recorded On : ${reportedOn}  | Recorded By: ${selectedInvestigation.reportedBy}`}
           modalHeading={selectedInvestigation.testName}
           testId="diagnostic-report-modal"
           size="lg"
