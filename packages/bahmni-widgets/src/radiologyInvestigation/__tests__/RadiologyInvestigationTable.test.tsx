@@ -2,10 +2,12 @@ import {
   QueryClient,
   QueryClientProvider,
   useQuery,
+  useQueries,
 } from '@tanstack/react-query';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
+import { ServiceRequestStatus } from '../../genericServiceRequest/models';
 import { useNotification } from '../../notification';
 import {
   mockRadiologyInvestigations,
@@ -23,12 +25,14 @@ jest.mock('../../hooks/usePatientUUID', () => ({
 jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),
   useQuery: jest.fn(),
+  useQueries: jest.fn(),
 }));
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   getPatientRadiologyInvestigations: jest.fn(),
   dispatchAuditEvent: jest.fn(),
   useSubscribeConsultationSaved: jest.fn(),
+  getDiagnosticReportBundle: jest.fn(),
 }));
 
 const mockAddNotification = jest.fn();
@@ -48,6 +52,8 @@ describe('RadiologyInvestigationTable', () => {
     (useNotification as jest.Mock).mockReturnValue({
       addNotification: mockAddNotification,
     });
+    // Default mock for useQueries - returns empty array
+    (useQueries as jest.Mock).mockReturnValue([]);
   });
 
   afterEach(() => {
@@ -461,6 +467,343 @@ describe('RadiologyInvestigationTable', () => {
       });
 
       expect(mockRefetch).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Diagnostic Report Modal', () => {
+    const { getDiagnosticReportBundle } = jest.requireMock('@bahmni/services');
+
+    const mockInvestigationWithReport = {
+      id: 'investigation-1',
+      testName: 'Chest X-Ray',
+      priority: 'stat',
+      orderedBy: 'Dr. Smith',
+      orderedDate: '2023-12-01T10:30:00.000Z',
+      status: ServiceRequestStatus.Completed,
+      reportId: 'report-123',
+      reportedBy: 'Dr. Radiologist',
+      reportedDate: '2023-12-02T14:30:00.000Z',
+    };
+
+    const mockDiagnosticReportBundle = {
+      resourceType: 'Bundle',
+      type: 'collection',
+      entry: [
+        {
+          resource: {
+            resourceType: 'Observation',
+            id: 'obs-1',
+            status: 'final',
+            code: {
+              text: 'Heart Rate',
+            },
+            valueQuantity: {
+              value: 72,
+              unit: 'bpm',
+            },
+          },
+        },
+      ],
+    };
+
+    beforeEach(() => {
+      getDiagnosticReportBundle.mockResolvedValue(mockDiagnosticReportBundle);
+    });
+
+    it('should render "View Report" link when investigation has reportId', () => {
+      (useQuery as jest.Mock).mockImplementation((options) => {
+        // Mock for radiology investigations query
+        if (options.queryKey[0] === 'radiologyInvestigation') {
+          return {
+            data: [mockInvestigationWithReport],
+            error: null,
+            isError: false,
+            isLoading: false,
+          };
+        }
+        // Default for other queries
+        return {
+          data: null,
+          isLoading: false,
+        };
+      });
+
+      (useQueries as jest.Mock).mockReturnValue([
+        {
+          data: null,
+          isLoading: false,
+        },
+      ]);
+
+      render(wrapper);
+
+      const viewReportLink = screen.getByTestId(
+        'investigation-1-view-report-link-test-id',
+      );
+      expect(viewReportLink).toBeInTheDocument();
+      expect(screen.getByText('RADIOLOGY_VIEW_REPORT')).toBeInTheDocument();
+    });
+
+    it('should open modal when "View Report" link is clicked', async () => {
+      (useQuery as jest.Mock).mockImplementation((options) => {
+        // Mock for radiology investigations query
+        if (options.queryKey[0] === 'radiologyInvestigation') {
+          return {
+            data: [mockInvestigationWithReport],
+            error: null,
+            isError: false,
+            isLoading: false,
+          };
+        }
+        // Mock for diagnostic report bundle query
+        if (options.queryKey[0] === 'diagnosticReportBundle') {
+          return {
+            data: mockDiagnosticReportBundle,
+            isLoading: false,
+          };
+        }
+        // Default for other queries
+        return {
+          data: null,
+          isLoading: false,
+        };
+      });
+
+      (useQueries as jest.Mock).mockReturnValue([
+        {
+          data: null,
+          isLoading: false,
+        },
+      ]);
+
+      render(wrapper);
+
+      const viewReportLink = screen.getByTestId(
+        'investigation-1-view-report-link-test-id',
+      );
+      await userEvent.click(viewReportLink);
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('diagnostic-report-modal'),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('should display modal with correct heading and label', async () => {
+      (useQuery as jest.Mock).mockImplementation((options) => {
+        // Mock for radiology investigations query
+        if (options.queryKey[0] === 'radiologyInvestigation') {
+          return {
+            data: [mockInvestigationWithReport],
+            error: null,
+            isError: false,
+            isLoading: false,
+          };
+        }
+        // Mock for diagnostic report bundle query
+        if (options.queryKey[0] === 'diagnosticReportBundle') {
+          return {
+            data: mockDiagnosticReportBundle,
+            isLoading: false,
+          };
+        }
+        // Default for other queries
+        return {
+          data: null,
+          isLoading: false,
+        };
+      });
+
+      (useQueries as jest.Mock).mockReturnValue([
+        {
+          data: null,
+          isLoading: false,
+        },
+      ]);
+
+      render(wrapper);
+
+      const viewReportLink = screen.getByTestId(
+        'investigation-1-view-report-link-test-id',
+      );
+      await userEvent.click(viewReportLink);
+
+      await waitFor(() => {
+        const modal = screen.getByTestId('diagnostic-report-modal');
+        expect(modal).toBeInTheDocument();
+      });
+    });
+
+    it('should display loading state in modal while fetching diagnostic report', async () => {
+      (useQuery as jest.Mock).mockImplementation((options) => {
+        // Mock for radiology investigations query
+        if (options.queryKey[0] === 'radiologyInvestigation') {
+          return {
+            data: [mockInvestigationWithReport],
+            error: null,
+            isError: false,
+            isLoading: false,
+          };
+        }
+        // Mock for diagnostic report bundle query - loading state
+        if (options.queryKey[0] === 'diagnosticReportBundle') {
+          return {
+            data: null,
+            isLoading: true,
+          };
+        }
+        // Default for other queries
+        return {
+          data: null,
+          isLoading: false,
+        };
+      });
+
+      (useQueries as jest.Mock).mockReturnValue([
+        {
+          data: null,
+          isLoading: false,
+        },
+      ]);
+
+      render(wrapper);
+
+      const viewReportLink = screen.getByTestId(
+        'investigation-1-view-report-link-test-id',
+      );
+      await userEvent.click(viewReportLink);
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('diagnostic-report-modal'),
+        ).toBeInTheDocument();
+      });
+
+      // Check for loading skeleton in modal body
+      const skeletons = screen.getAllByTestId(/skeleton/i);
+      expect(skeletons.length).toBeGreaterThan(0);
+    });
+
+    it('should display observations when diagnostic report is loaded', async () => {
+      (useQuery as jest.Mock).mockImplementation((options) => {
+        // Mock for radiology investigations query
+        if (options.queryKey[0] === 'radiologyInvestigation') {
+          return {
+            data: [mockInvestigationWithReport],
+            error: null,
+            isError: false,
+            isLoading: false,
+          };
+        }
+        // Mock for diagnostic report bundle query
+        if (options.queryKey[0] === 'diagnosticReportBundle') {
+          return {
+            data: mockDiagnosticReportBundle,
+            isLoading: false,
+          };
+        }
+        // Default for other queries
+        return {
+          data: null,
+          isLoading: false,
+        };
+      });
+
+      (useQueries as jest.Mock).mockReturnValue([
+        {
+          data: null,
+          isLoading: false,
+        },
+      ]);
+
+      render(wrapper);
+
+      const viewReportLink = screen.getByTestId(
+        'investigation-1-view-report-link-test-id',
+      );
+      await userEvent.click(viewReportLink);
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('radiology-observations-test-id'),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('should close modal when close is requested', async () => {
+      (useQuery as jest.Mock).mockImplementation((options) => {
+        // Mock for radiology investigations query
+        if (options.queryKey[0] === 'radiologyInvestigation') {
+          return {
+            data: [mockInvestigationWithReport],
+            error: null,
+            isError: false,
+            isLoading: false,
+          };
+        }
+        // Mock for diagnostic report bundle query
+        if (options.queryKey[0] === 'diagnosticReportBundle') {
+          return {
+            data: mockDiagnosticReportBundle,
+            isLoading: false,
+          };
+        }
+        // Default for other queries
+        return {
+          data: null,
+          isLoading: false,
+        };
+      });
+
+      (useQueries as jest.Mock).mockReturnValue([
+        {
+          data: null,
+          isLoading: false,
+        },
+      ]);
+
+      render(wrapper);
+
+      const viewReportLink = screen.getByTestId(
+        'investigation-1-view-report-link-test-id',
+      );
+      await userEvent.click(viewReportLink);
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('diagnostic-report-modal'),
+        ).toBeInTheDocument();
+      });
+
+      const closeButton = screen.getByLabelText(/close/i);
+      await userEvent.click(closeButton);
+
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId('diagnostic-report-modal'),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    it('should not render "View Report" link when investigation has no reportId', () => {
+      const investigationWithoutReport = {
+        ...mockInvestigationWithReport,
+        reportId: undefined,
+      };
+
+      (useQuery as jest.Mock).mockReturnValue({
+        data: [investigationWithoutReport],
+        error: null,
+        isError: false,
+        isLoading: false,
+      });
+
+      render(wrapper);
+
+      expect(
+        screen.queryByTestId('investigation-1-view-report-link-test-id'),
+      ).not.toBeInTheDocument();
     });
   });
 });
