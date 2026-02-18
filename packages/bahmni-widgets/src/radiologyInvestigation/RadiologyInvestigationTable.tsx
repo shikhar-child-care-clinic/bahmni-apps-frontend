@@ -23,6 +23,7 @@ import {
   useSubscribeConsultationSaved,
   getDiagnosticReports,
   getDiagnosticReportBundle,
+  DATE_TIME_FORMAT,
 } from '@bahmni/services';
 import { useQuery, useQueries } from '@tanstack/react-query';
 import type { DiagnosticReport, Bundle, Observation, Encounter } from 'fhir/r4';
@@ -185,6 +186,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
   }, [data, t]);
 
   // Fetch diagnostic reports for each accordion separately to enable caching
+  // TODO : simplify the useQueries
   const diagnosticReportQueries = useQueries({
     queries: processedInvestigations.map((group, index) => {
       const orderIds = group.investigations.map(
@@ -220,9 +222,6 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     }));
   }, [processedInvestigations, diagnosticReports]);
 
-  console.log({ updatedRadiologyInvestigations });
-
-  // Fetch diagnostic report bundle when a report is selected
   const { data: diagnosticReportBundle, isLoading: isLoadingReportBundle } =
     useQuery({
       queryKey: ['diagnosticReportBundle', selectedInvestigation?.reportId],
@@ -238,33 +237,6 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       diagnosticReportBundle as unknown as Bundle<Observation | Encounter>,
     );
   }, [diagnosticReportBundle]);
-
-  const diagnosticReportMetadata = useMemo(() => {
-    if (!diagnosticReportBundle) return { recordedOn: '', recordedBy: '' };
-
-    // Extract DiagnosticReport from bundle
-    const diagnosticReport = diagnosticReportBundle.entry?.find(
-      (entry) => entry.resource?.resourceType === 'DiagnosticReport',
-    )?.resource as DiagnosticReport | undefined;
-
-    if (!diagnosticReport) return { recordedOn: '', recordedBy: '' };
-
-    // Extract date (prefer issued, fallback to effectiveDateTime)
-    const dateStr =
-      diagnosticReport.issued ?? diagnosticReport.effectiveDateTime;
-    const recordedOn = dateStr
-      ? formatDate(dateStr, t, 'd-MMM-yyyy, h:mma').formattedResult
-      : '';
-    const formName = diagnosticReport.code.text;
-
-    // Extract provider/performer name
-    const recordedBy =
-      diagnosticReport.performer?.[0]?.display ??
-      diagnosticReport.resultsInterpreter?.[0]?.display ??
-      '';
-
-    return { recordedOn, recordedBy, formName };
-  }, [diagnosticReportBundle, t]);
 
   const handleRadiologyResultClick = () => {
     dispatchAuditEvent({
@@ -464,7 +436,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
           open={!!selectedInvestigation}
           onRequestClose={() => setSelectedInvestigation(null)}
           passiveModal
-          modalLabel={`RecordedOn : ${selectedInvestigation.reportedDate} | RecordedBy: ${selectedInvestigation.reportedBy}`}
+          modalLabel={`Recorded On : ${formatDate(selectedInvestigation.reportedDate!, t, DATE_TIME_FORMAT)}  | Recorded By: ${selectedInvestigation.reportedBy}`}
           modalHeading={selectedInvestigation.testName}
           testId="diagnostic-report-modal"
           size="lg"
