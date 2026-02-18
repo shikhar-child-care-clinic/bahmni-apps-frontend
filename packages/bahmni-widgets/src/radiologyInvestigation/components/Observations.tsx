@@ -64,6 +64,7 @@ const ObservationMember: React.FC<ObservationMemberProps> = ({
         <div
           className={styles.nestedGroupLabel}
           data-testid={`obs-nested-group-label-${displayLabel}-${memberIndex}`}
+          // eslint-disable-next-line react/forbid-dom-props
           style={{ paddingLeft: `${depth * 16}px` }}
         >
           {displayLabel}
@@ -74,7 +75,7 @@ const ObservationMember: React.FC<ObservationMemberProps> = ({
         >
           {member.members?.map((nestedMember, nestedIndex) => (
             <ObservationMember
-              key={`${nestedMember.id}-${nestedIndex}`}
+              key={`${nestedMember.id}-${nestedMember.id}`}
               member={nestedMember}
               depth={depth + 1}
               memberIndex={nestedIndex}
@@ -91,6 +92,7 @@ const ObservationMember: React.FC<ObservationMemberProps> = ({
     <div
       className={styles.memberRow}
       data-testid={`obs-member-row-${displayLabel}-${memberIndex}`}
+      // eslint-disable-next-line react/forbid-dom-props
       style={{ paddingLeft: `${depth * 16}px` }}
     >
       <p
@@ -153,7 +155,7 @@ const renderObservation = (
           >
             {observation.members?.map((member, memberIndex) => (
               <ObservationMember
-                key={`${member.id}-${memberIndex}`}
+                key={`${member.id}-${member.id}`}
                 member={member}
                 depth={0}
                 memberIndex={memberIndex}
