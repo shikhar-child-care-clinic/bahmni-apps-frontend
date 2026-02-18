@@ -343,6 +343,9 @@ const InvestigationsForm: React.FC = React.memo(() => {
           }
           onClose={() => {
             setShowDuplicateNotification(false);
+            setDuplicateInvestigationId(null);
+            setDuplicateCategory(null);
+            setDuplicateCategoryCode(null);
             notificationDismissedRef.current = true;
           }}
           hideCloseButton={false}

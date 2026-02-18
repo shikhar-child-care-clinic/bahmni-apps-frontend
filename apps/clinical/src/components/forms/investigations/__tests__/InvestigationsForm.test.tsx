@@ -1138,6 +1138,117 @@ describe('InvestigationsForm', () => {
       });
     });
 
+    test('does not re-show notification after dismiss when user continues typing', async () => {
+      getExistingServiceRequestsForAllCategories.mockResolvedValue([
+        {
+          conceptCode: 'cbc-001',
+          categoryUuid: 'lab',
+          display: 'Complete Blood Count',
+          requesterUuid: 'mock-practitioner-uuid',
+        },
+      ]);
+
+      const user = userEvent.setup();
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
+
+      const combobox = screen.getByRole('combobox');
+      await user.type(combobox, 'complete');
+
+      await waitFor(() => {
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Complete Blood Count'));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Investigation is already ordered'),
+        ).toBeInTheDocument();
+      });
+
+      const closeButton = screen.getByRole('button', { name: /close/i });
+      await user.click(closeButton);
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText('Investigation is already ordered'),
+        ).not.toBeInTheDocument();
+      });
+
+      // Continue typing — notification should stay dismissed
+      await user.type(combobox, 'blood');
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText('Investigation is already ordered'),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    test('re-shows notification after dismiss when user clears search and selects a different duplicate', async () => {
+      // Both CBC and Blood Glucose are already ordered
+      getExistingServiceRequestsForAllCategories.mockResolvedValue([
+        {
+          conceptCode: 'cbc-001',
+          categoryUuid: 'lab',
+          display: 'Complete Blood Count',
+          requesterUuid: 'mock-practitioner-uuid',
+        },
+        {
+          conceptCode: 'glucose-001',
+          categoryUuid: 'lab',
+          display: 'Blood Glucose Test',
+          requesterUuid: 'mock-practitioner-uuid',
+        },
+      ]);
+
+      const user = userEvent.setup();
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
+
+      const combobox = screen.getByRole('combobox');
+
+      // Select CBC → notification shows
+      await user.type(combobox, 'complete');
+      await waitFor(() => {
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
+      });
+      await user.click(screen.getByText('Complete Blood Count'));
+      await waitFor(() => {
+        expect(
+          screen.getByText('Investigation is already ordered'),
+        ).toBeInTheDocument();
+      });
+
+      // Dismiss the notification
+      const closeButton = screen.getByRole('button', { name: /close/i });
+      await user.click(closeButton);
+      await waitFor(() => {
+        expect(
+          screen.queryByText('Investigation is already ordered'),
+        ).not.toBeInTheDocument();
+      });
+
+      // Clear the combobox — resets the dismissal ref
+      await user.clear(combobox);
+      await waitFor(() => {
+        expect(
+          screen.queryByText('Investigation is already ordered'),
+        ).not.toBeInTheDocument();
+      });
+
+      // Select a different duplicate (Blood Glucose) — notification should reappear
+      await user.type(combobox, 'glucose');
+      await waitFor(() => {
+        expect(screen.getByText('Blood Glucose Test')).toBeInTheDocument();
+      });
+      await user.click(screen.getByText('Blood Glucose Test'));
+      await waitFor(() => {
+        expect(
+          screen.getByText('Investigation is already ordered'),
+        ).toBeInTheDocument();
+      });
+    });
+
     test('shows procedure-specific message when duplicate procedure is detected', async () => {
       const procedureInvestigations = [
         {
