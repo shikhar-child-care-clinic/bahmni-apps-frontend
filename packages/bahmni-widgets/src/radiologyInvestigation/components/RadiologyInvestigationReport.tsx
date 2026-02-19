@@ -6,7 +6,7 @@ import type { Bundle, Observation, Encounter } from 'fhir/r4';
 import React, { useMemo } from 'react';
 import { ExtractedObservation } from '../../observations/models';
 import { extractObservationsFromBundle } from '../../observations/utils';
-import styles from './Observations.module.scss';
+import styles from './RadiologyInvestigationReport.module.scss';
 
 export interface RadiologyInvestigationReportProps {
   reportId: string;
@@ -198,8 +198,15 @@ export const RadiologyInvestigationReport: React.FC<
     );
   }, [diagnosticReportBundle]);
 
+  const headers = [
+    { key: 'label', header: 'label' },
+    { key: 'value', header: 'value' },
+  ];
+
   if (isLoadingReportBundle) {
-    return <SortableDataTable headers={[]} rows={[]} loading ariaLabel={''} />;
+    return (
+      <SortableDataTable headers={headers} rows={[]} loading ariaLabel={''} />
+    );
   }
 
   if (!transformedObservations) {
@@ -208,6 +215,12 @@ export const RadiologyInvestigationReport: React.FC<
 
   const { observations, groupedObservations } = transformedObservations;
 
+  const sortedObservations = observations
+    .concat(groupedObservations)
+    .sort(({ sortId: xSortId = '' }, { sortId: ySortId = '' }) =>
+      xSortId.localeCompare(ySortId, undefined, { numeric: true }),
+    );
+
   return (
     <div
       id="radiology-observations"
@@ -215,9 +228,7 @@ export const RadiologyInvestigationReport: React.FC<
       aria-label="radiology-observations-aria-label"
       className={styles.resultsContainer}
     >
-      {observations
-        .concat(groupedObservations)
-        .map((obs, index) => renderObservation(obs, index))}
+      {sortedObservations.map((obs, index) => renderObservation(obs, index))}
     </div>
   );
 };

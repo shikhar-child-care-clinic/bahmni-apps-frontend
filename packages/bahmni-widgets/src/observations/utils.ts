@@ -236,6 +236,11 @@ function extractSingleObservation(
       extractSingleObservation(obs, encountersMap, observationsMap),
     );
 
+  const sortId =
+    observation.extension
+      ?.find(({ url }) => url.includes('form-namespace-path'))
+      ?.valueString?.split('/')[1] ?? '';
+
   return {
     id: observation.id!,
     display:
@@ -247,6 +252,7 @@ function extractSingleObservation(
       ? extractEncounterDetails(encounterId, encountersMap)
       : undefined,
     members: members.length > 0 ? members : undefined,
+    sortId,
   };
 }
 
