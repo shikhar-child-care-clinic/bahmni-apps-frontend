@@ -129,10 +129,8 @@ describe('observationUtils', () => {
       expect(result.groupedObservations).toHaveLength(1);
       expect(result.observations).toHaveLength(0);
       expect(result.groupedObservations[0].display).toBe('Blood Pressure');
-      expect(result.groupedObservations[0].children).toHaveLength(1);
-      expect(result.groupedObservations[0].children[0].display).toBe(
-        'Systolic',
-      );
+      expect(result.groupedObservations[0].members).toHaveLength(1);
+      expect(result.groupedObservations[0].members[0].display).toBe('Systolic');
     });
 
     it('should handle observation without value type', () => {
@@ -170,8 +168,8 @@ describe('observationUtils', () => {
 
       expect(result.groupedObservations).toHaveLength(1);
       expect(result.groupedObservations[0].id).toBe('obs-parent');
-      expect(result.groupedObservations[0].children).toHaveLength(1);
-      expect(result.groupedObservations[0].children[0].id).toBe(
+      expect(result.groupedObservations[0].members).toHaveLength(1);
+      expect(result.groupedObservations[0].members[0].id).toBe(
         'obs-child-valid',
       );
     });

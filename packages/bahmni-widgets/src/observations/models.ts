@@ -46,24 +46,14 @@ export interface ExtractedObservation {
   members?: ExtractedObservation[];
 }
 
-export interface GroupedObservation {
-  id: string;
-  display: string;
-  observationValue?: ObservationValue;
-  effectiveDateTime?: string;
-  issued?: string;
-  encounter?: EncounterDetails;
-  children: ExtractedObservation[];
-}
-
 export interface ExtractedObservationsResult {
   observations: ExtractedObservation[];
-  groupedObservations: GroupedObservation[];
+  groupedObservations: ExtractedObservation[];
 }
 
 export interface ObservationsByEncounter {
   encounterId: string;
   encounterDetails?: EncounterDetails;
   observations: ExtractedObservation[];
-  groupedObservations: GroupedObservation[];
+  groupedObservations: ExtractedObservation[];
 }
