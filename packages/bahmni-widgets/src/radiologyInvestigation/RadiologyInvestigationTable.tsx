@@ -25,7 +25,7 @@ import {
   getDiagnosticReportBundle,
   DATE_TIME_FORMAT,
 } from '@bahmni/services';
-import { useQuery, useQueries } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import type { DiagnosticReport, Bundle, Observation, Encounter } from 'fhir/r4';
 import React, { useMemo, useEffect, useState } from 'react';
 import { ServiceRequestStatus } from '../genericServiceRequest/models';
@@ -83,6 +83,8 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
   const [openAccordionIndices, setOpenAccordionIndices] = useState<Set<number>>(
     new Set([0]),
   );
+  const [currentOpenedAccordionIndex, setCurrentOpenedAccordionIndex] =
+    useState<number>(0);
   const [selectedInvestigation, setSelectedInvestigation] =
     useState<RadiologyInvestigationViewModel | null>(null);
 
@@ -188,31 +190,32 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     }));
   }, [data, t]);
 
-  // Fetch diagnostic reports for each accordion separately to enable caching
-  // TODO : simplify the useQueries
-  const diagnosticReportQueries = useQueries({
-    queries: processedInvestigations.map((group, index) => {
-      const orderIds = group.investigations.map(
-        (investigation) => investigation.id,
-      );
-      return {
-        queryKey: ['diagnosticReports', patientUUID, index, orderIds],
-        queryFn: () => getDiagnosticReports(patientUUID!, orderIds),
-        enabled:
-          !!patientUUID &&
-          openAccordionIndices.has(index) &&
-          orderIds.length > 0,
-      };
-    }),
+  // Fetch diagnostic reports only for the most recently opened accordion
+  const currentAccordionGroup =
+    processedInvestigations[currentOpenedAccordionIndex];
+  const orderIds =
+    currentAccordionGroup?.investigations.map(
+      (investigation) => investigation.id,
+    ) ?? [];
+
+  const { data: diagnosticReportsBundle } = useQuery({
+    queryKey: [
+      'diagnosticReports',
+      patientUUID,
+      currentOpenedAccordionIndex,
+      orderIds,
+    ],
+    queryFn: () => getDiagnosticReports(patientUUID!, orderIds),
+    enabled:
+      !!patientUUID &&
+      openAccordionIndices.has(currentOpenedAccordionIndex) &&
+      orderIds.length > 0,
   });
 
-  // Merge all diagnostic reports from open accordions
   const diagnosticReports = useMemo<DiagnosticReport[]>(() => {
-    const reports = diagnosticReportQueries
-      .filter((query) => query.data)
-      .flatMap((query) => extractDiagnosticReportsFromBundle(query.data));
-    return reports;
-  }, [diagnosticReportQueries]);
+    if (!diagnosticReportsBundle) return [];
+    return extractDiagnosticReportsFromBundle(diagnosticReportsBundle);
+  }, [diagnosticReportsBundle]);
 
   // Enrich the grouped investigations with diagnostic report info (reportId)
   const updatedRadiologyInvestigations = useMemo(() => {
@@ -437,6 +440,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
                     newSet.delete(index);
                   } else {
                     newSet.add(index);
+                    setCurrentOpenedAccordionIndex(index);
                   }
                   return newSet;
                 });
