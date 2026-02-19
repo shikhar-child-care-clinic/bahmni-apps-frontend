@@ -221,6 +221,28 @@ export const RadiologyInvestigationReport: React.FC<
       xSortId.localeCompare(ySortId, undefined, { numeric: true }),
     );
 
+  const multiSelectGroupedObservations = sortedObservations.reduce(
+    (
+      valueGroupedObs: ExtractedObservation[],
+      observation: ExtractedObservation,
+    ) => {
+      const matchedObs = valueGroupedObs.find(
+        (obs: ExtractedObservation) => obs.conceptId === observation.conceptId,
+      );
+
+      if (matchedObs) {
+        matchedObs.observationValue!.value =
+          matchedObs.observationValue?.value +
+          ', ' +
+          observation.observationValue?.value;
+      } else {
+        valueGroupedObs.push(observation);
+      }
+      return valueGroupedObs;
+    },
+    [],
+  );
+
   return (
     <div
       id="radiology-observations"
@@ -228,7 +250,9 @@ export const RadiologyInvestigationReport: React.FC<
       aria-label="radiology-observations-aria-label"
       className={styles.resultsContainer}
     >
-      {sortedObservations.map((obs, index) => renderObservation(obs, index))}
+      {multiSelectGroupedObservations.map((obs, index) =>
+        renderObservation(obs, index),
+      )}
     </div>
   );
 };

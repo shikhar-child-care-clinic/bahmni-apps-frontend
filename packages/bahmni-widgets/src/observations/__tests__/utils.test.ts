@@ -53,6 +53,7 @@ describe('observationUtils', () => {
       expect(result.observations[0]).toEqual({
         id: 'obs-1',
         display: 'Systolic blood pressure',
+        conceptId: '5085',
         observationValue: {
           value: 120,
           unit: 'mmHg',

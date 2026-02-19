@@ -253,6 +253,8 @@ function extractSingleObservation(
       : undefined,
     members: members.length > 0 ? members : undefined,
     sortId,
+    conceptId: observation.code?.coding?.[0]?.code,
+    // conceptId is required to group the multiselect obs
   };
 }
 

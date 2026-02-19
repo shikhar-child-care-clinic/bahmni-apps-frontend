@@ -35,11 +35,12 @@
 
 .rowLabel {
   @include type-style("heading-compact-01");
-  flex-basis: 40%;
+  flex-basis: 30%;
 }
 
 .rowValue {
   @include type-style("body-compact-01");
+  flex-basis: 70%;
 }
 
 .groupMembers {

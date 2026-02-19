@@ -475,6 +475,7 @@ describe('Observations Component', () => {
         {
           id: 'obs-1',
           display: 'Simple Test',
+          conceptId: '12345',
           observationValue: {
             value: 10,
             unit: 'mg',
@@ -491,6 +492,7 @@ describe('Observations Component', () => {
             {
               id: 'member-1',
               display: 'Panel Member',
+              conceptId: '23456',
               observationValue: {
                 value: 20,
                 unit: 'mg',
@@ -521,5 +523,54 @@ describe('Observations Component', () => {
     expect(
       screen.getByTestId('observation-item-Panel Test-1'),
     ).toBeInTheDocument();
+  });
+
+  it('should render multiselect observation values as comma separated', async () => {
+    const transformedObservations: ExtractedObservationsResult = {
+      observations: [
+        {
+          id: 'obs-1',
+          display: 'Simple Test',
+          conceptId: '12345',
+          observationValue: {
+            value: 10,
+            unit: 'mg',
+            type: 'quantity',
+            isAbnormal: false,
+          },
+        },
+        {
+          id: 'obs-1',
+          display: 'Simple Test',
+          conceptId: '12345',
+          observationValue: {
+            value: 20,
+            unit: 'mg',
+            type: 'quantity',
+            isAbnormal: false,
+          },
+        },
+      ],
+      groupedObservations: [] as any,
+    };
+
+    (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
+      resourceType: 'Bundle',
+      entry: [],
+    });
+    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
+      transformedObservations,
+    );
+
+    renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
+    await screen.findByTestId('radiology-observations-test-id');
+
+    expect(
+      screen.getByTestId('observation-item-Simple Test-0'),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByTestId('observation-item-Simple Test-0'),
+    ).toHaveTextContent('10, 20 mg');
   });
 });
