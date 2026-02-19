@@ -1,9 +1,12 @@
-import { OPENMRS_FHIR_R4, OPENMRS_REST_V1 } from '../constants/app';
+import { OPENMRS_FHIR_R4 } from '../constants/app';
 
 export const OBSERVATION_PAGE_SIZE = 100;
 
 export const PATIENT_VISITS_URL = (patientUUID: string) =>
   OPENMRS_FHIR_R4 + `/Encounter?subject:Patient=${patientUUID}&_tag=visit`;
 
-export const BAHMNI_ENCOUNTER_URL = (encounterUUID: string) =>
-  `${OPENMRS_FHIR_R4}/Observation?encounter=${encounterUUID}`;
+export const BAHMNI_ENCOUNTER_URL = (
+  encounterUUID: string,
+  pageSize: number = OBSERVATION_PAGE_SIZE,
+) =>
+  `${OPENMRS_FHIR_R4}/Observation?encounter=${encounterUUID}&_count=${pageSize}`;

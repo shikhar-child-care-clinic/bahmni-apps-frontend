@@ -19,18 +19,16 @@ import {
   ObservationForm,
   getFormsDataByEncounterUuid,
   shouldEnableEncounterFilter,
-  FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import { Bundle, Observation } from 'fhir/r4';
 import React, { useCallback, useMemo, useState } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
-import { ExtractedObservation } from '../observations/models';
-import { extractObservationsFromBundle } from '../observations/utils';
 import { WidgetProps } from '../registry/model';
 import { FormRecordViewModel, GroupedFormRecords } from './models';
 import ObservationItem from './ObservationItem';
 import styles from './styles/FormsTable.module.scss';
+import { filterObservationsByFormName } from './utils';
 
 /**
  * Component to display patient forms grouped by form name in accordion format
@@ -115,61 +113,13 @@ const FormsTable: React.FC<WidgetProps> = ({
 
   // Extract observations from FHIR bundle and filter by form name
   const filteredObservations = useMemo(() => {
-    if (!fhirObservationBundle?.entry || !selectedRecord?.formName) {
+    if (!fhirObservationBundle || !selectedRecord?.formName) {
       return [];
     }
 
-    // Use extraction logic from ObsByEncounter
-    const extractedResult = extractObservationsFromBundle(
+    return filterObservationsByFormName(
       fhirObservationBundle,
-    );
-
-    // Helper to extract formFieldPath and comment from FHIR Observation
-    const getFormFieldPathAndComment = (
-      obsId: string,
-    ): { formFieldPath?: string; comment?: string } => {
-      const fhirObs = fhirObservationBundle.entry?.find(
-        (entry) => entry.resource?.id === obsId,
-      )?.resource as Observation | undefined;
-
-      if (!fhirObs) return {};
-
-      const formPathExt = fhirObs.extension?.find(
-        (ext) => ext.url === FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
-      );
-      const comment = fhirObs.note?.[0]?.text;
-
-      return {
-        formFieldPath: formPathExt?.valueString,
-        comment,
-      };
-    };
-
-    // Combine observations and grouped observations
-    const allObservations: Array<{
-      obs: ExtractedObservation;
-      comment?: string;
-      formFieldPath?: string;
-    }> = [
-      ...extractedResult.observations.map((obs) => {
-        const { formFieldPath, comment } = getFormFieldPathAndComment(obs.id);
-        return { obs, formFieldPath, comment };
-      }),
-
-      ...extractedResult.groupedObservations.flatMap((group) => {
-        const { formFieldPath } = getFormFieldPathAndComment(group.id); // formFieldPath from parent
-        return group.children.map((child) => {
-          const { comment } = getFormFieldPathAndComment(child.id); // comment from each child
-          return { obs: child, formFieldPath, comment };
-        });
-      }),
-    ];
-
-    // Filter by form name using formFieldPath
-    // If formFieldPath is missing, include the observation (don't filter it out)
-    return allObservations.filter(
-      ({ formFieldPath }) =>
-        !formFieldPath || formFieldPath.includes(selectedRecord.formName),
+      selectedRecord.formName,
     );
   }, [fhirObservationBundle, selectedRecord?.formName]);
 
