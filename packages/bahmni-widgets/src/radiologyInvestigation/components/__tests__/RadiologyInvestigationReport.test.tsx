@@ -1,19 +1,71 @@
+import { getDiagnosticReportBundle } from '@bahmni/services';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import {
   ExtractedObservation,
   ExtractedObservationsResult,
 } from '../../../observations/models';
-import { Observations } from '../Observations';
+import { extractObservationsFromBundle } from '../../../observations/utils';
+import { Observations } from '../RadiologyInvestigationReport';
+
+jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
+  getDiagnosticReportBundle: jest.fn(),
+}));
+
+jest.mock('../../../observations/utils', () => ({
+  ...jest.requireActual('../../../observations/utils'),
+  extractObservationsFromBundle: jest.fn(),
+}));
 
 describe('Observations Component', () => {
-  it('should render null when transformedObservations is null', () => {
-    const { container } = render(
-      <Observations transformedObservations={null} />,
-    );
-    expect(container.firstChild).toBeNull();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
   });
 
-  it('should render observations without members', () => {
+  const renderWithQueryClient = (component: React.ReactElement) => {
+    return render(
+      <QueryClientProvider client={queryClient}>
+        {component}
+      </QueryClientProvider>,
+    );
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    queryClient.clear();
+  });
+
+  it('should render loading state when data is being fetched', () => {
+    (getDiagnosticReportBundle as jest.Mock).mockImplementation(
+      () => new Promise(() => {}), // Never resolves to keep in loading state
+    );
+
+    renderWithQueryClient(<Observations reportId="report-1" />);
+
+    expect(screen.getByTestId(/skeleton/i)).toBeInTheDocument();
+  });
+
+  it('should render null when transformedObservations is null', async () => {
+    (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
+      resourceType: 'Bundle',
+      entry: [],
+    });
+    (extractObservationsFromBundle as jest.Mock).mockReturnValue(null);
+
+    const { container } = renderWithQueryClient(
+      <Observations reportId="report-1" />,
+    );
+
+    await screen.findByTestId(/skeleton/i);
+    expect(container.querySelector('#radiology-observations')).toBeNull();
+  });
+
+  it('should render observations without members', async () => {
     const mockObservations: ExtractedObservation[] = [
       {
         id: 'obs-1',
@@ -32,10 +84,18 @@ describe('Observations Component', () => {
       groupedObservations: [],
     };
 
-    render(<Observations transformedObservations={transformedObservations} />);
+    (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
+      resourceType: 'Bundle',
+      entry: [],
+    });
+    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
+      transformedObservations,
+    );
+
+    renderWithQueryClient(<Observations reportId="report-1" />);
 
     expect(
-      screen.getByTestId('radiology-observations-test-id'),
+      await screen.findByTestId('radiology-observations-test-id'),
     ).toBeInTheDocument();
     expect(
       screen.getByTestId('observation-item-Heart Rate-0'),
@@ -48,7 +108,7 @@ describe('Observations Component', () => {
     ).toHaveTextContent('72 bpm');
   });
 
-  it('should render observations with reference range', () => {
+  it('should render observations with reference range', async () => {
     const mockObservations: ExtractedObservation[] = [
       {
         id: 'obs-1',
@@ -71,7 +131,17 @@ describe('Observations Component', () => {
       groupedObservations: [],
     };
 
-    render(<Observations transformedObservations={transformedObservations} />);
+    (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
+      resourceType: 'Bundle',
+      entry: [],
+    });
+    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
+      transformedObservations,
+    );
+
+    renderWithQueryClient(<Observations reportId="report-1" />);
+
+    await screen.findByTestId('radiology-observations-test-id');
 
     expect(
       screen.getByTestId('observation-label-Blood Glucose-0'),
@@ -84,7 +154,7 @@ describe('Observations Component', () => {
     ).toHaveTextContent('95 mg/dL');
   });
 
-  it('should render abnormal observations with proper styling', () => {
+  it('should render abnormal observations with proper styling', async () => {
     const mockObservations: ExtractedObservation[] = [
       {
         id: 'obs-1',
@@ -106,7 +176,17 @@ describe('Observations Component', () => {
       groupedObservations: [],
     };
 
-    render(<Observations transformedObservations={transformedObservations} />);
+    (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
+      resourceType: 'Bundle',
+      entry: [],
+    });
+    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
+      transformedObservations,
+    );
+
+    renderWithQueryClient(<Observations reportId="report-1" />);
+
+    await screen.findByTestId('radiology-observations-test-id');
 
     const label = screen.getByTestId('observation-label-High Temperature-0');
     const value = screen.getByTestId('observation-value-High Temperature-0');
@@ -115,7 +195,7 @@ describe('Observations Component', () => {
     expect(value).toHaveClass('abnormalValue');
   });
 
-  it('should render observations with only low reference range', () => {
+  it('should render observations with only low reference range', async () => {
     const mockObservations: ExtractedObservation[] = [
       {
         id: 'obs-1',
@@ -137,14 +217,24 @@ describe('Observations Component', () => {
       groupedObservations: [],
     };
 
-    render(<Observations transformedObservations={transformedObservations} />);
+    (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
+      resourceType: 'Bundle',
+      entry: [],
+    });
+    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
+      transformedObservations,
+    );
+
+    renderWithQueryClient(<Observations reportId="report-1" />);
+
+    await screen.findByTestId('radiology-observations-test-id');
 
     expect(
       screen.getByTestId('observation-label-Hemoglobin-0'),
     ).toHaveTextContent('(>12)');
   });
 
-  it('should render observations with only high reference range', () => {
+  it('should render observations with only high reference range', async () => {
     const mockObservations: ExtractedObservation[] = [
       {
         id: 'obs-1',
@@ -166,14 +256,24 @@ describe('Observations Component', () => {
       groupedObservations: [],
     };
 
-    render(<Observations transformedObservations={transformedObservations} />);
+    (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
+      resourceType: 'Bundle',
+      entry: [],
+    });
+    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
+      transformedObservations,
+    );
+
+    renderWithQueryClient(<Observations reportId="report-1" />);
+
+    await screen.findByTestId('radiology-observations-test-id');
 
     expect(
       screen.getByTestId('observation-label-Blood Pressure-0'),
     ).toHaveTextContent('(<120)');
   });
 
-  it('should render grouped observations with members', () => {
+  it('should render grouped observations with members', async () => {
     // Note: Component expects groupedObservations to work like ExtractedObservation with 'members'
     // but type system expects GroupedObservation with 'children'. Using 'as any' to test actual behavior.
     const transformedObservations: ExtractedObservationsResult = {
@@ -208,7 +308,17 @@ describe('Observations Component', () => {
       ] as any,
     };
 
-    render(<Observations transformedObservations={transformedObservations} />);
+    (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
+      resourceType: 'Bundle',
+      entry: [],
+    });
+    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
+      transformedObservations,
+    );
+
+    renderWithQueryClient(<Observations reportId="report-1" />);
+
+    await screen.findByTestId('radiology-observations-test-id');
 
     expect(
       screen.getByTestId('observation-label-Complete Blood Count-0'),
@@ -226,7 +336,7 @@ describe('Observations Component', () => {
     expect(screen.getByTestId('obs-member-row-RBC-1')).toBeInTheDocument();
   });
 
-  it('should render nested grouped observations with proper indentation', () => {
+  it('should render nested grouped observations with proper indentation', async () => {
     const transformedObservations: ExtractedObservationsResult = {
       observations: [],
       groupedObservations: [
@@ -255,7 +365,17 @@ describe('Observations Component', () => {
       ] as any,
     };
 
-    render(<Observations transformedObservations={transformedObservations} />);
+    (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
+      resourceType: 'Bundle',
+      entry: [],
+    });
+    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
+      transformedObservations,
+    );
+
+    renderWithQueryClient(<Observations reportId="report-1" />);
+
+    await screen.findByTestId('radiology-observations-test-id');
 
     expect(
       screen.getByTestId('obs-nested-group-Sub Panel-0'),
@@ -268,7 +388,7 @@ describe('Observations Component', () => {
     ).toBeInTheDocument();
   });
 
-  it('should render abnormal values in grouped observations', () => {
+  it('should render abnormal values in grouped observations', async () => {
     const transformedObservations: ExtractedObservationsResult = {
       observations: [],
       groupedObservations: [
@@ -294,7 +414,17 @@ describe('Observations Component', () => {
       ] as any,
     };
 
-    render(<Observations transformedObservations={transformedObservations} />);
+    (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
+      resourceType: 'Bundle',
+      entry: [],
+    });
+    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
+      transformedObservations,
+    );
+
+    renderWithQueryClient(<Observations reportId="report-1" />);
+
+    await screen.findByTestId('radiology-observations-test-id');
 
     const memberLabel = screen.getByTestId('obs-member-label-ALT-0');
     const memberValue = screen.getByTestId('obs-member-value-ALT-0');
@@ -304,7 +434,7 @@ describe('Observations Component', () => {
     expect(memberLabel).toHaveTextContent('(<40)');
   });
 
-  it('should render observations without units', () => {
+  it('should render observations without units', async () => {
     const mockObservations: ExtractedObservation[] = [
       {
         id: 'obs-1',
@@ -322,14 +452,24 @@ describe('Observations Component', () => {
       groupedObservations: [],
     };
 
-    render(<Observations transformedObservations={transformedObservations} />);
+    (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
+      resourceType: 'Bundle',
+      entry: [],
+    });
+    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
+      transformedObservations,
+    );
+
+    renderWithQueryClient(<Observations reportId="report-1" />);
+
+    await screen.findByTestId('radiology-observations-test-id');
 
     expect(screen.getByTestId('observation-value-Result-0')).toHaveTextContent(
       'Positive',
     );
   });
 
-  it('should render multiple observations and grouped observations together', () => {
+  it('should render multiple observations and grouped observations together', async () => {
     const transformedObservations: ExtractedObservationsResult = {
       observations: [
         {
@@ -363,7 +503,17 @@ describe('Observations Component', () => {
       ] as any,
     };
 
-    render(<Observations transformedObservations={transformedObservations} />);
+    (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
+      resourceType: 'Bundle',
+      entry: [],
+    });
+    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
+      transformedObservations,
+    );
+
+    renderWithQueryClient(<Observations reportId="report-1" />);
+
+    await screen.findByTestId('radiology-observations-test-id');
 
     expect(
       screen.getByTestId('observation-item-Simple Test-0'),

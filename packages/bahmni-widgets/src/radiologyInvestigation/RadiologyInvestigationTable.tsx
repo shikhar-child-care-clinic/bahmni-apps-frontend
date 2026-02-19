@@ -22,11 +22,10 @@ import {
   AuditEventType,
   useSubscribeConsultationSaved,
   getDiagnosticReports,
-  getDiagnosticReportBundle,
   DATE_TIME_FORMAT,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
-import type { DiagnosticReport, Bundle, Observation, Encounter } from 'fhir/r4';
+import type { DiagnosticReport } from 'fhir/r4';
 import React, { useMemo, useEffect, useState } from 'react';
 import { ServiceRequestStatus } from '../genericServiceRequest/models';
 import { usePatientUUID } from '../hooks/usePatientUUID';
@@ -35,9 +34,8 @@ import {
   updateInvestigationsWithReportInfo,
 } from '../labinvestigation/utils';
 import { useNotification } from '../notification';
-import { extractObservationsFromBundle } from '../observations/utils';
 import { WidgetProps } from '../registry/model';
-import { Observations } from './components/Observations';
+import { Observations } from './components/RadiologyInvestigationReport';
 import { RadiologyInvestigationViewModel } from './models';
 import styles from './styles/RadiologyInvestigationTable.module.scss';
 import {
@@ -227,22 +225,6 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       ),
     }));
   }, [processedInvestigations, diagnosticReports]);
-
-  const { data: diagnosticReportBundle, isLoading: isLoadingReportBundle } =
-    useQuery({
-      queryKey: ['diagnosticReportBundle', selectedInvestigation?.reportId],
-      queryFn: () =>
-        getDiagnosticReportBundle(selectedInvestigation!.reportId!),
-      enabled: !!selectedInvestigation?.reportId,
-    });
-
-  const transformedObservations = useMemo(() => {
-    if (!diagnosticReportBundle) return null;
-
-    return extractObservationsFromBundle(
-      diagnosticReportBundle as unknown as Bundle<Observation | Encounter>,
-    );
-  }, [diagnosticReportBundle]);
 
   const handleRadiologyResultClick = () => {
     dispatchAuditEvent({
@@ -474,17 +456,10 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
           size="lg"
         >
           <Modal.Body>
-            {!isLoadingReportBundle && transformedObservations && (
-              <Observations transformedObservations={transformedObservations} />
-            )}
-            {isLoadingReportBundle && (
-              <SortableDataTable
-                headers={headers}
-                rows={[]}
-                loading
-                ariaLabel={''}
-              />
-            )}
+            <Observations
+              reportId={selectedInvestigation.reportId!}
+              patientUUID={patientUUID!}
+            />
           </Modal.Body>
         </Modal>
       )}

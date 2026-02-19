@@ -1,13 +1,15 @@
+import { SortableDataTable } from '@bahmni/design-system';
+import { getDiagnosticReportBundle } from '@bahmni/services';
+import { useQuery } from '@tanstack/react-query';
 import classNames from 'classnames';
-import React from 'react';
-import {
-  ExtractedObservation,
-  ExtractedObservationsResult,
-} from '../../observations/models';
+import type { Bundle, Observation, Encounter } from 'fhir/r4';
+import React, { useMemo } from 'react';
+import { ExtractedObservation } from '../../observations/models';
+import { extractObservationsFromBundle } from '../../observations/utils';
 import styles from './Observations.module.scss';
 
 export interface ObservationsProps {
-  transformedObservations: ExtractedObservationsResult | null;
+  reportId: string;
 }
 
 interface ObservationMemberProps {
@@ -178,9 +180,26 @@ const renderObservation = (
   );
 };
 
-export const Observations: React.FC<ObservationsProps> = ({
-  transformedObservations,
-}) => {
+export const Observations: React.FC<ObservationsProps> = ({ reportId }) => {
+  const { data: diagnosticReportBundle, isLoading: isLoadingReportBundle } =
+    useQuery({
+      queryKey: ['diagnosticReportBundle', reportId],
+      queryFn: () => getDiagnosticReportBundle(reportId),
+      enabled: !!reportId,
+    });
+
+  const transformedObservations = useMemo(() => {
+    if (!diagnosticReportBundle) return null;
+
+    return extractObservationsFromBundle(
+      diagnosticReportBundle as Bundle<Observation | Encounter>,
+    );
+  }, [diagnosticReportBundle]);
+
+  if (isLoadingReportBundle) {
+    return <SortableDataTable headers={[]} rows={[]} loading ariaLabel={''} />;
+  }
+
   if (!transformedObservations) {
     return null;
   }

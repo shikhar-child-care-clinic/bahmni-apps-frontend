@@ -2,7 +2,6 @@ import {
   QueryClient,
   QueryClientProvider,
   useQuery,
-  useQueries,
 } from '@tanstack/react-query';
 import { render, screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -25,7 +24,6 @@ jest.mock('../../hooks/usePatientUUID', () => ({
 jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),
   useQuery: jest.fn(),
-  useQueries: jest.fn(),
 }));
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
@@ -52,8 +50,6 @@ describe('RadiologyInvestigationTable', () => {
     (useNotification as jest.Mock).mockReturnValue({
       addNotification: mockAddNotification,
     });
-    // Default mock for useQueries - returns empty array
-    (useQueries as jest.Mock).mockReturnValue([]);
   });
 
   afterEach(() => {
@@ -528,13 +524,6 @@ describe('RadiologyInvestigationTable', () => {
         };
       });
 
-      (useQueries as jest.Mock).mockReturnValue([
-        {
-          data: null,
-          isLoading: false,
-        },
-      ]);
-
       render(wrapper);
 
       const viewReportLink = screen.getByTestId(
@@ -568,13 +557,6 @@ describe('RadiologyInvestigationTable', () => {
           isLoading: false,
         };
       });
-
-      (useQueries as jest.Mock).mockReturnValue([
-        {
-          data: null,
-          isLoading: false,
-        },
-      ]);
 
       render(wrapper);
 
@@ -615,13 +597,6 @@ describe('RadiologyInvestigationTable', () => {
         };
       });
 
-      (useQueries as jest.Mock).mockReturnValue([
-        {
-          data: null,
-          isLoading: false,
-        },
-      ]);
-
       render(wrapper);
 
       const viewReportLink = screen.getByTestId(
@@ -659,13 +634,6 @@ describe('RadiologyInvestigationTable', () => {
           isLoading: false,
         };
       });
-
-      (useQueries as jest.Mock).mockReturnValue([
-        {
-          data: null,
-          isLoading: false,
-        },
-      ]);
 
       render(wrapper);
 
@@ -710,13 +678,6 @@ describe('RadiologyInvestigationTable', () => {
         };
       });
 
-      (useQueries as jest.Mock).mockReturnValue([
-        {
-          data: null,
-          isLoading: false,
-        },
-      ]);
-
       render(wrapper);
 
       const viewReportLink = screen.getByTestId(
@@ -755,13 +716,6 @@ describe('RadiologyInvestigationTable', () => {
           isLoading: false,
         };
       });
-
-      (useQueries as jest.Mock).mockReturnValue([
-        {
-          data: null,
-          isLoading: false,
-        },
-      ]);
 
       render(wrapper);
 
