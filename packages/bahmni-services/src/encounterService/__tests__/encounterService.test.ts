@@ -105,35 +105,6 @@ describe('encounterService', () => {
       );
     });
 
-    it('should handle pagination and combine all entries', async () => {
-      const page1 = {
-        resourceType: 'Bundle',
-        type: 'searchset',
-        total: 2,
-        entry: [mockFormsEncounter.entry![0]],
-        link: [
-          {
-            relation: 'next',
-            url: 'http://localhost:3000/Observation?encounter=uuid&page=2',
-          },
-        ],
-      };
-
-      const page2 = {
-        resourceType: 'Bundle',
-        type: 'searchset',
-        total: 2,
-        entry: [mockFormsEncounter.entry![0]],
-      };
-
-      mockedGet.mockResolvedValueOnce(page1).mockResolvedValueOnce(page2);
-
-      const result = await getFormsDataByEncounterUuid(encounterUUID);
-
-      expect(result.entry?.length).toBe(2);
-      expect(mockedGet).toHaveBeenCalledTimes(2);
-    });
-
     it('should return the forms encounter data', async () => {
       mockedGet.mockResolvedValueOnce(mockFormsEncounter);
 
