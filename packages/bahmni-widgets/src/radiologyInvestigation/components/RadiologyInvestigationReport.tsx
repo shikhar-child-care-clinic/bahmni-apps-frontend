@@ -8,7 +8,7 @@ import { ExtractedObservation } from '../../observations/models';
 import { extractObservationsFromBundle } from '../../observations/utils';
 import styles from './Observations.module.scss';
 
-export interface ObservationsProps {
+export interface RadiologyInvestigationReportProps {
   reportId: string;
 }
 
@@ -180,7 +180,9 @@ const renderObservation = (
   );
 };
 
-export const Observations: React.FC<ObservationsProps> = ({ reportId }) => {
+export const RadiologyInvestigationReport: React.FC<
+  RadiologyInvestigationReportProps
+> = ({ reportId }) => {
   const { data: diagnosticReportBundle, isLoading: isLoadingReportBundle } =
     useQuery({
       queryKey: ['diagnosticReportBundle', reportId],
@@ -213,12 +215,11 @@ export const Observations: React.FC<ObservationsProps> = ({ reportId }) => {
       aria-label="radiology-observations-aria-label"
       className={styles.resultsContainer}
     >
-      {observations.map((obs, index) => renderObservation(obs, index))}
-      {groupedObservations.map((groupedObs, index) =>
-        renderObservation(groupedObs, index),
-      )}
+      {observations
+        .concat(groupedObservations)
+        .map((obs, index) => renderObservation(obs, index))}
     </div>
   );
 };
 
-export default Observations;
+export default RadiologyInvestigationReport;

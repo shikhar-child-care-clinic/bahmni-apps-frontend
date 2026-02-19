@@ -35,7 +35,7 @@ import {
 } from '../labinvestigation/utils';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
-import { Observations } from './components/RadiologyInvestigationReport';
+import { RadiologyInvestigationReport } from './components/RadiologyInvestigationReport';
 import { RadiologyInvestigationViewModel } from './models';
 import styles from './styles/RadiologyInvestigationTable.module.scss';
 import {
@@ -456,9 +456,8 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
           size="lg"
         >
           <Modal.Body>
-            <Observations
+            <RadiologyInvestigationReport
               reportId={selectedInvestigation.reportId!}
-              patientUUID={patientUUID!}
             />
           </Modal.Body>
         </Modal>

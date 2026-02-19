@@ -6,7 +6,7 @@ import {
   ExtractedObservationsResult,
 } from '../../../observations/models';
 import { extractObservationsFromBundle } from '../../../observations/utils';
-import { Observations } from '../RadiologyInvestigationReport';
+import { RadiologyInvestigationReport } from '../RadiologyInvestigationReport';
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
@@ -45,7 +45,7 @@ describe('Observations Component', () => {
       () => new Promise(() => {}), // Never resolves to keep in loading state
     );
 
-    renderWithQueryClient(<Observations reportId="report-1" />);
+    renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
     expect(screen.getByTestId(/skeleton/i)).toBeInTheDocument();
   });
@@ -58,7 +58,7 @@ describe('Observations Component', () => {
     (extractObservationsFromBundle as jest.Mock).mockReturnValue(null);
 
     const { container } = renderWithQueryClient(
-      <Observations reportId="report-1" />,
+      <RadiologyInvestigationReport reportId="report-1" />,
     );
 
     await screen.findByTestId(/skeleton/i);
@@ -92,7 +92,7 @@ describe('Observations Component', () => {
       transformedObservations,
     );
 
-    renderWithQueryClient(<Observations reportId="report-1" />);
+    renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
     expect(
       await screen.findByTestId('radiology-observations-test-id'),
@@ -139,7 +139,7 @@ describe('Observations Component', () => {
       transformedObservations,
     );
 
-    renderWithQueryClient(<Observations reportId="report-1" />);
+    renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
     await screen.findByTestId('radiology-observations-test-id');
 
@@ -184,7 +184,7 @@ describe('Observations Component', () => {
       transformedObservations,
     );
 
-    renderWithQueryClient(<Observations reportId="report-1" />);
+    renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
     await screen.findByTestId('radiology-observations-test-id');
 
@@ -225,7 +225,7 @@ describe('Observations Component', () => {
       transformedObservations,
     );
 
-    renderWithQueryClient(<Observations reportId="report-1" />);
+    renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
     await screen.findByTestId('radiology-observations-test-id');
 
@@ -264,7 +264,7 @@ describe('Observations Component', () => {
       transformedObservations,
     );
 
-    renderWithQueryClient(<Observations reportId="report-1" />);
+    renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
     await screen.findByTestId('radiology-observations-test-id');
 
@@ -316,7 +316,7 @@ describe('Observations Component', () => {
       transformedObservations,
     );
 
-    renderWithQueryClient(<Observations reportId="report-1" />);
+    renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
     await screen.findByTestId('radiology-observations-test-id');
 
@@ -373,7 +373,7 @@ describe('Observations Component', () => {
       transformedObservations,
     );
 
-    renderWithQueryClient(<Observations reportId="report-1" />);
+    renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
     await screen.findByTestId('radiology-observations-test-id');
 
@@ -422,7 +422,7 @@ describe('Observations Component', () => {
       transformedObservations,
     );
 
-    renderWithQueryClient(<Observations reportId="report-1" />);
+    renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
     await screen.findByTestId('radiology-observations-test-id');
 
@@ -460,7 +460,7 @@ describe('Observations Component', () => {
       transformedObservations,
     );
 
-    renderWithQueryClient(<Observations reportId="report-1" />);
+    renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
     await screen.findByTestId('radiology-observations-test-id');
 
@@ -511,7 +511,7 @@ describe('Observations Component', () => {
       transformedObservations,
     );
 
-    renderWithQueryClient(<Observations reportId="report-1" />);
+    renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
     await screen.findByTestId('radiology-observations-test-id');
 
@@ -519,7 +519,7 @@ describe('Observations Component', () => {
       screen.getByTestId('observation-item-Simple Test-0'),
     ).toBeInTheDocument();
     expect(
-      screen.getByTestId('observation-item-Panel Test-0'),
+      screen.getByTestId('observation-item-Panel Test-1'),
     ).toBeInTheDocument();
   });
 });
