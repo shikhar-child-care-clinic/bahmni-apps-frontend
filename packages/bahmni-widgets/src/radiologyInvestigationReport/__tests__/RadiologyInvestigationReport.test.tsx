@@ -42,7 +42,7 @@ describe('Observations Component', () => {
 
   it('should render loading state when data is being fetched', () => {
     (getDiagnosticReportBundle as jest.Mock).mockImplementation(
-      () => new Promise(() => {}), // Never resolves to keep in loading state
+      () => new Promise(() => {}),
     );
 
     renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
@@ -274,8 +274,6 @@ describe('Observations Component', () => {
   });
 
   it('should render grouped observations with members', async () => {
-    // Note: Component expects groupedObservations to work like ExtractedObservation with 'members'
-    // but type system expects GroupedObservation with 'children'. Using 'as any' to test actual behavior.
     const transformedObservations: ExtractedObservationsResult = {
       observations: [],
       groupedObservations: [
@@ -305,7 +303,7 @@ describe('Observations Component', () => {
             },
           ],
         },
-      ] as any,
+      ],
     };
 
     (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({

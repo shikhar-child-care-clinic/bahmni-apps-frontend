@@ -508,7 +508,6 @@ describe('RadiologyInvestigationTable', () => {
 
     it('should render "View Report" link when investigation has reportId', () => {
       (useQuery as jest.Mock).mockImplementation((options) => {
-        // Mock for radiology investigations query
         if (options.queryKey[0] === 'radiologyInvestigation') {
           return {
             data: [mockInvestigationWithReport],
@@ -517,7 +516,6 @@ describe('RadiologyInvestigationTable', () => {
             isLoading: false,
           };
         }
-        // Default for other queries
         return {
           data: null,
           isLoading: false,
@@ -535,7 +533,6 @@ describe('RadiologyInvestigationTable', () => {
 
     it('should open modal when "View Report" link is clicked', async () => {
       (useQuery as jest.Mock).mockImplementation((options) => {
-        // Mock for radiology investigations query
         if (options.queryKey[0] === 'radiologyInvestigation') {
           return {
             data: [mockInvestigationWithReport],
@@ -544,14 +541,12 @@ describe('RadiologyInvestigationTable', () => {
             isLoading: false,
           };
         }
-        // Mock for diagnostic report bundle query
         if (options.queryKey[0] === 'diagnosticReportBundle') {
           return {
             data: mockDiagnosticReportBundle,
             isLoading: false,
           };
         }
-        // Default for other queries
         return {
           data: null,
           isLoading: false,
@@ -574,7 +569,6 @@ describe('RadiologyInvestigationTable', () => {
 
     it('should display modal with correct heading and label', async () => {
       (useQuery as jest.Mock).mockImplementation((options) => {
-        // Mock for radiology investigations query
         if (options.queryKey[0] === 'radiologyInvestigation') {
           return {
             data: [mockInvestigationWithReport],
@@ -583,14 +577,12 @@ describe('RadiologyInvestigationTable', () => {
             isLoading: false,
           };
         }
-        // Mock for diagnostic report bundle query
         if (options.queryKey[0] === 'diagnosticReportBundle') {
           return {
             data: mockDiagnosticReportBundle,
             isLoading: false,
           };
         }
-        // Default for other queries
         return {
           data: null,
           isLoading: false,
@@ -612,7 +604,6 @@ describe('RadiologyInvestigationTable', () => {
 
     it('should display loading state in modal while fetching diagnostic report', async () => {
       (useQuery as jest.Mock).mockImplementation((options) => {
-        // Mock for radiology investigations query
         if (options.queryKey[0] === 'radiologyInvestigation') {
           return {
             data: [mockInvestigationWithReport],
@@ -621,14 +612,12 @@ describe('RadiologyInvestigationTable', () => {
             isLoading: false,
           };
         }
-        // Mock for diagnostic report bundle query - loading state
         if (options.queryKey[0] === 'diagnosticReportBundle') {
           return {
             data: null,
             isLoading: true,
           };
         }
-        // Default for other queries
         return {
           data: null,
           isLoading: false,
@@ -648,14 +637,12 @@ describe('RadiologyInvestigationTable', () => {
         ).toBeInTheDocument();
       });
 
-      // Check for loading skeleton in modal body
       const skeletons = screen.getAllByTestId(/skeleton/i);
       expect(skeletons.length).toBeGreaterThan(0);
     });
 
     it('should display observations when diagnostic report is loaded', async () => {
       (useQuery as jest.Mock).mockImplementation((options) => {
-        // Mock for radiology investigations query
         if (options.queryKey[0] === 'radiologyInvestigation') {
           return {
             data: [mockInvestigationWithReport],
@@ -664,14 +651,12 @@ describe('RadiologyInvestigationTable', () => {
             isLoading: false,
           };
         }
-        // Mock for diagnostic report bundle query
         if (options.queryKey[0] === 'diagnosticReportBundle') {
           return {
             data: mockDiagnosticReportBundle,
             isLoading: false,
           };
         }
-        // Default for other queries
         return {
           data: null,
           isLoading: false,
@@ -694,7 +679,6 @@ describe('RadiologyInvestigationTable', () => {
 
     it('should close modal when close is requested', async () => {
       (useQuery as jest.Mock).mockImplementation((options) => {
-        // Mock for radiology investigations query
         if (options.queryKey[0] === 'radiologyInvestigation') {
           return {
             data: [mockInvestigationWithReport],
@@ -703,14 +687,12 @@ describe('RadiologyInvestigationTable', () => {
             isLoading: false,
           };
         }
-        // Mock for diagnostic report bundle query
         if (options.queryKey[0] === 'diagnosticReportBundle') {
           return {
             data: mockDiagnosticReportBundle,
             isLoading: false,
           };
         }
-        // Default for other queries
         return {
           data: null,
           isLoading: false,
