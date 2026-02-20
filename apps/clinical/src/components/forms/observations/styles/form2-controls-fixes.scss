@@ -78,3 +78,32 @@ button.abnormal-button:disabled {
   border: $spacing-01 solid $red-30 !important;
   background: $red-20 !important;
 }
+.form-builder-row .obs-control-select-wrapper {
+  width: calc($spacing-12 + $spacing-12 + $spacing-01) !important;
+  max-width: calc($spacing-12 + $spacing-12 + $spacing-01) !important;
+  min-width: calc($spacing-12 + $spacing-12 + $spacing-01) !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.form-builder-row .obs-control-select-wrapper .Select-control {
+  width: calc($spacing-12 + $spacing-12 + $spacing-01) !important;
+  max-width: calc($spacing-12 + $spacing-12 + $spacing-01) !important;
+  min-width: calc($spacing-12 + $spacing-12 + $spacing-01) !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.form-builder-row .obs-control-select-wrapper .Select-input {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.form-builder-row .obs-control-select-wrapper .Select-input > input {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
