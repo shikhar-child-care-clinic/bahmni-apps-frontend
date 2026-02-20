@@ -48,6 +48,13 @@ import {
 export const radiologyInvestigationQueryKeys = (patientUUID: string) =>
   ['radiologyInvestigation', patientUUID] as const;
 
+const STATUS_TRANSLATION_MAP: Record<ServiceRequestStatus, string> = {
+  [ServiceRequestStatus.Active]: 'IN_PROGRESS_STATUS',
+  [ServiceRequestStatus.Completed]: 'COMPLETED_STATUS',
+  [ServiceRequestStatus.Revoked]: 'REVOKED_STATUS',
+  [ServiceRequestStatus.Unknown]: 'UNKNOWN_STATUS',
+};
+
 const fetchRadiologyInvestigations = async (
   patientUUID: string,
   category: string,
@@ -342,18 +349,13 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
             id={`${investigation.id}-status`}
             data-testid={`${investigation.id}-status-test-id`}
           >
-            {investigation.status === ServiceRequestStatus.Active && (
-              <Tag type="outline">{t('IN_PROGRESS_STATUS')}</Tag>
-            )}
-            {investigation.status === ServiceRequestStatus.Completed && (
-              <Tag type="outline">{t('COMPLETED_STATUS')}</Tag>
-            )}
-            {investigation.status === ServiceRequestStatus.Revoked && (
-              <Tag type="outline">{t('REVOKED_STATUS')}</Tag>
-            )}
-            {investigation.status === ServiceRequestStatus.Unknown && (
-              <Tag type="outline">{t('UNKNOWN_STATUS')}</Tag>
-            )}
+            <Tag type="outline">
+              {t(
+                STATUS_TRANSLATION_MAP[
+                  investigation.status as ServiceRequestStatus
+                ],
+              )}
+            </Tag>
           </span>
         );
       default:

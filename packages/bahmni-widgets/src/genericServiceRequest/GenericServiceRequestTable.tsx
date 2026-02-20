@@ -34,6 +34,13 @@ export const genericServiceRequestQueryKeys = (
 ) =>
   ['genericServiceRequest', categoryUuid, patientUUID, encounterUuids] as const;
 
+const STATUS_TRANSLATION_MAP: Record<ServiceRequestStatus, string> = {
+  [ServiceRequestStatus.Active]: 'IN_PROGRESS_STATUS',
+  [ServiceRequestStatus.Completed]: 'COMPLETED_STATUS',
+  [ServiceRequestStatus.Revoked]: 'REVOKED_STATUS',
+  [ServiceRequestStatus.Unknown]: 'UNKNOWN_STATUS',
+};
+
 const fetchServiceRequests = async (
   categoryUuid: string,
   patientUUID: string,
@@ -210,20 +217,11 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
           return request.orderedBy;
         case 'status':
           return (
-            <>
-              {request.status === ServiceRequestStatus.Active && (
-                <Tag type="outline">{t('IN_PROGRESS_STATUS')}</Tag>
+            <Tag type="outline">
+              {t(
+                STATUS_TRANSLATION_MAP[request.status as ServiceRequestStatus],
               )}
-              {request.status === ServiceRequestStatus.Completed && (
-                <Tag type="outline">{t('COMPLETED_STATUS')}</Tag>
-              )}
-              {request.status === ServiceRequestStatus.Revoked && (
-                <Tag type="outline">{t('REVOKED_STATUS')}</Tag>
-              )}
-              {request.status === ServiceRequestStatus.Unknown && (
-                <Tag type="outline">{t('UNKNOWN_STATUS')}</Tag>
-              )}
-            </>
+            </Tag>
           );
 
         default:
