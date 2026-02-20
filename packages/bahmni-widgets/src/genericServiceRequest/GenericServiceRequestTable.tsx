@@ -23,7 +23,11 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
-import { ServiceRequestViewModel, ServiceRequestStatus } from './models';
+import {
+  ServiceRequestViewModel,
+  ServiceRequestStatus,
+  STATUS_TRANSLATION_MAP,
+} from './models';
 import styles from './styles/GenericServiceRequestTable.module.scss';
 import { mapServiceRequest, sortServiceRequestsByPriority } from './utils';
 
@@ -33,13 +37,6 @@ export const genericServiceRequestQueryKeys = (
   encounterUuids?: string[],
 ) =>
   ['genericServiceRequest', categoryUuid, patientUUID, encounterUuids] as const;
-
-const STATUS_TRANSLATION_MAP: Record<ServiceRequestStatus, string> = {
-  [ServiceRequestStatus.Active]: 'IN_PROGRESS_STATUS',
-  [ServiceRequestStatus.Completed]: 'COMPLETED_STATUS',
-  [ServiceRequestStatus.Revoked]: 'REVOKED_STATUS',
-  [ServiceRequestStatus.Unknown]: 'UNKNOWN_STATUS',
-};
 
 const fetchServiceRequests = async (
   categoryUuid: string,

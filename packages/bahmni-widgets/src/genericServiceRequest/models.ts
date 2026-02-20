@@ -5,6 +5,13 @@ export enum ServiceRequestStatus {
   Unknown = 'unknown',
 }
 
+export const STATUS_TRANSLATION_MAP: Record<ServiceRequestStatus, string> = {
+  [ServiceRequestStatus.Active]: 'IN_PROGRESS_STATUS',
+  [ServiceRequestStatus.Completed]: 'COMPLETED_STATUS',
+  [ServiceRequestStatus.Revoked]: 'REVOKED_STATUS',
+  [ServiceRequestStatus.Unknown]: 'UNKNOWN_STATUS',
+};
+
 export interface ServiceRequestViewModel {
   id: string;
   testName: string;

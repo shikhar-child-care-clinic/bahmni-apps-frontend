@@ -27,7 +27,10 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import type { DiagnosticReport } from 'fhir/r4';
 import React, { useMemo, useEffect, useState } from 'react';
-import { ServiceRequestStatus } from '../genericServiceRequest/models';
+import {
+  ServiceRequestStatus,
+  STATUS_TRANSLATION_MAP,
+} from '../genericServiceRequest/models';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import {
   extractDiagnosticReportsFromBundle,
@@ -47,13 +50,6 @@ import {
 
 export const radiologyInvestigationQueryKeys = (patientUUID: string) =>
   ['radiologyInvestigation', patientUUID] as const;
-
-const STATUS_TRANSLATION_MAP: Record<ServiceRequestStatus, string> = {
-  [ServiceRequestStatus.Active]: 'IN_PROGRESS_STATUS',
-  [ServiceRequestStatus.Completed]: 'COMPLETED_STATUS',
-  [ServiceRequestStatus.Revoked]: 'REVOKED_STATUS',
-  [ServiceRequestStatus.Unknown]: 'UNKNOWN_STATUS',
-};
 
 const fetchRadiologyInvestigations = async (
   patientUUID: string,
