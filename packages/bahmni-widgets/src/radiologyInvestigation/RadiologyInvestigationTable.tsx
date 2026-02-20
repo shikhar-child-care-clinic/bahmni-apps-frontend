@@ -34,8 +34,8 @@ import {
   updateInvestigationsWithReportInfo,
 } from '../labinvestigation/utils';
 import { useNotification } from '../notification';
+import { RadiologyInvestigationReport } from '../radiologyInvestigationReport';
 import { WidgetProps } from '../registry/model';
-import { RadiologyInvestigationReport } from './components/RadiologyInvestigationReport';
 import { RadiologyInvestigationViewModel } from './models';
 import styles from './styles/RadiologyInvestigationTable.module.scss';
 import {

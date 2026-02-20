@@ -4,8 +4,8 @@ import { render, screen } from '@testing-library/react';
 import {
   ExtractedObservation,
   ExtractedObservationsResult,
-} from '../../../observations/models';
-import { extractObservationsFromBundle } from '../../../observations/utils';
+} from '../../observations/models';
+import { extractObservationsFromBundle } from '../../observations/utils';
 import { RadiologyInvestigationReport } from '../RadiologyInvestigationReport';
 
 jest.mock('@bahmni/services', () => ({
@@ -13,8 +13,8 @@ jest.mock('@bahmni/services', () => ({
   getDiagnosticReportBundle: jest.fn(),
 }));
 
-jest.mock('../../../observations/utils', () => ({
-  ...jest.requireActual('../../../observations/utils'),
+jest.mock('../../observations/utils', () => ({
+  ...jest.requireActual('../../observations/utils'),
   extractObservationsFromBundle: jest.fn(),
 }));
 

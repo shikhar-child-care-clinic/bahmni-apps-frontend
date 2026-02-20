@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import classNames from 'classnames';
 import type { Bundle, Observation, Encounter } from 'fhir/r4';
 import React, { useMemo } from 'react';
-import { ExtractedObservation } from '../../observations/models';
-import { extractObservationsFromBundle } from '../../observations/utils';
+import { ExtractedObservation } from '../observations/models';
+import { extractObservationsFromBundle } from '../observations/utils';
 import styles from './styles/RadiologyInvestigationReport.module.scss';
 
 export interface RadiologyInvestigationReportProps {
