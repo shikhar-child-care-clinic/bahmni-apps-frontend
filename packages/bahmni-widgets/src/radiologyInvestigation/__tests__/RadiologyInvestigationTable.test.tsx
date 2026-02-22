@@ -39,7 +39,7 @@ jest.mock('../../hooks/usePatientUUID', () => ({
   usePatientUUID: jest.fn(() => 'test-patient-uuid'),
 }));
 
-jest.mock('../../RadiologyInvestigationReport', () => ({
+jest.mock('../../radiologyInvestigationReport', () => ({
   RadiologyInvestigationReport: ({ reportId }: { reportId: string }) => (
     <div data-testid="radiology-observations-test-id">
       Report ID: {reportId}
