@@ -1,3 +1,4 @@
+import { FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL } from '@bahmni/services';
 import { Bundle, Observation } from 'fhir/r4';
 import {
   extractFormFieldPath,
@@ -5,9 +6,6 @@ import {
   getFormFieldPathAndComment,
   filterObservationsByFormName,
 } from '../utils';
-
-const FORM_NAMESPACE_PATH_URL =
-  'http://fhir.bahmni.org/ext/observation/form-namespace-path';
 
 const makeObservation = (
   id: string,
@@ -33,7 +31,7 @@ describe('forms/utils', () => {
       const obs = makeObservation('obs-1', 'Temperature', {
         extension: [
           {
-            url: FORM_NAMESPACE_PATH_URL,
+            url: FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
             valueString: 'Vitals.1/1-0',
           },
         ],
@@ -110,7 +108,7 @@ describe('forms/utils', () => {
       const obs = makeObservation('obs-1', 'Temperature', {
         extension: [
           {
-            url: FORM_NAMESPACE_PATH_URL,
+            url: FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
             valueString: 'Vitals.1/1-0',
           },
         ],
@@ -129,7 +127,7 @@ describe('forms/utils', () => {
       const obs = makeObservation('obs-1', 'Temperature', {
         extension: [
           {
-            url: FORM_NAMESPACE_PATH_URL,
+            url: FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
             valueString: 'Vitals.1/1-0',
           },
         ],
@@ -190,7 +188,7 @@ describe('forms/utils', () => {
         valueQuantity: { value: 98.6, unit: 'F' },
         extension: [
           {
-            url: FORM_NAMESPACE_PATH_URL,
+            url: FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
             valueString: 'Vitals.1/1-0',
           },
         ],
@@ -208,7 +206,7 @@ describe('forms/utils', () => {
         valueQuantity: { value: 98.6, unit: 'F' },
         extension: [
           {
-            url: FORM_NAMESPACE_PATH_URL,
+            url: FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
             valueString: 'OtherForm.1/1-0',
           },
         ],
@@ -235,7 +233,7 @@ describe('forms/utils', () => {
         valueQuantity: { value: 98.6, unit: 'F' },
         extension: [
           {
-            url: FORM_NAMESPACE_PATH_URL,
+            url: FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
             valueString: 'Vitals.1/1-0',
           },
         ],
@@ -252,7 +250,7 @@ describe('forms/utils', () => {
         valueQuantity: { value: 98.6, unit: 'F' },
         extension: [
           {
-            url: FORM_NAMESPACE_PATH_URL,
+            url: FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
             valueString: 'Vitals.1/1-0',
           },
         ],
@@ -261,7 +259,7 @@ describe('forms/utils', () => {
         valueQuantity: { value: 70, unit: 'kg' },
         extension: [
           {
-            url: FORM_NAMESPACE_PATH_URL,
+            url: FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
             valueString: 'PhysicalExam.1/1-0',
           },
         ],
@@ -287,7 +285,7 @@ describe('forms/utils', () => {
         hasMember: [{ reference: 'Observation/child-1' }],
         extension: [
           {
-            url: FORM_NAMESPACE_PATH_URL,
+            url: FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
             valueString: 'Vitals.1/2-0',
           },
         ],
@@ -309,7 +307,7 @@ describe('forms/utils', () => {
         hasMember: [{ reference: 'Observation/child-1' }],
         extension: [
           {
-            url: FORM_NAMESPACE_PATH_URL,
+            url: FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL,
             valueString: 'OtherForm.1/2-0',
           },
         ],

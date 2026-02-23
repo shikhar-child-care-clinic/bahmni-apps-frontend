@@ -44,7 +44,7 @@ export async function getActiveVisit(
  * @param encounterUUID - Encounter UUID
  * @returns Promise resolving to FHIR observation bundle
  */
-export async function getFormsDataByEncounterUuid(
+export async function getObservationsBundleByEncounterUuid(
   encounterUUID: string,
 ): Promise<Bundle<Observation>> {
   return await get<Bundle<Observation>>(BAHMNI_ENCOUNTER_URL(encounterUUID));

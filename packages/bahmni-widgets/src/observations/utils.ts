@@ -193,9 +193,10 @@ function extractObservationValue(
   }
 
   if (valueDateTime) {
-    const dateOnly = valueDateTime.split('T')[0];
+    const parts = valueDateTime.split('T');
+    const dateOnly = parts[0];
     return {
-      value: dateOnly,
+      value: dateOnly || valueDateTime,
       type: 'dateTime',
       isAbnormal,
     };

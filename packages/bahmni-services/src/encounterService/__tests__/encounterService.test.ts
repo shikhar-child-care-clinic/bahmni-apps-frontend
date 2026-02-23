@@ -3,7 +3,7 @@ import {
   getPatientVisits,
   getVisits,
   getActiveVisit,
-  getFormsDataByEncounterUuid,
+  getObservationsBundleByEncounterUuid,
 } from '../../encounterService';
 import {
   mockVisitBundle,
@@ -92,13 +92,13 @@ describe('encounterService', () => {
     });
   });
 
-  describe('getFormsDataByEncounterUuid', () => {
+  describe('getObservationsBundleByEncounterUuid', () => {
     const encounterUUID = 'e8c5eeb5-86d9-44d4-b37a-9de74a122a6e';
 
     it('should fetch forms encounter from the FHIR API endpoint', async () => {
       mockedGet.mockResolvedValueOnce(mockFormsEncounter);
 
-      await getFormsDataByEncounterUuid(encounterUUID);
+      await getObservationsBundleByEncounterUuid(encounterUUID);
 
       expect(mockedGet).toHaveBeenCalledWith(
         expect.stringContaining(`/Observation?encounter=${encounterUUID}`),
@@ -108,7 +108,7 @@ describe('encounterService', () => {
     it('should return the forms encounter data', async () => {
       mockedGet.mockResolvedValueOnce(mockFormsEncounter);
 
-      const result = await getFormsDataByEncounterUuid(encounterUUID);
+      const result = await getObservationsBundleByEncounterUuid(encounterUUID);
 
       expect(result.resourceType).toBe('Bundle');
       expect(result.entry).toBeDefined();
