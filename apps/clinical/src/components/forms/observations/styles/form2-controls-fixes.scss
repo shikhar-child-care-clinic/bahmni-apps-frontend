@@ -3,7 +3,7 @@
 @use "@carbon/react/scss/type" as *;
 @use "@carbon/react/scss/colors" as *;
 
-$obs-select-width: calc($spacing-12 + $spacing-12 + $spacing-01);
+$obs-select-width: calc($spacing-12 * 8);
 
 .form-control-buttons button,
 button.abnormal-button {
