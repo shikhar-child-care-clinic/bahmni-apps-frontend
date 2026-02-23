@@ -17,7 +17,7 @@ interface User extends BaseResource {
 
 interface AuditInfo {
   creator?: User;
-  dateCreated?: string;
+  dateCreated: string;
   changedBy?: User | null;
   dateChanged?: string | null;
 }
@@ -143,7 +143,7 @@ interface ProgramEnrollmentState {
   endDate: string | null;
   voided: boolean;
   state: WorkflowState;
-  auditInfo?: AuditInfo;
+  auditInfo: AuditInfo;
 }
 
 interface Workflow extends BaseResource {

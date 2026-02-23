@@ -73,8 +73,8 @@ export function getCurrentStateName(
       (state) => state.endDate !== null,
     );
     const sortedStates = statesWithEndDate.sort((a, b) => {
-      const dateA = new Date(a.endDate!).getTime();
-      const dateB = new Date(b.endDate!).getTime();
+      const dateA = new Date(a.auditInfo.dateCreated).getTime();
+      const dateB = new Date(b.auditInfo.dateCreated).getTime();
       return dateA - dateB;
     });
     currentState = sortedStates[sortedStates.length - 1];
@@ -86,11 +86,10 @@ export function getCurrentStateName(
     return null;
   }
 
-  const conceptName = getDisplayNameForConcept(
-    currentState.state.concept.names,
+  return (
+    getDisplayNameForConcept(currentState.state.concept.names) ??
+    currentState.state.concept.display
   );
-
-  return conceptName ?? currentState.state.concept.display;
 }
 
 /**

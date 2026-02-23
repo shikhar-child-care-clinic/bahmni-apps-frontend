@@ -241,7 +241,6 @@ export const mockEnrollments: ProgramEnrollment[] = [
       },
       dateCreated: '2023-01-01T10:00:00.000+0000',
       changedBy: null,
-      dateChanged: null,
     },
     links: [],
     resourceVersion: '1.0',
@@ -326,6 +325,19 @@ export const mockEnrollments: ProgramEnrollment[] = [
           links: [],
           resourceVersion: '1.0',
         },
+        auditInfo: {
+          creator: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+          dateCreated: '2024-01-01T10:00:00.000+0000',
+          changedBy: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+        },
       },
       {
         uuid: 'state-2',
@@ -367,6 +379,15 @@ export const mockEnrollments: ProgramEnrollment[] = [
           },
           links: [],
           resourceVersion: '1.0',
+        },
+        auditInfo: {
+          creator: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+          dateCreated: '2024-06-01T10:00:00.000+0000',
+          changedBy: null,
         },
       },
     ],
@@ -410,7 +431,6 @@ export const mockEnrollments: ProgramEnrollment[] = [
       },
       dateCreated: '2024-01-01T10:00:00.000+0000',
       changedBy: null,
-      dateChanged: null,
     },
     links: [],
     resourceVersion: '1.0',
@@ -494,6 +514,19 @@ export const mockEnrollments: ProgramEnrollment[] = [
           links: [],
           resourceVersion: '1.0',
         },
+        auditInfo: {
+          creator: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+          dateCreated: '2023-01-01T10:00:00.000+0000',
+          changedBy: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+        },
       },
       {
         uuid: 'state-4',
@@ -513,6 +546,19 @@ export const mockEnrollments: ProgramEnrollment[] = [
           },
           links: [],
           resourceVersion: '1.0',
+        },
+        auditInfo: {
+          creator: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+          dateCreated: '2023-06-01T10:00:00.000+0000',
+          changedBy: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
         },
       },
       {
@@ -546,6 +592,19 @@ export const mockEnrollments: ProgramEnrollment[] = [
           links: [],
           resourceVersion: '1.0',
         },
+        auditInfo: {
+          creator: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+          dateCreated: '2024-01-01T10:00:00.000+0000',
+          changedBy: {
+            uuid: 'user-2',
+            display: 'Nurse User',
+            links: [],
+          },
+        },
       },
     ],
     attributes: [],
@@ -559,7 +618,6 @@ export const mockEnrollments: ProgramEnrollment[] = [
       },
       dateCreated: '2023-01-01T10:00:00.000+0000',
       changedBy: null,
-      dateChanged: null,
     },
     links: [],
     resourceVersion: '1.0',
@@ -643,6 +701,19 @@ export const mockEnrollments: ProgramEnrollment[] = [
           },
           links: [],
           resourceVersion: '1.0',
+        },
+        auditInfo: {
+          creator: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+          dateCreated: '2023-01-01T10:00:00.000+0000',
+          changedBy: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
         },
       },
     ],
