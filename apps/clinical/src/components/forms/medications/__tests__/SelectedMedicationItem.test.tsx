@@ -1124,7 +1124,7 @@ describe('SelectedMedicationItem', () => {
           'entry-1',
           expect.any(Date),
         );
-        expect(updateDuration).toHaveBeenCalledWith('entry-1', 0);
+        expect(updateDuration).toHaveBeenCalledWith('entry-1', 5);
         expect(updateDurationUnit).toHaveBeenCalledWith('entry-1', null);
       });
 
@@ -1185,7 +1185,7 @@ describe('SelectedMedicationItem', () => {
         // Assert
         expect(updateFrequency).toHaveBeenCalledWith('entry-1', null);
       });
-      test('sets immediate frequency, start date, and clears duration when STAT is true and PRN is false', () => {
+      test('sets immediate frequency, start date, and preserves duration when STAT is true and PRN is false', () => {
         // Arrange
         const updateFrequency = jest.fn();
         const updateStartDate = jest.fn();
@@ -1233,7 +1233,7 @@ describe('SelectedMedicationItem', () => {
           expect.any(Date),
         );
 
-        expect(updateDuration).toHaveBeenCalledWith('entry-1', 0);
+        expect(updateDuration).toHaveBeenCalledWith('entry-1', 7);
 
         expect(updateDurationUnit).toHaveBeenCalledWith('entry-1', null);
       });
@@ -1277,7 +1277,7 @@ describe('SelectedMedicationItem', () => {
           'entry-1',
           expect.any(Date),
         );
-        expect(updateDuration).toHaveBeenCalledWith('entry-1', 0);
+        expect(updateDuration).toHaveBeenCalledWith('entry-1', 5);
         expect(updateDurationUnit).toHaveBeenCalledWith('entry-1', null);
       });
     });
