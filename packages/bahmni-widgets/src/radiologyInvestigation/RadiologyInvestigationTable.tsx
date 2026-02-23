@@ -32,13 +32,13 @@ import {
   STATUS_TRANSLATION_MAP,
 } from '../genericServiceRequest/models';
 import { usePatientUUID } from '../hooks/usePatientUUID';
-import {
-  extractDiagnosticReportsFromBundle,
-  updateInvestigationsWithReportInfo,
-} from '../labinvestigation/utils';
 import { useNotification } from '../notification';
 import { RadiologyInvestigationReport } from '../radiologyInvestigationReport';
 import { WidgetProps } from '../registry/model';
+import {
+  extractDiagnosticReportsFromBundle,
+  updateInvestigationsWithReportInfo,
+} from '../utils/Investigations';
 import { RadiologyInvestigationViewModel } from './models';
 import styles from './styles/RadiologyInvestigationTable.module.scss';
 import {

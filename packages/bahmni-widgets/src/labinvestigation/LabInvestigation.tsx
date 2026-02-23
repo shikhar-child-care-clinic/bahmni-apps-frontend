@@ -19,6 +19,10 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
+import {
+  extractDiagnosticReportsFromBundle,
+  updateInvestigationsWithReportInfo,
+} from '../utils/Investigations';
 import LabInvestigationItem from './LabInvestigationItem';
 import { FormattedLabInvestigations, LabInvestigationsByDate } from './models';
 import styles from './styles/LabInvestigation.module.scss';
@@ -26,8 +30,6 @@ import {
   filterLabInvestigationEntries,
   formatLabInvestigations,
   groupLabInvestigationsByDate,
-  updateInvestigationsWithReportInfo,
-  extractDiagnosticReportsFromBundle,
   sortLabInvestigationsByPriority,
 } from './utils';
 
