@@ -1,0 +1,48 @@
+@use "@carbon/react/scss/colors" as *;
+@use "@carbon/react/scss/type" as *;
+@use "@carbon/react/scss/theme" as *;
+@use "@carbon/react/scss/spacing" as *;
+
+.documentsTableBody {
+  td {
+    width: 25%;
+  }
+
+  td:nth-child(1) {
+    width: 30%;
+  }
+
+  td:nth-child(4) {
+    padding-inline: 0 !important;
+  }
+}
+
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: $spacing-02;
+}
+
+.fileIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.pdfIcon {
+  color: $red-50;
+}
+
+.imageIcon {
+  color: $blue-50;
+}
+
+.documentIcon {
+  color: $gray-50;
+}
