@@ -163,6 +163,7 @@ const createDefaultProps = (overrides = {}): SelectedMedicationItemProps => ({
   updateStartDate: jest.fn(),
   updateDispenseQuantity: jest.fn(),
   updateDispenseUnit: jest.fn(),
+  updateNote: jest.fn(),
   ...overrides,
 });
 
@@ -1124,8 +1125,6 @@ describe('SelectedMedicationItem', () => {
           'entry-1',
           expect.any(Date),
         );
-        expect(updateDuration).toHaveBeenCalledWith('entry-1', 5);
-        expect(updateDurationUnit).toHaveBeenCalledWith('entry-1', null);
       });
 
       test('disables controls when STAT is selected without PRN', () => {
@@ -1232,10 +1231,6 @@ describe('SelectedMedicationItem', () => {
           'entry-1',
           expect.any(Date),
         );
-
-        expect(updateDuration).toHaveBeenCalledWith('entry-1', 7);
-
-        expect(updateDurationUnit).toHaveBeenCalledWith('entry-1', null);
       });
 
       test('does not update frequency if immediate frequency is not found in config', () => {
@@ -1272,13 +1267,11 @@ describe('SelectedMedicationItem', () => {
         // Should not call updateFrequency since immediate frequency is not found
         expect(updateFrequency).not.toHaveBeenCalled();
 
-        // But should still update other fields
+        // But should still update start date
         expect(updateStartDate).toHaveBeenCalledWith(
           'entry-1',
           expect.any(Date),
         );
-        expect(updateDuration).toHaveBeenCalledWith('entry-1', 5);
-        expect(updateDurationUnit).toHaveBeenCalledWith('entry-1', null);
       });
     });
 
