@@ -1092,6 +1092,33 @@ describe('SelectedMedicationItem', () => {
         expect(calculateTotalQuantity).toHaveBeenCalled();
         expect(updateDispenseQuantity).toHaveBeenCalledWith('entry-1', 5);
       });
+
+      test('calculates total quantity when duration is 0', () => {
+        const updateDispenseQuantity = jest.fn();
+        (calculateTotalQuantity as jest.Mock).mockReturnValue(0);
+
+        const durationUnit = { code: 'd', display: 'Days', daysMultiplier: 1 };
+        const frequency = { uuid: 'bd-uuid', name: 'BD', frequencyPerDay: 2 };
+
+        const props = createDefaultProps({
+          medicationInputEntry: createMockMedicationInputEntry({
+            dosage: 2,
+            frequency,
+            duration: 0,
+            durationUnit,
+          }),
+          updateDispenseQuantity,
+        });
+
+        render(<SelectedMedicationItem {...props} />);
+        expect(calculateTotalQuantity).toHaveBeenCalledWith(
+          2,
+          frequency,
+          0,
+          durationUnit,
+        );
+        expect(updateDispenseQuantity).toHaveBeenCalledWith('entry-1', 0);
+      });
     });
 
     describe('STAT/PRN Logic', () => {
@@ -1125,6 +1152,8 @@ describe('SelectedMedicationItem', () => {
           'entry-1',
           expect.any(Date),
         );
+        expect(updateDuration).not.toHaveBeenCalled();
+        expect(updateDurationUnit).not.toHaveBeenCalled();
       });
 
       test('disables controls when STAT is selected without PRN', () => {
@@ -1231,6 +1260,8 @@ describe('SelectedMedicationItem', () => {
           'entry-1',
           expect.any(Date),
         );
+        expect(updateDuration).not.toHaveBeenCalled();
+        expect(updateDurationUnit).not.toHaveBeenCalled();
       });
 
       test('does not update frequency if immediate frequency is not found in config', () => {
@@ -1272,6 +1303,96 @@ describe('SelectedMedicationItem', () => {
           'entry-1',
           expect.any(Date),
         );
+        expect(updateDuration).not.toHaveBeenCalled();
+        expect(updateDurationUnit).not.toHaveBeenCalled();
+      });
+
+      test('preserves duration and recalculates total quantity when STAT is toggled on then off', async () => {
+        const updateFrequency = jest.fn();
+        const updateStartDate = jest.fn();
+        const updateDuration = jest.fn();
+        const updateDurationUnit = jest.fn();
+        const updateDispenseQuantity = jest.fn();
+
+        const duration = 7;
+        const durationUnit = DURATION_UNIT_OPTIONS[2]; // Days
+        const bdFrequency = { uuid: 'bd-uuid', name: 'BD', frequencyPerDay: 2 };
+        const immediateFrequency = {
+          uuid: '0',
+          name: 'Immediately',
+          frequencyPerDay: 1,
+        };
+
+        (calculateTotalQuantity as jest.Mock).mockReturnValue(28);
+
+        const baseProps = createDefaultProps({
+          updateFrequency,
+          updateStartDate,
+          updateDuration,
+          updateDurationUnit,
+          updateDispenseQuantity,
+        });
+
+        // Step 1: initial render — STAT off, duration=7
+        const { rerender } = render(
+          <SelectedMedicationItem
+            {...baseProps}
+            medicationInputEntry={createMockMedicationInputEntry({
+              isSTAT: false,
+              isPRN: false,
+              duration,
+              durationUnit,
+              frequency: bdFrequency,
+            })}
+          />,
+        );
+
+        // Step 2: STAT on — parent updates entry with isSTAT=true
+        await act(async () => {
+          rerender(
+            <SelectedMedicationItem
+              {...baseProps}
+              medicationInputEntry={createMockMedicationInputEntry({
+                isSTAT: true,
+                isPRN: false,
+                duration,
+                durationUnit,
+                frequency: immediateFrequency,
+              })}
+            />,
+          );
+        });
+
+        // Step 3: STAT off — parent clears frequency but duration stays unchanged
+        await act(async () => {
+          rerender(
+            <SelectedMedicationItem
+              {...baseProps}
+              medicationInputEntry={createMockMedicationInputEntry({
+                isSTAT: false,
+                isPRN: false,
+                duration,
+                durationUnit,
+                frequency: null,
+              })}
+            />,
+          );
+        });
+
+        expect(updateDuration).not.toHaveBeenCalled();
+        expect(updateDurationUnit).not.toHaveBeenCalled();
+
+        // Assert: after STAT is turned off, total quantity is recalculated using
+        // the preserved duration (not 0 or undefined)
+        await waitFor(() => {
+          expect(calculateTotalQuantity).toHaveBeenCalledWith(
+            expect.anything(),
+            null,
+            duration,
+            durationUnit,
+          );
+          expect(updateDispenseQuantity).toHaveBeenCalledWith('entry-1', 28);
+        });
       });
     });
 
