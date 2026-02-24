@@ -105,7 +105,7 @@ describe('ExpandableDataTable', () => {
     </div>
   );
 
-  it('renders medication table with all rows', () => {
+  it('renders expandable datatable with all rows', () => {
     render(
       <ExpandableDataTable
         headers={mockHeaders}
@@ -122,19 +122,39 @@ describe('ExpandableDataTable', () => {
     expect(screen.getByText('8 Unit')).toBeInTheDocument();
   });
 
-  it('renders expandable rows when renderExpandedContent is provided', () => {
+  it('renders expandable rows when renderExpandedContent returns truthy content, and simple rows when it returns null', () => {
+    const conditionalRenderExpandedContent = (
+      row: (typeof mockMedicationRows)[number],
+    ) => {
+      if (row.status === 'active') {
+        return (
+          <div data-testid={`expanded-content-${row.id}`}>
+            <p>Additional details for {row.name}</p>
+            <p>Dosage Unit: {row.dosageUnit}</p>
+          </div>
+        );
+      }
+      return null;
+    };
+
     render(
       <ExpandableDataTable
         headers={mockHeaders}
         rows={mockMedicationRows}
         ariaLabel="Medication Orders"
         renderCell={renderCell}
-        renderExpandedContent={renderExpandedContent}
+        renderExpandedContent={conditionalRenderExpandedContent}
       />,
     );
 
     const expandButtons = screen.getAllByRole('button', { name: /expand/i });
-    expect(expandButtons.length).toBeGreaterThan(0);
+    const activeMedications = mockMedicationRows.filter(
+      (row) => row.status === 'active',
+    );
+    expect(expandButtons).toHaveLength(activeMedications.length);
+
+    expect(screen.getByText('Paracetamol 650 mg')).toBeInTheDocument();
+    expect(screen.getByText('Oxygen')).toBeInTheDocument();
   });
 
   it('expands and collapses row on button click', () => {
@@ -195,29 +215,6 @@ describe('ExpandableDataTable', () => {
     expect(
       screen.queryByTestId(`expanded-content-${mockMedicationRows[1].id}`),
     ).not.toBeInTheDocument();
-  });
-
-  it('conditionally makes rows expandable using isRowExpandable', () => {
-    const isRowExpandable = (row: (typeof mockMedicationRows)[number]) =>
-      row.status === 'active';
-
-    render(
-      <ExpandableDataTable
-        headers={mockHeaders}
-        rows={mockMedicationRows}
-        ariaLabel="Medication Orders"
-        renderCell={renderCell}
-        renderExpandedContent={renderExpandedContent}
-        isRowExpandable={isRowExpandable}
-      />,
-    );
-
-    const expandButtons = screen.getAllByRole('button', { name: /expand/i });
-
-    const activeMedications = mockMedicationRows.filter(
-      (row) => row.status === 'active',
-    );
-    expect(expandButtons).toHaveLength(activeMedications.length);
   });
 
   it('renders error state when errorStateMessage is provided', () => {

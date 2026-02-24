@@ -245,12 +245,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with full data and expan
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_30_"
+                id="table-sort-_r_2o_"
               >
                 Click to sort rows by Medication header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_30_"
+                aria-describedby="table-sort-_r_2o_"
                 class="cds--table-sort"
                 data-testid="table-header-name"
                 type="button"
@@ -306,12 +306,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with full data and expan
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_31_"
+                id="table-sort-_r_2p_"
               >
                 Click to sort rows by Dosage header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_31_"
+                aria-describedby="table-sort-_r_2p_"
                 class="cds--table-sort"
                 data-testid="table-header-dosage"
                 type="button"
@@ -367,12 +367,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with full data and expan
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_32_"
+                id="table-sort-_r_2q_"
               >
                 Click to sort rows by Instruction header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_32_"
+                aria-describedby="table-sort-_r_2q_"
                 class="cds--table-sort"
                 data-testid="table-header-instruction"
                 type="button"
@@ -428,12 +428,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with full data and expan
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_33_"
+                id="table-sort-_r_2r_"
               >
                 Click to sort rows by Start Date header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_33_"
+                aria-describedby="table-sort-_r_2r_"
                 class="cds--table-sort"
                 data-testid="table-header-startDate"
                 type="button"
@@ -489,12 +489,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with full data and expan
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_34_"
+                id="table-sort-_r_2s_"
               >
                 Click to sort rows by Order Date header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_34_"
+                aria-describedby="table-sort-_r_2s_"
                 class="cds--table-sort"
                 data-testid="table-header-orderDate"
                 type="button"
@@ -550,12 +550,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with full data and expan
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_35_"
+                id="table-sort-_r_2t_"
               >
                 Click to sort rows by Ordered By header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_35_"
+                aria-describedby="table-sort-_r_2t_"
                 class="cds--table-sort"
                 data-testid="table-header-orderedBy"
                 type="button"
@@ -611,12 +611,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with full data and expan
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_36_"
+                id="table-sort-_r_2u_"
               >
                 Click to sort rows by Quantity header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_36_"
+                aria-describedby="table-sort-_r_2u_"
                 class="cds--table-sort"
                 data-testid="table-header-quantity"
                 type="button"
@@ -672,12 +672,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with full data and expan
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_37_"
+                id="table-sort-_r_2v_"
               >
                 Click to sort rows by Status header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_37_"
+                aria-describedby="table-sort-_r_2v_"
                 class="cds--table-sort"
                 data-testid="table-header-status"
                 type="button"
@@ -1204,12 +1204,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with non-expandable rows
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_38_"
+                id="table-sort-_r_30_"
               >
                 Click to sort rows by Medication header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_38_"
+                aria-describedby="table-sort-_r_30_"
                 class="cds--table-sort"
                 data-testid="table-header-name"
                 type="button"
@@ -1265,12 +1265,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with non-expandable rows
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_39_"
+                id="table-sort-_r_31_"
               >
                 Click to sort rows by Dosage header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_39_"
+                aria-describedby="table-sort-_r_31_"
                 class="cds--table-sort"
                 data-testid="table-header-dosage"
                 type="button"
@@ -1326,12 +1326,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with non-expandable rows
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_3a_"
+                id="table-sort-_r_32_"
               >
                 Click to sort rows by Instruction header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_3a_"
+                aria-describedby="table-sort-_r_32_"
                 class="cds--table-sort"
                 data-testid="table-header-instruction"
                 type="button"
@@ -1387,12 +1387,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with non-expandable rows
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_3b_"
+                id="table-sort-_r_33_"
               >
                 Click to sort rows by Start Date header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_3b_"
+                aria-describedby="table-sort-_r_33_"
                 class="cds--table-sort"
                 data-testid="table-header-startDate"
                 type="button"
@@ -1448,12 +1448,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with non-expandable rows
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_3c_"
+                id="table-sort-_r_34_"
               >
                 Click to sort rows by Order Date header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_3c_"
+                aria-describedby="table-sort-_r_34_"
                 class="cds--table-sort"
                 data-testid="table-header-orderDate"
                 type="button"
@@ -1509,12 +1509,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with non-expandable rows
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_3d_"
+                id="table-sort-_r_35_"
               >
                 Click to sort rows by Ordered By header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_3d_"
+                aria-describedby="table-sort-_r_35_"
                 class="cds--table-sort"
                 data-testid="table-header-orderedBy"
                 type="button"
@@ -1570,12 +1570,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with non-expandable rows
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_3e_"
+                id="table-sort-_r_36_"
               >
                 Click to sort rows by Quantity header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_3e_"
+                aria-describedby="table-sort-_r_36_"
                 class="cds--table-sort"
                 data-testid="table-header-quantity"
                 type="button"
@@ -1631,12 +1631,12 @@ exports[`ExpandableDataTable Snapshots matches snapshot with non-expandable rows
             >
               <div
                 class="cds--table-sort__description"
-                id="table-sort-_r_3f_"
+                id="table-sort-_r_37_"
               >
                 Click to sort rows by Status header in ascending order
               </div>
               <button
-                aria-describedby="table-sort-_r_3f_"
+                aria-describedby="table-sort-_r_37_"
                 class="cds--table-sort"
                 data-testid="table-header-status"
                 type="button"

@@ -25,7 +25,6 @@ interface ExpandableDataTableProps<T> {
   emptyStateMessage?: string;
   renderCell?: (row: T, cellId: string) => React.ReactNode;
   renderExpandedContent?: (row: T) => React.ReactNode;
-  isRowExpandable?: (row: T) => boolean;
   className?: string;
   dataTestId?: string;
   initialExpandedRows?: string[];
@@ -42,7 +41,6 @@ export const ExpandableDataTable = <T extends { id: string }>({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   renderCell = (row, cellId) => (row as any)[cellId],
   renderExpandedContent,
-  isRowExpandable,
   className = 'expandable-data-table',
   dataTestId = 'expandable-data-table',
   initialExpandedRows = [],
@@ -143,21 +141,17 @@ export const ExpandableDataTable = <T extends { id: string }>({
               {tableRows.map((row) => {
                 const originalRow = rowMap.get(row.id)!;
                 const isExpanded = expandedRows.has(row.id);
-                const isExpandable = renderExpandedContent
-                  ? isRowExpandable
-                    ? isRowExpandable(originalRow)
-                    : true
-                  : false;
-
+                const isExpandable = renderExpandedContent?.(originalRow);
                 const rowPropsWithKey = getRowProps({ row });
                 const { key, ...rowProps } = rowPropsWithKey;
 
                 return (
-                  <React.Fragment key={key}>
+                  <>
                     {isExpandable ? (
                       <>
                         <TableExpandRow
                           {...rowProps}
+                          key={key}
                           isExpanded={isExpanded}
                           onExpand={() => toggleRowExpansion(row.id)}
                           data-testid={`table-row-${row.id}`}
@@ -176,6 +170,7 @@ export const ExpandableDataTable = <T extends { id: string }>({
                     ) : (
                       <TableRow
                         {...rowProps}
+                        key={key}
                         data-testid={`table-row-${row.id}`}
                       >
                         {hasExpandableRows && (
@@ -191,7 +186,7 @@ export const ExpandableDataTable = <T extends { id: string }>({
                         ))}
                       </TableRow>
                     )}
-                  </React.Fragment>
+                  </>
                 );
               })}
             </TableBody>
