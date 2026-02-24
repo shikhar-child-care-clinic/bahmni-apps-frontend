@@ -100,7 +100,7 @@ export const filterObservationsByFormName = (
 
     ...extractedResult.groupedObservations.flatMap((group) => {
       const { formFieldPath } = getFormFieldPathAndComment(bundle, group.id);
-      return group.children.map((child) => {
+      return (group.members ?? []).map((child) => {
         const { comment } = getFormFieldPathAndComment(bundle, child.id);
         return { obs: child, formFieldPath, comment };
       });
