@@ -19,8 +19,10 @@ import {
   ObservationForm,
   getObservationsBundleByEncounterUuid,
   shouldEnableEncounterFilter,
+  useSubscribeConsultationSaved,
+  ConsultationSavedEventPayload,
 } from '@bahmni/services';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bundle, Observation } from 'fhir/r4';
 import React, { useCallback, useMemo, useState } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
@@ -51,11 +53,14 @@ const FormsTable: React.FC<WidgetProps> = ({
     encounterUuids,
   );
 
+  const queryClient = useQueryClient();
+
   const {
     data: formsData = [],
     isLoading: loading,
     isError,
     error,
+    refetch: refetchForms,
   } = useQuery<FormResponseData[], Error>({
     queryKey: ['forms', patientUuid, episodeOfCareUuids],
     queryFn: () => getPatientFormData(patientUuid!, undefined, numberOfVisits),
@@ -111,6 +116,20 @@ const FormsTable: React.FC<WidgetProps> = ({
       getObservationsBundleByEncounterUuid(selectedRecord!.encounterUuid),
     enabled: !!selectedRecord?.encounterUuid && isModalOpen,
   });
+
+  // Listen to consultation saved events and refetch cached data if observations were updated
+  useSubscribeConsultationSaved(
+    (payload: ConsultationSavedEventPayload) => {
+      if (
+        payload.patientUUID === patientUuid &&
+        payload.updatedConcepts.size > 0
+      ) {
+        refetchForms();
+        queryClient.invalidateQueries({ queryKey: ['formsEncounter'] });
+      }
+    },
+    [patientUuid],
+  );
 
   // Extract observations from FHIR bundle and filter by form name
   const filteredObservations = useMemo(() => {
