@@ -4,7 +4,6 @@ import {
   EncounterDetails,
   ObservationValue,
   ExtractedObservation,
-  GroupedObservation,
   ExtractedObservationsResult,
   ObservationsByEncounter,
 } from './models';
@@ -28,7 +27,7 @@ export const formatEncounterTitle = (
 };
 
 export const formatObservationValue = (
-  observation: ExtractedObservation | GroupedObservation,
+  observation: ExtractedObservation,
 ): string => {
   if (!observation.observationValue?.value) {
     return '';
@@ -38,9 +37,7 @@ export const formatObservationValue = (
   return baseValue;
 };
 
-const formatObservationHeader = (
-  observation: ExtractedObservation | GroupedObservation,
-): string => {
+const formatObservationHeader = (observation: ExtractedObservation): string => {
   const display = observation.display!;
 
   if (!observation.observationValue) {
@@ -259,6 +256,11 @@ function extractSingleObservation(
       extractSingleObservation(obs, encountersMap, observationsMap),
     );
 
+  const sortId =
+    observation.extension
+      ?.find(({ url }) => url.includes('form-namespace-path'))
+      ?.valueString?.split('/')[1] ?? '';
+
   return {
     id: observation.id!,
     display:
@@ -270,6 +272,9 @@ function extractSingleObservation(
       ? extractEncounterDetails(encounterId, encountersMap)
       : undefined,
     members: members.length > 0 ? members : undefined,
+    sortId,
+    conceptId: observation.code?.coding?.[0]?.code,
+    // conceptId is required to group the multiselect obs
   };
 }
 
@@ -295,7 +300,7 @@ export function extractObservationsFromBundle(
   });
 
   const observations: ExtractedObservation[] = [];
-  const groupedObservations: GroupedObservation[] = [];
+  const groupedObservations: ExtractedObservation[] = [];
 
   observationsMap.forEach((obs, id) => {
     if (childIds.has(id)) return;
@@ -306,8 +311,8 @@ export function extractObservationsFromBundle(
       observationsMap,
     );
 
-    if (extracted.members?.length) {
-      groupedObservations.push({ ...extracted, children: extracted.members });
+    if (extracted.members) {
+      groupedObservations.push(extracted);
     } else {
       observations.push(extracted);
     }
@@ -323,7 +328,7 @@ export function groupObservationsByEncounter(
     string,
     {
       observations: ExtractedObservation[];
-      groupedObservations: GroupedObservation[];
+      groupedObservations: ExtractedObservation[];
     }
   >();
 

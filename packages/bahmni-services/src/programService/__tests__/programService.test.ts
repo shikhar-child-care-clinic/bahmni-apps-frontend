@@ -1,14 +1,17 @@
-import { get } from '../../api';
+import { get, post } from '../../api';
 import { mockEnrollments, patientUUID } from '../__mocks__/mocks';
+import { PROGRAM_DETAILS_URL, PATIENT_PROGRAMS_URL } from '../constants';
 import { ProgramEnrollment, PatientProgramsResponse } from '../model';
 import {
   extractAttributes,
   getCurrentStateName,
   getPatientPrograms,
   getProgramByUUID,
+  updateProgramState,
 } from '../programService';
 
 jest.mock('../../api');
+
 describe('programService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -25,9 +28,7 @@ describe('programService', () => {
       const result = await getPatientPrograms(patientUUID);
 
       expect(result).toEqual(mockResponse);
-      expect(get).toHaveBeenCalledWith(
-        `/openmrs/ws/rest/v1/bahmniprogramenrollment?patient=${patientUUID}&v=full`,
-      );
+      expect(get).toHaveBeenCalledWith(PATIENT_PROGRAMS_URL(patientUUID));
     });
 
     it('should return empty array when no enrollments exist', async () => {
@@ -51,9 +52,7 @@ describe('programService', () => {
       const result = await getProgramByUUID(programUUID);
 
       expect(result).toEqual(mockProgramEnrollment);
-      expect(get).toHaveBeenCalledWith(
-        `/openmrs/ws/rest/v1/bahmniprogramenrollment/${programUUID}?v=full`,
-      );
+      expect(get).toHaveBeenCalledWith(PROGRAM_DETAILS_URL(programUUID));
     });
   });
 
@@ -112,14 +111,94 @@ describe('programService', () => {
       const mockEnrollment: ProgramEnrollment = mockEnrollments[2];
 
       const result = getCurrentStateName(mockEnrollment);
-      expect(result).toBe('Recovery');
+      expect(result).toBe('Phase de continuation');
     });
 
     it('should return the active state name if the program is not completed', () => {
       const mockEnrollment: ProgramEnrollment = mockEnrollments[1];
 
       const result = getCurrentStateName(mockEnrollment);
-      expect(result).toBe('Continuation Phase');
+      expect(result).toBe('In Progress');
+    });
+
+    it('should return SHORT name when available', () => {
+      const result = getCurrentStateName(mockEnrollments[1]);
+      expect(result).toBe('In Progress');
+    });
+
+    it('should return FULLY_SPECIFIED name when SHORT not available', () => {
+      const result = getCurrentStateName(mockEnrollments[2]);
+      expect(result).toBe('Phase de continuation');
+    });
+
+    it('should fallback to display when names array is empty', () => {
+      const result = getCurrentStateName(mockEnrollments[3]);
+      expect(result).toBe('Initial Treatment');
+    });
+  });
+
+  describe('updateProgramState', () => {
+    it('should successfully update program state', async () => {
+      const programEnrollmentUUID = 'enrollment-1';
+      const stateConceptUUID = 'concept-state-1';
+      const mockUpdatedEnrollment: ProgramEnrollment = {
+        ...mockEnrollments[0],
+        uuid: programEnrollmentUUID,
+      };
+
+      (post as jest.Mock).mockResolvedValue(mockUpdatedEnrollment);
+
+      const result = await updateProgramState(
+        programEnrollmentUUID,
+        stateConceptUUID,
+      );
+
+      expect(result).toEqual(mockUpdatedEnrollment);
+      expect(post).toHaveBeenCalledWith(
+        `/openmrs/ws/rest/v1/bahmniprogramenrollment/${programEnrollmentUUID}`,
+        {
+          uuid: programEnrollmentUUID,
+          states: [
+            {
+              state: { uuid: stateConceptUUID },
+            },
+          ],
+        },
+      );
+    });
+
+    it('should call post with correct URL and body structure', async () => {
+      const programEnrollmentUUID = 'enrollment-2';
+      const stateConceptUUID = 'workflow-state-2';
+
+      (post as jest.Mock).mockResolvedValue(mockEnrollments[1]);
+
+      await updateProgramState(programEnrollmentUUID, stateConceptUUID);
+
+      expect(post).toHaveBeenCalledTimes(1);
+      expect(post).toHaveBeenCalledWith(
+        `/openmrs/ws/rest/v1/bahmniprogramenrollment/${programEnrollmentUUID}`,
+        expect.objectContaining({
+          uuid: programEnrollmentUUID,
+          states: expect.arrayContaining([
+            expect.objectContaining({
+              state: { uuid: stateConceptUUID },
+            }),
+          ]),
+        }),
+      );
+    });
+
+    it('should handle API errors correctly', async () => {
+      const programEnrollmentUUID = 'enrollment-1';
+      const stateConceptUUID = 'invalid-state-uuid';
+      const mockError = new Error('Failed to update program state');
+
+      (post as jest.Mock).mockRejectedValue(mockError);
+
+      await expect(
+        updateProgramState(programEnrollmentUUID, stateConceptUUID),
+      ).rejects.toThrow('Failed to update program state');
     });
   });
 });

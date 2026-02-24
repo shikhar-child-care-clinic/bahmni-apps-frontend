@@ -1,5 +1,10 @@
-import { get } from '../api';
-import { PATIENT_PROGRAMS_URL, PROGRAM_DETAILS_URL } from './constants';
+import { get, post } from '../api';
+import { getDisplayNameForConcept } from '../conceptService';
+import {
+  PATIENT_PROGRAMS_URL,
+  PROGRAM_DETAILS_URL,
+  PROGRAMS_URL,
+} from './constants';
 import { PatientProgramsResponse, ProgramEnrollment } from './model';
 
 // TODO: Add Optional parameters for pagination and filtering
@@ -26,6 +31,30 @@ export const getProgramByUUID = async (
 };
 
 /**
+ * Updates the state of a program enrollment
+ * @param programEnrollmentUUID - The UUID of the program enrollment to update
+ * @param stateConceptUUID - The UUID of the new state concept to set for the program enrollment
+ * @returns Promise resolving to the updated program enrollment
+ */
+export const updateProgramState = async (
+  programEnrollmentUUID: string,
+  stateConceptUUID: string,
+): Promise<ProgramEnrollment> => {
+  const body = {
+    uuid: programEnrollmentUUID,
+    states: [
+      {
+        state: { uuid: stateConceptUUID },
+      },
+    ],
+  };
+  return await post<ProgramEnrollment>(
+    PROGRAMS_URL(programEnrollmentUUID),
+    body,
+  );
+};
+
+/**
  * Gets the current state name of a program enrollment
  * @param enrollment - The program enrollment object
  * @returns The name of the current state or null if not available
@@ -36,23 +65,31 @@ export function getCurrentStateName(
   if (enrollment.states.length === 0) {
     return null;
   }
+
+  let currentState;
+
   if (enrollment.dateCompleted !== null) {
     const statesWithEndDate = enrollment.states.filter(
       (state) => state.endDate !== null,
     );
     const sortedStates = statesWithEndDate.sort((a, b) => {
-      const dateA = new Date(a.endDate!).getTime();
-      const dateB = new Date(b.endDate!).getTime();
+      const dateA = new Date(a.auditInfo.dateCreated).getTime();
+      const dateB = new Date(b.auditInfo.dateCreated).getTime();
       return dateA - dateB;
     });
-    const latestState = sortedStates[sortedStates.length - 1];
-    return latestState.state.concept.display;
+    currentState = sortedStates[sortedStates.length - 1];
   } else {
-    const activeState = enrollment.states.find(
-      (state) => state.endDate === null,
-    );
-    return activeState!.state.concept.display;
+    currentState = enrollment.states.find((state) => state.endDate === null);
   }
+
+  if (!currentState) {
+    return null;
+  }
+
+  return (
+    getDisplayNameForConcept(currentState.state.concept.names) ??
+    currentState.state.concept.display
+  );
 }
 
 /**
