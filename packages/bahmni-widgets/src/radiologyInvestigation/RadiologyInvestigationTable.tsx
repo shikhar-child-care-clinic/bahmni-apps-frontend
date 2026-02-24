@@ -189,6 +189,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     }));
   }, [data, t]);
 
+  // Fetch reports independent of the other accordion
   const diagnosticReportQueries = useQueries({
     queries: Array.from(openAccordionIndices).map((index) => {
       const accordionGroup = processedInvestigations[index];
