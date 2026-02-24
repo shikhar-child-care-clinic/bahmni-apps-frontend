@@ -3,6 +3,7 @@ import {
   AccordionItem,
   CodeSnippetSkeleton,
 } from '@bahmni/design-system';
+import { ArrowsVertical, ArrowUp, ArrowDown } from '@carbon/icons-react';
 import {
   shouldEnableEncounterFilter,
   useTranslation,
@@ -14,7 +15,7 @@ import {
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import type { DiagnosticReport } from 'fhir/r4';
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useCallback } from 'react';
 
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
@@ -65,6 +66,51 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   );
   const [currentOpenedAccordionIndex, setCurrentOpenedAccordionIndex] =
     useState<number>(0);
+  const [sortConfig, setSortConfig] = useState<{
+    key: 'testName' | 'orderedBy';
+    direction: 'ASC' | 'DESC';
+  } | null>(null);
+
+  const handleSort = useCallback(
+    (key: 'testName' | 'orderedBy') => {
+      setSortConfig((prev) => {
+        if (prev?.key === key) {
+          return prev.direction === 'ASC'
+            ? { key, direction: 'DESC' }
+            : null;
+        }
+        return { key, direction: 'ASC' };
+      });
+    },
+    [],
+  );
+
+  const sortTests = useCallback(
+    (tests: FormattedLabInvestigations[]) => {
+      if (!sortConfig) return tests;
+      return [...tests].sort((a, b) => {
+        const aVal = a[sortConfig.key];
+        const bVal = b[sortConfig.key];
+        const comparison = aVal.localeCompare(bVal);
+        return sortConfig.direction === 'ASC' ? comparison : -comparison;
+      });
+    },
+    [sortConfig],
+  );
+
+  const renderSortIcon = useCallback(
+    (key: 'testName' | 'orderedBy') => {
+      if (sortConfig?.key !== key) {
+        return <ArrowsVertical size={16} />;
+      }
+      return sortConfig.direction === 'ASC' ? (
+        <ArrowUp size={16} />
+      ) : (
+        <ArrowDown size={16} />
+      );
+    },
+    [sortConfig],
+  );
 
   const emptyEncounterFilter = shouldEnableEncounterFilter(
     episodeOfCareUuids,
@@ -236,7 +282,28 @@ const LabInvestigation: React.FC<WidgetProps> = ({
           }}
           title={group.date}
         >
-          {group.tests?.map((test) => (
+          <div
+            className={styles.labTestTableHeader}
+            data-testid="lab-test-table-header"
+          >
+            <button
+              className={`${styles.sortableHeaderButton} ${sortConfig?.key === 'testName' ? styles.sortableHeaderButtonActive : ''}`}
+              onClick={() => handleSort('testName')}
+              data-testid="lab-test-sort-testName"
+            >
+              {t('LAB_TEST_NAME')}
+              {renderSortIcon('testName')}
+            </button>
+            <button
+              className={`${styles.sortableHeaderButton} ${sortConfig?.key === 'orderedBy' ? styles.sortableHeaderButtonActive : ''}`}
+              onClick={() => handleSort('orderedBy')}
+              data-testid="lab-test-sort-orderedBy"
+            >
+              {t('LAB_TEST_ORDERED_BY')}
+              {renderSortIcon('orderedBy')}
+            </button>
+          </div>
+          {sortTests(group.tests ?? []).map((test) => (
             <LabInvestigationItem
               key={`${group.date}-${test.testName}-${test.id || test.testName}`}
               test={test}

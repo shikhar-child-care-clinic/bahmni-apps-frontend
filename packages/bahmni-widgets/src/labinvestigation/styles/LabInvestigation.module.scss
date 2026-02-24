@@ -70,6 +70,47 @@
   padding: 0 $spacing-04 $spacing-04;
 }
 
+.labTestTableHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: $background;
+  border-block: 1px solid $border-subtle;
+}
+
+.sortableHeaderButton {
+  @include type-style("heading-compact-01");
+  display: flex;
+  align-items: center;
+  gap: $spacing-03;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $text-secondary;
+  font-weight: normal;
+  padding: $spacing-03 $spacing-05;
+  min-height: $spacing-09;
+
+  svg {
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  &:hover {
+    background-color: $layer-hover-01;
+
+    svg {
+      opacity: 1;
+    }
+  }
+}
+
+.sortableHeaderButtonActive {
+  svg {
+    opacity: 1;
+  }
+}
+
 .accordionItem {
   background-color: $layer-01;
   :global(.cds--accordion__content),
