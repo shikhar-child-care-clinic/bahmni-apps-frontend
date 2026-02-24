@@ -212,7 +212,15 @@ jest.mock('@bahmni/widgets', () => ({
     addNotification: mockAddNotification,
   })),
   useUserPrivilege: jest.fn(() => ({
-    userPrivileges: ['VIEW_PATIENTS', 'EDIT_ENCOUNTERS'],
+    userPrivileges: [
+      { uuid: '1', name: 'Add Allergies' },
+      { uuid: '2', name: 'Add Orders' },
+      { uuid: '3', name: 'Add Diagnoses' },
+      { uuid: '4', name: 'Add Medications' },
+      { uuid: '5', name: 'Add Vaccinations' },
+    ],
+    isLoading: false,
+    error: null,
   })),
   useActivePractitioner: jest.fn(() => ({
     user: { uuid: 'user-123', username: 'testuser' },
@@ -587,6 +595,20 @@ describe('ConsultationPad', () => {
     mockUsePinnedObservationForms.mockReturnValue({
       pinnedForms: [],
       updatePinnedForms: jest.fn(),
+      isLoading: false,
+      error: null,
+    });
+
+    // Reset useUserPrivilege mock to default (all edit privileges)
+    const mockWidgets = jest.requireMock('@bahmni/widgets');
+    mockWidgets.useUserPrivilege.mockReturnValue({
+      userPrivileges: [
+        { uuid: '1', name: 'Add Allergies' },
+        { uuid: '2', name: 'Add Orders' },
+        { uuid: '3', name: 'Add Diagnoses' },
+        { uuid: '4', name: 'Add Medications' },
+        { uuid: '5', name: 'Add Vaccinations' },
+      ],
       isLoading: false,
       error: null,
     });
@@ -2285,6 +2307,106 @@ describe('ConsultationPad', () => {
         expect(concepts.get('valid-uuid-001')).toBe('Valid Concept 1');
         expect(concepts.get('another-valid-uuid-002')).toBe('Valid Concept 2');
       });
+    });
+  });
+
+  // Privilege-based rendering tests
+  describe('Privilege-based rendering', () => {
+    it('should show all forms when user has all edit privileges', () => {
+      renderWithProvider();
+
+      expect(screen.getByTestId('mock-allergies-form')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-investigations-form')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('mock-conditions-diagnoses'),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('mock-medications-form')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-vaccination-forms')).toBeInTheDocument();
+    });
+
+    it('should hide allergies form when user has no allergy privilege', () => {
+      const mockWidgets = jest.requireMock('@bahmni/widgets');
+      mockWidgets.useUserPrivilege.mockReturnValue({
+        userPrivileges: [
+          { uuid: '2', name: 'Add Orders' },
+          { uuid: '3', name: 'Add Diagnoses' },
+          { uuid: '4', name: 'Add Medications' },
+          { uuid: '5', name: 'Add Vaccinations' },
+        ],
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithProvider();
+
+      expect(screen.queryByTestId('mock-allergies-form')).not.toBeInTheDocument();
+      expect(screen.getByTestId('mock-investigations-form')).toBeInTheDocument();
+    });
+
+    it('should show form with view-only privilege', () => {
+      const mockWidgets = jest.requireMock('@bahmni/widgets');
+      mockWidgets.useUserPrivilege.mockReturnValue({
+        userPrivileges: [{ uuid: '1', name: 'View Allergies' }],
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithProvider();
+
+      // Form should still render in view-only mode
+      expect(screen.getByTestId('mock-allergies-form')).toBeInTheDocument();
+    });
+
+    it('should hide all forms when user has no privileges', () => {
+      const mockWidgets = jest.requireMock('@bahmni/widgets');
+      mockWidgets.useUserPrivilege.mockReturnValue({
+        userPrivileges: [],
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithProvider();
+
+      expect(screen.queryByTestId('mock-allergies-form')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-investigations-form'),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-conditions-diagnoses'),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-medications-form'),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-vaccination-forms'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('should show only sections with matching privileges', () => {
+      const mockWidgets = jest.requireMock('@bahmni/widgets');
+      // Only allergies and medications privileges
+      mockWidgets.useUserPrivilege.mockReturnValue({
+        userPrivileges: [
+          { uuid: '1', name: 'Add Allergies' },
+          { uuid: '4', name: 'Add Medications' },
+        ],
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('mock-allergies-form')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-medications-form')).toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-investigations-form'),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-conditions-diagnoses'),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-vaccination-forms'),
+      ).not.toBeInTheDocument();
     });
   });
 });

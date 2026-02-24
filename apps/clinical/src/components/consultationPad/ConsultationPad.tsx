@@ -12,8 +12,9 @@ import {
   ObservationForm,
   Form2Observation,
   dispatchConsultationSaved,
+  hasPrivilege,
 } from '@bahmni/services';
-import { useNotification, useActivePractitioner } from '@bahmni/widgets';
+import { useNotification, useActivePractitioner, useUserPrivilege } from '@bahmni/widgets';
 import { Bundle } from 'fhir/r4';
 import React, { useEffect } from 'react';
 import { useEncounterSession } from '../../../src/hooks/useEncounterSession';
@@ -31,6 +32,7 @@ import {
   VALIDATION_STATE_INVALID,
   VALIDATION_STATE_SCRIPT_ERROR,
 } from '../../constants/forms';
+import { CONSULTATION_PAD_PRIVILEGES } from '../../constants/consultationPadPrivileges';
 import { useClinicalAppData } from '../../hooks/useClinicalAppData';
 import useObservationFormsSearch from '../../hooks/useObservationFormsSearch';
 import { usePinnedObservationForms } from '../../hooks/usePinnedObservationForms';
@@ -66,6 +68,49 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { t } = useTranslation();
   const { addNotification } = useNotification();
+  const { userPrivileges } = useUserPrivilege();
+
+  // Privilege checks for each section
+  const canAddAllergies = hasPrivilege(
+    userPrivileges,
+    CONSULTATION_PAD_PRIVILEGES.ALLERGIES,
+  );
+  const canAddInvestigations = hasPrivilege(
+    userPrivileges,
+    CONSULTATION_PAD_PRIVILEGES.INVESTIGATIONS,
+  );
+  const canAddConditionsAndDiagnoses = hasPrivilege(
+    userPrivileges,
+    CONSULTATION_PAD_PRIVILEGES.CONDITIONS_AND_DIAGNOSES,
+  );
+  const canAddMedications = hasPrivilege(
+    userPrivileges,
+    CONSULTATION_PAD_PRIVILEGES.MEDICATIONS,
+  );
+  const canAddVaccinations = hasPrivilege(
+    userPrivileges,
+    CONSULTATION_PAD_PRIVILEGES.VACCINATIONS,
+  );
+
+  // Check if user can view each section (has edit OR view privilege)
+  const canViewAllergies =
+    canAddAllergies ||
+    hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.VIEW_ALLERGIES);
+  const canViewInvestigations =
+    canAddInvestigations ||
+    hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.VIEW_INVESTIGATIONS);
+  const canViewConditionsAndDiagnoses =
+    canAddConditionsAndDiagnoses ||
+    hasPrivilege(
+      userPrivileges,
+      CONSULTATION_PAD_PRIVILEGES.VIEW_CONDITIONS_AND_DIAGNOSES,
+    );
+  const canViewMedications =
+    canAddMedications ||
+    hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.VIEW_MEDICATIONS);
+  const canViewVaccinations =
+    canAddVaccinations ||
+    hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.VIEW_VACCINATIONS);
 
   // Use the observation forms store
   const {
@@ -419,16 +464,36 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     <>
       <BasicForm practitionerState={practitionerState} />
       <MenuItemDivider />
-      <AllergiesForm />
-      <MenuItemDivider />
-      <InvestigationsForm />
-      <MenuItemDivider />
-      <ConditionsAndDiagnoses />
-      <MenuItemDivider />
-      <MedicationsForm />
-      <MenuItemDivider />
-      <VaccinationForm />
-      <MenuItemDivider />
+      {canViewAllergies && (
+        <>
+          <AllergiesForm />
+          <MenuItemDivider />
+        </>
+      )}
+      {canViewInvestigations && (
+        <>
+          <InvestigationsForm />
+          <MenuItemDivider />
+        </>
+      )}
+      {canViewConditionsAndDiagnoses && (
+        <>
+          <ConditionsAndDiagnoses />
+          <MenuItemDivider />
+        </>
+      )}
+      {canViewMedications && (
+        <>
+          <MedicationsForm />
+          <MenuItemDivider />
+        </>
+      )}
+      {canViewVaccinations && (
+        <>
+          <VaccinationForm />
+          <MenuItemDivider />
+        </>
+      )}
       <ObservationForms
         onFormSelect={handleFormSelection}
         selectedForms={selectedForms}

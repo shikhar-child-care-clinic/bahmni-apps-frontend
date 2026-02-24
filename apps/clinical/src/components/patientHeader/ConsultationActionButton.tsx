@@ -1,7 +1,8 @@
 import { Button } from '@bahmni/design-system';
-import { useTranslation } from '@bahmni/services';
-import { useActivePractitioner } from '@bahmni/widgets';
+import { hasPrivilege, useTranslation } from '@bahmni/services';
+import { useActivePractitioner, useUserPrivilege } from '@bahmni/widgets';
 import React from 'react';
+import { CONSULTATION_PAD_PRIVILEGES } from '../../constants/consultationPadPrivileges';
 import { useEncounterSession } from '../../hooks/useEncounterSession';
 import styles from './styles/PatientHeader.module.scss';
 
@@ -26,6 +27,20 @@ const ConsultationActionButton: React.FC<ConsultationActionButtonProps> = ({
   const { editActiveEncounter, isLoading } = useEncounterSession({
     practitioner,
   });
+  const { userPrivileges } = useUserPrivilege();
+
+  // Check if user has any edit privilege
+  const hasEditPrivilege =
+    hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.ALLERGIES) ||
+    hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.INVESTIGATIONS) ||
+    hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.CONDITIONS_AND_DIAGNOSES) ||
+    hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.MEDICATIONS) ||
+    hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.VACCINATIONS);
+
+  // Button only visible if user has at least one edit privilege
+  if (!hasEditPrivilege) {
+    return null;
+  }
 
   return (
     <Button

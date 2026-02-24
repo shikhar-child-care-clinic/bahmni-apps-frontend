@@ -2,26 +2,44 @@ import { useTranslation } from '@bahmni/services';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import React from 'react';
-import PatientHeader from '../PatientHeader';
 import '@testing-library/jest-dom';
 
 expect.extend(toHaveNoViolations);
 
 jest.mock('@bahmni/services');
+
+// Export object for mock return values - defined before jest.mock uses it
+export const mockWidgets = {
+  mockUseUserPrivilegeReturn: {
+    userPrivileges: [
+      { uuid: '1', name: 'Add Allergies' },
+      { uuid: '2', name: 'Add Orders' },
+      { uuid: '3', name: 'Add Diagnoses' },
+      { uuid: '4', name: 'Add Medications' },
+      { uuid: '5', name: 'Add Vaccinations' },
+    ],
+    isLoading: false,
+    error: null,
+  },
+};
+
 // Mock the PatientDetails component
-jest.mock('@bahmni/widgets', () => {
-  return {
-    __esModule: true,
-    PatientDetails: () => (
-      <div data-testid="patient-details-mock">PatientDetails Mock</div>
-    ),
-    useActivePractitioner: jest.fn(() => ({
-      uuid: 'active-practitioner-uuid',
-      practitioner: { uuid: 'active-practitioner-uuid' },
-    })),
-    usePatientUUID: jest.fn(() => 'patient-uuid'),
-  };
-});
+jest.mock('@bahmni/widgets', () => ({
+  __esModule: true,
+  PatientDetails: () => (
+    <div data-testid="patient-details-mock">PatientDetails Mock</div>
+  ),
+  useActivePractitioner: jest.fn(() => ({
+    uuid: 'active-practitioner-uuid',
+    practitioner: { uuid: 'active-practitioner-uuid' },
+  })),
+  usePatientUUID: jest.fn(() => 'patient-uuid'),
+  useUserPrivilege: jest.fn(function mockUseUserPrivilege() {
+    return mockWidgets.mockUseUserPrivilegeReturn;
+  }),
+}));
+
+import PatientHeader from '../PatientHeader';
 
 jest.mock('../../../hooks/useEncounterSession', () => ({
   useEncounterSession: jest.fn(() => ({
@@ -66,6 +84,18 @@ describe('PatientHeader Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockedUseTranslation.mockReturnValue({ t: mockTranslate } as any);
+    // Reset useUserPrivilege mock to default (all edit privileges)
+    mockWidgets.mockUseUserPrivilegeReturn = {
+      userPrivileges: [
+        { uuid: '1', name: 'Add Allergies' },
+        { uuid: '2', name: 'Add Orders' },
+        { uuid: '3', name: 'Add Diagnoses' },
+        { uuid: '4', name: 'Add Medications' },
+        { uuid: '5', name: 'Add Vaccinations' },
+      ],
+      isLoading: false,
+      error: null,
+    };
   });
 
   // Basic rendering tests
@@ -133,6 +163,58 @@ describe('PatientHeader Component', () => {
       const { container } = renderComponent();
       const results = await axe(container);
       expect(results).toHaveNoViolations();
+    });
+  });
+
+  // Privilege tests
+  describe('Privilege-based rendering', () => {
+    it('should render button when user has edit privilege', () => {
+      // Button should render by default (has all privileges)
+      renderComponent();
+      const button = screen.getByRole('button');
+      expect(button).toBeInTheDocument();
+      expect(button).not.toBeNull();
+    });
+
+    it('should not render button when user has only view privilege', () => {
+      // Mock user with only view privileges
+      mockWidgets.mockUseUserPrivilegeReturn = {
+        userPrivileges: [
+          { uuid: '1', name: 'View Allergies' },
+          { uuid: '2', name: 'View Orders' },
+        ],
+        isLoading: false,
+        error: null,
+      };
+
+      renderComponent();
+      const button = screen.queryByRole('button');
+      expect(button).not.toBeInTheDocument();
+    });
+
+    it('should not render button when user has no privileges', () => {
+      mockWidgets.mockUseUserPrivilegeReturn = {
+        userPrivileges: [],
+        isLoading: false,
+        error: null,
+      };
+
+      renderComponent();
+      const button = screen.queryByRole('button');
+      expect(button).not.toBeInTheDocument();
+    });
+
+    it('should render button when user has at least one edit privilege', () => {
+      // Only one edit privilege
+      mockWidgets.mockUseUserPrivilegeReturn = {
+        userPrivileges: [{ uuid: '1', name: 'Add Allergies' }],
+        isLoading: false,
+        error: null,
+      };
+
+      renderComponent();
+      const button = screen.getByRole('button');
+      expect(button).toBeInTheDocument();
     });
   });
 });
