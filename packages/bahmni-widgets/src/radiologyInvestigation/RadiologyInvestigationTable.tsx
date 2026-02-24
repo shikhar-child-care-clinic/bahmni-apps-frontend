@@ -1,38 +1,51 @@
 import {
-  SortableDataTable,
-  TooltipIcon,
-  Tag,
   Accordion,
   AccordionItem,
   Link,
+  Modal,
+  SortableDataTable,
+  Tag,
+  TooltipIcon,
 } from '@bahmni/design-system';
 import {
-  getPatientRadiologyInvestigationBundleWithImagingStudy,
-  useTranslation,
-  groupByDate,
-  formatDate,
-  FULL_MONTH_DATE_FORMAT,
-  ISO_DATE_FORMAT,
-  shouldEnableEncounterFilter,
-  getCategoryUuidFromOrderTypes,
-  getFormattedError,
-  dispatchAuditEvent,
   AUDIT_LOG_EVENT_DETAILS,
   AuditEventType,
+  DATE_TIME_FORMAT,
+  dispatchAuditEvent,
+  formatDate,
+  FULL_MONTH_DATE_FORMAT,
+  getCategoryUuidFromOrderTypes,
+  getDiagnosticReports,
+  getFormattedError,
+  getPatientRadiologyInvestigationBundleWithImagingStudy,
+  groupByDate,
+  ISO_DATE_FORMAT,
+  shouldEnableEncounterFilter,
   useSubscribeConsultationSaved,
+  useTranslation,
 } from '@bahmni/services';
-import { useQuery } from '@tanstack/react-query';
-import React, { useMemo, useEffect } from 'react';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import type { DiagnosticReport } from 'fhir/r4';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  ServiceRequestStatus,
+  STATUS_TRANSLATION_MAP,
+} from '../genericServiceRequest/models';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
+import { RadiologyInvestigationReport } from '../radiologyInvestigationReport';
 import { WidgetProps } from '../registry/model';
+import {
+  extractDiagnosticReportsFromBundle,
+  updateInvestigationsWithReportInfo,
+} from '../utils/Investigations';
 import { RadiologyInvestigationViewModel } from './models';
 import styles from './styles/RadiologyInvestigationTable.module.scss';
 import {
-  sortRadiologyInvestigationsByPriority,
-  filterRadiologyInvestionsReplacementEntries,
   createRadiologyInvestigationViewModels,
+  filterRadiologyInvestionsReplacementEntries,
   getAvailableImagingStudies,
+  sortRadiologyInvestigationsByPriority,
 } from './utils';
 
 export const radiologyInvestigationQueryKeys = (patientUUID: string) =>
@@ -68,6 +81,11 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
   const categoryName = config?.orderType as string;
   const numberOfVisits = config?.numberOfVisits as number;
   const pacsViewerUrl = config?.pacsViewerUrl as string;
+  const [openAccordionIndices, setOpenAccordionIndices] = useState<Set<number>>(
+    new Set([0]),
+  );
+  const [selectedInvestigation, setSelectedInvestigation] =
+    useState<RadiologyInvestigationViewModel | null>(null);
 
   const emptyEncounterFilter = shouldEnableEncounterFilter(
     episodeOfCareUuids,
@@ -115,6 +133,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       { key: 'testName', header: t('RADIOLOGY_INVESTIGATION_NAME') },
       { key: 'results', header: t('RADIOLOGY_RESULTS') },
       { key: 'orderedBy', header: t('RADIOLOGY_ORDERED_BY') },
+      { key: 'status', header: t('SERVICE_REQUEST_ORDERED_STATUS') },
     ],
     [t],
   );
@@ -124,6 +143,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       { key: 'testName', sortable: true },
       { key: 'results', sortable: true },
       { key: 'orderedBy', sortable: true },
+      { key: 'status', sortable: true },
     ],
     [],
   );
@@ -169,6 +189,52 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     }));
   }, [data, t]);
 
+  // Fetch reports independent of the other accordion
+  const diagnosticReportQueries = useQueries({
+    queries: Array.from(openAccordionIndices).map((index) => {
+      const accordionGroup = processedInvestigations[index];
+      const orderIds =
+        accordionGroup?.investigations.map(
+          (investigation) => investigation.id,
+        ) ?? [];
+
+      return {
+        queryKey: ['diagnosticReports', patientUUID, index, orderIds],
+        queryFn: () => getDiagnosticReports(patientUUID!, orderIds),
+        enabled: !!patientUUID && orderIds.length > 0,
+      };
+    }),
+  });
+
+  const diagnosticReportsBundle = useMemo(() => {
+    const allBundles = diagnosticReportQueries
+      .map((query) => query.data)
+      .filter((data) => data !== undefined);
+
+    if (allBundles.length === 0) return undefined;
+
+    return {
+      ...allBundles[0],
+      entry: allBundles.flatMap((bundle) => bundle.entry ?? []),
+    };
+  }, [diagnosticReportQueries]);
+
+  const diagnosticReports = useMemo<DiagnosticReport[]>(() => {
+    if (!diagnosticReportsBundle) return [];
+    return extractDiagnosticReportsFromBundle(diagnosticReportsBundle);
+  }, [diagnosticReportsBundle]);
+
+  // Enrich the grouped investigations with diagnostic report info (reportId)
+  const updatedRadiologyInvestigations = useMemo(() => {
+    return processedInvestigations.map((group) => ({
+      ...group,
+      investigations: updateInvestigationsWithReportInfo(
+        group.investigations,
+        diagnosticReports,
+      ) as RadiologyInvestigationViewModel[],
+    }));
+  }, [processedInvestigations, diagnosticReports]);
+
   const handleRadiologyResultClick = () => {
     dispatchAuditEvent({
       eventType: AUDIT_LOG_EVENT_DETAILS.VIEWED_RADIOLOGY_RESULTS
@@ -183,32 +249,45 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     const availableStudies = getAvailableImagingStudies(
       investigation.imagingStudies,
     );
+    const hasViewImagesLink = availableStudies.length > 0 && pacsViewerUrl;
+    const hasViewReportLink = !!investigation.reportId;
 
-    if (availableStudies.length > 0 && pacsViewerUrl) {
+    if (hasViewImagesLink || hasViewReportLink) {
       return (
         <div
           id={`${investigation.id}-results`}
           data-testid={`${investigation.id}-results-test-id`}
+          className={styles.resultsCell}
         >
-          {availableStudies.map((study, index) => {
-            const viewerUrl = pacsViewerUrl.replace(
-              '{{StudyInstanceUIDs}}',
-              study.StudyInstanceUIDs,
-            );
-            return (
-              <Link
-                key={study.id}
-                href={viewerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                id={`${investigation.id}-result-link-${index}`}
-                testId={`${investigation.id}-result-link-${index}-test-id`}
-                onClick={() => handleRadiologyResultClick()}
-              >
-                {t('RADIOLOGY_VIEW_IMAGES')}
-              </Link>
-            );
-          })}
+          {hasViewImagesLink &&
+            availableStudies.map((study, index) => {
+              const viewerUrl = pacsViewerUrl.replace(
+                '{{StudyInstanceUIDs}}',
+                study.StudyInstanceUIDs,
+              );
+              return (
+                <Link
+                  key={study.id}
+                  href={viewerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  id={`${investigation.id}-result-link-${index}`}
+                  testId={`${investigation.id}-result-link-${index}-test-id`}
+                  onClick={() => handleRadiologyResultClick()}
+                >
+                  {t('RADIOLOGY_VIEW_IMAGES')}
+                </Link>
+              );
+            })}
+          {hasViewReportLink && (
+            <Link
+              id={`${investigation.id}-view-report-link`}
+              testId={`${investigation.id}-view-report-link-test-id`}
+              onClick={() => setSelectedInvestigation(investigation)}
+            >
+              {t('RADIOLOGY_VIEW_REPORT')}
+            </Link>
+          )}
         </div>
       );
     }
@@ -266,12 +345,29 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
             {investigation.orderedBy}
           </span>
         );
+      case 'status':
+        return (
+          <span
+            id={`${investigation.id}-status`}
+            data-testid={`${investigation.id}-status-test-id`}
+          >
+            <Tag type="outline">
+              {t(
+                STATUS_TRANSLATION_MAP[
+                  investigation.status as ServiceRequestStatus
+                ],
+              )}
+            </Tag>
+          </span>
+        );
+      default:
+        return null;
     }
   };
 
   if (
     loading ||
-    !!hasError ||
+    hasError ||
     processedInvestigations.length === 0 ||
     emptyEncounterFilter
   ) {
@@ -296,6 +392,11 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     );
   }
 
+  const reportedOn =
+    selectedInvestigation?.reportedDate &&
+    formatDate(selectedInvestigation.reportedDate, t, DATE_TIME_FORMAT)
+      .formattedResult;
+
   return (
     <div
       id="radiology-investigations-table"
@@ -303,7 +404,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       aria-label="radiology-investigations-table-aria-label"
     >
       <Accordion align="start">
-        {processedInvestigations.map((investigationsByDate, index) => {
+        {updatedRadiologyInvestigations.map((investigationsByDate, index) => {
           const { date, investigations } = investigationsByDate;
           const formattedDate = formatDate(
             date,
@@ -317,7 +418,18 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
               key={date}
               className={styles.customAccordianItem}
               testId={'accordian-table-title'}
-              open={index === 0}
+              open={openAccordionIndices.has(index)}
+              onHeadingClick={() => {
+                setOpenAccordionIndices((prev) => {
+                  const newSet = new Set(prev);
+                  if (newSet.has(index)) {
+                    newSet.delete(index);
+                  } else {
+                    newSet.add(index);
+                  }
+                  return newSet;
+                });
+              }}
             >
               <SortableDataTable
                 headers={headers}
@@ -335,6 +447,24 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
           );
         })}
       </Accordion>
+
+      {selectedInvestigation && (
+        <Modal
+          open={!!selectedInvestigation}
+          onRequestClose={() => setSelectedInvestigation(null)}
+          passiveModal
+          modalLabel={`Recorded On : ${reportedOn}  | Recorded By: ${selectedInvestigation.reportedBy}`}
+          modalHeading={selectedInvestigation.testName}
+          testId="diagnostic-report-modal"
+          size="lg"
+        >
+          <Modal.Body>
+            <RadiologyInvestigationReport
+              reportId={selectedInvestigation.reportId!}
+            />
+          </Modal.Body>
+        </Modal>
+      )}
     </div>
   );
 };

@@ -203,6 +203,36 @@ export const mockEnrollments: ProgramEnrollment[] = [
       },
     ],
     episodeUuid: 'episode-1',
+    allowedStates: [
+      {
+        uuid: 'allowed-state-1',
+        display: 'Active',
+        description: 'Patient is actively enrolled',
+        retired: false,
+        concept: {
+          uuid: 'concept-active-1',
+          display: 'Active',
+          links: [],
+          resourceVersion: '1.0',
+        },
+        links: [],
+        resourceVersion: '1.0',
+      },
+      {
+        uuid: 'allowed-state-2',
+        display: 'On Hold',
+        description: 'Program on hold',
+        retired: false,
+        concept: {
+          uuid: 'concept-hold-1',
+          display: 'On Hold',
+          links: [],
+          resourceVersion: '1.0',
+        },
+        links: [],
+        resourceVersion: '1.0',
+      },
+    ],
     auditInfo: {
       creator: {
         uuid: 'user-1',
@@ -211,7 +241,6 @@ export const mockEnrollments: ProgramEnrollment[] = [
       },
       dateCreated: '2023-01-01T10:00:00.000+0000',
       changedBy: null,
-      dateChanged: null,
     },
     links: [],
     resourceVersion: '1.0',
@@ -296,6 +325,19 @@ export const mockEnrollments: ProgramEnrollment[] = [
           links: [],
           resourceVersion: '1.0',
         },
+        auditInfo: {
+          creator: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+          dateCreated: '2024-01-01T10:00:00.000+0000',
+          changedBy: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+        },
       },
       {
         uuid: 'state-2',
@@ -338,10 +380,49 @@ export const mockEnrollments: ProgramEnrollment[] = [
           links: [],
           resourceVersion: '1.0',
         },
+        auditInfo: {
+          creator: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+          dateCreated: '2024-06-01T10:00:00.000+0000',
+          changedBy: null,
+        },
       },
     ],
     attributes: [],
     episodeUuid: 'episode-2',
+    allowedStates: [
+      {
+        uuid: 'allowed-state-3',
+        display: 'Continuation Phase',
+        description: 'Continuation treatment phase',
+        retired: false,
+        concept: {
+          uuid: 'concept-continuation',
+          display: 'Continuation Phase',
+          links: [],
+          resourceVersion: '1.0',
+        },
+        links: [],
+        resourceVersion: '1.0',
+      },
+      {
+        uuid: 'allowed-state-4',
+        display: 'Treatment Complete',
+        description: 'Treatment completed successfully',
+        retired: false,
+        concept: {
+          uuid: 'concept-complete',
+          display: 'Treatment Complete',
+          links: [],
+          resourceVersion: '1.0',
+        },
+        links: [],
+        resourceVersion: '1.0',
+      },
+    ],
     auditInfo: {
       creator: {
         uuid: 'user-1',
@@ -350,7 +431,6 @@ export const mockEnrollments: ProgramEnrollment[] = [
       },
       dateCreated: '2024-01-01T10:00:00.000+0000',
       changedBy: null,
-      dateChanged: null,
     },
     links: [],
     resourceVersion: '1.0',
@@ -434,6 +514,19 @@ export const mockEnrollments: ProgramEnrollment[] = [
           links: [],
           resourceVersion: '1.0',
         },
+        auditInfo: {
+          creator: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+          dateCreated: '2023-01-01T10:00:00.000+0000',
+          changedBy: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+        },
       },
       {
         uuid: 'state-4',
@@ -453,6 +546,19 @@ export const mockEnrollments: ProgramEnrollment[] = [
           },
           links: [],
           resourceVersion: '1.0',
+        },
+        auditInfo: {
+          creator: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+          dateCreated: '2023-06-01T10:00:00.000+0000',
+          changedBy: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
         },
       },
       {
@@ -486,10 +592,24 @@ export const mockEnrollments: ProgramEnrollment[] = [
           links: [],
           resourceVersion: '1.0',
         },
+        auditInfo: {
+          creator: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+          dateCreated: '2024-01-01T10:00:00.000+0000',
+          changedBy: {
+            uuid: 'user-2',
+            display: 'Nurse User',
+            links: [],
+          },
+        },
       },
     ],
     attributes: [],
     episodeUuid: 'episode-3',
+    allowedStates: [],
     auditInfo: {
       creator: {
         uuid: 'user-1',
@@ -498,7 +618,6 @@ export const mockEnrollments: ProgramEnrollment[] = [
       },
       dateCreated: '2023-01-01T10:00:00.000+0000',
       changedBy: null,
-      dateChanged: null,
     },
     links: [],
     resourceVersion: '1.0',
@@ -583,10 +702,24 @@ export const mockEnrollments: ProgramEnrollment[] = [
           links: [],
           resourceVersion: '1.0',
         },
+        auditInfo: {
+          creator: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+          dateCreated: '2023-01-01T10:00:00.000+0000',
+          changedBy: {
+            uuid: 'user-1',
+            display: 'Admin User',
+            links: [],
+          },
+        },
       },
     ],
     attributes: [],
     episodeUuid: 'episode-4',
+    allowedStates: [],
     auditInfo: {
       creator: {
         uuid: 'user-1',

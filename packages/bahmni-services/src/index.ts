@@ -220,7 +220,7 @@ export { findActiveEncounterInSession } from './encounterSessionService';
 export {
   getActiveVisit,
   shouldEnableEncounterFilter,
-  getFormsDataByEncounterUuid,
+  getObservationsBundleByEncounterUuid,
   type FormsEncounter,
 } from './encounterService';
 
@@ -302,6 +302,7 @@ export {
   getProgramByUUID,
   getCurrentStateName,
   extractAttributes,
+  updateProgramState,
   type ProgramEnrollment,
   type PatientProgramsResponse,
 } from './programService';
