@@ -73,7 +73,13 @@ jest.mock('@bahmni/widgets', () => ({
     activeEncounter: { id: 'encounter-123' },
   })),
   useUserPrivilege: jest.fn(() => ({
-    userPrivileges: ['Get Patients', 'Add Patients'],
+    userPrivileges: [
+      { uuid: 'priv-1', name: 'Add Allergies' },
+      { uuid: 'priv-2', name: 'Add Orders' },
+      { uuid: 'priv-3', name: 'Add Diagnoses' },
+      { uuid: 'priv-4', name: 'Add Medications' },
+      { uuid: 'priv-5', name: 'Add Vaccinations' },
+    ],
   })),
   conditionsQueryKeys: jest.fn((patientUUID: string) => [
     'conditions',

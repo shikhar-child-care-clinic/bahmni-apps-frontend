@@ -7,7 +7,25 @@ import '@testing-library/jest-dom';
 
 expect.extend(toHaveNoViolations);
 
-jest.mock('@bahmni/services');
+jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
+  useTranslation: jest.fn(),
+  hasPrivilege: jest.fn((userPrivileges: any[], privilegeName: string) => {
+    if (!userPrivileges || userPrivileges.length === 0) return false;
+    return userPrivileges.some((p: any) => p.name === privilegeName);
+  }),
+}));
+
+const mockUseUserPrivilege = jest.fn(() => ({
+  userPrivileges: [
+    { uuid: 'priv-1', name: 'Add Allergies' },
+    { uuid: 'priv-2', name: 'Add Orders' },
+    { uuid: 'priv-3', name: 'Add Diagnoses' },
+    { uuid: 'priv-4', name: 'Add Medications' },
+    { uuid: 'priv-5', name: 'Add Vaccinations' },
+  ],
+}));
+
 // Mock the PatientDetails component
 jest.mock('@bahmni/widgets', () => {
   return {
@@ -20,6 +38,7 @@ jest.mock('@bahmni/widgets', () => {
       practitioner: { uuid: 'active-practitioner-uuid' },
     })),
     usePatientUUID: jest.fn(() => 'patient-uuid'),
+    useUserPrivilege: (...args: any[]) => mockUseUserPrivilege(...args),
   };
 });
 
@@ -66,6 +85,16 @@ describe('PatientHeader Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockedUseTranslation.mockReturnValue({ t: mockTranslate } as any);
+    // Reset mockUseUserPrivilege to default (all privileges)
+    mockUseUserPrivilege.mockImplementation(() => ({
+      userPrivileges: [
+        { uuid: 'priv-1', name: 'Add Allergies' },
+        { uuid: 'priv-2', name: 'Add Orders' },
+        { uuid: 'priv-3', name: 'Add Diagnoses' },
+        { uuid: 'priv-4', name: 'Add Medications' },
+        { uuid: 'priv-5', name: 'Add Vaccinations' },
+      ],
+    }));
   });
 
   // Basic rendering tests
@@ -124,6 +153,53 @@ describe('PatientHeader Component', () => {
       fireEvent.click(button);
 
       expect(mockSetIsActionAreaVisible).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  // Privilege tests
+  describe('Privilege checks', () => {
+    test('should not render consultation button when user has no consultation privileges', () => {
+      mockUseUserPrivilege.mockReturnValue({
+        userPrivileges: [],
+      });
+
+      renderComponent();
+
+      expect(
+        screen.queryByTestId('consultation-action-button'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('should render consultation button when user has at least one edit privilege', () => {
+      mockUseUserPrivilege.mockReturnValue({
+        userPrivileges: [{ uuid: 'priv-1', name: 'Add Allergies' }],
+      });
+
+      renderComponent();
+
+      expect(
+        screen.getByTestId('consultation-action-button'),
+      ).toBeInTheDocument();
+    });
+
+    test('should not render consultation button when user has only view-only privileges', () => {
+      mockUseUserPrivilege.mockReturnValue({
+        userPrivileges: [{ uuid: 'priv-1', name: 'View Allergies' }],
+      });
+
+      renderComponent();
+
+      expect(
+        screen.queryByTestId('consultation-action-button'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('should render consultation button when user has all edit privileges', () => {
+      renderComponent();
+
+      expect(
+        screen.getByTestId('consultation-action-button'),
+      ).toBeInTheDocument();
     });
   });
 

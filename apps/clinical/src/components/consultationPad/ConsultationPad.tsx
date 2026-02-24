@@ -8,12 +8,17 @@ import {
   AUDIT_LOG_EVENT_DETAILS,
   AuditEventType,
   dispatchAuditEvent,
+  hasPrivilege,
   useTranslation,
   ObservationForm,
   Form2Observation,
   dispatchConsultationSaved,
 } from '@bahmni/services';
-import { useNotification, useActivePractitioner } from '@bahmni/widgets';
+import {
+  useNotification,
+  useActivePractitioner,
+  useUserPrivilege,
+} from '@bahmni/widgets';
 import { Bundle } from 'fhir/r4';
 import React, { useEffect } from 'react';
 import { useEncounterSession } from '../../../src/hooks/useEncounterSession';
@@ -24,6 +29,7 @@ import { useMedicationStore } from '../../../src/stores/medicationsStore';
 import { useObservationFormsStore } from '../../../src/stores/observationFormsStore';
 import useServiceRequestStore from '../../../src/stores/serviceRequestStore';
 import { useVaccinationStore } from '../../../src/stores/vaccinationsStore';
+import { CONSULTATION_PAD_PRIVILEGES } from '../../constants/consultationPadPrivileges';
 import { ERROR_TITLES } from '../../constants/errors';
 import {
   VALIDATION_STATE_EMPTY,
@@ -67,6 +73,52 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { t } = useTranslation();
   const { addNotification } = useNotification();
+  const { userPrivileges } = useUserPrivilege();
+
+  // Privilege checks for consultation pad sections
+  // Edit/Add privileges
+  const hasAllergyPrivilege = hasPrivilege(
+    userPrivileges,
+    CONSULTATION_PAD_PRIVILEGES.ALLERGIES,
+  );
+  const canViewAllergies =
+    hasAllergyPrivilege ||
+    hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.VIEW_ALLERGIES);
+
+  const hasInvestigationPrivilege = hasPrivilege(
+    userPrivileges,
+    CONSULTATION_PAD_PRIVILEGES.INVESTIGATIONS,
+  );
+  const canViewInvestigations =
+    hasInvestigationPrivilege ||
+    hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.VIEW_INVESTIGATIONS);
+
+  const hasConditionsDiagnosesPrivilege = hasPrivilege(
+    userPrivileges,
+    CONSULTATION_PAD_PRIVILEGES.CONDITIONS_AND_DIAGNOSES,
+  );
+  const canViewConditionsDiagnoses =
+    hasConditionsDiagnosesPrivilege ||
+    hasPrivilege(
+      userPrivileges,
+      CONSULTATION_PAD_PRIVILEGES.VIEW_CONDITIONS_AND_DIAGNOSES,
+    );
+
+  const hasMedicationPrivilege = hasPrivilege(
+    userPrivileges,
+    CONSULTATION_PAD_PRIVILEGES.MEDICATIONS,
+  );
+  const canViewMedications =
+    hasMedicationPrivilege ||
+    hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.VIEW_MEDICATIONS);
+
+  const hasVaccinationPrivilege = hasPrivilege(
+    userPrivileges,
+    CONSULTATION_PAD_PRIVILEGES.VACCINATIONS,
+  );
+  const canViewVaccinations =
+    hasVaccinationPrivilege ||
+    hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.VIEW_VACCINATIONS);
 
   // Use the observation forms store
   const {
@@ -439,16 +491,36 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     <>
       <BasicForm practitionerState={practitionerState} />
       <MenuItemDivider />
-      <AllergiesForm />
-      <MenuItemDivider />
-      <InvestigationsForm />
-      <MenuItemDivider />
-      <ConditionsAndDiagnoses />
-      <MenuItemDivider />
-      <MedicationsForm />
-      <MenuItemDivider />
-      <VaccinationForm />
-      <MenuItemDivider />
+      {canViewAllergies && (
+        <>
+          <AllergiesForm />
+          <MenuItemDivider />
+        </>
+      )}
+      {canViewInvestigations && (
+        <>
+          <InvestigationsForm />
+          <MenuItemDivider />
+        </>
+      )}
+      {canViewConditionsDiagnoses && (
+        <>
+          <ConditionsAndDiagnoses />
+          <MenuItemDivider />
+        </>
+      )}
+      {canViewMedications && (
+        <>
+          <MedicationsForm />
+          <MenuItemDivider />
+        </>
+      )}
+      {canViewVaccinations && (
+        <>
+          <VaccinationForm />
+          <MenuItemDivider />
+        </>
+      )}
       <ObservationForms
         onFormSelect={handleFormSelection}
         selectedForms={selectedForms}

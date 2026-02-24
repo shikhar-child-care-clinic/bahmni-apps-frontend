@@ -248,13 +248,21 @@ const mockUseObservationFormsSearch =
 // Mock hooks
 const mockAddNotification = jest.fn();
 
+const mockUseUserPrivilege = jest.fn(() => ({
+  userPrivileges: [
+    { uuid: 'priv-1', name: 'Add Allergies' },
+    { uuid: 'priv-2', name: 'Add Orders' },
+    { uuid: 'priv-3', name: 'Add Diagnoses' },
+    { uuid: 'priv-4', name: 'Add Medications' },
+    { uuid: 'priv-5', name: 'Add Vaccinations' },
+  ],
+}));
+
 jest.mock('@bahmni/widgets', () => ({
   useNotification: jest.fn(() => ({
     addNotification: mockAddNotification,
   })),
-  useUserPrivilege: jest.fn(() => ({
-    userPrivileges: ['VIEW_PATIENTS', 'EDIT_ENCOUNTERS'],
-  })),
+  useUserPrivilege: (...args: any[]) => mockUseUserPrivilege(...args),
   useActivePractitioner: jest.fn(() => ({
     user: { uuid: 'user-123', username: 'testuser' },
     practitioner: { uuid: 'practitioner-123' },
@@ -569,6 +577,17 @@ describe('ConsultationPad', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Reset mockUseUserPrivilege to default (all privileges)
+    mockUseUserPrivilege.mockImplementation(() => ({
+      userPrivileges: [
+        { uuid: 'priv-1', name: 'Add Allergies' },
+        { uuid: 'priv-2', name: 'Add Orders' },
+        { uuid: 'priv-3', name: 'Add Diagnoses' },
+        { uuid: 'priv-4', name: 'Add Medications' },
+        { uuid: 'priv-5', name: 'Add Vaccinations' },
+      ],
+    }));
 
     // Reset stores to initial state
     mockEncounterDetailsStore = createMockEncounterDetailsStore();
@@ -2420,6 +2439,196 @@ describe('ConsultationPad', () => {
       fireEvent.keyDown(primaryButton, { key: 'Enter', code: 'Enter' });
 
       expect(primaryButton).toHaveFocus();
+    });
+  });
+
+  describe('Privilege Checks', () => {
+    it('should hide AllergiesForm when user lacks allergy privilege', () => {
+      mockUseUserPrivilege.mockReturnValue({
+        userPrivileges: [
+          { uuid: 'priv-2', name: 'Add Orders' },
+          { uuid: 'priv-3', name: 'Add Diagnoses' },
+          { uuid: 'priv-4', name: 'Add Medications' },
+          { uuid: 'priv-5', name: 'Add Vaccinations' },
+        ],
+      });
+
+      renderWithProvider();
+
+      expect(
+        screen.queryByTestId('mock-allergies-form'),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByTestId('mock-investigations-form'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('mock-conditions-diagnoses'),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('mock-medications-form')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-vaccination-forms')).toBeInTheDocument();
+    });
+
+    it('should hide InvestigationsForm when user lacks investigation privilege', () => {
+      mockUseUserPrivilege.mockReturnValue({
+        userPrivileges: [
+          { uuid: 'priv-1', name: 'Add Allergies' },
+          { uuid: 'priv-3', name: 'Add Diagnoses' },
+          { uuid: 'priv-4', name: 'Add Medications' },
+          { uuid: 'priv-5', name: 'Add Vaccinations' },
+        ],
+      });
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('mock-allergies-form')).toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-investigations-form'),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByTestId('mock-conditions-diagnoses'),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('mock-medications-form')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-vaccination-forms')).toBeInTheDocument();
+    });
+
+    it('should hide ConditionsAndDiagnoses when user lacks diagnosis privilege', () => {
+      mockUseUserPrivilege.mockReturnValue({
+        userPrivileges: [
+          { uuid: 'priv-1', name: 'Add Allergies' },
+          { uuid: 'priv-2', name: 'Add Orders' },
+          { uuid: 'priv-4', name: 'Add Medications' },
+          { uuid: 'priv-5', name: 'Add Vaccinations' },
+        ],
+      });
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('mock-allergies-form')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('mock-investigations-form'),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-conditions-diagnoses'),
+      ).not.toBeInTheDocument();
+      expect(screen.getByTestId('mock-medications-form')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-vaccination-forms')).toBeInTheDocument();
+    });
+
+    it('should hide MedicationsForm when user lacks medication privilege', () => {
+      mockUseUserPrivilege.mockReturnValue({
+        userPrivileges: [
+          { uuid: 'priv-1', name: 'Add Allergies' },
+          { uuid: 'priv-2', name: 'Add Orders' },
+          { uuid: 'priv-3', name: 'Add Diagnoses' },
+          { uuid: 'priv-5', name: 'Add Vaccinations' },
+        ],
+      });
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('mock-allergies-form')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('mock-investigations-form'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('mock-conditions-diagnoses'),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-medications-form'),
+      ).not.toBeInTheDocument();
+      expect(screen.getByTestId('mock-vaccination-forms')).toBeInTheDocument();
+    });
+
+    it('should hide VaccinationForm when user lacks vaccination privilege', () => {
+      mockUseUserPrivilege.mockReturnValue({
+        userPrivileges: [
+          { uuid: 'priv-1', name: 'Add Allergies' },
+          { uuid: 'priv-2', name: 'Add Orders' },
+          { uuid: 'priv-3', name: 'Add Diagnoses' },
+          { uuid: 'priv-4', name: 'Add Medications' },
+        ],
+      });
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('mock-allergies-form')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('mock-investigations-form'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('mock-conditions-diagnoses'),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('mock-medications-form')).toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-vaccination-forms'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('should show all forms when user has all privileges', () => {
+      renderWithProvider();
+
+      expect(screen.getByTestId('mock-allergies-form')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('mock-investigations-form'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('mock-conditions-diagnoses'),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('mock-medications-form')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-vaccination-forms')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-observation-forms')).toBeInTheDocument();
+    });
+
+    it('should always show BasicForm and ObservationForms regardless of privileges', () => {
+      mockUseUserPrivilege.mockReturnValue({
+        userPrivileges: [],
+      });
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('mock-encounter-details')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-observation-forms')).toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-allergies-form'),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-investigations-form'),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-conditions-diagnoses'),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-medications-form'),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('mock-vaccination-forms'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('should show forms when user has view-only privilege', () => {
+      mockUseUserPrivilege.mockReturnValue({
+        userPrivileges: [
+          { uuid: 'priv-1', name: 'View Allergies' },
+          { uuid: 'priv-2', name: 'View Orders' },
+          { uuid: 'priv-3', name: 'View Diagnoses' },
+          { uuid: 'priv-4', name: 'View Medications' },
+          { uuid: 'priv-5', name: 'View Vaccinations' },
+        ],
+      });
+
+      renderWithProvider();
+
+      // All forms should be visible with view-only privileges
+      expect(screen.getByTestId('mock-allergies-form')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('mock-investigations-form'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('mock-conditions-diagnoses'),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('mock-medications-form')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-vaccination-forms')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-observation-forms')).toBeInTheDocument();
     });
   });
 });
