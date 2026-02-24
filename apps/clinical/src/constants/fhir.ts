@@ -13,7 +13,7 @@ export const FHIR_OBSERVATION_INTERPRETATION_SYSTEM =
 export const FHIR_OBSERVATION_FORM_NAMESPACE_PATH_URL =
   'http://fhir.bahmni.org/ext/observation/form-namespace-path';
 
-export const FHIR_OBSERVATION_COMPLEX_DATA_URL =
+export const FHIR_OBSERVATION_VALUE_ATTACHMENT_URL =
   'http://fhir.bahmni.org/ext/observation/obs-value-attachment';
 
 export const CONCEPT_DATATYPE_NUMERIC = 'Numeric';
