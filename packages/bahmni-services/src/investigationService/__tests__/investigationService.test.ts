@@ -815,29 +815,5 @@ describe('investigationService', () => {
       // This would require a more complex mock setup, so we'll verify the function exists
       expect(getExistingServiceRequestsForAllCategories).toBeDefined();
     });
-
-    it('should handle empty service request results', async () => {
-      const { getExistingServiceRequestsForAllCategories } = await import(
-        '../investigationService'
-      );
-
-      expect(getExistingServiceRequestsForAllCategories).toBeDefined();
-    });
-
-    it('should handle missing service request codes', async () => {
-      const { getExistingServiceRequestsForAllCategories } = await import(
-        '../investigationService'
-      );
-
-      expect(getExistingServiceRequestsForAllCategories).toBeDefined();
-    });
-
-    it('should process multiple order types sequentially', async () => {
-      const { getExistingServiceRequestsForAllCategories } = await import(
-        '../investigationService'
-      );
-
-      expect(getExistingServiceRequestsForAllCategories).toBeDefined();
-    });
   });
 });

@@ -164,7 +164,6 @@ const InvestigationsForm: React.FC = React.memo(() => {
     if (showDuplicateNotification) {
       if (searchTerm === '') {
         setShowDuplicateNotification(false);
-        notificationDismissedRef.current = false;
         return;
       }
 
