@@ -58,6 +58,16 @@
 
 .durationInput {
   width: 50%;
+  z-index: 1;
+
+  :global(.cds--number__control-btn.up-icon) {
+    order: unset !important;
+  }
+
+  :global(.cds--number__input-wrapper:hover) {
+    border-color: transparent !important;
+    outline: none !important;
+  }
 }
 
 .durationUnit {
