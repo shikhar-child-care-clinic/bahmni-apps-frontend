@@ -1,6 +1,6 @@
 import {
   SortableDataTable,
-  Link as DesignSystemLink,
+  Modal,
 } from '@bahmni/design-system';
 import {
   useTranslation,
@@ -11,7 +11,7 @@ import {
 } from '@bahmni/services';
 import { DocumentPdf, Image, Document } from '@carbon/icons-react';
 import { useQuery } from '@tanstack/react-query';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
@@ -28,7 +28,9 @@ const fetchDocuments = async (
   encounterUuids?: string[],
 ): Promise<DocumentViewModel[]> => {
   const bundle = await getDocumentReferences(patientUUID, encounterUuids);
-  return mapDocumentReferencesToViewModels(bundle.entry || []);
+  return mapDocumentReferencesToViewModels(
+    (bundle.entry || []) as any[],
+  );
 };
 
 /**
@@ -36,9 +38,21 @@ const fetchDocuments = async (
  */
 const DocumentsTable: React.FC<WidgetProps> = ({ encounterUuids }) => {
   const [documents, setDocuments] = useState<DocumentViewModel[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState<DocumentViewModel | null>(null);
   const patientUUID = usePatientUUID();
   const { t } = useTranslation();
   const { addNotification } = useNotification();
+
+  const handleIconClick = useCallback((doc: DocumentViewModel) => {
+    setSelectedDoc(doc);
+    setIsModalOpen(true);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+    setSelectedDoc(null);
+  }, []);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['documents', patientUUID!, encounterUuids],
@@ -91,7 +105,6 @@ const DocumentsTable: React.FC<WidgetProps> = ({ encounterUuids }) => {
     [],
   );
 
-  // Render file type icon based on content type
   const renderFileIcon = (contentType?: string) => {
     const fileType = getFileTypeCategory(contentType);
     switch (fileType) {
@@ -111,16 +124,14 @@ const DocumentsTable: React.FC<WidgetProps> = ({ encounterUuids }) => {
       case 'name':
         return (
           <div className={styles.nameCell}>
-            <span className={styles.fileIcon}>
-              {renderFileIcon(doc.contentType)}
-            </span>
-            <DesignSystemLink
-              href={buildDocumentUrl(doc.documentUrl)}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              className={styles.fileIconButton}
+              onClick={() => handleIconClick(doc)}
+              aria-label={`View ${doc.name}`}
             >
-              {doc.name}
-            </DesignSystemLink>
+              {renderFileIcon(doc.contentType)}
+            </button>
+            <span>{doc.name}</span>
           </div>
         );
       case 'documentType':
@@ -140,21 +151,55 @@ const DocumentsTable: React.FC<WidgetProps> = ({ encounterUuids }) => {
     }
   };
 
+  const docUrl = selectedDoc ? buildDocumentUrl(selectedDoc.documentUrl) : '';
+  const isPDF = selectedDoc?.contentType?.toLowerCase().includes('pdf');
+  const isImage = selectedDoc?.contentType?.toLowerCase().includes('image');
+
   return (
-    <div data-testid="documents-table">
-      <SortableDataTable
-        headers={headers}
-        ariaLabel={t('DOCUMENTS_TABLE_HEADING')}
-        rows={documents}
-        loading={isLoading}
-        errorStateMessage={isError ? error?.message : null}
-        sortable={sortable}
-        emptyStateMessage={t('DOCUMENTS_NO_RECORDS')}
-        renderCell={renderCell}
-        className={styles.documentsTableBody}
-        dataTestId="documents-table"
-      />
-    </div>
+    <>
+      <div data-testid="documents-table">
+        <SortableDataTable
+          headers={headers}
+          ariaLabel={t('DOCUMENTS_TABLE_HEADING')}
+          rows={documents}
+          loading={isLoading}
+          errorStateMessage={isError ? error?.message : null}
+          sortable={sortable}
+          emptyStateMessage={t('DOCUMENTS_NO_RECORDS')}
+          renderCell={renderCell}
+          className={styles.documentsTableBody}
+          dataTestId="documents-table"
+        />
+      </div>
+
+      {isModalOpen && selectedDoc && (
+        <Modal
+          id="modalIdForActionAreaLayout"
+          open={isModalOpen}
+          onRequestClose={handleCloseModal}
+          modalHeading={selectedDoc.name}
+          passiveModal
+          size="lg"
+          testId="document-view-modal"
+        >
+          <div className={styles.documentViewerContainer}>
+            {isImage ? (
+              <img
+                src={docUrl}
+                alt={selectedDoc.name}
+                className={styles.documentImage}
+              />
+            ) : (
+              <iframe
+                src={isPDF ? `${docUrl}#toolbar=0` : docUrl}
+                className={styles.documentIframe}
+                title={selectedDoc.name}
+              />
+            )}
+          </div>
+        </Modal>
+      )}
+    </>
   );
 };
 

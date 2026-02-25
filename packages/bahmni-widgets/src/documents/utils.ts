@@ -74,6 +74,6 @@ export function buildDocumentUrl(documentUrl: string): string {
     return documentUrl;
   }
 
-  // Default: assume it's a path that needs the OpenMRS base
-  return `/openmrs/ws/fhir2/R4/Binary/${documentUrl}`;
+  // Default: serve via OpenMRS document_images endpoint
+  return `/openmrs/auth?requested_document=/document_images/${documentUrl}`;
 }
