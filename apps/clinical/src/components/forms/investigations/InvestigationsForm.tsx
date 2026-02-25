@@ -118,7 +118,9 @@ const InvestigationsForm: React.FC = React.memo(() => {
         payload.patientUUID === patientUUID &&
         Object.keys(payload.updatedResources.serviceRequests).length > 0
       ) {
-        queryClient.removeQueries({ queryKey: ['existingServiceRequests'] });
+        queryClient.removeQueries({
+          queryKey: ['existingServiceRequests', patientUUID],
+        });
         refetchExistingServiceRequests();
       }
     },
