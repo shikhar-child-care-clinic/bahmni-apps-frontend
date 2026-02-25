@@ -159,9 +159,7 @@ describe('getUniqueServiceRequests', () => {
 
     expect(result).toHaveLength(3);
     expect(
-      result.filter(
-        (e: any) => e.resource?.resourceType === 'ServiceRequest',
-      ),
+      result.filter((e: any) => e.resource?.resourceType === 'ServiceRequest'),
     ).toHaveLength(1);
     expect(
       result.filter((e: any) => e.resource?.resourceType === 'ImagingStudy'),

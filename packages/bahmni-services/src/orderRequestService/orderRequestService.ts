@@ -1,7 +1,7 @@
 import type { Bundle, ServiceRequest, Resource } from 'fhir/r4';
 import { get } from '../api';
-import { getUniqueServiceRequests } from './serviceRequestUtils';
 import { SERVICE_REQUESTS_URL } from './constants';
+import { getUniqueServiceRequests } from './serviceRequestUtils';
 
 /**
  * Fetches service requests from the FHIR R4 endpoint
