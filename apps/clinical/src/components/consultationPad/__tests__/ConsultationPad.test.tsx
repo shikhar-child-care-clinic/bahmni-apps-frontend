@@ -1207,23 +1207,19 @@ describe('ConsultationPad', () => {
           type: 'transaction-response',
         });
 
-        const eventListener = jest.fn();
-        window.addEventListener('consultation:saved', eventListener);
-
         renderWithProvider();
 
         const doneButton = screen.getByTestId('primary-button');
         await userEvent.click(doneButton);
 
-        // Wait for the deferred event to fire
-        await waitFor(
-          () => {
-            expect(eventListener).toHaveBeenCalled();
-          },
-          { timeout: 100 },
-        );
-
-        window.removeEventListener('consultation:saved', eventListener);
+        await waitFor(() => {
+          expect(mockDispatchConsultationSaved).toHaveBeenCalledWith(
+            expect.objectContaining({
+              patientUUID: expect.any(String),
+              updatedResources: expect.any(Object),
+            }),
+          );
+        });
       });
 
       it('should disable button during submission', async () => {
