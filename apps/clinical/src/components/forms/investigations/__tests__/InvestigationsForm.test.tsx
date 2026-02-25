@@ -1305,6 +1305,236 @@ describe('InvestigationsForm', () => {
     });
   });
 
+  describe('Episode Context Fallback', () => {
+    const { useClinicalAppData } = jest.requireMock(
+      '../../../../hooks/useClinicalAppData',
+    );
+    const { useEncounterSession } = jest.requireMock(
+      '../../../../hooks/useEncounterSession',
+    );
+    const { getExistingServiceRequestsForAllCategories } =
+      jest.requireMock('@bahmni/services');
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      (useInvestigationsSearch as jest.Mock).mockReturnValue({
+        investigations: mockInvestigations,
+        isLoading: false,
+        error: null,
+      });
+      (useServiceRequestStore as unknown as jest.Mock).mockReturnValue(
+        mockStore,
+      );
+    });
+
+    afterEach(() => {
+      useClinicalAppData.mockReturnValue({
+        episodeOfCare: [],
+        visit: [],
+        encounter: [],
+        isLoading: false,
+        error: null,
+      });
+      useEncounterSession.mockReturnValue({
+        activeEncounter: { id: 'mock-encounter-id' },
+      });
+    });
+
+    test('uses active encounter when available, even with episode context', async () => {
+      useClinicalAppData.mockReturnValue({
+        episodeOfCare: [{ encounterUuids: ['eoc-enc-1'] }],
+        visit: [],
+        encounter: [],
+        isLoading: false,
+        error: null,
+      });
+
+      getExistingServiceRequestsForAllCategories.mockResolvedValue([]);
+
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(getExistingServiceRequestsForAllCategories).toHaveBeenCalledWith(
+          expect.anything(),
+          'mock-patient-uuid',
+          ['mock-encounter-id'],
+        );
+      });
+    });
+
+    test('falls back to episode encounter UUIDs when no active encounter', async () => {
+      useEncounterSession.mockReturnValue({
+        activeEncounter: null,
+      });
+      useClinicalAppData.mockReturnValue({
+        episodeOfCare: [{ encounterUuids: ['eoc-enc-1', 'eoc-enc-2'] }],
+        visit: [{ encounterUuids: ['visit-enc-1'] }],
+        encounter: [{ uuid: 'direct-enc-1' }],
+        isLoading: false,
+        error: null,
+      });
+
+      getExistingServiceRequestsForAllCategories.mockResolvedValue([]);
+
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(getExistingServiceRequestsForAllCategories).toHaveBeenCalledWith(
+          expect.anything(),
+          'mock-patient-uuid',
+          expect.arrayContaining([
+            'eoc-enc-1',
+            'eoc-enc-2',
+            'visit-enc-1',
+            'direct-enc-1',
+          ]),
+        );
+      });
+    });
+
+    test('does not fetch existing service requests when no encounter context', async () => {
+      useEncounterSession.mockReturnValue({
+        activeEncounter: null,
+      });
+      useClinicalAppData.mockReturnValue({
+        episodeOfCare: [],
+        visit: [],
+        encounter: [],
+        isLoading: false,
+        error: null,
+      });
+
+      getExistingServiceRequestsForAllCategories.mockResolvedValue([]);
+
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
+
+      // Give time for any queries to fire
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      expect(getExistingServiceRequestsForAllCategories).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Consultation Saved Event Subscription', () => {
+    const { getExistingServiceRequestsForAllCategories } =
+      jest.requireMock('@bahmni/services');
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      (useInvestigationsSearch as jest.Mock).mockReturnValue({
+        investigations: [],
+        isLoading: false,
+        error: null,
+      });
+      (useServiceRequestStore as unknown as jest.Mock).mockReturnValue(
+        mockStore,
+      );
+      getExistingServiceRequestsForAllCategories.mockResolvedValue([]);
+    });
+
+    test('refetches existing service requests when consultation saved event has service request updates', async () => {
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
+
+      // Wait for initial query to settle
+      await waitFor(() => {
+        expect(
+          getExistingServiceRequestsForAllCategories,
+        ).toHaveBeenCalledTimes(1);
+      });
+
+      getExistingServiceRequestsForAllCategories.mockClear();
+
+      // Dispatch consultation saved event with service request updates
+      window.dispatchEvent(
+        new CustomEvent('consultation:saved', {
+          detail: {
+            patientUUID: 'mock-patient-uuid',
+            updatedResources: {
+              conditions: false,
+              allergies: false,
+              medications: false,
+              serviceRequests: { lab: true },
+            },
+            updatedConcepts: new Map(),
+          },
+        }),
+      );
+
+      await waitFor(() => {
+        expect(getExistingServiceRequestsForAllCategories).toHaveBeenCalled();
+      });
+    });
+
+    test('does not refetch when consultation saved event has no service request updates', async () => {
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(
+          getExistingServiceRequestsForAllCategories,
+        ).toHaveBeenCalledTimes(1);
+      });
+
+      getExistingServiceRequestsForAllCategories.mockClear();
+
+      window.dispatchEvent(
+        new CustomEvent('consultation:saved', {
+          detail: {
+            patientUUID: 'mock-patient-uuid',
+            updatedResources: {
+              conditions: true,
+              allergies: false,
+              medications: false,
+              serviceRequests: {},
+            },
+            updatedConcepts: new Map(),
+          },
+        }),
+      );
+
+      // Give time for any async operations
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      expect(getExistingServiceRequestsForAllCategories).not.toHaveBeenCalled();
+    });
+
+    test('does not refetch when consultation saved event is for a different patient', async () => {
+      render(<InvestigationsForm />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(
+          getExistingServiceRequestsForAllCategories,
+        ).toHaveBeenCalledTimes(1);
+      });
+
+      getExistingServiceRequestsForAllCategories.mockClear();
+
+      window.dispatchEvent(
+        new CustomEvent('consultation:saved', {
+          detail: {
+            patientUUID: 'different-patient-uuid',
+            updatedResources: {
+              conditions: false,
+              allergies: false,
+              medications: false,
+              serviceRequests: { lab: true },
+            },
+            updatedConcepts: new Map(),
+          },
+        }),
+      );
+
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      expect(getExistingServiceRequestsForAllCategories).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Edge Cases', () => {
     test('handles empty search term correctly', () => {
       render(<InvestigationsForm />, { wrapper: createWrapper() });
@@ -1386,38 +1616,60 @@ describe('InvestigationsForm', () => {
       expect(results).toHaveNoViolations();
     });
 
-    test('duplicate notification structure supports accessibility (M4)', async () => {
-      // This test verifies the InlineNotification component in InvestigationsForm
-      // properly supports accessibility when a duplicate is detected
-      // (lines 377-393 of InvestigationsForm.tsx)
-      //
-      // The InlineNotification from @bahmni/design-system:
-      // - Renders with role="alert" for screen reader announcements
-      // - Has a close button that's keyboard accessible
-      // - Provides subtitle text describing the duplicate condition
+    test('duplicate notification supports accessibility when visible', async () => {
+      const { getExistingServiceRequestsForAllCategories } =
+        jest.requireMock('@bahmni/services');
 
-      // Component structure verification: the InlineNotification JSX is
-      // conditionally rendered when showDuplicateNotification is true,
-      // with proper subtitles for Procedure vs Investigation duplicates
-
-      const mockInvestigations: FlattenedInvestigations[] = [
+      getExistingServiceRequestsForAllCategories.mockResolvedValue([
         {
-          code: 'GLU',
-          display: 'Glucose',
-          category: 'Lab Order',
-          categoryCode: 'lab-uuid',
+          conceptCode: 'cbc-001',
+          categoryUuid: 'lab',
+          display: 'Complete Blood Count',
+          requesterUuid: 'mock-practitioner-uuid',
         },
-      ];
+      ]);
 
       (useInvestigationsSearch as jest.Mock).mockReturnValue({
         investigations: mockInvestigations,
         isLoading: false,
         error: null,
       });
+      (useServiceRequestStore as unknown as jest.Mock).mockReturnValue(
+        mockStore,
+      );
 
-      // These existing tests already verify duplicate notification works
-      // See: 'closes duplicate notification when close button is clicked'
-      // and: 'clears duplicate notification when search is cleared'
+      let container: HTMLElement;
+      const user = userEvent.setup();
+
+      await act(async () => {
+        const rendered = render(<InvestigationsForm />, {
+          wrapper: createWrapper(),
+        });
+        container = rendered.container;
+      });
+
+      const combobox = screen.getByRole('combobox');
+      await user.type(combobox, 'complete');
+
+      await waitFor(() => {
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Complete Blood Count'));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Investigation is already ordered'),
+        ).toBeInTheDocument();
+      });
+
+      // Verify close button is keyboard accessible
+      const closeButton = screen.getByRole('button', { name: /close/i });
+      expect(closeButton).toBeInTheDocument();
+
+      // Run axe with notification visible
+      const results = await axe(container!);
+      expect(results).toHaveNoViolations();
     });
 
     test('form maintains semantic HTML for accessibility', async () => {
