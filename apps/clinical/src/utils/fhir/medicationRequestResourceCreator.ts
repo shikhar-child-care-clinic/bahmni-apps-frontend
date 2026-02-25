@@ -73,6 +73,7 @@ const createDosageInstructions = (
       medicationEntry.startDate,
       medicationEntry.duration,
       medicationEntry.durationUnit,
+      medicationEntry.isSTAT,
     );
   }
 
@@ -107,6 +108,7 @@ const createDosageInstructions = (
  * @param startDate - The start date for the medication
  * @param duration - The duration value
  * @param durationUnit - The duration unit
+ * @param isSTAT - Whether this is a STAT (immediate) order
  * @returns Timing object
  */
 const createTiming = (
@@ -114,6 +116,7 @@ const createTiming = (
   startDate?: Date,
   duration?: number,
   durationUnit?: DurationUnitOption | null,
+  isSTAT?: boolean,
 ): Timing => {
   const timing: Timing = {};
 
@@ -124,8 +127,18 @@ const createTiming = (
     timing.event = [date.toISOString()];
   }
 
-  // Add repeat information if duration is specified
-  if (duration && durationUnit) {
+  if (isSTAT) {
+    const now = new Date();
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 0);
+    timing.repeat = {
+      boundsPeriod: {
+        start: now.toISOString(),
+        end: endOfDay.toISOString(),
+      },
+    };
+  } else if (duration && durationUnit) {
+    // Add repeat information if duration is specified
     timing.repeat = {
       duration: duration,
       durationUnit: durationUnit.code,
