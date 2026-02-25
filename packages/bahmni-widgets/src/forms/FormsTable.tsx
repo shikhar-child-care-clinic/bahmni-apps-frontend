@@ -125,7 +125,7 @@ const FormsTable: React.FC<WidgetProps> = ({
         payload.updatedConcepts.size > 0
       ) {
         refetchForms();
-        queryClient.invalidateQueries({ queryKey: ['formsEncounter'] });
+        queryClient.invalidateQueries({ queryKey: ['formsEncounterFHIR'] });
       }
     },
     [patientUuid],
