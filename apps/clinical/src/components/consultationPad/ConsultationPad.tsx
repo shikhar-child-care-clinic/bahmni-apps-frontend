@@ -14,7 +14,6 @@ import {
   dispatchConsultationSaved,
 } from '@bahmni/services';
 import { useNotification, useActivePractitioner } from '@bahmni/widgets';
-import { useQueryClient } from '@tanstack/react-query';
 import React, { useEffect } from 'react';
 import { useEncounterSession } from '../../../src/hooks/useEncounterSession';
 import useAllergyStore from '../../../src/stores/allergyStore';
@@ -66,7 +65,6 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { t } = useTranslation();
   const { addNotification } = useNotification();
-  const queryClient = useQueryClient();
 
   // Use the observation forms store
   const {
@@ -351,6 +349,16 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
             encounterType: selectedEncounterType!.name,
           },
         });
+        const selectedServiceRequest: Record<string, boolean> = {};
+        selectedServiceRequests.forEach((_, category) => {
+          selectedServiceRequest[category.toLowerCase()] = true;
+        });
+        const hadConditions =
+          selectedDiagnoses.length > 0 || selectedConditions.length > 0;
+        const hadAllergies = selectedAllergies.length > 0;
+        const hadMedications =
+          selectedMedications.length > 0 || selectedVaccinations.length > 0;
+
         resetDiagnoses();
         resetAllergies();
         resetEncounterDetails();
@@ -359,19 +367,12 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         resetVaccinations();
         resetObservationForms();
 
-        const selectedServiceRequest: Record<string, boolean> = {};
-        selectedServiceRequests.forEach((_, category) => {
-          selectedServiceRequest[category.toLowerCase()] = true;
-        });
-
         dispatchConsultationSaved({
           patientUUID: patientUUID!,
           updatedResources: {
-            conditions:
-              selectedDiagnoses.length > 0 || selectedConditions.length > 0,
-            allergies: selectedAllergies.length > 0,
-            medications:
-              selectedMedications.length > 0 || selectedVaccinations.length > 0,
+            conditions: hadConditions,
+            allergies: hadAllergies,
+            medications: hadMedications,
             serviceRequests: selectedServiceRequest,
           },
         });
@@ -382,7 +383,6 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
           type: 'success',
           timeout: 5000,
         });
-        queryClient.removeQueries({ queryKey: ['existingServiceRequests'] });
         onClose();
       } catch (error) {
         setIsSubmitting(false);

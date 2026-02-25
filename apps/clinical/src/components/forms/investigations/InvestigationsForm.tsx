@@ -14,7 +14,7 @@ import {
   ConsultationSavedEventPayload,
 } from '@bahmni/services';
 import { usePatientUUID, useActivePractitioner } from '@bahmni/widgets';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, {
   useMemo,
   useCallback,
@@ -33,6 +33,7 @@ import styles from './styles/InvestigationsForm.module.scss';
 const InvestigationsForm: React.FC = React.memo(() => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
+  const queryClient = useQueryClient();
   const { practitioner } = useActivePractitioner();
   const { activeEncounter } = useEncounterSession({ practitioner });
   const { episodeOfCare, visit, encounter } = useClinicalAppData();
@@ -117,10 +118,11 @@ const InvestigationsForm: React.FC = React.memo(() => {
         payload.patientUUID === patientUUID &&
         Object.keys(payload.updatedResources.serviceRequests).length > 0
       ) {
+        queryClient.removeQueries({ queryKey: ['existingServiceRequests'] });
         refetchExistingServiceRequests();
       }
     },
-    [patientUUID, refetchExistingServiceRequests],
+    [patientUUID, queryClient, refetchExistingServiceRequests],
   );
 
   const translateOrderType = useCallback(
@@ -194,6 +196,7 @@ const InvestigationsForm: React.FC = React.memo(() => {
       setShowDuplicateNotification(true);
     }
 
+    // Reset dismissed state when search is cleared so future duplicate attempts re-show the notification
     if (searchTerm === '') {
       notificationDismissedRef.current = false;
     }

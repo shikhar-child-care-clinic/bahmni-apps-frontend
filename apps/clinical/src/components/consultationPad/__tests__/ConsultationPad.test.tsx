@@ -1190,7 +1190,7 @@ describe('ConsultationPad', () => {
         });
       });
 
-      it('should remove existingServiceRequests cache after successful submission to prevent stale duplicate detection', async () => {
+      it('should dispatch consultation saved event after successful submission to notify subscribers', async () => {
         (
           consultationBundleService.postConsultationBundle as jest.Mock
         ).mockResolvedValue({
@@ -1198,33 +1198,23 @@ describe('ConsultationPad', () => {
           type: 'transaction-response',
         });
 
-        renderWithProvider();
-
-        const doneButton = screen.getByTestId('primary-button');
-        await userEvent.click(doneButton);
-
-        await waitFor(() => {
-          expect(mockRemoveQueries).toHaveBeenCalledWith({
-            queryKey: ['existingServiceRequests'],
-          });
-        });
-      });
-
-      it('should not remove existingServiceRequests cache when submission fails', async () => {
-        (
-          consultationBundleService.postConsultationBundle as jest.Mock
-        ).mockRejectedValue(new Error('Network error'));
+        const eventListener = jest.fn();
+        window.addEventListener('consultation:saved', eventListener);
 
         renderWithProvider();
 
         const doneButton = screen.getByTestId('primary-button');
         await userEvent.click(doneButton);
 
-        await waitFor(() => {
-          expect(mockOnClose).not.toHaveBeenCalled();
-        });
+        // Wait for the deferred event to fire
+        await waitFor(
+          () => {
+            expect(eventListener).toHaveBeenCalled();
+          },
+          { timeout: 100 },
+        );
 
-        expect(mockRemoveQueries).not.toHaveBeenCalled();
+        window.removeEventListener('consultation:saved', eventListener);
       });
 
       it('should disable button during submission', async () => {
