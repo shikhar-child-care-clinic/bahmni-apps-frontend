@@ -109,63 +109,59 @@ const renderLabInvestigations = (
 
 describe('LabInvestigation', () => {
   const mockAddNotification = jest.fn();
+  const LAB_ORDER_CONCEPT_TYPE_URL = 'http://fhir.bahmni.org/ext/lab-order-concept-type';
 
   const createMockBundle = (
-    resources: ServiceRequest[],
+    serviceRequests: ServiceRequest[],
   ): Bundle<ServiceRequest> => ({
     resourceType: 'Bundle',
+    id: 'bundle-test-id',
     type: 'searchset',
-    entry: resources.map((resource) => ({
+    total: serviceRequests.length,
+    entry: serviceRequests.map((resource) => ({
       resource,
+      fullUrl: `http://example.com/ServiceRequest/${resource.id}`,
     })),
   });
 
+  const createMockServiceRequest = (
+    overrides: Partial<ServiceRequest> = {},
+  ): ServiceRequest => ({
+    resourceType: 'ServiceRequest',
+    id: 'test-id',
+    status: 'active',
+    intent: 'order',
+    subject: { reference: 'Patient/patient-123' },
+    code: { text: 'Complete Blood Count' },
+    priority: 'routine',
+    requester: { display: 'Dr. Smith' },
+    occurrencePeriod: { start: '2025-05-08T12:44:24+00:00' },
+    ...overrides,
+  });
+
   const mockServiceRequests: ServiceRequest[] = [
-    {
-      resourceType: 'ServiceRequest',
+    createMockServiceRequest({
       id: 'test-1',
-      status: 'active',
-      intent: 'order',
-      subject: { reference: 'Patient/patient-123' },
       code: { text: 'Complete Blood Count' },
       priority: 'routine',
       requester: { display: 'Dr. Smith' },
-      occurrencePeriod: { start: '2025-05-08T12:44:24+00:00' },
-      extension: [
-        {
-          url: 'http://fhir.bahmni.org/ext/lab-order-concept-type',
-          valueString: 'Panel',
-        },
-      ],
-    },
-    {
-      resourceType: 'ServiceRequest',
+      extension: [{ url: LAB_ORDER_CONCEPT_TYPE_URL, valueString: 'Panel' }],
+    }),
+    createMockServiceRequest({
       id: 'test-2',
-      status: 'active',
-      intent: 'order',
-      subject: { reference: 'Patient/patient-123' },
       code: { text: 'Lipid Panel' },
       priority: 'stat',
       requester: { display: 'Dr. Johnson' },
       occurrencePeriod: { start: '2025-04-09T13:21:22+00:00' },
-      extension: [
-        {
-          url: 'http://fhir.bahmni.org/ext/lab-order-concept-type',
-          valueString: 'Panel',
-        },
-      ],
-    },
-    {
-      resourceType: 'ServiceRequest',
+      extension: [{ url: LAB_ORDER_CONCEPT_TYPE_URL, valueString: 'Panel' }],
+    }),
+    createMockServiceRequest({
       id: 'test-3',
-      status: 'active',
-      intent: 'order',
-      subject: { reference: 'Patient/patient-123' },
       code: { text: 'Liver Function' },
       priority: 'routine',
       requester: { display: 'Dr. Williams' },
       occurrencePeriod: { start: '2025-04-09T13:21:22+00:00' },
-    },
+    }),
   ];
 
   beforeEach(() => {

@@ -24,6 +24,8 @@ jest.mock('@bahmni/services', () => ({
 }));
 
 describe('Lab Investigation Utils', () => {
+  const LAB_ORDER_CONCEPT_TYPE_URL = 'http://fhir.bahmni.org/ext/lab-order-concept-type';
+
   beforeEach(() => {
     jest.clearAllMocks();
     (formatDate as jest.Mock).mockImplementation((date) => ({
@@ -102,7 +104,7 @@ describe('Lab Investigation Utils', () => {
       const labTest = createMockServiceRequest({
         extension: [
           {
-            url: 'http://fhir.bahmni.org/ext/lab-order-concept-type',
+            url: LAB_ORDER_CONCEPT_TYPE_URL,
             valueString: 'Panel',
           },
         ],
@@ -115,7 +117,7 @@ describe('Lab Investigation Utils', () => {
       const labTest = createMockServiceRequest({
         extension: [
           {
-            url: 'http://fhir.bahmni.org/ext/lab-order-concept-type',
+            url: LAB_ORDER_CONCEPT_TYPE_URL,
             valueString: 'Test',
           },
         ],
@@ -228,7 +230,7 @@ describe('Lab Investigation Utils', () => {
           occurrencePeriod: { start: '2025-05-08T12:44:24+00:00' },
           extension: [
             {
-              url: 'http://fhir.bahmni.org/ext/lab-order-concept-type',
+              url: LAB_ORDER_CONCEPT_TYPE_URL,
               valueString: 'Test',
             },
           ],
