@@ -303,15 +303,24 @@ const InvestigationsForm: React.FC = React.memo(() => {
   const handleChange = (
     selectedItem: FlattenedInvestigations | null | undefined,
   ) => {
-    if (!selectedItem?.code) return;
+    if (!selectedItem?.code) {
+      // eslint-disable-next-line no-console
+      console.log('[InvestigationsForm] handleChange: no selectedItem.code');
+      return;
+    }
 
-    if (
-      isDuplicateInvestigation(
-        selectedItem.code,
-        selectedItem.category,
-        selectedItem.categoryCode,
-      )
-    ) {
+    const isDuplicate = isDuplicateInvestigation(
+      selectedItem.code,
+      selectedItem.category,
+      selectedItem.categoryCode,
+    );
+    // eslint-disable-next-line no-console
+    console.log('[InvestigationsForm] handleChange:', {
+      code: selectedItem.code,
+      isDuplicate,
+    });
+
+    if (isDuplicate) {
       setShowDuplicateNotification(true);
       setDuplicateInvestigationId(selectedItem.code);
       setDuplicateCategory(selectedItem.category);
