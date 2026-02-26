@@ -27,7 +27,6 @@ import {
 import { useMedicationStore } from '../../../stores/medicationsStore';
 import {
   checkMedicationsOverlap,
-  isDuplicateMedication,
   medicationsMatchByCode,
 } from '../../../utils/fhir/medicationUtilities';
 import SelectedMedicationItem from './SelectedMedicationItem';
@@ -139,19 +138,6 @@ const MedicationsForm: React.FC = React.memo(() => {
     }
 
     const displayName = getMedicationDisplay(selectedItem.medication);
-
-    const newStartDate = new Date();
-    const isDuplicate = isDuplicateMedication(
-      selectedItem.medication,
-      newStartDate,
-      1,
-      'd',
-      activeMedications,
-      selectedMedications,
-      medicationMap,
-    );
-
-    setShowDuplicateNotification(isDuplicate);
 
     isSelectingRef.current = true;
     addMedication(selectedItem.medication, displayName);

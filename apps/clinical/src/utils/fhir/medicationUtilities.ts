@@ -9,6 +9,40 @@ import { MedicationInputEntry } from '../../models/medication';
 import { FHIRCode, extractCodesFromConcept } from './codeUtilities';
 
 /**
+ * Adjusts an end date to be exclusive.
+ * For overlap detection, we treat date ranges as [start, end) where end is exclusive.
+ * So a medicine covering Feb 27 has range [Feb 27 00:00, Feb 28 00:00).
+ * We subtract 1 day from the calculated end date to make it exclusive.
+ * @param endDate - The inclusive end date from calculateEndDate
+ * @returns The exclusive end date (1 day earlier)
+ */
+export const makeEndDateExclusive = (endDate: Date): Date => {
+  const exclusiveEnd = new Date(endDate);
+  exclusiveEnd.setDate(exclusiveEnd.getDate() - 1);
+  return exclusiveEnd;
+};
+
+/**
+ * Checks if a date is today.
+ * Used to determine if duration should be extended for duplicate detection.
+ * Medication scheduled for today covers today and tomorrow.
+ * Medication scheduled for future dates covers only the specified days.
+ * @param startDate - The medication start date
+ * @returns true if startDate is today, false otherwise
+ */
+export const isDateToday = (startDate: Date | string | undefined): boolean => {
+  if (!startDate) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const dateAtMidnight = new Date(startDate);
+  dateAtMidnight.setHours(0, 0, 0, 0);
+
+  return dateAtMidnight.getTime() === today.getTime();
+};
+
+/**
  * Generic type for FHIR resources or objects with optional code properties
  */
 interface CodeableResource {
@@ -154,19 +188,34 @@ export const checkMedicationsOverlap = (
 
       if (!other.startDate) continue;
 
+      // Skip overlap check if duration or durationUnit not set
+      if (!current.durationUnit || !other.durationUnit) {
+        continue;
+      }
+
       const currentStart = new Date(current.startDate);
-      const currentEnd = calculateEndDate(
+      currentStart.setHours(0, 0, 0, 0);
+      const currentBaseDuration =
+        current.duration > 0 ? current.duration : 1;
+      const currentDuration = currentBaseDuration + (isDateToday(current.startDate) ? 1 : 0);
+      const currentEndInclusive = calculateEndDate(
         currentStart,
-        current.duration > 0 ? current.duration : 1,
+        currentDuration,
         current.durationUnit?.code ?? 'd',
       );
+      const currentEnd = makeEndDateExclusive(currentEndInclusive);
 
       const otherStart = new Date(other.startDate);
-      const otherEnd = calculateEndDate(
+      otherStart.setHours(0, 0, 0, 0);
+      const otherBaseDuration =
+        other.duration > 0 ? other.duration : 1;
+      const otherDuration = otherBaseDuration + (isDateToday(other.startDate) ? 1 : 0);
+      const otherEndInclusive = calculateEndDate(
         otherStart,
-        other.duration > 0 ? other.duration : 1,
+        otherDuration,
         other.durationUnit?.code ?? 'd',
       );
+      const otherEnd = makeEndDateExclusive(otherEndInclusive);
 
       if (doDateRangesOverlap(currentStart, currentEnd, otherStart, otherEnd)) {
         return true;
@@ -193,7 +242,7 @@ export const checkMedicationsOverlap = (
         const startDate =
           med.dosageInstruction?.[0]?.timing?.event?.[0] ?? med.authoredOn;
         const duration =
-          med.dosageInstruction?.[0]?.timing?.repeat?.duration ?? 7;
+          med.dosageInstruction?.[0]?.timing?.repeat?.duration ?? 1;
         const durationUnit =
           med.dosageInstruction?.[0]?.timing?.repeat?.durationUnit ?? 'd';
 
@@ -201,19 +250,29 @@ export const checkMedicationsOverlap = (
         if (isPRN || current.isPRN) return false;
         if (!startDate || !current.startDate) return false;
 
+        // Skip overlap check if selected medication's durationUnit not set
+        if (!current.durationUnit) return false;
+
         const existingStart = new Date(startDate);
-        const existingEnd = calculateEndDate(
+        existingStart.setHours(0, 0, 0, 0);
+        const existingEndInclusive = calculateEndDate(
           existingStart,
           duration,
           durationUnit,
         );
+        const existingEnd = makeEndDateExclusive(existingEndInclusive);
 
         const currentStart = new Date(current.startDate);
-        const currentEnd = calculateEndDate(
+        currentStart.setHours(0, 0, 0, 0);
+        const currentBaseDuration =
+          current.duration > 0 ? current.duration : 1;
+        const currentDuration = currentBaseDuration + (isDateToday(current.startDate) ? 1 : 0);
+        const currentEndInclusive = calculateEndDate(
           currentStart,
-          current.duration > 0 ? current.duration : 1,
+          currentDuration,
           current.durationUnit?.code ?? 'd',
         );
+        const currentEnd = makeEndDateExclusive(currentEndInclusive);
 
         return doDateRangesOverlap(
           existingStart,
@@ -240,13 +299,17 @@ export const isDuplicateMedication = (
   selectedMedications: MedicationInputEntry[],
   medicationMap: Record<string, Medication>,
 ): boolean => {
-  const effectiveDuration = newDuration > 0 ? newDuration : 1;
+  const baseDuration = newDuration > 0 ? newDuration : 1;
   const effectiveUnit = newDurationUnit ?? 'd';
-  const newEndDate = calculateEndDate(
-    newStartDate,
+  const effectiveDuration = baseDuration + (isDateToday(newStartDate) ? 1 : 0);
+  const newStartDateNormalized = new Date(newStartDate);
+  newStartDateNormalized.setHours(0, 0, 0, 0);
+  const newEndDateInclusive = calculateEndDate(
+    newStartDateNormalized,
     effectiveDuration,
     effectiveUnit,
   );
+  const newEndDate = makeEndDateExclusive(newEndDateInclusive);
 
   const isExistingDuplicate = activeMedications.some(
     (med: FhirMedicationRequest) => {
@@ -273,21 +336,23 @@ export const isDuplicateMedication = (
       }
 
       const existingDuration =
-        med.dosageInstruction?.[0]?.timing?.repeat?.duration ?? 7;
+        med.dosageInstruction?.[0]?.timing?.repeat?.duration ?? 1;
       const existingDurationUnit =
         med.dosageInstruction?.[0]?.timing?.repeat?.durationUnit ?? 'd';
 
       const existingStartDate = new Date(startDate);
-      const existingEndDate = calculateEndDate(
+      existingStartDate.setHours(0, 0, 0, 0);
+      const existingEndDateInclusive = calculateEndDate(
         existingStartDate,
         existingDuration,
         existingDurationUnit,
       );
+      const existingEndDate = makeEndDateExclusive(existingEndDateInclusive);
 
       return doDateRangesOverlap(
         existingStartDate,
         existingEndDate,
-        newStartDate,
+        newStartDateNormalized,
         newEndDate,
       );
     },
