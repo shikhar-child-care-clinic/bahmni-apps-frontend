@@ -109,7 +109,16 @@ const renderLabInvestigations = (
 
 describe('LabInvestigation', () => {
   const mockAddNotification = jest.fn();
-  const LAB_URL = 'https://fhir.bahmni.org/ext/lab-order-concept-type';
+
+  const createMockBundle = (
+    resources: ServiceRequest[],
+  ): Bundle<ServiceRequest> => ({
+    resourceType: 'Bundle',
+    type: 'searchset',
+    entry: resources.map((resource) => ({
+      resource,
+    })),
+  });
 
   const mockServiceRequests: ServiceRequest[] = [
     {
@@ -122,7 +131,12 @@ describe('LabInvestigation', () => {
       priority: 'routine',
       requester: { display: 'Dr. Smith' },
       occurrencePeriod: { start: '2025-05-08T12:44:24+00:00' },
-      extension: [{ url: LAB_URL, valueString: 'Panel' }],
+      extension: [
+        {
+          url: 'http://fhir.bahmni.org/ext/lab-order-concept-type',
+          valueString: 'Panel',
+        },
+      ],
     },
     {
       resourceType: 'ServiceRequest',
@@ -134,7 +148,12 @@ describe('LabInvestigation', () => {
       priority: 'stat',
       requester: { display: 'Dr. Johnson' },
       occurrencePeriod: { start: '2025-04-09T13:21:22+00:00' },
-      extension: [{ url: LAB_URL, valueString: 'Panel' }],
+      extension: [
+        {
+          url: 'http://fhir.bahmni.org/ext/lab-order-concept-type',
+          valueString: 'Panel',
+        },
+      ],
     },
     {
       resourceType: 'ServiceRequest',
@@ -172,11 +191,9 @@ describe('LabInvestigation', () => {
     });
 
     mockGetCategoryUuidFromOrderTypes.mockResolvedValue('lab-order-type-uuid');
-    mockGetLabInvestigationsBundle.mockResolvedValue({
-      resourceType: 'Bundle',
-      type: 'searchset',
-      entry: mockServiceRequests.map((resource) => ({ resource })),
-    });
+    mockGetLabInvestigationsBundle.mockResolvedValue(
+      createMockBundle(mockServiceRequests),
+    );
     mockGetDiagnosticReports.mockResolvedValue({
       resourceType: 'Bundle',
       type: 'searchset',
@@ -213,11 +230,7 @@ describe('LabInvestigation', () => {
   });
 
   it('renders empty state message when no lab tests', async () => {
-    mockGetLabInvestigationsBundle.mockResolvedValue({
-      resourceType: 'Bundle',
-      type: 'searchset',
-      entry: [],
-    });
+    mockGetLabInvestigationsBundle.mockResolvedValue(createMockBundle([]));
 
     render(renderLabInvestigations());
 
