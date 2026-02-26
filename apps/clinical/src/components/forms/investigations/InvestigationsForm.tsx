@@ -158,6 +158,10 @@ const InvestigationsForm: React.FC = React.memo(() => {
     if (showDuplicateNotification) {
       // If search is cleared, hide notification
       if (searchTerm === '') {
+        // eslint-disable-next-line no-console
+        console.log(
+          '[InvestigationsForm] useEffect: Clearing notification because searchTerm is empty',
+        );
         setShowDuplicateNotification(false);
         setDuplicateInvestigationId(null);
         setDuplicateCategory(null);
@@ -321,6 +325,11 @@ const InvestigationsForm: React.FC = React.memo(() => {
     });
 
     if (isDuplicate) {
+      // eslint-disable-next-line no-console
+      console.log(
+        '[InvestigationsForm] handleChange: SETTING notification to true, searchTerm:',
+        searchTerm,
+      );
       setShowDuplicateNotification(true);
       setDuplicateInvestigationId(selectedItem.code);
       setDuplicateCategory(selectedItem.category);
