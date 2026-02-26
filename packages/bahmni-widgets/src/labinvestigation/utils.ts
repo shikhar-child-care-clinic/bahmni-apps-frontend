@@ -90,7 +90,11 @@ export function formatLabInvestigations(
     const orderedDate = labTest.occurrencePeriod?.start;
     let formattedDate;
     if (orderedDate) {
-      const dateFormatResult = formatDate(orderedDate, t, FULL_MONTH_DATE_FORMAT);
+      const dateFormatResult = formatDate(
+        orderedDate,
+        t,
+        FULL_MONTH_DATE_FORMAT,
+      );
       formattedDate =
         dateFormatResult.formattedResult || orderedDate.split('T')[0];
     }
@@ -216,7 +220,8 @@ export function formatObservationsAsLabTestResults(
         .join(', ') ?? '';
 
     const reportedOn = obs.issued
-      ? formatDate(obs.issued, t, FULL_MONTH_DATE_FORMAT).formattedResult || obs.issued
+      ? formatDate(obs.issued, t, FULL_MONTH_DATE_FORMAT).formattedResult ||
+        obs.issued
       : '';
 
     // Extract interpretation code (e.g., "A" for abnormal, "N" for normal, "H" for high, "L" for low)
