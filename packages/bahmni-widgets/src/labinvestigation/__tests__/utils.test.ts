@@ -24,7 +24,8 @@ jest.mock('@bahmni/services', () => ({
 }));
 
 describe('Lab Investigation Utils', () => {
-  const LAB_ORDER_CONCEPT_TYPE_URL = 'http://fhir.bahmni.org/ext/lab-order-concept-type';
+  const LAB_ORDER_CONCEPT_TYPE_URL =
+    'https://fhir.bahmni.org/ext/lab-order-concept-type';
 
   beforeEach(() => {
     jest.clearAllMocks();

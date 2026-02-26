@@ -109,59 +109,44 @@ const renderLabInvestigations = (
 
 describe('LabInvestigation', () => {
   const mockAddNotification = jest.fn();
-  const LAB_ORDER_CONCEPT_TYPE_URL = 'http://fhir.bahmni.org/ext/lab-order-concept-type';
-
-  const createMockBundle = (
-    serviceRequests: ServiceRequest[],
-  ): Bundle<ServiceRequest> => ({
-    resourceType: 'Bundle',
-    id: 'bundle-test-id',
-    type: 'searchset',
-    total: serviceRequests.length,
-    entry: serviceRequests.map((resource) => ({
-      resource,
-      fullUrl: `http://example.com/ServiceRequest/${resource.id}`,
-    })),
-  });
-
-  const createMockServiceRequest = (
-    overrides: Partial<ServiceRequest> = {},
-  ): ServiceRequest => ({
-    resourceType: 'ServiceRequest',
-    id: 'test-id',
-    status: 'active',
-    intent: 'order',
-    subject: { reference: 'Patient/patient-123' },
-    code: { text: 'Complete Blood Count' },
-    priority: 'routine',
-    requester: { display: 'Dr. Smith' },
-    occurrencePeriod: { start: '2025-05-08T12:44:24+00:00' },
-    ...overrides,
-  });
+  const LAB_URL = 'https://fhir.bahmni.org/ext/lab-order-concept-type';
 
   const mockServiceRequests: ServiceRequest[] = [
-    createMockServiceRequest({
+    {
+      resourceType: 'ServiceRequest',
       id: 'test-1',
+      status: 'active',
+      intent: 'order',
+      subject: { reference: 'Patient/patient-123' },
       code: { text: 'Complete Blood Count' },
       priority: 'routine',
       requester: { display: 'Dr. Smith' },
-      extension: [{ url: LAB_ORDER_CONCEPT_TYPE_URL, valueString: 'Panel' }],
-    }),
-    createMockServiceRequest({
+      occurrencePeriod: { start: '2025-05-08T12:44:24+00:00' },
+      extension: [{ url: LAB_URL, valueString: 'Panel' }],
+    },
+    {
+      resourceType: 'ServiceRequest',
       id: 'test-2',
+      status: 'active',
+      intent: 'order',
+      subject: { reference: 'Patient/patient-123' },
       code: { text: 'Lipid Panel' },
       priority: 'stat',
       requester: { display: 'Dr. Johnson' },
       occurrencePeriod: { start: '2025-04-09T13:21:22+00:00' },
-      extension: [{ url: LAB_ORDER_CONCEPT_TYPE_URL, valueString: 'Panel' }],
-    }),
-    createMockServiceRequest({
+      extension: [{ url: LAB_URL, valueString: 'Panel' }],
+    },
+    {
+      resourceType: 'ServiceRequest',
       id: 'test-3',
+      status: 'active',
+      intent: 'order',
+      subject: { reference: 'Patient/patient-123' },
       code: { text: 'Liver Function' },
       priority: 'routine',
       requester: { display: 'Dr. Williams' },
       occurrencePeriod: { start: '2025-04-09T13:21:22+00:00' },
-    }),
+    },
   ];
 
   beforeEach(() => {
@@ -187,9 +172,11 @@ describe('LabInvestigation', () => {
     });
 
     mockGetCategoryUuidFromOrderTypes.mockResolvedValue('lab-order-type-uuid');
-    mockGetLabInvestigationsBundle.mockResolvedValue(
-      createMockBundle(mockServiceRequests),
-    );
+    mockGetLabInvestigationsBundle.mockResolvedValue({
+      resourceType: 'Bundle',
+      type: 'searchset',
+      entry: mockServiceRequests.map((resource) => ({ resource })),
+    });
     mockGetDiagnosticReports.mockResolvedValue({
       resourceType: 'Bundle',
       type: 'searchset',
@@ -226,7 +213,11 @@ describe('LabInvestigation', () => {
   });
 
   it('renders empty state message when no lab tests', async () => {
-    mockGetLabInvestigationsBundle.mockResolvedValue(createMockBundle([]));
+    mockGetLabInvestigationsBundle.mockResolvedValue({
+      resourceType: 'Bundle',
+      type: 'searchset',
+      entry: [],
+    });
 
     render(renderLabInvestigations());
 
