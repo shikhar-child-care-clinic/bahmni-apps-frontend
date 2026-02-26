@@ -195,9 +195,9 @@ export const checkMedicationsOverlap = (
 
       const currentStart = new Date(current.startDate);
       currentStart.setHours(0, 0, 0, 0);
-      const currentBaseDuration =
-        current.duration > 0 ? current.duration : 1;
-      const currentDuration = currentBaseDuration + (isDateToday(current.startDate) ? 1 : 0);
+      const currentBaseDuration = current.duration > 0 ? current.duration : 1;
+      const currentDuration =
+        currentBaseDuration + (isDateToday(current.startDate) ? 1 : 0);
       const currentEndInclusive = calculateEndDate(
         currentStart,
         currentDuration,
@@ -207,9 +207,9 @@ export const checkMedicationsOverlap = (
 
       const otherStart = new Date(other.startDate);
       otherStart.setHours(0, 0, 0, 0);
-      const otherBaseDuration =
-        other.duration > 0 ? other.duration : 1;
-      const otherDuration = otherBaseDuration + (isDateToday(other.startDate) ? 1 : 0);
+      const otherBaseDuration = other.duration > 0 ? other.duration : 1;
+      const otherDuration =
+        otherBaseDuration + (isDateToday(other.startDate) ? 1 : 0);
       const otherEndInclusive = calculateEndDate(
         otherStart,
         otherDuration,
@@ -264,9 +264,9 @@ export const checkMedicationsOverlap = (
 
         const currentStart = new Date(current.startDate);
         currentStart.setHours(0, 0, 0, 0);
-        const currentBaseDuration =
-          current.duration > 0 ? current.duration : 1;
-        const currentDuration = currentBaseDuration + (isDateToday(current.startDate) ? 1 : 0);
+        const currentBaseDuration = current.duration > 0 ? current.duration : 1;
+        const currentDuration =
+          currentBaseDuration + (isDateToday(current.startDate) ? 1 : 0);
         const currentEndInclusive = calculateEndDate(
           currentStart,
           currentDuration,
@@ -365,4 +365,26 @@ export const isDuplicateMedication = (
   );
 
   return isExistingDuplicate || isSelectedDuplicate;
+};
+
+/**
+ * Validates medications for overlaps at save time
+ * Returns true if medications are valid (no overlaps)
+ * Returns false if duplicates exist
+ * @param selectedMedications - Medications selected in the form
+ * @param activeMedications - Active medications from backend
+ * @param medicationMap - Medication resource map
+ * @returns true if valid (no overlaps), false if overlaps exist
+ */
+export const validateMedicationsForOverlaps = (
+  selectedMedications: MedicationInputEntry[],
+  activeMedications: FhirMedicationRequest[],
+  medicationMap: Record<string, Medication>,
+): boolean => {
+  // If no overlaps detected, medications are valid
+  return !checkMedicationsOverlap(
+    selectedMedications,
+    activeMedications,
+    medicationMap,
+  );
 };

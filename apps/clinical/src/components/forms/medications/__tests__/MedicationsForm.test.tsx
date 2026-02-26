@@ -129,6 +129,7 @@ const mockSelectedMedication: MedicationInputEntry = {
 
 const mockStore = {
   selectedMedications: [],
+  hasOverlapDuplicates: false,
   addMedication: jest.fn(),
   removeMedication: jest.fn(),
   updateDosage: jest.fn(),
@@ -145,6 +146,8 @@ const mockStore = {
   updateStartDate: jest.fn(),
   updateNote: jest.fn(),
   validateAllMedications: jest.fn(),
+  validateMedicationsForOverlaps: jest.fn(),
+  setOverlapDuplicates: jest.fn(),
   reset: jest.fn(),
   getState: jest.fn(),
 };

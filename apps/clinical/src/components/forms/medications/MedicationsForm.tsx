@@ -74,6 +74,7 @@ const MedicationsForm: React.FC = React.memo(() => {
     updateDispenseUnit,
     updateNote,
     updateStartDate,
+    setOverlapDuplicates,
   } = useMedicationStore();
 
   const {
@@ -124,7 +125,13 @@ const MedicationsForm: React.FC = React.memo(() => {
       medicationMap,
     );
     setShowDuplicateNotification(hasOverlaps);
-  }, [selectedMedications, activeMedications, medicationMap]);
+    setOverlapDuplicates(hasOverlaps);
+  }, [
+    selectedMedications,
+    activeMedications,
+    medicationMap,
+    setOverlapDuplicates,
+  ]);
 
   const handleSearch = (searchTerm: string) => {
     if (!isSelectingRef.current) {
