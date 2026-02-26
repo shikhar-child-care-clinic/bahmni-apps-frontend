@@ -320,3 +320,5 @@ export {
   createDocumentReference,
   updateDocumentReference,
 } from './documentReferenceService';
+
+export { uploadDocument } from './documentUploadService';
