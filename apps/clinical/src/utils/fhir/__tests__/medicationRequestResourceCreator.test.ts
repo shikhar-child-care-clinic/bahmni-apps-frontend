@@ -410,7 +410,9 @@ describe('medicationRequestResourceCreator', () => {
       jest.useRealTimers();
 
       const timing = result.dosageInstruction![0].timing!;
-      expect(timing.repeat?.boundsPeriod?.start).toBe('2024-06-01T08:00:00.000Z');
+      expect(timing.repeat?.boundsPeriod?.start).toBe(
+        '2024-06-01T08:00:00.000Z',
+      );
       expect(timing.repeat?.boundsPeriod?.end).toBe('2024-06-01T10:00:00.000Z');
       expect(timing.repeat?.duration).toBeUndefined();
       expect(timing.event).toBeUndefined();
