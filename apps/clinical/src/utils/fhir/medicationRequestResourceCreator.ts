@@ -1,4 +1,5 @@
 import { MedicationRequest, Reference, Dosage, Timing } from 'fhir/r4';
+import { STAT_ORDER_VALIDITY_MS } from '../../constants/medications';
 import {
   DurationUnitOption,
   MedicationInputEntry,
@@ -120,28 +121,30 @@ const createTiming = (
 ): Timing => {
   const timing: Timing = {};
 
-  // Add event (start date)
-  if (startDate) {
-    // Convert to ISO format with timezone
-    const date = new Date(startDate);
-    timing.event = [date.toISOString()];
-  }
-
   if (isSTAT) {
     const now = new Date();
-    const endOfDay = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    const statExpiryTime = new Date(now.getTime() + STAT_ORDER_VALIDITY_MS);
     timing.repeat = {
       boundsPeriod: {
         start: now.toISOString(),
-        end: endOfDay.toISOString(),
+        end: statExpiryTime.toISOString(),
       },
     };
-  } else if (duration && durationUnit) {
-    // Add repeat information if duration is specified
-    timing.repeat = {
-      duration: duration,
-      durationUnit: durationUnit.code,
-    };
+  } else {
+    // Add event (start date) for non-STAT orders
+    if (startDate) {
+      // Convert to ISO format with timezone
+      const date = new Date(startDate);
+      timing.event = [date.toISOString()];
+    }
+
+    if (duration && durationUnit) {
+      // Add repeat information if duration is specified
+      timing.repeat = {
+        duration: duration,
+        durationUnit: durationUnit.code,
+      };
+    }
   }
 
   // Add frequency code
