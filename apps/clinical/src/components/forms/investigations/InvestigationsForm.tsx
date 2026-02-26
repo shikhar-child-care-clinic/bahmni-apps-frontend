@@ -15,13 +15,7 @@ import {
 } from '@bahmni/services';
 import { usePatientUUID, useActivePractitioner } from '@bahmni/widgets';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import React, {
-  useMemo,
-  useCallback,
-  useState,
-  useEffect,
-  useRef,
-} from 'react';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { useClinicalAppData } from '../../../hooks/useClinicalAppData';
 import { useEncounterSession } from '../../../hooks/useEncounterSession';
 import useInvestigationsSearch from '../../../hooks/useInvestigationsSearch';
@@ -67,7 +61,6 @@ const InvestigationsForm: React.FC = React.memo(() => {
   const [duplicateCategoryCode, setDuplicateCategoryCode] = useState<
     string | null
   >(null);
-  const notificationDismissedRef = useRef(false);
 
   const { investigations, isLoading, error } =
     useInvestigationsSearch(searchTerm);
@@ -160,13 +153,19 @@ const InvestigationsForm: React.FC = React.memo(() => {
     [existingServiceRequests, isSelectedInCategory, currentPractitionerUuid],
   );
 
+  // Clear notification when search is cleared or when the duplicate investigation is no longer a duplicate
   useEffect(() => {
     if (showDuplicateNotification) {
+      // If search is cleared, hide notification
       if (searchTerm === '') {
         setShowDuplicateNotification(false);
+        setDuplicateInvestigationId(null);
+        setDuplicateCategory(null);
+        setDuplicateCategoryCode(null);
         return;
       }
 
+      // If the duplicate investigation was removed from selectedServiceRequests, hide notification
       if (
         duplicateInvestigationId &&
         duplicateCategory &&
@@ -182,24 +181,6 @@ const InvestigationsForm: React.FC = React.memo(() => {
         setDuplicateCategory(null);
         setDuplicateCategoryCode(null);
       }
-    } else if (
-      !notificationDismissedRef.current &&
-      searchTerm !== '' &&
-      duplicateInvestigationId &&
-      duplicateCategory &&
-      duplicateCategoryCode &&
-      isDuplicateInvestigation(
-        duplicateInvestigationId,
-        duplicateCategory,
-        duplicateCategoryCode,
-      )
-    ) {
-      setShowDuplicateNotification(true);
-    }
-
-    // Reset dismissed state when search is cleared so future duplicate attempts re-show the notification
-    if (searchTerm === '') {
-      notificationDismissedRef.current = false;
     }
   }, [
     searchTerm,
@@ -389,10 +370,6 @@ const InvestigationsForm: React.FC = React.memo(() => {
           }
           onClose={() => {
             setShowDuplicateNotification(false);
-            setDuplicateInvestigationId(null);
-            setDuplicateCategory(null);
-            setDuplicateCategoryCode(null);
-            notificationDismissedRef.current = true;
           }}
           hideCloseButton={false}
           className={styles.duplicateNotification}
