@@ -129,8 +129,7 @@ const createTiming = (
 
   if (isSTAT) {
     const now = new Date();
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 0);
+    const endOfDay = new Date(now.getTime() + 2 * 60 * 60 * 1000);
     timing.repeat = {
       boundsPeriod: {
         start: now.toISOString(),
