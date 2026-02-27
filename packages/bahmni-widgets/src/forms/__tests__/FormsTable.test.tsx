@@ -22,13 +22,6 @@ import ObservationItem from '../ObservationItem';
 
 expect.extend(toHaveNoViolations);
 
-// Mock ResizeObserver for modal tests
-global.ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
-}));
-
 // Mock dependencies
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
@@ -920,10 +913,19 @@ describe('FormsTable', () => {
 
     it('re-fetches FHIR encounter data after consultation:saved event when modal is open', async () => {
       const user = userEvent.setup();
+      let capturedCallback: ((payload: any) => void) | null = null;
+
       mockGetPatientFormData.mockResolvedValue(mockFormResponseData);
       mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
       mockGetObservationsBundleByEncounterUuid.mockResolvedValue(
         mockFhirObservationBundle,
+      );
+
+      // Capture the subscription callback
+      mockUseSubscribeConsultationSaved.mockImplementation(
+        (callback: (payload: any) => void) => {
+          capturedCallback = callback;
+        },
       );
 
       const { container } = renderFormsTable();
@@ -940,25 +942,24 @@ describe('FormsTable', () => {
         expect(screen.getByTestId('form-details-modal')).toBeInTheDocument();
       });
 
-      // Reset mock to count new calls
-      mockGetObservationsBundleByEncounterUuid.mockClear();
-      mockGetObservationsBundleByEncounterUuid.mockResolvedValue(
-        mockFhirObservationBundle,
-      );
+      // Verify initial call was made
+      const initialCallCount =
+        mockGetObservationsBundleByEncounterUuid.mock.calls.length;
 
-      // Simulate consultation:saved event
-      const event = new CustomEvent('consultation:saved', {
-        detail: {
+      // Trigger the consultation saved callback
+      if (capturedCallback !== null) {
+        (capturedCallback as (payload: any) => void)({
           patientUUID: 'patient-123',
           updatedResources: {},
           updatedConcepts: new Map([['concept-1', 'Concept 1']]),
-        },
-      });
-      window.dispatchEvent(event);
+        });
+      }
 
-      // Verify re-fetch was triggered when modal is open
+      // Verify that cache invalidation triggered a refetch
       await waitFor(() => {
-        expect(mockGetObservationsBundleByEncounterUuid).toHaveBeenCalled();
+        expect(
+          mockGetObservationsBundleByEncounterUuid.mock.calls.length,
+        ).toBeGreaterThan(initialCallCount);
       });
     });
   });
