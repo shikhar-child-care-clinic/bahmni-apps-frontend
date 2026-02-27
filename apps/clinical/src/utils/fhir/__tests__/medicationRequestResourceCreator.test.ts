@@ -427,14 +427,14 @@ describe('medicationRequestResourceCreator', () => {
         ...mockMedicationEntry,
         isSTAT: true,
       };
-      const oneHourInMs = 60 * 60 * 1000;
+      const twoHoursInMs = 2 * 60 * 60 * 1000;
 
       const result = createMedicationRequestResource(
         statEntry,
         mockSubjectReference,
         mockEncounterReference,
         mockRequesterReference,
-        oneHourInMs,
+        twoHoursInMs,
       );
 
       jest.useRealTimers();
@@ -443,7 +443,7 @@ describe('medicationRequestResourceCreator', () => {
       expect(timing.repeat?.boundsPeriod?.start).toBe(
         '2024-06-01T08:00:00.000Z',
       );
-      expect(timing.repeat?.boundsPeriod?.end).toBe('2024-06-01T09:00:00.000Z');
+      expect(timing.repeat?.boundsPeriod?.end).toBe('2024-06-01T10:00:00.000Z');
     });
   });
 
