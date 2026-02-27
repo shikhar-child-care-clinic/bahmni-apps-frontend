@@ -15,7 +15,7 @@ import {
 } from '@bahmni/services';
 import { usePatientUUID, useActivePractitioner } from '@bahmni/widgets';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { useMemo, useCallback, useState, useEffect } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { useClinicalAppData } from '../../../hooks/useClinicalAppData';
 import { useEncounterSession } from '../../../hooks/useEncounterSession';
 import useInvestigationsSearch from '../../../hooks/useInvestigationsSearch';
@@ -52,15 +52,9 @@ const InvestigationsForm: React.FC = React.memo(() => {
     useState<FlattenedInvestigations | null>(null);
   const [showDuplicateNotification, setShowDuplicateNotification] =
     useState(false);
-  const [duplicateInvestigationId, setDuplicateInvestigationId] = useState<
-    string | null
-  >(null);
   const [duplicateCategory, setDuplicateCategory] = useState<string | null>(
     null,
   );
-  const [duplicateCategoryCode, setDuplicateCategoryCode] = useState<
-    string | null
-  >(null);
 
   const { investigations, isLoading, error } =
     useInvestigationsSearch(searchTerm);
@@ -152,49 +146,6 @@ const InvestigationsForm: React.FC = React.memo(() => {
     },
     [existingServiceRequests, isSelectedInCategory, currentPractitionerUuid],
   );
-
-  // Clear notification when search is cleared or when the duplicate investigation is no longer a duplicate
-  useEffect(() => {
-    if (showDuplicateNotification) {
-      // If search is cleared, hide notification
-      if (searchTerm === '') {
-        // eslint-disable-next-line no-console
-        console.log(
-          '[InvestigationsForm] useEffect: Clearing notification because searchTerm is empty',
-        );
-        setShowDuplicateNotification(false);
-        setDuplicateInvestigationId(null);
-        setDuplicateCategory(null);
-        setDuplicateCategoryCode(null);
-        return;
-      }
-
-      // If the duplicate investigation was removed from selectedServiceRequests, hide notification
-      if (
-        duplicateInvestigationId &&
-        duplicateCategory &&
-        duplicateCategoryCode &&
-        !isDuplicateInvestigation(
-          duplicateInvestigationId,
-          duplicateCategory,
-          duplicateCategoryCode,
-        )
-      ) {
-        setShowDuplicateNotification(false);
-        setDuplicateInvestigationId(null);
-        setDuplicateCategory(null);
-        setDuplicateCategoryCode(null);
-      }
-    }
-  }, [
-    searchTerm,
-    selectedServiceRequests,
-    showDuplicateNotification,
-    duplicateInvestigationId,
-    duplicateCategory,
-    duplicateCategoryCode,
-    isDuplicateInvestigation,
-  ]);
 
   const arrangeFilteredInvestigationsByCategory = useCallback(
     (investigations: FlattenedInvestigations[]): FlattenedInvestigations[] => {
@@ -304,43 +255,25 @@ const InvestigationsForm: React.FC = React.memo(() => {
     arrangeFilteredInvestigationsByCategory,
   ]);
 
+  // Matches ConditionsAndDiagnoses handleOnChange pattern exactly
   const handleChange = (
     selectedItem: FlattenedInvestigations | null | undefined,
   ) => {
-    if (!selectedItem?.code) {
-      // eslint-disable-next-line no-console
-      console.log('[InvestigationsForm] handleChange: no selectedItem.code');
-      return;
-    }
+    setShowDuplicateNotification(false); // Always reset first (Diagnoses pattern)
+    if (!selectedItem?.code) return;
 
     const isDuplicate = isDuplicateInvestigation(
       selectedItem.code,
       selectedItem.category,
       selectedItem.categoryCode,
     );
-    // eslint-disable-next-line no-console
-    console.log('[InvestigationsForm] handleChange:', {
-      code: selectedItem.code,
-      isDuplicate,
-    });
 
     if (isDuplicate) {
-      // eslint-disable-next-line no-console
-      console.log(
-        '[InvestigationsForm] handleChange: SETTING notification to true, searchTerm:',
-        searchTerm,
-      );
       setShowDuplicateNotification(true);
-      setDuplicateInvestigationId(selectedItem.code);
       setDuplicateCategory(selectedItem.category);
-      setDuplicateCategoryCode(selectedItem.categoryCode);
-      return;
+      return; // Don't add duplicate!
     }
 
-    setShowDuplicateNotification(false);
-    setDuplicateInvestigationId(null);
-    setDuplicateCategory(null);
-    setDuplicateCategoryCode(null);
     addServiceRequest(
       selectedItem.category,
       selectedItem.code,
@@ -386,9 +319,7 @@ const InvestigationsForm: React.FC = React.memo(() => {
               ? t('PROCEDURE_ALREADY_ADDED')
               : t('INVESTIGATION_ALREADY_ADDED')
           }
-          onClose={() => {
-            setShowDuplicateNotification(false);
-          }}
+          onClose={() => setShowDuplicateNotification(false)}
           hideCloseButton={false}
           className={styles.duplicateNotification}
         />
