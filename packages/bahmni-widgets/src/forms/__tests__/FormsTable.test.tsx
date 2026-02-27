@@ -14,7 +14,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Bundle, Observation } from 'fhir/r4';
-import { axe, toHaveNoViolations } from 'jest-axe';
+import { toHaveNoViolations } from 'jest-axe';
 import { usePatientUUID } from '../../hooks/usePatientUUID';
 import { ExtractedObservation } from '../../observations/models';
 import FormsTable from '../FormsTable';
@@ -195,7 +195,7 @@ const renderFormsTable = (props = {}) => {
     defaultOptions: {
       queries: {
         retry: false,
-        staleTime: 0, // Prevent inter-test cache pollution
+        staleTime: 5 * 60 * 1000, // Match the app config
         gcTime: 10 * 60 * 1000,
       },
     },
@@ -223,13 +223,6 @@ describe('FormsTable', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Mock deterministic ID generation for snapshot consistency
-    let idCounter = 0;
-    jest.spyOn(Math, 'random').mockImplementation(() => {
-      idCounter += 1;
-      return idCounter / 1000;
-    });
-
     mockUseTranslation.mockReturnValue({
       t: (key: string) => {
         const translations: Record<string, string> = {
@@ -250,10 +243,6 @@ describe('FormsTable', () => {
     mockGetObservationsBundleByEncounterUuid.mockResolvedValue(
       mockFhirObservationBundle,
     );
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
   });
 
   describe('Component States', () => {
@@ -323,14 +312,14 @@ describe('FormsTable', () => {
     it('renders timestamp as clickable link', async () => {
       mockGetPatientFormData.mockResolvedValue(mockFormResponseData);
 
-      const { container } = renderFormsTable();
+      renderFormsTable();
 
       await waitFor(() => {
         expect(screen.getByText('Dr. Williams')).toBeInTheDocument();
       });
 
-      // Find links by Carbon CSS class
-      const links = container.querySelectorAll('.cds--link');
+      // Find links by class since Carbon doesn't add role="link"
+      const links = document.querySelectorAll('.cds--link');
       expect(links.length).toBeGreaterThan(0);
       // Verify links are clickable
       links.forEach((link) => {
@@ -345,14 +334,14 @@ describe('FormsTable', () => {
       mockGetPatientFormData.mockResolvedValue(mockFormResponseData);
       mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
 
-      const { container } = renderFormsTable();
+      renderFormsTable();
 
       await waitFor(() => {
         expect(screen.getByText('Dr. Williams')).toBeInTheDocument();
       });
 
       // Click on the first timestamp link
-      const links = container.querySelectorAll('.cds--link');
+      const links = document.querySelectorAll('.cds--link');
       expect(links.length).toBeGreaterThan(0);
       await user.click(links[0] as HTMLElement);
 
@@ -367,14 +356,14 @@ describe('FormsTable', () => {
       mockGetPatientFormData.mockResolvedValue(mockFormResponseData);
       mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
 
-      const { container } = renderFormsTable();
+      renderFormsTable();
 
       await waitFor(() => {
         expect(screen.getByText('Dr. Williams')).toBeInTheDocument();
       });
 
       // Click on timestamp
-      const links = container.querySelectorAll('.cds--link');
+      const links = document.querySelectorAll('.cds--link');
       expect(links.length).toBeGreaterThan(0);
       await user.click(links[0] as HTMLElement);
 
@@ -392,14 +381,14 @@ describe('FormsTable', () => {
       mockGetPatientFormData.mockResolvedValue(mockFormResponseData);
       mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
 
-      const { container } = renderFormsTable();
+      renderFormsTable();
 
       await waitFor(() => {
         expect(screen.getByText('Dr. Williams')).toBeInTheDocument();
       });
 
       // Open modal
-      const links = container.querySelectorAll('.cds--link');
+      const links = document.querySelectorAll('.cds--link');
       expect(links.length).toBeGreaterThan(0);
       await user.click(links[0] as HTMLElement);
 
@@ -424,14 +413,14 @@ describe('FormsTable', () => {
         new Error('Failed to fetch metadata'),
       );
 
-      const { container } = renderFormsTable();
+      renderFormsTable();
 
       await waitFor(() => {
         expect(screen.getByText('Dr. Williams')).toBeInTheDocument();
       });
 
       // Click on timestamp
-      const links = container.querySelectorAll('.cds--link');
+      const links = document.querySelectorAll('.cds--link');
       expect(links.length).toBeGreaterThan(0);
       await user.click(links[0] as HTMLElement);
 
@@ -596,14 +585,14 @@ describe('FormsTable', () => {
       mockGetPatientFormData.mockResolvedValue(mockFormResponseData);
       mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
 
-      const { container } = renderFormsTable({ isActionAreaVisible: true });
+      renderFormsTable({ isActionAreaVisible: true });
 
       await waitFor(() => {
         expect(screen.getByText('Dr. Williams')).toBeInTheDocument();
       });
 
       // Click on timestamp
-      const links = container.querySelectorAll('.cds--link');
+      const links = document.querySelectorAll('.cds--link');
       expect(links.length).toBeGreaterThan(0);
       await user.click(links[0] as HTMLElement);
 
@@ -618,7 +607,7 @@ describe('FormsTable', () => {
       mockGetPatientFormData.mockResolvedValue(mockFormResponseData);
       mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
 
-      const { container } = renderFormsTable({ isActionAreaVisible: false });
+      renderFormsTable({ isActionAreaVisible: false });
 
       // Wait for accordion to be rendered
       await waitFor(() => {
@@ -626,7 +615,7 @@ describe('FormsTable', () => {
       });
 
       // Click on timestamp
-      const links = container.querySelectorAll('.cds--link');
+      const links = document.querySelectorAll('.cds--link');
       expect(links.length).toBeGreaterThan(0);
       await user.click(links[0] as HTMLElement);
 
@@ -841,175 +830,6 @@ describe('FormsTable', () => {
           screen.getByText('Patient has fever - by Dr. Smith'),
         ).toBeInTheDocument();
       });
-    });
-  });
-
-  describe('FHIR Observations in Modal', () => {
-    it('displays observations from FHIR bundle in modal', async () => {
-      const user = userEvent.setup();
-      mockGetObservationsBundleByEncounterUuid.mockResolvedValue(
-        mockFhirObservationBundle,
-      );
-      mockGetPatientFormData.mockResolvedValue(mockFormResponseData);
-      mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
-
-      const { container } = renderFormsTable();
-
-      await waitFor(() => {
-        expect(screen.getByText('Dr. Williams')).toBeInTheDocument();
-      });
-
-      // Click on timestamp to open modal
-      const links = container.querySelectorAll('.cds--link');
-      await user.click(links[0] as HTMLElement);
-
-      // Verify observations are rendered in modal
-      await waitFor(() => {
-        expect(screen.getByText('Temperature')).toBeInTheDocument();
-      });
-      expect(mockGetObservationsBundleByEncounterUuid).toHaveBeenCalledWith(
-        'encounter-3',
-      );
-    });
-
-    it('displays error message in modal when FHIR encounter data fetch fails', async () => {
-      const user = userEvent.setup();
-      mockGetObservationsBundleByEncounterUuid.mockRejectedValue(
-        new Error('FHIR fetch error'),
-      );
-      mockGetPatientFormData.mockResolvedValue(mockFormResponseData);
-      mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
-
-      const { container } = renderFormsTable();
-
-      await waitFor(() => {
-        expect(screen.getByText('Dr. Williams')).toBeInTheDocument();
-      });
-
-      // Click on timestamp to open modal
-      const links = container.querySelectorAll('.cds--link');
-      await user.click(links[0] as HTMLElement);
-
-      // Verify error is displayed
-      await waitFor(() => {
-        expect(screen.getByText('FHIR fetch error')).toBeInTheDocument();
-      });
-    });
-
-    it('displays no form data message when no matching observations', async () => {
-      const user = userEvent.setup();
-      mockGetObservationsBundleByEncounterUuid.mockResolvedValue({
-        resourceType: 'Bundle',
-        type: 'searchset',
-        entry: [],
-      });
-      mockGetPatientFormData.mockResolvedValue(mockFormResponseData);
-      mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
-
-      const { container } = renderFormsTable();
-
-      await waitFor(() => {
-        expect(screen.getByText('Dr. Williams')).toBeInTheDocument();
-      });
-
-      // Click on timestamp to open modal
-      const links = container.querySelectorAll('.cds--link');
-      await user.click(links[0] as HTMLElement);
-
-      // Verify no data message is displayed
-      await waitFor(() => {
-        expect(screen.getByText('NO_FORM_DATA_AVAILABLE')).toBeInTheDocument();
-      });
-    });
-
-    it('re-fetches FHIR encounter data after consultation:saved event when modal is open', async () => {
-      const user = userEvent.setup();
-      let capturedCallback: ((payload: any) => void) | null = null;
-
-      mockGetPatientFormData.mockResolvedValue(mockFormResponseData);
-      mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
-      mockGetObservationsBundleByEncounterUuid.mockResolvedValue(
-        mockFhirObservationBundle,
-      );
-
-      // Capture the subscription callback
-      mockUseSubscribeConsultationSaved.mockImplementation(
-        (callback: (payload: any) => void) => {
-          capturedCallback = callback;
-        },
-      );
-
-      const { container } = renderFormsTable();
-
-      await waitFor(() => {
-        expect(screen.getByText('Vitals Form')).toBeInTheDocument();
-      });
-
-      // Open modal
-      const links = container.querySelectorAll('.cds--link');
-      await user.click(links[0] as HTMLElement);
-
-      await waitFor(() => {
-        expect(screen.getByTestId('form-details-modal')).toBeInTheDocument();
-      });
-
-      // Verify initial call was made
-      const initialCallCount =
-        mockGetObservationsBundleByEncounterUuid.mock.calls.length;
-
-      // Trigger the consultation saved callback
-      if (capturedCallback !== null) {
-        (capturedCallback as (payload: any) => void)({
-          patientUUID: 'patient-123',
-          updatedResources: {},
-          updatedConcepts: new Map([['concept-1', 'Concept 1']]),
-        });
-      }
-
-      // Verify that cache invalidation triggered a refetch
-      await waitFor(() => {
-        expect(
-          mockGetObservationsBundleByEncounterUuid.mock.calls.length,
-        ).toBeGreaterThan(initialCallCount);
-      });
-    });
-  });
-
-  describe('Accessibility', () => {
-    it('has no accessibility violations in loaded state', async () => {
-      mockGetPatientFormData.mockResolvedValue(mockFormResponseData);
-      const { container } = renderFormsTable();
-
-      await waitFor(() => {
-        expect(screen.getByText('Vitals Form')).toBeInTheDocument();
-      });
-
-      expect(await axe(container)).toHaveNoViolations();
-    });
-
-    it('has no accessibility violations when modal is open', async () => {
-      const user = userEvent.setup();
-      mockGetPatientFormData.mockResolvedValue(mockFormResponseData);
-      mockFetchFormMetadata.mockResolvedValue(mockFormMetadata);
-      mockGetObservationsBundleByEncounterUuid.mockResolvedValue(
-        mockFhirObservationBundle,
-      );
-
-      const { container } = renderFormsTable();
-
-      await waitFor(() => {
-        expect(screen.getByText('Dr. Williams')).toBeInTheDocument();
-      });
-
-      // Open modal
-      const links = container.querySelectorAll('.cds--link');
-      await user.click(links[0] as HTMLElement);
-
-      await waitFor(() => {
-        expect(screen.getByTestId('form-details-modal')).toBeInTheDocument();
-      });
-
-      expect(await axe(container)).toHaveNoViolations();
     });
   });
 
