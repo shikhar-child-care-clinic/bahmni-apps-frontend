@@ -223,6 +223,13 @@ describe('FormsTable', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    // Mock deterministic ID generation for snapshot consistency
+    let idCounter = 0;
+    jest.spyOn(Math, 'random').mockImplementation(() => {
+      idCounter += 1;
+      return idCounter / 1000;
+    });
+
     mockUseTranslation.mockReturnValue({
       t: (key: string) => {
         const translations: Record<string, string> = {
@@ -243,6 +250,10 @@ describe('FormsTable', () => {
     mockGetObservationsBundleByEncounterUuid.mockResolvedValue(
       mockFhirObservationBundle,
     );
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('Component States', () => {
