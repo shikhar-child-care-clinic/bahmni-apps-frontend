@@ -1,0 +1,11 @@
+@use "@carbon/react/scss/type" as *;
+
+.table {
+  td,
+  th {
+    width: 9.09%;
+  }
+  th {
+    @include type-style("heading-compact-01");
+  }
+}
