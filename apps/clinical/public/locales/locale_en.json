@@ -116,7 +116,7 @@
   "DIAGNOSIS_RECORDED_DATE": "Recorded Date",
   "DIAGNOSIS_TABLE_NOT_AVAILABLE": "Not available",
   "DOCUMENTS_DOCUMENT_TYPE": "Document Type",
-  "DOCUMENTS_NAME": "Name",
+  "DOCUMENTS_DOCUMENT_IDENTIFIER": "Document Identifier",
   "DOCUMENTS_NOT_AVAILABLE": "Not Available",
   "DOCUMENTS_NO_RECORDS": "No documents added",
   "DOCUMENTS_TABLE_HEADING": "Patient Documents",

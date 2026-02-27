@@ -1,4 +1,4 @@
-import { type DocumentReference } from '@bahmni/services';
+import { camelToScreamingSnakeCase, type DocumentReference } from '@bahmni/services';
 import { DocumentViewModel } from './models';
 
 /**
@@ -18,7 +18,7 @@ export function mapDocumentReferencesToViewModels(
 
       return {
         id: doc.id!,
-        name: masterIdentifier,
+        documentIdentifier: masterIdentifier,
         documentType: doc.type?.coding?.[0]?.display || doc.category?.[0]?.coding?.[0]?.display,
         uploadedOn: doc.date || '',
         uploadedBy: doc.author?.[0]?.display,
@@ -76,4 +76,21 @@ export function buildDocumentUrl(documentUrl: string): string {
 
   // Default: serve via OpenMRS document_images endpoint
   return `/openmrs/auth?requested_document=/document_images/${documentUrl}`;
+}
+
+/**
+ * Creates table headers from configured fields
+ * Maps field names to i18n translation keys
+ * @param fields - Array of field names to display
+ * @param t - Translation function
+ * @returns Array of header objects with key and translated header text
+ */
+export function createDocumentHeaders(
+  fields: string[],
+  t: (key: string) => string,
+): Array<{ key: string; header: string }> {
+  return fields.map((field) => ({
+    key: field,
+    header: t(`DOCUMENTS_${camelToScreamingSnakeCase(field)}`),
+  }));
 }

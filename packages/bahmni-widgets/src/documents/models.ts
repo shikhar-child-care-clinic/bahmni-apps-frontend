@@ -3,7 +3,7 @@
  */
 export interface DocumentViewModel {
   readonly id: string;
-  readonly name: string;
+  readonly documentIdentifier: string;
   readonly documentType?: string;
   readonly uploadedOn: string;
   readonly uploadedBy?: string;

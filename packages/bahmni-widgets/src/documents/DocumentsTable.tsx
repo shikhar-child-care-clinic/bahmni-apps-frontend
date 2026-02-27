@@ -21,6 +21,7 @@ import {
   mapDocumentReferencesToViewModels,
   getFileTypeCategory,
   buildDocumentUrl,
+  createDocumentHeaders,
 } from './utils';
 
 const fetchDocuments = async (
@@ -36,7 +37,10 @@ const fetchDocuments = async (
 /**
  * Component to display patient documents using SortableDataTable
  */
-const DocumentsTable: React.FC<WidgetProps> = ({ encounterUuids }) => {
+const DocumentsTable: React.FC<WidgetProps> = ({
+  config,
+  encounterUuids,
+}) => {
   const [documents, setDocuments] = useState<DocumentViewModel[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<DocumentViewModel | null>(null);
@@ -84,25 +88,30 @@ const DocumentsTable: React.FC<WidgetProps> = ({ encounterUuids }) => {
     }
   }, [data, isLoading, isError, error, addNotification, t]);
 
-  // Define table headers
+  // Define table headers based on configured fields
   const headers = useMemo(
-    () => [
-      { key: 'name', header: t('DOCUMENTS_NAME') },
-      { key: 'documentType', header: t('DOCUMENTS_DOCUMENT_TYPE') },
-      { key: 'uploadedOn', header: t('DOCUMENTS_UPLOADED_ON') },
-      { key: 'uploadedBy', header: t('DOCUMENTS_UPLOADED_BY') },
-    ],
-    [t],
+    () => {
+      const fields = config?.fields as string[];
+      if (!fields || fields.length === 0) {
+        return [];
+      }
+      return createDocumentHeaders(fields, t);
+    },
+    [config?.fields, t],
   );
 
   const sortable = useMemo(
-    () => [
-      { key: 'name', sortable: true },
-      { key: 'documentType', sortable: true },
-      { key: 'uploadedOn', sortable: true },
-      { key: 'uploadedBy', sortable: true },
-    ],
-    [],
+    () => {
+      const fields = config?.fields as string[];
+      if (!fields || fields.length === 0) {
+        return [];
+      }
+      return fields.map((field) => ({
+        key: field,
+        sortable: true,
+      }));
+    },
+    [config?.fields],
   );
 
   const renderFileIcon = (contentType?: string) => {
@@ -121,17 +130,17 @@ const DocumentsTable: React.FC<WidgetProps> = ({ encounterUuids }) => {
   // Function to render cell content based on the cell ID
   const renderCell = (doc: DocumentViewModel, cellId: string) => {
     switch (cellId) {
-      case 'name':
+      case 'documentIdentifier':
         return (
           <div className={styles.nameCell}>
             <button
               className={styles.fileIconButton}
               onClick={() => handleIconClick(doc)}
-              aria-label={`View ${doc.name}`}
+              aria-label={`View ${doc.documentIdentifier}`}
             >
               {renderFileIcon(doc.contentType)}
             </button>
-            <span>{doc.name}</span>
+            <span>{doc.documentIdentifier}</span>
           </div>
         );
       case 'documentType':
@@ -177,7 +186,7 @@ const DocumentsTable: React.FC<WidgetProps> = ({ encounterUuids }) => {
           id="modalIdForActionAreaLayout"
           open={isModalOpen}
           onRequestClose={handleCloseModal}
-          modalHeading={selectedDoc.name}
+          modalHeading={selectedDoc.documentIdentifier}
           passiveModal
           size="lg"
           testId="document-view-modal"
@@ -186,14 +195,14 @@ const DocumentsTable: React.FC<WidgetProps> = ({ encounterUuids }) => {
             {isImage ? (
               <img
                 src={docUrl}
-                alt={selectedDoc.name}
+                alt={selectedDoc.documentIdentifier}
                 className={styles.documentImage}
               />
             ) : (
               <iframe
                 src={isPDF ? `${docUrl}#toolbar=0` : docUrl}
                 className={styles.documentIframe}
-                title={selectedDoc.name}
+                title={selectedDoc.documentIdentifier}
               />
             )}
           </div>
@@ -208,7 +217,7 @@ export default DocumentsTable;
 // i18n keys used:
 // DOCUMENTS_TABLE_HEADING
 // DOCUMENTS_NO_RECORDS
-// DOCUMENTS_NAME
+// DOCUMENTS_DOCUMENT_IDENTIFIER
 // DOCUMENTS_DOCUMENT_TYPE
 // DOCUMENTS_UPLOADED_ON
 // DOCUMENTS_UPLOADED_BY
