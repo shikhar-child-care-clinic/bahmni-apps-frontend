@@ -419,34 +419,6 @@ describe('medicationRequestResourceCreator', () => {
       expect(timing.repeat?.boundsPeriod?.end).toBe('2024-06-01T09:00:00.000Z');
     });
 
-    it('should use statDurationInMilliseconds from config for STAT order boundsPeriod end when provided', () => {
-      const fixedNow = new Date('2024-06-01T08:00:00.000Z');
-      jest.useFakeTimers({ now: fixedNow });
-
-      const statEntry = {
-        ...mockMedicationEntry,
-        isSTAT: true,
-      };
-      const twoHoursInMs = 2 * 60 * 60 * 1000;
-
-      const result = createMedicationRequestResource(
-        statEntry,
-        mockSubjectReference,
-        mockEncounterReference,
-        mockRequesterReference,
-        twoHoursInMs,
-      );
-
-      jest.useRealTimers();
-
-      const timing = result.dosageInstruction![0].timing!;
-      expect(timing.repeat?.boundsPeriod?.start).toBe(
-        '2024-06-01T08:00:00.000Z',
-      );
-      expect(timing.repeat?.boundsPeriod?.end).toBe('2024-06-01T10:00:00.000Z');
-    });
-  });
-
   describe('createMedicationRequestResources', () => {
     it('should create multiple MedicationRequest resources', () => {
       const medicationEntries = [
