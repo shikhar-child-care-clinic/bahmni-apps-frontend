@@ -424,6 +424,44 @@ describe('Medication Utilities', () => {
 
       expect(result).toBe(true);
     });
+
+    test('detects duplicate when existing backend med was ordered yesterday for 1 day and new med is for today', () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(0, 0, 0, 0);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const medResource = makeMedication('albendazole-200');
+      const entry = makeEntry({
+        medication: medResource,
+        startDate: today,
+        duration: 1,
+      });
+      const activeMed = makeActiveMed({
+        medicationReference: { reference: 'Medication/active-1' },
+        dosageInstruction: [
+          {
+            timing: {
+              event: [yesterday.toISOString()],
+              repeat: { duration: 1, durationUnit: 'd' },
+            },
+          },
+        ],
+      });
+      const medicationMap: Record<string, Medication> = {
+        'active-1': medResource,
+      };
+
+      const result = checkMedicationsOverlap(
+        [entry],
+        [activeMed],
+        medicationMap,
+      );
+
+      expect(result).toBe(true);
+    });
   });
 
   describe('isDuplicateMedication', () => {
@@ -624,6 +662,44 @@ describe('Medication Utilities', () => {
         newMed,
         new Date('2025-01-01'),
         0,
+        'd',
+        [activeMed],
+        [],
+        medicationMap,
+      );
+
+      expect(result).toBe(true);
+    });
+
+    test('detects duplicate when existing med was ordered yesterday for 1 day and new med is for today', () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(0, 0, 0, 0);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const newMed = makeMedication('albendazole-200');
+      const existingMedResource = makeMedication('albendazole-200');
+      const activeMed = makeActiveMed({
+        medicationReference: { reference: 'Medication/active-1' },
+        dosageInstruction: [
+          {
+            timing: {
+              event: [yesterday.toISOString()],
+              repeat: { duration: 1, durationUnit: 'd' },
+            },
+          },
+        ],
+      });
+      const medicationMap: Record<string, Medication> = {
+        'active-1': existingMedResource,
+      };
+
+      const result = isDuplicateMedication(
+        newMed,
+        today,
+        1,
         'd',
         [activeMed],
         [],
