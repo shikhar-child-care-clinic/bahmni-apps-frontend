@@ -25,6 +25,7 @@ export const createMedicationRequestResource = (
   subjectReference: Reference,
   encounterReference: Reference,
   requesterReference: Reference,
+  statDurationInMilliseconds?: number,
 ): MedicationRequest => {
   const medicationRequest: MedicationRequest = {
     resourceType: 'MedicationRequest',
@@ -34,7 +35,10 @@ export const createMedicationRequestResource = (
     subject: subjectReference,
     encounter: encounterReference,
     requester: requesterReference,
-    dosageInstruction: createDosageInstructions(medicationEntry),
+    dosageInstruction: createDosageInstructions(
+      medicationEntry,
+      statDurationInMilliseconds,
+    ),
     priority: medicationEntry.isSTAT ? 'stat' : 'routine',
   };
   medicationRequest.dispenseRequest = createDispenseRequest(medicationEntry);
@@ -57,6 +61,7 @@ export const createMedicationRequestResource = (
  */
 const createDosageInstructions = (
   medicationEntry: MedicationInputEntry,
+  statDurationInMilliseconds?: number,
 ): Dosage[] => {
   const dosage: Dosage = {};
 
@@ -75,6 +80,7 @@ const createDosageInstructions = (
       medicationEntry.duration,
       medicationEntry.durationUnit,
       medicationEntry.isSTAT,
+      statDurationInMilliseconds,
     );
   }
 
@@ -118,12 +124,15 @@ const createTiming = (
   duration?: number,
   durationUnit?: DurationUnitOption | null,
   isSTAT?: boolean,
+  statDurationInMilliseconds?: number,
 ): Timing => {
   const timing: Timing = {};
 
   if (isSTAT) {
     const now = new Date();
-    const statExpiryTime = new Date(now.getTime() + STAT_ORDER_VALIDITY_MS);
+    const statExpiryTime = new Date(
+      now.getTime() + (statDurationInMilliseconds ?? STAT_ORDER_VALIDITY_MS),
+    );
     timing.repeat = {
       boundsPeriod: {
         start: now.toISOString(),
@@ -181,6 +190,7 @@ export const createMedicationRequestResources = (
   subjectReference: Reference,
   encounterReference: Reference,
   requesterReference: Reference,
+  statDurationInMilliseconds?: number,
 ): MedicationRequest[] => {
   return medicationEntries.map((entry) =>
     createMedicationRequestResource(
@@ -188,6 +198,7 @@ export const createMedicationRequestResources = (
       subjectReference,
       encounterReference,
       requesterReference,
+      statDurationInMilliseconds,
     ),
   );
 };
