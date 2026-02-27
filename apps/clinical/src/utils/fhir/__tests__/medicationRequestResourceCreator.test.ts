@@ -418,6 +418,7 @@ describe('medicationRequestResourceCreator', () => {
       );
       expect(timing.repeat?.boundsPeriod?.end).toBe('2024-06-01T09:00:00.000Z');
     });
+  });
 
   describe('createMedicationRequestResources', () => {
     it('should create multiple MedicationRequest resources', () => {
