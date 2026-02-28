@@ -89,6 +89,34 @@ export const mockSingleDocumentReference: DocumentReferenceViewModel = {
   attachment: [{ contentType: 'application/pdf' }],
 };
 
+export const mockDocumentReferenceWithAttachments: DocumentReferenceViewModel =
+  {
+    id: 'doc-1',
+    documentType: 'Identity Documents',
+    masterIdentifier: 'ID123456',
+    issuingDate: new Date('2020-01-15T00:00:00.000Z'),
+    expiryDate: new Date('2030-01-15T00:00:00.000Z'),
+    attributes: { issuingCountry: 'USA' },
+    attachment: [
+      {
+        id: 'image-attachment',
+        contentType: 'image/png',
+        url: 'https://example.com/image.png',
+        title: 'Passport Photo',
+      },
+      {
+        id: 'video-attachment',
+        contentType: 'video/mp4',
+        url: 'https://example.com/video.mp4',
+      },
+      {
+        id: 'file-attachment',
+        contentType: 'application/pdf',
+        url: 'https://example.com/document.pdf',
+      },
+    ],
+  };
+
 export const mockDocumentReferences: DocumentReference[] = [
   {
     resourceType: 'DocumentReference',

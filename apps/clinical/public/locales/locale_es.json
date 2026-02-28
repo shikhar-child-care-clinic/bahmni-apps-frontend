@@ -115,6 +115,7 @@
   "DIAGNOSIS_LIST_RECORDED_BY": "Grabado por",
   "DIAGNOSIS_RECORDED_DATE": "Fecha de grabación",
   "DIAGNOSIS_TABLE_NOT_AVAILABLE": "No disponible",
+  "DOCUMENT_REFERENCE_ATTACHMENT_IMAGE": "Imagen adjunta",
   "DOCUMENT_REFERENCE_TABLE_EMPTY_STATE": "No hay documentos registrados",
   "DOCUMENT_REFERENCE_TABLE_ERROR_STATE": "Error al cargar documentos",
   "DOCUMENT_REFERENCE_TABLE_HEADER_ATTACHMENT": "Adjunto",

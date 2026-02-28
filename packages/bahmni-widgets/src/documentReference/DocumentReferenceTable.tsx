@@ -1,4 +1,9 @@
-import { SortableDataTable } from '@bahmni/design-system';
+import {
+  FileTile,
+  ImageTile,
+  VideoTile,
+  SortableDataTable,
+} from '@bahmni/design-system';
 import {
   useTranslation,
   getDocumentReferencesByPatient,
@@ -6,6 +11,7 @@ import {
   DATE_FORMAT,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
+import { Attachment } from 'fhir/r4';
 import { useMemo } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { DocumentReferenceViewModel } from './models';
@@ -18,6 +24,7 @@ import {
 interface DocumentReferenceTableProps {
   config: {
     fields: string[];
+    hideThumbnail: boolean;
   };
 }
 
@@ -44,8 +51,42 @@ const DocumentReferenceTable: React.FC<DocumentReferenceTableProps> = ({
     [config?.fields],
   );
 
+  const renderAttachment = (attachment: Attachment) => {
+    switch (attachment.contentType?.substring(0, 5)) {
+      case 'image':
+        return (
+          <ImageTile
+            id={attachment.id!}
+            imageSrc={attachment.url!}
+            hideThumbnail={config.hideThumbnail}
+            alt={t('DOCUMENT_REFERENCE_ATTACHMENT_IMAGE')}
+          />
+        );
+      case 'video':
+        return (
+          <VideoTile
+            id={attachment.id!}
+            videoSrc={attachment.url!}
+            hideThumbnail={config.hideThumbnail}
+          />
+        );
+      default:
+        return <FileTile id={attachment.id!} src={attachment.url!} />;
+    }
+  };
+
   const renderCell = (row: DocumentReferenceViewModel, cellId: string) => {
     switch (cellId) {
+      case 'attachment':
+        return (
+          <span
+            id={`patient-document-reference-table-${cellId}-${row.id}`}
+            data-testid={`patient-document-reference-table-${cellId}-${row.id}-test-id`}
+            aria-label={`patient-document-reference-table-${cellId}-${row.id}-aria-label`}
+          >
+            {row.attachment.map(renderAttachment)}
+          </span>
+        );
       case 'issuingDate':
       case 'expiryDate': {
         const date = row[cellId];
