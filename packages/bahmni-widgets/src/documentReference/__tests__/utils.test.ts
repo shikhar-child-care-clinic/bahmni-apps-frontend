@@ -91,7 +91,7 @@ describe('DocumentReference Utils', () => {
             valueString: 'Other',
           },
           {
-            url: 'http://fhir.bahmni.org/ext/document-reference/attribute#issuing-country',
+            url: 'https://fhir.bahmni.org/ext/document-reference/attribute#issuing-country',
             valueString: 'MEX',
           },
         ],

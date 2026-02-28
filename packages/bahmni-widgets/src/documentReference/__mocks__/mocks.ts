@@ -1,3 +1,4 @@
+import { QueryClient } from '@tanstack/react-query';
 import { DocumentReference } from 'fhir/r4';
 import { DocumentReferenceViewModel } from '../models';
 
@@ -22,7 +23,7 @@ export const createMockDocumentReference = (
   },
   extension: [
     {
-      url: 'http://fhir.bahmni.org/ext/document-reference/attribute#issuing-country',
+      url: 'https://fhir.bahmni.org/ext/document-reference/attribute#issuing-country',
       valueString: 'USA',
     },
   ],
@@ -101,8 +102,8 @@ export const mockDocumentReferences: DocumentReference[] = [
     },
     context: {
       period: {
-        start: '2020-01-15',
-        end: '2030-01-15',
+        start: '2020-01-15T00:00:00.000Z',
+        end: '2030-01-15T00:00:00.000Z',
       },
     },
     content: [
@@ -125,8 +126,8 @@ export const mockDocumentReferences: DocumentReference[] = [
     },
     context: {
       period: {
-        start: '2019-05-10',
-        end: '2029-05-10',
+        start: '2019-05-10T00:00:00.000Z',
+        end: '2029-05-10T00:00:00.000Z',
       },
     },
     content: [
@@ -138,3 +139,17 @@ export const mockDocumentReferences: DocumentReference[] = [
     ],
   },
 ];
+
+export const mockConfig = {
+  fields: ['documentType', 'masterIdentifier', 'issuingDate', 'expiryDate'],
+};
+
+export const createQueryClient = (): QueryClient =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        staleTime: 0,
+      },
+    },
+  });

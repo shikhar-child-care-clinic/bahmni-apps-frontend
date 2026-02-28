@@ -1,13 +1,11 @@
 import { formatDate } from '@bahmni/services';
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQuery,
-} from '@tanstack/react-query';
+import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { render, screen, act } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { usePatientUUID } from '../../hooks/usePatientUUID';
 import {
+  createQueryClient,
+  mockConfig,
   mockDocumentReferenceViewModels,
   mockDocumentReferenceWithMissingValues,
   mockSingleDocumentReference,
@@ -27,17 +25,7 @@ jest.mock('@bahmni/services', () => ({
 jest.mock('../../hooks/usePatientUUID');
 
 describe('DocumentReferenceTable', () => {
-  const queryClient: QueryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
-
-  const mockConfig = {
-    fields: ['documentType', 'masterIdentifier', 'issuingDate', 'expiryDate'],
-  };
+  const queryClient = createQueryClient();
 
   beforeEach(() => {
     jest.clearAllMocks();

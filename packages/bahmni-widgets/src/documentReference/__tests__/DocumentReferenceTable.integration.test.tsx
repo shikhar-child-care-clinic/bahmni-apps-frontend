@@ -1,8 +1,12 @@
 import { getDocumentReferencesByPatient } from '@bahmni/services';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import { DocumentReference } from 'fhir/r4';
 import { usePatientUUID } from '../../hooks/usePatientUUID';
+import {
+  createQueryClient,
+  mockConfig,
+  mockDocumentReferences,
+} from '../__mocks__/mocks';
 import DocumentReferenceTable from '../DocumentReferenceTable';
 
 jest.mock('@bahmni/services', () => ({
@@ -12,69 +16,7 @@ jest.mock('@bahmni/services', () => ({
 jest.mock('../../hooks/usePatientUUID');
 
 describe('DocumentReferenceTable Integration', () => {
-  const queryClient: QueryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        staleTime: 0,
-      },
-    },
-  });
-
-  const mockConfig = {
-    fields: ['documentType', 'masterIdentifier', 'issuingDate', 'expiryDate'],
-  };
-
-  const mockDocumentReferences: DocumentReference[] = [
-    {
-      resourceType: 'DocumentReference',
-      id: 'doc-1',
-      status: 'current',
-      type: {
-        text: 'Passport',
-      },
-      masterIdentifier: {
-        value: 'P123456',
-      },
-      context: {
-        period: {
-          start: '2020-01-15T00:00:00.000Z',
-          end: '2030-01-15T00:00:00.000Z',
-        },
-      },
-      content: [
-        {
-          attachment: {
-            contentType: 'application/pdf',
-          },
-        },
-      ],
-    },
-    {
-      resourceType: 'DocumentReference',
-      id: 'doc-2',
-      status: 'current',
-      type: {
-        text: 'National ID',
-      },
-      masterIdentifier: {
-        value: 'N789012',
-      },
-      context: {
-        period: {
-          start: '2019-05-10T00:00:00.000Z',
-          end: '2029-05-10T00:00:00.000Z',
-        },
-      },
-      content: [
-        {
-          attachment: {
-            contentType: 'application/pdf',
-          },
-        },
-      ],
-    },
-  ];
+  const queryClient = createQueryClient();
 
   beforeEach(() => {
     jest.clearAllMocks();

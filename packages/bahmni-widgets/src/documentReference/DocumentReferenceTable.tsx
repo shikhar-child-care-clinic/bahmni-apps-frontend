@@ -24,7 +24,7 @@ interface DocumentReferenceTableProps {
 const fetchDocumentReference = async (
   programUUID: string,
 ): Promise<DocumentReferenceViewModel[]> => {
-  const response = await getDocumentReferencesByPatient(programUUID!);
+  const response = await getDocumentReferencesByPatient(programUUID);
   return response?.map(mapDocumentReferenceToDisplayData);
 };
 

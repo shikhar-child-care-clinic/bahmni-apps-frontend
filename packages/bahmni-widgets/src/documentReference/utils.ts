@@ -24,7 +24,7 @@ export function createDocumentReferenceHeaders(
 }
 
 function kebabToCamelCase(str: string): string {
-  return str.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+  return str.replaceAll(/-([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 
 export function extractDocumentReferenceAttributes(
