@@ -54,7 +54,7 @@ export const VideoTile: React.FC<VideoTileProps> = ({
             id={`${id}-hidden-thumbnail`}
             data-testid={`${id}-hidden-thumbnail-test-id`}
             aria-label={`${id}-thumbnail-aria-label`}
-            size={16}
+            size={24}
             className={styles.videoIcon}
           />
         ) : (
