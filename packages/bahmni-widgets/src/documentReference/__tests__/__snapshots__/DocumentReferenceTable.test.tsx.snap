@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`DocumentReferenceTable Snapshot should match snapshot with document data 1`] = `
+exports[`DocumentReferenceTable Snapshot and Accessibility should match snapshot and pass accessibility tests with document data 1`] = `
 <div>
   <div
     aria-label="patient-document-reference-aria-label"

@@ -24,7 +24,7 @@ import {
 interface DocumentReferenceTableProps {
   config: {
     fields: string[];
-    hideThumbnail: boolean;
+    hideThumbnail?: boolean;
   };
 }
 
@@ -84,7 +84,9 @@ const DocumentReferenceTable: React.FC<DocumentReferenceTableProps> = ({
             data-testid={`patient-document-reference-table-${cellId}-${row.id}-test-id`}
             aria-label={`patient-document-reference-table-${cellId}-${row.id}-aria-label`}
           >
-            {row.attachment.map(renderAttachment)}
+            {row.attachment.map((attachment) => (
+              <span key={attachment.id}>{renderAttachment(attachment)}</span>
+            ))}
           </span>
         );
       case 'issuingDate':
