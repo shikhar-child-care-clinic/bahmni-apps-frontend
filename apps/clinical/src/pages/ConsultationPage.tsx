@@ -1,8 +1,6 @@
 import {
   Loading,
-  Icon,
   Header,
-  ICON_SIZE,
   useSidebarNavigation,
   ActionAreaLayout,
 } from '@bahmni/design-system';
@@ -11,6 +9,7 @@ import {
   ProgramDetails,
   useNotification,
   useUserPrivilege,
+  UserGlobalAction,
 } from '@bahmni/widgets';
 import React, { Suspense, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -45,23 +44,9 @@ const breadcrumbItems = [
 
 const globalActions = [
   {
-    id: 'search',
-    label: 'Search',
-    renderIcon: <Icon id="search-icon" name="fa-search" size={ICON_SIZE.LG} />,
-    onClick: () => {},
-  },
-  {
-    id: 'notifications',
-    label: 'Notifications',
-    renderIcon: (
-      <Icon id="notifications-icon" name="fa-bell" size={ICON_SIZE.LG} />
-    ),
-    onClick: () => {},
-  },
-  {
     id: 'user',
     label: 'User',
-    renderIcon: <Icon id="user-icon" name="fa-user" size={ICON_SIZE.LG} />,
+    renderIcon: <UserGlobalAction />,
     onClick: () => {},
   },
 ];
