@@ -2,6 +2,7 @@ export {
   capitalize,
   generateId,
   getCookieByName,
+  deleteCookie,
   isStringEmpty,
   getPriorityByOrder,
   groupByDate,

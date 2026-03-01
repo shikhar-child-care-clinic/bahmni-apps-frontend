@@ -85,6 +85,7 @@ export {
   capitalize,
   generateId,
   getCookieByName,
+  deleteCookie,
   isStringEmpty,
   getPriorityByOrder,
   groupByDate,
@@ -204,6 +205,7 @@ export {
 } from './configService';
 
 export { getCurrentUser, getUserLoginLocation, type User } from './userService';
+export { logout } from './authService';
 export { USER_PINNED_PREFERENCE_URL } from './observationFormsService/constants';
 export {
   getPatientObservationsBundle,

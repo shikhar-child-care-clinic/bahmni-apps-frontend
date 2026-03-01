@@ -69,6 +69,15 @@ export function getCookieByName(name: string): string {
   return '';
 }
 
+/**
+ * Deletes a cookie by setting its expiry to the past
+ * @param name The name of the cookie to delete
+ * @param path The path of the cookie (default: '/')
+ */
+export function deleteCookie(name: string, path: string = '/'): void {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path};`;
+}
+
 export const isStringEmpty = (input?: string): boolean => {
   return !input || input.trim().length === 0;
 };
@@ -285,8 +294,8 @@ export const getValueType = (value: string | number): string => {
 
 export function camelToScreamingSnakeCase(str: string): string {
   return str
-    .replace(/\s+/g, '_')
-    .replace(/([a-z])([A-Z])/g, '$1_$2')
-    .replace(/([A-Z])([A-Z][a-z])/g, '$1_$2')
+    .replaceAll(/\s+/g, '_')
+    .replaceAll(/([a-z])([A-Z])/g, '$1_$2')
+    .replaceAll(/([A-Z])([A-Z][a-z])/g, '$1_$2')
     .toUpperCase();
 }
