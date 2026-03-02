@@ -32,6 +32,7 @@ import {
   VALIDATION_STATE_SCRIPT_ERROR,
 } from '../../constants/forms';
 import { useClinicalAppData } from '../../hooks/useClinicalAppData';
+import { useClinicalConfig } from '../../hooks/useClinicalConfig';
 import useObservationFormsSearch from '../../hooks/useObservationFormsSearch';
 import { usePinnedObservationForms } from '../../hooks/usePinnedObservationForms';
 import {
@@ -85,6 +86,9 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
   const { user: currentUser } = practitionerState;
 
   const { episodeOfCare } = useClinicalAppData();
+  const { clinicalConfig } = useClinicalConfig();
+  const statDurationInMilliseconds =
+    clinicalConfig?.consultationPad?.statDurationInMilliseconds;
 
   const episodeOfCareUuids: string[] = episodeOfCare.map((eoc) => eoc.uuid);
 
@@ -138,6 +142,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
   const {
     selectedMedications,
     validateAllMedications,
+    hasOverlapDuplicates,
     reset: resetMedications,
   } = useMedicationStore();
 
@@ -278,6 +283,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       encounterSubject: encounterResource.subject!,
       encounterReference,
       practitionerUUID: practitionerUUID,
+      statDurationInMilliseconds,
     });
 
     const vaccinationEntries = createMedicationRequestEntries({
@@ -285,6 +291,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       encounterSubject: encounterResource.subject!,
       encounterReference,
       practitionerUUID: practitionerUUID,
+      statDurationInMilliseconds,
     });
 
     const observationEntries = createObservationBundleEntries({
@@ -328,13 +335,23 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         });
       }
 
+      if (hasOverlapDuplicates && selectedMedications.length > 0) {
+        addNotification({
+          title: t('ERROR_DEFAULT_TITLE'),
+          message: t('ERROR_DUPLICATE_ACTIVE_MEDICATION'),
+          type: 'error',
+          timeout: 5000,
+        });
+      }
+
       const isVaccinationsValid = validateAllVaccinations();
       if (
         !isConditionsAndDiagnosesValid ||
         !isAllergiesValid ||
         !isMedicationsValid ||
         !isObservationFormValid ||
-        !isVaccinationsValid
+        !isVaccinationsValid ||
+        hasOverlapDuplicates
       ) {
         return;
       }
