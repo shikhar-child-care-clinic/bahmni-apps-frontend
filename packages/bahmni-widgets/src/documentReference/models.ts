@@ -6,6 +6,7 @@ export interface DocumentReferenceViewModel {
   readonly documentType: string;
   readonly masterIdentifier: string;
   readonly issuingDate: Date | null;
+  readonly author: string;
   readonly expiryDate: Date | null;
   readonly attributes: Record<string, string | null>;
 }

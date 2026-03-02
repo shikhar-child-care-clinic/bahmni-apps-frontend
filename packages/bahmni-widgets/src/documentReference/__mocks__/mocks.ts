@@ -21,6 +21,16 @@ export const createMockDocumentReference = (
   masterIdentifier: {
     value: 'ABC123456',
   },
+  author: [
+    {
+      reference: 'Practitioner/d7a67c17-5e07-11ef-8f7c-0242ac120002',
+      type: 'Practitioner',
+      identifier: {
+        value: 'superman',
+      },
+      display: 'Super Man',
+    },
+  ],
   extension: [
     {
       url: 'https://fhir.bahmni.org/ext/document-reference/attribute#issuing-country',
@@ -43,6 +53,7 @@ export const mockDocumentReferenceViewModels: DocumentReferenceViewModel[] = [
     masterIdentifier: 'P123456',
     issuingDate: new Date('2020-01-15T00:00:00.000Z'),
     expiryDate: new Date('2030-01-15T00:00:00.000Z'),
+    author: 'Super Man',
     attributes: { issuingCountry: 'USA' },
     attachment: [{ contentType: 'application/pdf' }],
   },
@@ -52,6 +63,7 @@ export const mockDocumentReferenceViewModels: DocumentReferenceViewModel[] = [
     masterIdentifier: 'N789012',
     issuingDate: new Date('2019-05-10T00:00:00.000Z'),
     expiryDate: new Date('2029-05-10T00:00:00.000Z'),
+    author: 'Super Man',
     attributes: {},
     attachment: [{ contentType: 'application/pdf' }],
   },
@@ -65,6 +77,7 @@ export const mockDocumentReferenceWithMissingValues: DocumentReferenceViewModel[
       masterIdentifier: 'P123456',
       issuingDate: null,
       expiryDate: null,
+      author: '-',
       attributes: {},
       attachment: [],
     },
@@ -74,6 +87,7 @@ export const mockDocumentReferenceWithMissingValues: DocumentReferenceViewModel[
       masterIdentifier: '',
       issuingDate: new Date('2019-05-10T00:00:00.000Z'),
       expiryDate: null,
+      author: '-',
       attributes: { issuingCountry: null },
       attachment: [{ contentType: 'application/pdf' }],
     },
@@ -85,6 +99,7 @@ export const mockSingleDocumentReference: DocumentReferenceViewModel = {
   masterIdentifier: 'P123456',
   issuingDate: new Date('2020-01-15T00:00:00.000Z'),
   expiryDate: new Date('2030-01-15T00:00:00.000Z'),
+  author: 'Super Man',
   attributes: { issuingCountry: 'USA' },
   attachment: [{ contentType: 'application/pdf' }],
 };
@@ -96,6 +111,7 @@ export const mockDocumentReferenceWithAttachments: DocumentReferenceViewModel =
     masterIdentifier: 'ID123456',
     issuingDate: new Date('2020-01-15T00:00:00.000Z'),
     expiryDate: new Date('2030-01-15T00:00:00.000Z'),
+    author: 'Super Man',
     attributes: { issuingCountry: 'USA' },
     attachment: [
       {
@@ -128,6 +144,16 @@ export const mockDocumentReferences: DocumentReference[] = [
     masterIdentifier: {
       value: 'P123456',
     },
+    author: [
+      {
+        reference: 'Practitioner/d7a67c17-5e07-11ef-8f7c-0242ac120002',
+        type: 'Practitioner',
+        identifier: {
+          value: 'superman',
+        },
+        display: 'Super Man',
+      },
+    ],
     context: {
       period: {
         start: '2020-01-15T00:00:00.000Z',
@@ -152,6 +178,16 @@ export const mockDocumentReferences: DocumentReference[] = [
     masterIdentifier: {
       value: 'N789012',
     },
+    author: [
+      {
+        reference: 'Practitioner/d7a67c17-5e07-11ef-8f7c-0242ac120002',
+        type: 'Practitioner',
+        identifier: {
+          value: 'superman',
+        },
+        display: 'Super Man',
+      },
+    ],
     context: {
       period: {
         start: '2019-05-10T00:00:00.000Z',
@@ -169,7 +205,13 @@ export const mockDocumentReferences: DocumentReference[] = [
 ];
 
 export const mockConfig = {
-  fields: ['documentType', 'masterIdentifier', 'issuingDate', 'expiryDate'],
+  fields: [
+    'documentType',
+    'masterIdentifier',
+    'issuingDate',
+    'expiryDate',
+    'author',
+  ],
 };
 
 export const createQueryClient = (): QueryClient =>

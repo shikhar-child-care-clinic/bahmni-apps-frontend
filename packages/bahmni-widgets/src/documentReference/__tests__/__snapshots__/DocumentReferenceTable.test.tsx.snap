@@ -73,6 +73,19 @@ exports[`DocumentReferenceTable Snapshot and Accessibility should match snapshot
                   />
                 </div>
               </th>
+              <th
+                data-testid="table-header-author"
+                scope="col"
+              >
+                <div
+                  class="cds--table-header-label"
+                >
+                  DOCUMENT_REFERENCE_TABLE_HEADER_AUTHOR
+                  <div
+                    class="cds--table-header-label--decorator-inner"
+                  />
+                </div>
+              </th>
             </tr>
           </thead>
           <tbody
@@ -123,6 +136,17 @@ exports[`DocumentReferenceTable Snapshot and Accessibility should match snapshot
                   id="patient-document-reference-table-expiryDate-doc-1"
                 >
                   15/01/2020
+                </span>
+              </td>
+              <td
+                data-testid="table-cell-doc-1-author"
+              >
+                <span
+                  aria-label="patient-document-reference-table-author-doc-1-aria-label"
+                  data-testid="patient-document-reference-table-author-doc-1-test-id"
+                  id="patient-document-reference-table-author-doc-1"
+                >
+                  Super Man
                 </span>
               </td>
             </tr>

@@ -37,7 +37,7 @@ export function extractDocumentReferenceAttributes(
       const attributeName = ext.url.split(ATTRIBUTE_REGEX_KEY)[1];
       if (attributeName) {
         // TODO: Handle different value types that FHIR extensions can have
-        attributes[kebabToCamelCase(attributeName)] = ext.valueString ?? null;
+        attributes[kebabToCamelCase(attributeName)] = ext.valueString ?? '-';
       }
     }
   });
@@ -59,12 +59,17 @@ export function mapDocumentReferenceToDisplayData(
     ? parseISO(docReference.context?.period?.end)
     : null;
   const attributes = extractDocumentReferenceAttributes(docReference);
-
+  const author =
+    docReference.author
+      ?.map((author) => author.display)
+      .filter((display): display is string => !!display)
+      .join(', ') ?? '-';
   return {
     id: docReference.id!,
     attachment,
     documentType,
     masterIdentifier,
+    author,
     issuingDate,
     expiryDate,
     attributes,

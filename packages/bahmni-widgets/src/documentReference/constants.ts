@@ -4,6 +4,7 @@ export const KNOWN_FIELDS: string[] = [
   'masterIdentifier',
   'issuingDate',
   'expiryDate',
+  'author',
 ];
 
 export const ATTRIBUTE_REGEX_KEY = '/attribute#';

@@ -99,6 +99,26 @@ describe('DocumentReferenceTable', () => {
     expect(screen.getByText('P123456')).toBeInTheDocument();
     expect(screen.getByText('National ID')).toBeInTheDocument();
     expect(screen.getByText('N789012')).toBeInTheDocument();
+    expect(
+      screen.getByTestId(
+        'patient-document-reference-table-author-doc-1-test-id',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId(
+        'patient-document-reference-table-author-doc-1-test-id',
+      ),
+    ).toHaveTextContent('Super Man');
+    expect(
+      screen.getByTestId(
+        'patient-document-reference-table-author-doc-2-test-id',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId(
+        'patient-document-reference-table-author-doc-2-test-id',
+      ),
+    ).toHaveTextContent('Super Man');
   });
 
   it('should handle missing values gracefully', () => {
@@ -117,6 +137,7 @@ describe('DocumentReferenceTable', () => {
           'issuingDate',
           'expiryDate',
           'issuingCountry',
+          'author',
         ],
       }),
     );
@@ -130,6 +151,11 @@ describe('DocumentReferenceTable', () => {
     expect(
       screen.getByTestId(
         'patient-document-reference-table-issuingCountry-doc-1-test-id',
+      ),
+    ).toHaveTextContent('-');
+    expect(
+      screen.getByTestId(
+        'patient-document-reference-table-author-doc-1-test-id',
       ),
     ).toHaveTextContent('-');
   });
