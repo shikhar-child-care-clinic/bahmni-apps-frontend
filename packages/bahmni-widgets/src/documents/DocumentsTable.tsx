@@ -3,7 +3,6 @@ import {
   useTranslation,
   formatDate,
   DATE_TIME_FORMAT,
-  useSubscribeConsultationSaved,
   getDocumentReferences,
 } from '@bahmni/services';
 import { DocumentPdf, Image, Document } from '@carbon/icons-react';
@@ -51,7 +50,7 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
     setSelectedDoc(null);
   }, []);
 
-  const { data, isLoading, isError, error, refetch } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ['documents', patientUUID!, encounterUuids],
     enabled: !!patientUUID,
     queryFn: () => fetchDocuments(patientUUID!, encounterUuids),
