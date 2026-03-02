@@ -162,10 +162,6 @@ export const checkMedicationsOverlap = (
         return true;
       }
 
-      if (current.isPRN || other.isPRN) {
-        continue;
-      }
-
       if (!other.startDate) continue;
 
       if (!current.durationUnit || !other.durationUnit) {
@@ -216,7 +212,6 @@ export const checkMedicationsOverlap = (
         }
 
         const isImmediate = med.priority === 'stat';
-        const isPRN = med.dosageInstruction?.[0]?.asNeededBoolean ?? false;
         const startDate =
           med.dosageInstruction?.[0]?.timing?.event?.[0] ?? med.authoredOn;
         const duration =
@@ -225,7 +220,6 @@ export const checkMedicationsOverlap = (
           med.dosageInstruction?.[0]?.timing?.repeat?.durationUnit ?? 'd';
 
         if (isImmediate || current.isSTAT) return true;
-        if (isPRN || current.isPRN) return false;
         if (!startDate || !current.startDate) return false;
 
         if (!current.durationUnit) return false;

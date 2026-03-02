@@ -306,7 +306,7 @@ describe('Medication Utilities', () => {
       expect(result).toBe(true);
     });
 
-    test('returns false when PRN medications have same code', () => {
+    test('returns true when PRN medications have same code and overlapping dates', () => {
       const med = makeMedication('paracetamol-500');
       const entry1 = makeEntry({
         medication: med,
@@ -323,7 +323,7 @@ describe('Medication Utilities', () => {
 
       const result = checkMedicationsOverlap([entry1, entry2], [], {});
 
-      expect(result).toBe(false);
+      expect(result).toBe(true);
     });
 
     test('returns true when selected medication overlaps with existing backend medication', () => {
