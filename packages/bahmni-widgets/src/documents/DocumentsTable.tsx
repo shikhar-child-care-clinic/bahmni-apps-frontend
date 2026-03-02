@@ -41,7 +41,6 @@ const DocumentsTable: React.FC<WidgetProps> = ({
   config,
   encounterUuids,
 }) => {
-  const [documents, setDocuments] = useState<DocumentViewModel[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<DocumentViewModel | null>(null);
   const patientUUID = usePatientUUID();
@@ -79,14 +78,11 @@ const DocumentsTable: React.FC<WidgetProps> = ({
     if (isError) {
       addNotification({
         title: t('ERROR_DEFAULT_TITLE'),
-        message: error.message,
+        message: error?.message ?? '',
         type: 'error',
       });
     }
-    if (data) {
-      setDocuments(data);
-    }
-  }, [data, isLoading, isError, error, addNotification, t]);
+  }, [isError, error, addNotification, t]);
 
   // Define table headers based on configured fields
   const headers = useMemo(
@@ -137,6 +133,7 @@ const DocumentsTable: React.FC<WidgetProps> = ({
               className={styles.fileIconButton}
               onClick={() => handleIconClick(doc)}
               aria-label={`View ${doc.documentIdentifier}`}
+              disabled={!doc.documentUrl}
             >
               {renderFileIcon(doc.contentType)}
             </button>
@@ -170,7 +167,7 @@ const DocumentsTable: React.FC<WidgetProps> = ({
         <SortableDataTable
           headers={headers}
           ariaLabel={t('DOCUMENTS_TABLE_HEADING')}
-          rows={documents}
+          rows={data ?? []}
           loading={isLoading}
           errorStateMessage={isError ? error?.message : null}
           sortable={sortable}

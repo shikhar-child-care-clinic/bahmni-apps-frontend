@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { getDocumentReferences } from '@bahmni/services';
+import { getDocumentReferences, useSubscribeConsultationSaved } from '@bahmni/services';
 import { useNotification } from '../../notification';
+import { usePatientUUID } from '../../hooks/usePatientUUID';
 import DocumentsTable from '../DocumentsTable';
 
 jest.mock('../../notification');
@@ -98,14 +99,7 @@ const fhirLabDoc = {
 };
 
 describe('DocumentsTable Integration', () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        staleTime: 0,
-      },
-    },
-  });
+  let queryClient: QueryClient;
 
   const defaultConfig = {
     fields: ['documentIdentifier', 'documentType', 'uploadedOn', 'uploadedBy'],
@@ -119,6 +113,14 @@ describe('DocumentsTable Integration', () => {
     );
 
   beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: 0,
+        },
+      },
+    });
     jest.clearAllMocks();
     (useNotification as jest.Mock).mockReturnValue({
       addNotification: mockAddNotification,
@@ -211,7 +213,7 @@ describe('DocumentsTable Integration', () => {
       screen.getByRole('button', { name: 'View Prescription_2024' }),
     );
 
-    expect(screen.getByTestId('document-view-modal')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
     const iframe = screen.getByTitle('Prescription_2024');
     expect(iframe.tagName).toBe('IFRAME');
     expect(iframe).toHaveAttribute(
@@ -236,7 +238,7 @@ describe('DocumentsTable Integration', () => {
       screen.getByRole('button', { name: 'View XRay_Report_2024' }),
     );
 
-    expect(screen.getByTestId('document-view-modal')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
     const image = screen.getByRole('img', { name: 'XRay_Report_2024' });
     expect(image).toBeInTheDocument();
   });
@@ -256,13 +258,13 @@ describe('DocumentsTable Integration', () => {
     await user.click(
       screen.getByRole('button', { name: 'View Prescription_2024' }),
     );
-    expect(screen.getByTestId('document-view-modal')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Close' }));
 
     await waitFor(() => {
       expect(
-        screen.queryByTestId('document-view-modal'),
+        screen.queryByRole('dialog'),
       ).not.toBeInTheDocument();
     });
   });
@@ -282,4 +284,102 @@ describe('DocumentsTable Integration', () => {
       );
     });
   });
+
+  it('calls service without encounter filter when encounterUuids is not provided', async () => {
+    mockedGetDocumentReferences.mockResolvedValueOnce(
+      makeFhirBundle([fhirPrescriptionDoc]) as any,
+    );
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(mockedGetDocumentReferences).toHaveBeenCalledWith(
+        'test-patient-uuid',
+        undefined,
+      );
+    });
+  });
+
+  it('renders documents in the order returned by the service (latest first)', async () => {
+    // API returns sorted by _sort=-date (latest first):
+    // fhirPrescriptionDoc: Jan 15, fhirXrayDoc: Jan 10
+    mockedGetDocumentReferences.mockResolvedValueOnce(
+      makeFhirBundle([fhirPrescriptionDoc, fhirXrayDoc]) as any,
+    );
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
+    });
+
+    const rows = screen.getAllByRole('row');
+    // rows[0] is the header row; data rows start at index 1
+    expect(rows[1]).toHaveTextContent('Prescription_2024');
+    expect(rows[2]).toHaveTextContent('XRay_Report_2024');
+  });
+
+  it('refetches documents when a consultation is saved for the current patient', async () => {
+    let capturedCallback: ((payload: any) => void) | undefined;
+    (useSubscribeConsultationSaved as jest.Mock).mockImplementation((cb: (payload: any) => void) => {
+      capturedCallback = cb;
+    });
+
+    mockedGetDocumentReferences
+      .mockResolvedValueOnce(makeFhirBundle([fhirPrescriptionDoc]) as any)
+      .mockResolvedValueOnce(makeFhirBundle([fhirPrescriptionDoc, fhirXrayDoc]) as any);
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
+    });
+
+    act(() => {
+      capturedCallback?.({ patientUUID: 'test-patient-uuid' });
+    });
+
+    await waitFor(() => {
+      expect(mockedGetDocumentReferences).toHaveBeenCalledTimes(2);
+      expect(screen.getByText('XRay_Report_2024')).toBeInTheDocument();
+    });
+  });
+
+  it('does not refetch documents when consultation saved for a different patient', async () => {
+    let capturedCallback: ((payload: any) => void) | undefined;
+    (useSubscribeConsultationSaved as jest.Mock).mockImplementation((cb: (payload: any) => void) => {
+      capturedCallback = cb;
+    });
+
+    mockedGetDocumentReferences.mockResolvedValueOnce(
+      makeFhirBundle([fhirPrescriptionDoc]) as any,
+    );
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
+    });
+
+    act(() => {
+      capturedCallback?.({ patientUUID: 'different-patient-uuid' });
+    });
+
+    await act(async () => {});
+
+    expect(mockedGetDocumentReferences).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call the API when patientUUID is null', async () => {
+    (usePatientUUID as jest.Mock).mockReturnValue(null);
+    mockedGetDocumentReferences.mockResolvedValueOnce(makeFhirBundle([]) as any);
+
+    renderComponent();
+
+    // Wait a render cycle to ensure no query fires
+    await act(async () => {});
+
+    expect(mockedGetDocumentReferences).not.toHaveBeenCalled();
+  });
+
 });

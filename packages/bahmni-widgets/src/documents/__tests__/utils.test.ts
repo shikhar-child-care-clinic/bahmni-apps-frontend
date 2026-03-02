@@ -3,6 +3,7 @@ import {
   mapDocumentReferencesToViewModels,
   getFileTypeCategory,
   buildDocumentUrl,
+  createDocumentHeaders,
 } from '../utils';
 
 describe('Documents Utils', () => {
@@ -259,6 +260,46 @@ describe('Documents Utils', () => {
     it('returns # for empty URL', () => {
       const url = buildDocumentUrl('');
       expect(url).toBe('#');
+    });
+  });
+
+  describe('createDocumentHeaders', () => {
+    const mockT = (key: string) => key;
+
+    it('returns header objects with key and translated header for each field', () => {
+      const fields = ['documentIdentifier', 'documentType', 'uploadedOn', 'uploadedBy'];
+
+      const result = createDocumentHeaders(fields, mockT);
+
+      expect(result).toHaveLength(4);
+      expect(result[0]).toEqual({ key: 'documentIdentifier', header: 'DOCUMENTS_DOCUMENT_IDENTIFIER' });
+      expect(result[1]).toEqual({ key: 'documentType', header: 'DOCUMENTS_DOCUMENT_TYPE' });
+      expect(result[2]).toEqual({ key: 'uploadedOn', header: 'DOCUMENTS_UPLOADED_ON' });
+      expect(result[3]).toEqual({ key: 'uploadedBy', header: 'DOCUMENTS_UPLOADED_BY' });
+    });
+
+    it('returns empty array when fields is empty', () => {
+      const result = createDocumentHeaders([], mockT);
+
+      expect(result).toEqual([]);
+    });
+
+    it('uses the translation function to generate the header label', () => {
+      const translationFn = jest.fn((key: string) => `translated:${key}`);
+      const fields = ['documentIdentifier'];
+
+      const result = createDocumentHeaders(fields, translationFn);
+
+      expect(translationFn).toHaveBeenCalledWith('DOCUMENTS_DOCUMENT_IDENTIFIER');
+      expect(result[0].header).toBe('translated:DOCUMENTS_DOCUMENT_IDENTIFIER');
+    });
+
+    it('converts camelCase field names to SCREAMING_SNAKE_CASE i18n keys', () => {
+      const fields = ['uploadedOn'];
+
+      const result = createDocumentHeaders(fields, mockT);
+
+      expect(result[0]).toEqual({ key: 'uploadedOn', header: 'DOCUMENTS_UPLOADED_ON' });
     });
   });
 });
