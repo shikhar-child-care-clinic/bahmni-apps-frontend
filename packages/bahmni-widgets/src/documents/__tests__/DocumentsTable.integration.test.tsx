@@ -13,21 +13,26 @@ jest.mock('../../notification');
 jest.mock('../../hooks/usePatientUUID', () => ({
   usePatientUUID: jest.fn(() => 'test-patient-uuid'),
 }));
+
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
-  useTranslation: () => ({
-    t: (key: string) => key,
-  }),
-  formatDate: () => ({
-    formattedResult: '2024-01-15 10:30 AM',
-  }),
+  useTranslation: () => ({ t: (key: string) => key }),
+  formatDate: () => ({ formattedResult: '2024-01-15 10:30 AM' }),
   getDocumentReferences: jest.fn(),
   useSubscribeConsultationSaved: jest.fn(),
 }));
+
+const PdfIcon = () => <div data-testid="pdf-icon">PDF</div>;
+PdfIcon.displayName = 'DocumentPdf';
+const ImageIcon = () => <div data-testid="image-icon">IMG</div>;
+ImageIcon.displayName = 'Image';
+const DocIcon = () => <div data-testid="document-icon">DOC</div>;
+DocIcon.displayName = 'Document';
+
 jest.mock('@carbon/icons-react', () => ({
-  DocumentPdf: () => <div data-testid="pdf-icon">PDF</div>,
-  Image: () => <div data-testid="image-icon">IMG</div>,
-  Document: () => <div data-testid="document-icon">DOC</div>,
+  DocumentPdf: PdfIcon,
+  Image: ImageIcon,
+  Document: DocIcon,
 }));
 
 const mockedGetDocumentReferences =
@@ -319,36 +324,6 @@ describe('DocumentsTable Integration', () => {
     // rows[0] is the header row; data rows start at index 1
     expect(rows[1]).toHaveTextContent('Prescription_2024');
     expect(rows[2]).toHaveTextContent('XRay_Report_2024');
-  });
-
-  it('refetches documents when a consultation is saved for the current patient', async () => {
-    let capturedCallback: ((payload: any) => void) | undefined;
-    (useSubscribeConsultationSaved as jest.Mock).mockImplementation(
-      (cb: (payload: any) => void) => {
-        capturedCallback = cb;
-      },
-    );
-
-    mockedGetDocumentReferences
-      .mockResolvedValueOnce(makeFhirBundle([fhirPrescriptionDoc]) as any)
-      .mockResolvedValueOnce(
-        makeFhirBundle([fhirPrescriptionDoc, fhirXrayDoc]) as any,
-      );
-
-    renderComponent();
-
-    await waitFor(() => {
-      expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
-    });
-
-    act(() => {
-      capturedCallback?.({ patientUUID: 'test-patient-uuid' });
-    });
-
-    await waitFor(() => {
-      expect(mockedGetDocumentReferences).toHaveBeenCalledTimes(2);
-      expect(screen.getByText('XRay_Report_2024')).toBeInTheDocument();
-    });
   });
 
   it('does not refetch documents when consultation saved for a different patient', async () => {

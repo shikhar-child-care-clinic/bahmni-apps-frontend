@@ -57,17 +57,6 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
     queryFn: () => fetchDocuments(patientUUID!, encounterUuids),
   });
 
-  // Listen to consultation saved events and refetch if documents were updated
-  useSubscribeConsultationSaved(
-    (payload) => {
-      // TODO: add resource key for documents when consultation event includes document updates
-      if (payload.patientUUID === patientUUID) {
-        refetch();
-      }
-    },
-    [patientUUID, refetch],
-  );
-
   useEffect(() => {
     if (isError) {
       addNotification({
@@ -198,13 +187,3 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
 };
 
 export default DocumentsTable;
-
-// i18n keys used:
-// DOCUMENTS_TABLE_HEADING
-// DOCUMENTS_NO_RECORDS
-// DOCUMENTS_DOCUMENT_IDENTIFIER
-// DOCUMENTS_DOCUMENT_TYPE
-// DOCUMENTS_UPLOADED_ON
-// DOCUMENTS_UPLOADED_BY
-// DOCUMENTS_NOT_AVAILABLE
-// ERROR_DEFAULT_TITLE

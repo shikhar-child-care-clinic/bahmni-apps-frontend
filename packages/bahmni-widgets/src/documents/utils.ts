@@ -15,7 +15,7 @@ export function mapDocumentReferencesToViewModels(
   return entries
     .filter((entry) => entry.resource?.resourceType === 'DocumentReference')
     .map((entry) => {
-      const doc = entry.resource as DocumentReference;
+      const doc = entry.resource;
       const attachment = doc.content?.[0]?.attachment;
       const masterIdentifier = doc.masterIdentifier?.value ?? doc.id ?? '';
 

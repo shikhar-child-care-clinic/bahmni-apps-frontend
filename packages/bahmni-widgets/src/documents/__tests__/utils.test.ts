@@ -19,7 +19,7 @@ describe('Documents Utils', () => {
           type: {
             coding: [
               {
-                system: 'http://snomed.info/sct',
+                system: 'https://snomed.info/sct',
                 code: '16076005',
                 display: 'Prescription',
               },
