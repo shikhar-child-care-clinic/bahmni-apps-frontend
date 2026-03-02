@@ -796,16 +796,19 @@ describe('MedicationsForm', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText(duplicateNotificationPattern),
+          screen.queryByText(duplicateNotificationPattern),
         ).toBeInTheDocument();
       });
     });
 
-    test('does not show duplicate notification for PRN medications with same code', async () => {
+    test('shows duplicate notification for PRN medications with same code and overlapping dates', async () => {
       const prnMed: MedicationInputEntry = {
         ...mockSelectedMedication,
         id: 'prn-med',
         isPRN: true,
+        startDate: new Date('2025-01-01'),
+        duration: 10,
+        durationUnit: { code: 'd', display: 'Days', daysMultiplier: 1 },
         medication: {
           ...mockMedication,
           code: {
@@ -840,7 +843,7 @@ describe('MedicationsForm', () => {
       await waitFor(() => {
         expect(
           screen.queryByText(duplicateNotificationPattern),
-        ).not.toBeInTheDocument();
+        ).toBeInTheDocument();
       });
     });
   });

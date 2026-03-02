@@ -296,12 +296,68 @@ describe('Medication Utilities', () => {
       expect(result).toBe(true);
     });
 
-    test('returns true when a STAT medication matches another selected medication with same code', () => {
+    test('returns true when a STAT medication is paired with another selected medication with same code', () => {
       const med = makeMedication('paracetamol-500');
       const entry1 = makeEntry({ medication: med, isSTAT: true });
       const entry2 = makeEntry({ medication: med });
 
       const result = checkMedicationsOverlap([entry1, entry2], [], {});
+
+      expect(result).toBe(true);
+    });
+
+    test('returns true when selected STAT medication matches an active backend medication with same code', () => {
+      const medResource = makeMedication('paracetamol-500');
+      const statEntry = makeEntry({
+        medication: medResource,
+        isSTAT: true,
+        startDate: new Date('2025-01-03'),
+        duration: 7,
+      });
+      const activeMed = makeActiveMed({
+        medicationReference: { reference: 'Medication/active-1' },
+        dosageInstruction: [
+          {
+            timing: {
+              event: ['2025-01-01'],
+              repeat: { duration: 7, durationUnit: 'd' },
+            },
+          },
+        ],
+      });
+      const medicationMap: Record<string, Medication> = {
+        'active-1': medResource,
+      };
+
+      const result = checkMedicationsOverlap(
+        [statEntry],
+        [activeMed],
+        medicationMap,
+      );
+
+      expect(result).toBe(true);
+    });
+
+    test('returns true when active backend medication is STAT and selected medication has same code', () => {
+      const medResource = makeMedication('paracetamol-500');
+      const regularEntry = makeEntry({
+        medication: medResource,
+        startDate: new Date('2025-01-03'),
+        duration: 7,
+      });
+      const statActiveMed = makeActiveMed({
+        medicationReference: { reference: 'Medication/active-1' },
+        priority: 'stat',
+      });
+      const medicationMap: Record<string, Medication> = {
+        'active-1': medResource,
+      };
+
+      const result = checkMedicationsOverlap(
+        [regularEntry],
+        [statActiveMed],
+        medicationMap,
+      );
 
       expect(result).toBe(true);
     });
