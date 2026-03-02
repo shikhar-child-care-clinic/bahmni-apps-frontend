@@ -1,9 +1,12 @@
+import {
+  getDocumentReferences,
+  useSubscribeConsultationSaved,
+} from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { getDocumentReferences, useSubscribeConsultationSaved } from '@bahmni/services';
-import { useNotification } from '../../notification';
 import { usePatientUUID } from '../../hooks/usePatientUUID';
+import { useNotification } from '../../notification';
 import DocumentsTable from '../DocumentsTable';
 
 jest.mock('../../notification');
@@ -27,9 +30,8 @@ jest.mock('@carbon/icons-react', () => ({
   Document: () => <div data-testid="document-icon">DOC</div>,
 }));
 
-const mockedGetDocumentReferences = getDocumentReferences as jest.MockedFunction<
-  typeof getDocumentReferences
->;
+const mockedGetDocumentReferences =
+  getDocumentReferences as jest.MockedFunction<typeof getDocumentReferences>;
 const mockAddNotification = jest.fn();
 
 const makeFhirBundle = (docs: any[]) => ({
@@ -218,7 +220,9 @@ describe('DocumentsTable Integration', () => {
     expect(iframe.tagName).toBe('IFRAME');
     expect(iframe).toHaveAttribute(
       'src',
-      expect.stringContaining('/openmrs/auth?requested_document=/document_images/'),
+      expect.stringContaining(
+        '/openmrs/auth?requested_document=/document_images/',
+      ),
     );
   });
 
@@ -263,9 +267,7 @@ describe('DocumentsTable Integration', () => {
     await user.click(screen.getByRole('button', { name: 'Close' }));
 
     await waitFor(() => {
-      expect(
-        screen.queryByRole('dialog'),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 
@@ -321,13 +323,17 @@ describe('DocumentsTable Integration', () => {
 
   it('refetches documents when a consultation is saved for the current patient', async () => {
     let capturedCallback: ((payload: any) => void) | undefined;
-    (useSubscribeConsultationSaved as jest.Mock).mockImplementation((cb: (payload: any) => void) => {
-      capturedCallback = cb;
-    });
+    (useSubscribeConsultationSaved as jest.Mock).mockImplementation(
+      (cb: (payload: any) => void) => {
+        capturedCallback = cb;
+      },
+    );
 
     mockedGetDocumentReferences
       .mockResolvedValueOnce(makeFhirBundle([fhirPrescriptionDoc]) as any)
-      .mockResolvedValueOnce(makeFhirBundle([fhirPrescriptionDoc, fhirXrayDoc]) as any);
+      .mockResolvedValueOnce(
+        makeFhirBundle([fhirPrescriptionDoc, fhirXrayDoc]) as any,
+      );
 
     renderComponent();
 
@@ -347,9 +353,11 @@ describe('DocumentsTable Integration', () => {
 
   it('does not refetch documents when consultation saved for a different patient', async () => {
     let capturedCallback: ((payload: any) => void) | undefined;
-    (useSubscribeConsultationSaved as jest.Mock).mockImplementation((cb: (payload: any) => void) => {
-      capturedCallback = cb;
-    });
+    (useSubscribeConsultationSaved as jest.Mock).mockImplementation(
+      (cb: (payload: any) => void) => {
+        capturedCallback = cb;
+      },
+    );
 
     mockedGetDocumentReferences.mockResolvedValueOnce(
       makeFhirBundle([fhirPrescriptionDoc]) as any,
@@ -372,7 +380,9 @@ describe('DocumentsTable Integration', () => {
 
   it('does not call the API when patientUUID is null', async () => {
     (usePatientUUID as jest.Mock).mockReturnValue(null);
-    mockedGetDocumentReferences.mockResolvedValueOnce(makeFhirBundle([]) as any);
+    mockedGetDocumentReferences.mockResolvedValueOnce(
+      makeFhirBundle([]) as any,
+    );
 
     renderComponent();
 
@@ -381,5 +391,4 @@ describe('DocumentsTable Integration', () => {
 
     expect(mockedGetDocumentReferences).not.toHaveBeenCalled();
   });
-
 });

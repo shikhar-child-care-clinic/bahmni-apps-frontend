@@ -1,4 +1,7 @@
-import { camelToScreamingSnakeCase, type DocumentReference } from '@bahmni/services';
+import {
+  camelToScreamingSnakeCase,
+  type DocumentReference,
+} from '@bahmni/services';
 import { DocumentViewModel } from './models';
 
 /**
@@ -10,20 +13,22 @@ export function mapDocumentReferencesToViewModels(
   entries: Array<{ resource: DocumentReference }>,
 ): DocumentViewModel[] {
   return entries
-    .filter((entry) => entry.resource && entry.resource.resourceType === 'DocumentReference')
+    .filter((entry) => entry.resource?.resourceType === 'DocumentReference')
     .map((entry) => {
       const doc = entry.resource as DocumentReference;
       const attachment = doc.content?.[0]?.attachment;
-      const masterIdentifier = doc.masterIdentifier?.value || doc.id || '';
+      const masterIdentifier = doc.masterIdentifier?.value ?? doc.id ?? '';
 
       return {
         id: doc.id!,
         documentIdentifier: masterIdentifier,
-        documentType: doc.type?.coding?.[0]?.display || doc.category?.[0]?.coding?.[0]?.display,
-        uploadedOn: doc.date || '',
+        documentType:
+          doc.type?.coding?.[0]?.display ??
+          doc.category?.[0]?.coding?.[0]?.display,
+        uploadedOn: doc.date ?? '',
         uploadedBy: doc.author?.[0]?.display,
         contentType: attachment?.contentType,
-        documentUrl: attachment?.url || '',
+        documentUrl: attachment?.url ?? '',
       };
     });
 }

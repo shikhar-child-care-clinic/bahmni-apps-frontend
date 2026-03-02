@@ -1,7 +1,4 @@
-import {
-  SortableDataTable,
-  Modal,
-} from '@bahmni/design-system';
+import { SortableDataTable, Modal } from '@bahmni/design-system';
 import {
   useTranslation,
   formatDate,
@@ -29,20 +26,17 @@ const fetchDocuments = async (
   encounterUuids?: string[],
 ): Promise<DocumentViewModel[]> => {
   const bundle = await getDocumentReferences(patientUUID, encounterUuids);
-  return mapDocumentReferencesToViewModels(
-    (bundle.entry || []) as any[],
-  );
+  return mapDocumentReferencesToViewModels(bundle.entry ?? []);
 };
 
 /**
  * Component to display patient documents using SortableDataTable
  */
-const DocumentsTable: React.FC<WidgetProps> = ({
-  config,
-  encounterUuids,
-}) => {
+const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDoc, setSelectedDoc] = useState<DocumentViewModel | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<DocumentViewModel | null>(
+    null,
+  );
   const patientUUID = usePatientUUID();
   const { t } = useTranslation();
   const { addNotification } = useNotification();
@@ -85,30 +79,24 @@ const DocumentsTable: React.FC<WidgetProps> = ({
   }, [isError, error, addNotification, t]);
 
   // Define table headers based on configured fields
-  const headers = useMemo(
-    () => {
-      const fields = config?.fields as string[];
-      if (!fields || fields.length === 0) {
-        return [];
-      }
-      return createDocumentHeaders(fields, t);
-    },
-    [config?.fields, t],
-  );
+  const headers = useMemo(() => {
+    const fields = config?.fields as string[];
+    if (!fields || fields.length === 0) {
+      return [];
+    }
+    return createDocumentHeaders(fields, t);
+  }, [config?.fields, t]);
 
-  const sortable = useMemo(
-    () => {
-      const fields = config?.fields as string[];
-      if (!fields || fields.length === 0) {
-        return [];
-      }
-      return fields.map((field) => ({
-        key: field,
-        sortable: true,
-      }));
-    },
-    [config?.fields],
-  );
+  const sortable = useMemo(() => {
+    const fields = config?.fields as string[];
+    if (!fields || fields.length === 0) {
+      return [];
+    }
+    return fields.map((field) => ({
+      key: field,
+      sortable: true,
+    }));
+  }, [config?.fields]);
 
   const renderFileIcon = (contentType?: string) => {
     const fileType = getFileTypeCategory(contentType);
@@ -148,7 +136,7 @@ const DocumentsTable: React.FC<WidgetProps> = ({
           t,
           DATE_TIME_FORMAT,
         ).formattedResult;
-        return formattedDate || t('DOCUMENTS_NOT_AVAILABLE');
+        return formattedDate ?? t('DOCUMENTS_NOT_AVAILABLE');
       }
       case 'uploadedBy':
         return doc.uploadedBy ?? t('DOCUMENTS_NOT_AVAILABLE');

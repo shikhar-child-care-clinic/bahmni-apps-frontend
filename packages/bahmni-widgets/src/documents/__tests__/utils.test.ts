@@ -148,7 +148,9 @@ describe('Documents Utils', () => {
             id: 'doc-1',
             masterIdentifier: { value: 'Doc 1' },
             date: '2024-01-15T10:30:00Z',
-            content: [{ attachment: { contentType: 'application/pdf', url: '/doc1' } }],
+            content: [
+              { attachment: { contentType: 'application/pdf', url: '/doc1' } },
+            ],
           } as DocumentReference,
         },
         {
@@ -267,15 +269,32 @@ describe('Documents Utils', () => {
     const mockT = (key: string) => key;
 
     it('returns header objects with key and translated header for each field', () => {
-      const fields = ['documentIdentifier', 'documentType', 'uploadedOn', 'uploadedBy'];
+      const fields = [
+        'documentIdentifier',
+        'documentType',
+        'uploadedOn',
+        'uploadedBy',
+      ];
 
       const result = createDocumentHeaders(fields, mockT);
 
       expect(result).toHaveLength(4);
-      expect(result[0]).toEqual({ key: 'documentIdentifier', header: 'DOCUMENTS_DOCUMENT_IDENTIFIER' });
-      expect(result[1]).toEqual({ key: 'documentType', header: 'DOCUMENTS_DOCUMENT_TYPE' });
-      expect(result[2]).toEqual({ key: 'uploadedOn', header: 'DOCUMENTS_UPLOADED_ON' });
-      expect(result[3]).toEqual({ key: 'uploadedBy', header: 'DOCUMENTS_UPLOADED_BY' });
+      expect(result[0]).toEqual({
+        key: 'documentIdentifier',
+        header: 'DOCUMENTS_DOCUMENT_IDENTIFIER',
+      });
+      expect(result[1]).toEqual({
+        key: 'documentType',
+        header: 'DOCUMENTS_DOCUMENT_TYPE',
+      });
+      expect(result[2]).toEqual({
+        key: 'uploadedOn',
+        header: 'DOCUMENTS_UPLOADED_ON',
+      });
+      expect(result[3]).toEqual({
+        key: 'uploadedBy',
+        header: 'DOCUMENTS_UPLOADED_BY',
+      });
     });
 
     it('returns empty array when fields is empty', () => {
@@ -290,7 +309,9 @@ describe('Documents Utils', () => {
 
       const result = createDocumentHeaders(fields, translationFn);
 
-      expect(translationFn).toHaveBeenCalledWith('DOCUMENTS_DOCUMENT_IDENTIFIER');
+      expect(translationFn).toHaveBeenCalledWith(
+        'DOCUMENTS_DOCUMENT_IDENTIFIER',
+      );
       expect(result[0].header).toBe('translated:DOCUMENTS_DOCUMENT_IDENTIFIER');
     });
 
@@ -299,7 +320,10 @@ describe('Documents Utils', () => {
 
       const result = createDocumentHeaders(fields, mockT);
 
-      expect(result[0]).toEqual({ key: 'uploadedOn', header: 'DOCUMENTS_UPLOADED_ON' });
+      expect(result[0]).toEqual({
+        key: 'uploadedOn',
+        header: 'DOCUMENTS_UPLOADED_ON',
+      });
     });
   });
 });

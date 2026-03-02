@@ -158,7 +158,12 @@ describe('DocumentsTable', () => {
       });
 
       const config = {
-        fields: ['documentIdentifier', 'documentType', 'uploadedOn', 'uploadedBy'],
+        fields: [
+          'documentIdentifier',
+          'documentType',
+          'uploadedOn',
+          'uploadedBy',
+        ],
       };
 
       renderComponent({ config });
@@ -167,7 +172,9 @@ describe('DocumentsTable', () => {
         'aria-label',
         'DOCUMENTS_TABLE_HEADING',
       );
-      expect(screen.getByText('DOCUMENTS_DOCUMENT_IDENTIFIER')).toBeInTheDocument();
+      expect(
+        screen.getByText('DOCUMENTS_DOCUMENT_IDENTIFIER'),
+      ).toBeInTheDocument();
       expect(screen.getByText('DOCUMENTS_DOCUMENT_TYPE')).toBeInTheDocument();
       expect(screen.getByText('DOCUMENTS_UPLOADED_ON')).toBeInTheDocument();
       expect(screen.getByText('DOCUMENTS_UPLOADED_BY')).toBeInTheDocument();
@@ -183,7 +190,12 @@ describe('DocumentsTable', () => {
       });
 
       const config = {
-        fields: ['documentIdentifier', 'documentType', 'uploadedOn', 'uploadedBy'],
+        fields: [
+          'documentIdentifier',
+          'documentType',
+          'uploadedOn',
+          'uploadedBy',
+        ],
       };
 
       renderComponent({ config });
@@ -204,13 +216,20 @@ describe('DocumentsTable', () => {
       });
 
       const config = {
-        fields: ['documentIdentifier', 'documentType', 'uploadedOn', 'uploadedBy'],
+        fields: [
+          'documentIdentifier',
+          'documentType',
+          'uploadedOn',
+          'uploadedBy',
+        ],
       };
 
       renderComponent({ config });
 
       expect(screen.getByText('Test Document')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'View Test Document' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'View Test Document' }),
+      ).toBeInTheDocument();
     });
 
     it('displays multiple documents', () => {
@@ -223,7 +242,12 @@ describe('DocumentsTable', () => {
       });
 
       const config = {
-        fields: ['documentIdentifier', 'documentType', 'uploadedOn', 'uploadedBy'],
+        fields: [
+          'documentIdentifier',
+          'documentType',
+          'uploadedOn',
+          'uploadedBy',
+        ],
       };
 
       renderComponent({ config });
@@ -237,7 +261,12 @@ describe('DocumentsTable', () => {
 
   describe('File Type Icons', () => {
     const config = {
-      fields: ['documentIdentifier', 'documentType', 'uploadedOn', 'uploadedBy'],
+      fields: [
+        'documentIdentifier',
+        'documentType',
+        'uploadedOn',
+        'uploadedBy',
+      ],
     };
 
     it('displays PDF icon for PDF documents', () => {
@@ -301,7 +330,12 @@ describe('DocumentsTable', () => {
 
   describe('Modal', () => {
     const config = {
-      fields: ['documentIdentifier', 'documentType', 'uploadedOn', 'uploadedBy'],
+      fields: [
+        'documentIdentifier',
+        'documentType',
+        'uploadedOn',
+        'uploadedBy',
+      ],
     };
 
     it('opens modal with document identifier when icon button is clicked', async () => {
@@ -316,12 +350,16 @@ describe('DocumentsTable', () => {
 
       renderComponent({ config });
 
-      await user.click(screen.getByRole('button', { name: 'View Test Document' }));
+      await user.click(
+        screen.getByRole('button', { name: 'View Test Document' }),
+      );
 
       const modal = screen.getByRole('dialog');
       expect(modal).toBeInTheDocument();
       // 'Test Document' appears both in table row and modal heading
-      expect(screen.getAllByText('Test Document').length).toBeGreaterThanOrEqual(2);
+      expect(
+        screen.getAllByText('Test Document').length,
+      ).toBeGreaterThanOrEqual(2);
     });
 
     it('renders iframe for PDF document in modal', async () => {
@@ -336,13 +374,17 @@ describe('DocumentsTable', () => {
 
       renderComponent({ config });
 
-      await user.click(screen.getByRole('button', { name: 'View Test Document' }));
+      await user.click(
+        screen.getByRole('button', { name: 'View Test Document' }),
+      );
 
       const iframe = screen.getByTitle('Test Document');
       expect(iframe.tagName).toBe('IFRAME');
       expect(iframe).toHaveAttribute(
         'src',
-        expect.stringContaining('/openmrs/auth?requested_document=/document_images/'),
+        expect.stringContaining(
+          '/openmrs/auth?requested_document=/document_images/',
+        ),
       );
     });
 
@@ -358,10 +400,15 @@ describe('DocumentsTable', () => {
 
       renderComponent({ config });
 
-      await user.click(screen.getByRole('button', { name: 'View Test Document' }));
+      await user.click(
+        screen.getByRole('button', { name: 'View Test Document' }),
+      );
 
       const iframe = screen.getByTitle('Test Document');
-      expect(iframe).toHaveAttribute('src', expect.stringContaining('#toolbar=0'));
+      expect(iframe).toHaveAttribute(
+        'src',
+        expect.stringContaining('#toolbar=0'),
+      );
     });
 
     it('renders img element for image document in modal', async () => {
@@ -376,13 +423,17 @@ describe('DocumentsTable', () => {
 
       renderComponent({ config });
 
-      await user.click(screen.getByRole('button', { name: 'View X-Ray Image' }));
+      await user.click(
+        screen.getByRole('button', { name: 'View X-Ray Image' }),
+      );
 
       const image = screen.getByRole('img', { name: 'X-Ray Image' });
       expect(image).toBeInTheDocument();
       expect(image).toHaveAttribute(
         'src',
-        expect.stringContaining('/openmrs/auth?requested_document=/document_images/'),
+        expect.stringContaining(
+          '/openmrs/auth?requested_document=/document_images/',
+        ),
       );
     });
 
@@ -398,7 +449,9 @@ describe('DocumentsTable', () => {
 
       renderComponent({ config });
 
-      await user.click(screen.getByRole('button', { name: 'View Clinical Notes' }));
+      await user.click(
+        screen.getByRole('button', { name: 'View Clinical Notes' }),
+      );
 
       const iframe = screen.getByTitle('Clinical Notes');
       expect(iframe.tagName).toBe('IFRAME');
@@ -416,7 +469,9 @@ describe('DocumentsTable', () => {
 
       renderComponent({ config });
 
-      await user.click(screen.getByRole('button', { name: 'View Test Document' }));
+      await user.click(
+        screen.getByRole('button', { name: 'View Test Document' }),
+      );
       expect(screen.getByRole('dialog')).toBeInTheDocument();
 
       await user.click(screen.getByRole('button', { name: 'Close' }));
@@ -443,7 +498,12 @@ describe('DocumentsTable', () => {
 
   describe('Fallback Content', () => {
     const config = {
-      fields: ['documentIdentifier', 'documentType', 'uploadedOn', 'uploadedBy'],
+      fields: [
+        'documentIdentifier',
+        'documentType',
+        'uploadedOn',
+        'uploadedBy',
+      ],
     };
 
     it('displays fallback text when document type is missing', () => {
@@ -489,14 +549,20 @@ describe('DocumentsTable', () => {
 
       renderComponent({ config });
 
-      expect(screen.getByRole('button', { name: 'View Test Document' })).toBeDisabled();
+      expect(
+        screen.getByRole('button', { name: 'View Test Document' }),
+      ).toBeDisabled();
     });
-
   });
 
   describe('Accessibility', () => {
     const config = {
-      fields: ['documentIdentifier', 'documentType', 'uploadedOn', 'uploadedBy'],
+      fields: [
+        'documentIdentifier',
+        'documentType',
+        'uploadedOn',
+        'uploadedBy',
+      ],
     };
 
     it('passes accessibility tests with data', async () => {
@@ -583,7 +649,9 @@ describe('DocumentsTable', () => {
 
       const { container } = renderComponent({ config });
 
-      await user.click(screen.getByRole('button', { name: 'View Test Document' }));
+      await user.click(
+        screen.getByRole('button', { name: 'View Test Document' }),
+      );
 
       await act(async () => {
         const results = await axe(container);
@@ -603,7 +671,9 @@ describe('DocumentsTable', () => {
 
       renderComponent({ config });
 
-      await user.click(screen.getByRole('button', { name: 'View Test Document' }));
+      await user.click(
+        screen.getByRole('button', { name: 'View Test Document' }),
+      );
       expect(screen.getByRole('dialog')).toBeInTheDocument();
 
       await user.keyboard('{Escape}');
@@ -625,13 +695,17 @@ describe('DocumentsTable', () => {
 
       renderComponent({ config });
 
-      await user.click(screen.getByRole('button', { name: 'View Test Document' }));
+      await user.click(
+        screen.getByRole('button', { name: 'View Test Document' }),
+      );
 
       const dialog = screen.getByRole('dialog');
       // Carbon Modal has a heading property that labels the dialog
       expect(dialog).toBeInTheDocument();
       // Verify the modal heading is set to document identifier
-      expect(screen.getAllByText('Test Document').length).toBeGreaterThanOrEqual(2);
+      expect(
+        screen.getAllByText('Test Document').length,
+      ).toBeGreaterThanOrEqual(2);
     });
   });
 });

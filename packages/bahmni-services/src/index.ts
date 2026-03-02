@@ -316,4 +316,7 @@ export {
   type ConsultationSavedEventPayload,
 } from './events/consultationEvents';
 
-export { getDocumentReferences, type DocumentReference } from './documentReferenceService';
+export {
+  getDocumentReferences,
+  type DocumentReference,
+} from './documentReferenceService';
