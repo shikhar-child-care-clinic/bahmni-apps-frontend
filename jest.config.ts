@@ -5,9 +5,6 @@ const nxPreset = require('@nx/jest/preset').default;
 const config: Config.InitialOptions = {
   ...nxPreset,
   testEnvironment: 'jsdom',
-  testEnvironmentOptions: {
-    errorOnDeprecated: false,
-  },
   setupFilesAfterEnv: ['<rootDir>/../setupTests.ts'],
   transform: {
     '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',

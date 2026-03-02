@@ -56,7 +56,7 @@ export const SelectedItem: React.FC<SelectedItemProps> = ({
           size="lg"
           hasIconOnly
           renderIcon={Close}
-          iconDescription="Close"
+          iconDescription="Selected Item Close"
           aria-label="Close Selected Item"
           onClick={onClose}
           data-testid={`${dataTestId}-close-button`}
