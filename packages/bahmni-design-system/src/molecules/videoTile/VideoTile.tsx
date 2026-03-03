@@ -23,8 +23,10 @@ export const VideoTile: React.FC<VideoTileProps> = ({
   onModalOpen,
   onModalClose,
 }) => {
-  const { isModalOpen, handleThumbnailClick, handleModalClose } =
-    useMediaModal(onModalOpen, onModalClose);
+  const { isModalOpen, handleThumbnailClick, handleModalClose } = useMediaModal(
+    onModalOpen,
+    onModalClose,
+  );
 
   return (
     <>

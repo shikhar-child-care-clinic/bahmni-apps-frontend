@@ -25,8 +25,10 @@ export const ImageTile: React.FC<ImageTileProps> = ({
   onModalOpen,
   onModalClose,
 }) => {
-  const { isModalOpen, handleThumbnailClick, handleModalClose } =
-    useMediaModal(onModalOpen, onModalClose);
+  const { isModalOpen, handleThumbnailClick, handleModalClose } = useMediaModal(
+    onModalOpen,
+    onModalClose,
+  );
 
   return (
     <>

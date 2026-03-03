@@ -23,8 +23,10 @@ export const PdfTile: React.FC<PdfTileProps> = ({
   onModalOpen,
   onModalClose,
 }) => {
-  const { isModalOpen, handleThumbnailClick, handleModalClose } =
-    useMediaModal(onModalOpen, onModalClose);
+  const { isModalOpen, handleThumbnailClick, handleModalClose } = useMediaModal(
+    onModalOpen,
+    onModalClose,
+  );
 
   return (
     <>
