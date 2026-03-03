@@ -1,6 +1,7 @@
 import classNames from 'classnames';
-import React, { useState } from 'react';
+import React from 'react';
 import { Modal } from '../../atoms/modal';
+import { useMediaModal } from '../hooks';
 import styles from './styles/ImageTile.module.scss';
 
 export interface ImageTileProps {
@@ -24,17 +25,8 @@ export const ImageTile: React.FC<ImageTileProps> = ({
   onModalOpen,
   onModalClose,
 }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const handleThumbnailClick = () => {
-    setIsModalOpen(true);
-    onModalOpen?.();
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    onModalClose?.();
-  };
+  const { isModalOpen, handleThumbnailClick, handleModalClose } =
+    useMediaModal(onModalOpen, onModalClose);
 
   return (
     <>
