@@ -26,8 +26,8 @@
   flex-shrink: 0;
 
   svg {
-    width: 16px;
-    height: 16px;
+    width: $spacing-05;
+    height: $spacing-05;
   }
 }
 
@@ -54,8 +54,8 @@
   flex-shrink: 0;
 
   &:focus {
-    outline: 2px solid $focus;
-    outline-offset: 1px;
+    outline: $spacing-01 solid $focus;
+    outline-offset: $spacing-01;
   }
 }
 
@@ -68,11 +68,11 @@
 
 .documentIframe {
   width: 100%;
-  height: 600px;
+  height: $spacing-06 * 25;
   border: none;
 }
 
 .documentImage {
   max-width: 100%;
-  max-height: 600px;
+  max-height: $spacing-06 * 25;
 }
