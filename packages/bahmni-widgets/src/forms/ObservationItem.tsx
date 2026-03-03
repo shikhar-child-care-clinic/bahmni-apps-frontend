@@ -1,4 +1,4 @@
-import { ImageTile, VideoTile } from '@bahmni/design-system';
+import { ImageTile, PdfTile, VideoTile } from '@bahmni/design-system';
 import { getValueType } from '@bahmni/services';
 import classNames from 'classnames';
 import React from 'react';
@@ -23,7 +23,7 @@ interface ObservationMemberProps {
 const INTERPRETATION_ABNORMAL = 'ABNORMAL';
 
 /**
- * Helper function to render value with media support (images/videos)
+ * Helper function to render value with media support (images/videos/pdfs)
  */
 const renderValueWithMedia = (valueAsString: string): React.ReactNode => {
   const valueType = getValueType(valueAsString);
@@ -40,6 +40,10 @@ const renderValueWithMedia = (valueAsString: string): React.ReactNode => {
 
   if (valueType === 'Video') {
     return <VideoTile id={`${valueAsString}-video`} videoSrc={valueAsString} />;
+  }
+
+  if (valueType === 'PDF') {
+    return <PdfTile id={`${valueAsString}-pdf`} pdfSrc={valueAsString} />;
   }
 
   return valueAsString;

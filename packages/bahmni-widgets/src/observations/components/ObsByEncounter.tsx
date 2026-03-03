@@ -1,6 +1,7 @@
 import {
   CollapsibleRowGroup,
   ImageTile,
+  PdfTile,
   RowCell,
   VideoTile,
 } from '@bahmni/design-system';
@@ -34,6 +35,9 @@ const renderObservation = (
 
   if (valueType === 'Video')
     valueToDisplay = <VideoTile id={`${value}-video`} videoSrc={value} />;
+
+  if (valueType === 'PDF')
+    valueToDisplay = <PdfTile id={`${value}-pdf`} pdfSrc={value} />;
 
   const info = t('OBSERVATIONS_RECORDED_BY', {
     provider: rowData.provider,
