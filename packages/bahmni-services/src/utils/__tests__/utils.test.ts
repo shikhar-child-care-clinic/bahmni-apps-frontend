@@ -387,7 +387,6 @@ describe('common utility functions', () => {
   });
 
   describe('filterReplacementEntries', () => {
-    // Mock data types for testing
     interface MockRadiologyItem {
       id: string;
       name: string;
@@ -406,6 +405,12 @@ describe('common utility functions', () => {
       supersedes?: string[];
     }
 
+    const runFilterTest = <T>(
+      items: T[],
+      idExtractor: (item: T) => string,
+      replacesExtractor: (item: T) => string[] | undefined,
+    ) => filterReplacementEntries(items, idExtractor, replacesExtractor);
+
     it('should filter out both replacing and replaced entries for radiology investigations', () => {
       const mockItems: MockRadiologyItem[] = [
         { id: 'rad-1', name: 'X-Ray Chest' },
@@ -414,7 +419,7 @@ describe('common utility functions', () => {
         { id: 'rad-4', name: 'Ultrasound', replaces: ['rad-3', 'rad-5'] },
         { id: 'rad-5', name: 'Nuclear Scan' },
       ];
-      const result = filterReplacementEntries(
+      const result = runFilterTest(
         mockItems,
         (item) => item.id,
         (item) => item.replaces,
@@ -438,7 +443,7 @@ describe('common utility functions', () => {
         },
         { id: 'lab-3', testName: 'Urine Test' },
       ];
-      const result = filterReplacementEntries(
+      const result = runFilterTest(
         mockLabItems,
         (item) => item.id,
         (item) => item.replacements,
@@ -455,7 +460,7 @@ describe('common utility functions', () => {
         { uuid: 'gen-2', title: 'Document B', supersedes: ['gen-1'] },
         { uuid: 'gen-3', title: 'Document C' },
       ];
-      const result = filterReplacementEntries(
+      const result = runFilterTest(
         mockGenericItems,
         (item) => item.uuid,
         (item) => item.supersedes,
@@ -472,7 +477,7 @@ describe('common utility functions', () => {
         { id: 'rad-2', name: 'CT Scan' },
         { id: 'rad-3', name: 'MRI Scan' },
       ];
-      const result = filterReplacementEntries(
+      const result = runFilterTest(
         mockItems,
         (item) => item.id,
         (item) => item.replaces,
@@ -483,13 +488,13 @@ describe('common utility functions', () => {
     });
 
     it('should handle empty array', () => {
-      const result = filterReplacementEntries(
-        [],
-        (item: MockRadiologyItem) => item.id,
-        (item: MockRadiologyItem) => item.replaces,
-      );
-
-      expect(result).toEqual([]);
+      expect(
+        runFilterTest(
+          [],
+          (item: MockRadiologyItem) => item.id,
+          (item: MockRadiologyItem) => item.replaces,
+        ),
+      ).toEqual([]);
     });
 
     it('should handle null/undefined replacement fields', () => {
@@ -498,7 +503,7 @@ describe('common utility functions', () => {
         { id: 'rad-2', name: 'CT Scan', replaces: [] },
         { id: 'rad-3', name: 'MRI Scan' },
       ];
-      const result = filterReplacementEntries(
+      const result = runFilterTest(
         mockItems,
         (item) => item.id,
         (item) => item.replaces,
@@ -515,7 +520,7 @@ describe('common utility functions', () => {
         { id: 'rad-3', name: 'Final Scan', replaces: ['rad-2'] },
         { id: 'rad-4', name: 'Independent Scan' },
       ];
-      const result = filterReplacementEntries(
+      const result = runFilterTest(
         mockItems,
         (item) => item.id,
         (item) => item.replaces,
@@ -533,7 +538,7 @@ describe('common utility functions', () => {
         { id: 'rad-3', name: 'X-Ray Both Arms', replaces: ['rad-1', 'rad-2'] },
         { id: 'rad-4', name: 'X-Ray Chest' },
       ];
-      const result = filterReplacementEntries(
+      const result = runFilterTest(
         mockItems,
         (item) => item.id,
         (item) => item.replaces,
@@ -552,7 +557,7 @@ describe('common utility functions', () => {
         { id: 'rad-4', name: 'CT v2', replaces: ['rad-3'] },
         { id: 'rad-5', name: 'MRI Scan' },
       ];
-      const result = filterReplacementEntries(
+      const result = runFilterTest(
         mockItems,
         (item) => item.id,
         (item) => item.replaces,
@@ -569,7 +574,7 @@ describe('common utility functions', () => {
         { id: 'rad-2', name: 'CT Scan', replaces: ['rad-99'] },
         { id: 'rad-3', name: 'MRI Scan' },
       ];
-      const result = filterReplacementEntries(
+      const result = runFilterTest(
         mockItems,
         (item) => item.id,
         (item) => item.replaces,
@@ -589,7 +594,7 @@ describe('common utility functions', () => {
         { id: 'rad-4', name: 'Ultrasound' },
         { id: 'rad-5', name: 'Nuclear Scan' },
       ];
-      const result = filterReplacementEntries(
+      const result = runFilterTest(
         mockItems,
         (item) => item.id,
         (item) => item.replaces,
@@ -608,7 +613,7 @@ describe('common utility functions', () => {
         { id: 'rad-2', name: 'CT Scan', replaces: [] },
         { id: 'rad-3', name: 'MRI Scan' },
       ];
-      const result = filterReplacementEntries(
+      const result = runFilterTest(
         mockItems,
         (item) => item.id,
         (item) => item.replaces,
@@ -633,7 +638,7 @@ describe('common utility functions', () => {
         },
         { identifier: 'item-3', description: 'Third item' },
       ];
-      const result = filterReplacementEntries(
+      const result = runFilterTest(
         customItems,
         (item) => item.identifier,
         (item) => item.replacedItems,
@@ -654,7 +659,7 @@ describe('common utility functions', () => {
         }),
       );
       const startTime = performance.now();
-      const result = filterReplacementEntries(
+      const result = runFilterTest(
         largeDataset,
         (item) => item.id,
         (item) => item.replaces,
@@ -750,19 +755,17 @@ describe('common utility functions', () => {
     });
   });
 
-  const setupWindowLocation = () => {
+  describe('parseQueryParams', () => {
     const original = window.location;
+
     beforeEach(() => {
       delete (window as any).location;
       (window as any).location = { search: '' };
     });
+
     afterAll(() => {
       window.location = original;
     });
-  };
-
-  describe('parseQueryParams', () => {
-    setupWindowLocation();
 
     it('should parse basic query string', () => {
       expect(parseQueryParams('key1=value1&key2=value2')).toEqual({
@@ -895,7 +898,16 @@ describe('common utility functions', () => {
   });
 
   describe('formatUrl', () => {
-    setupWindowLocation();
+    const original = window.location;
+
+    beforeEach(() => {
+      delete (window as any).location;
+      (window as any).location = { search: '' };
+    });
+
+    afterAll(() => {
+      window.location = original;
+    });
 
     it('should replace single placeholder with value from options', () => {
       expect(
