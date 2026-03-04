@@ -170,6 +170,30 @@ describe('ObsByEncounter', () => {
 
       expect(screen.getByText('98.6°F')).toBeInTheDocument();
     });
+
+    it('should render PdfTile when observation value is a PDF', async () => {
+      const pdfPath = '/documents/lab-report.pdf';
+      mockGetValueType.mockReturnValue('PDF');
+      mockTransformObservationToRowCell.mockReturnValueOnce({
+        index: 0,
+        header: 'Lab Report',
+        value: pdfPath,
+        provider: 'Dr. Smith',
+      });
+
+      const result = extractObservationsFromBundle(
+        mockBundleWithMixedObservations,
+      );
+      const groupedData = groupObservationsByEncounter(result);
+
+      const { container } = render(
+        <ObsByEncounter groupedData={groupedData} />,
+      );
+
+      // PdfTile renders a button with the PDF icon
+      const pdfButton = container.querySelector('button[aria-label*="lab-report"]');
+      expect(pdfButton).toBeInTheDocument();
+    });
   });
 
   describe('Grouped observations', () => {

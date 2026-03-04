@@ -23,6 +23,11 @@ jest.mock('@bahmni/design-system', () => ({
       Video: {videoSrc}
     </div>
   ),
+  PdfTile: ({ pdfSrc, id }: any) => (
+    <div data-testid="pdf-tile" data-src={pdfSrc} data-id={id}>
+      PDF: {pdfSrc}
+    </div>
+  ),
 }));
 
 // Mock the services
@@ -43,6 +48,9 @@ jest.mock('@bahmni/services', () => ({
       lower.endsWith('.mov')
     ) {
       return 'Video';
+    }
+    if (lower.endsWith('.pdf')) {
+      return 'PDF';
     }
     return 'string';
   },
@@ -454,6 +462,55 @@ describe('ObservationItem', () => {
       expect(videoTile).toHaveAttribute(
         'data-src',
         'http://example.com/surgery.avi',
+      );
+    });
+
+    it('should render PdfTile for PDF URLs in top-level observations', () => {
+      const observation: ExtractedObservation = {
+        id: 'pdf-uuid',
+        display: 'Medical Report',
+        observationValue: {
+          value: 'http://example.com/report.pdf',
+          type: 'string',
+        },
+      };
+
+      render(<ObservationItem observation={observation} index={0} />);
+
+      const pdfTile = screen.getByTestId('pdf-tile');
+      expect(pdfTile).toBeInTheDocument();
+      expect(pdfTile).toHaveAttribute(
+        'data-src',
+        'http://example.com/report.pdf',
+      );
+      expect(
+        screen.getByText(/PDF: http:\/\/example.com\/report.pdf/),
+      ).toBeInTheDocument();
+    });
+
+    it('should render PdfTile for PDF URLs in group members', () => {
+      const observation: ExtractedObservation = {
+        id: 'documents-uuid',
+        display: 'Medical Documents',
+        members: [
+          {
+            id: 'report-uuid',
+            display: 'Lab Report',
+            observationValue: {
+              value: 'http://example.com/lab-report.pdf',
+              type: 'string',
+            },
+          },
+        ],
+      };
+
+      render(<ObservationItem observation={observation} index={0} />);
+
+      const pdfTile = screen.getByTestId('pdf-tile');
+      expect(pdfTile).toBeInTheDocument();
+      expect(pdfTile).toHaveAttribute(
+        'data-src',
+        'http://example.com/lab-report.pdf',
       );
     });
   });

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 
 /**
  * Custom hook to manage media modal state and interactions
@@ -14,15 +14,15 @@ export const useMediaModal = (
 ) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleThumbnailClick = useCallback(() => {
+  const handleThumbnailClick = () => {
     setIsModalOpen(true);
     onModalOpen?.();
-  }, [onModalOpen]);
+  };
 
-  const handleModalClose = useCallback(() => {
+  const handleModalClose = () => {
     setIsModalOpen(false);
     onModalClose?.();
-  }, [onModalClose]);
+  };
 
   return {
     isModalOpen,
