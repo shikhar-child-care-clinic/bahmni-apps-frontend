@@ -212,6 +212,16 @@ describe('common utility functions', () => {
   });
 
   describe('groupByDate', () => {
+    const assertDateGrouping = (
+      result: { date: string; items: any[] }[],
+      expectedGroups: { date: string; count: number }[],
+    ) => {
+      expect(result).toHaveLength(expectedGroups.length);
+      expectedGroups.forEach(({ date, count }) => {
+        expect(result.find((g) => g.date === date)?.items).toHaveLength(count);
+      });
+    };
+
     it('should group items by date correctly', () => {
       const items = [
         { id: 1, date: '2023-01-01', name: 'Item 1' },
@@ -296,17 +306,10 @@ describe('common utility functions', () => {
           item.orderedDate.substring(0, 10),
       );
 
-      expect(result).toHaveLength(2);
-      expect(
-        result.find(
-          (g: { date: string; items: typeof items }) => g.date === '2023-01-01',
-        )?.items,
-      ).toHaveLength(2);
-      expect(
-        result.find(
-          (g: { date: string; items: typeof items }) => g.date === '2023-01-02',
-        )?.items,
-      ).toHaveLength(1);
+      assertDateGrouping(result, [
+        { date: '2023-01-01', count: 2 },
+        { date: '2023-01-02', count: 1 },
+      ]);
     });
 
     it('should preserve original item structure', () => {
@@ -349,17 +352,10 @@ describe('common utility functions', () => {
         (item: { id: number; shortDate: string }) => item.shortDate,
       );
 
-      expect(result).toHaveLength(2);
-      expect(
-        result.find(
-          (g: { date: string; items: typeof items }) => g.date === '2023-01-01',
-        )?.items,
-      ).toHaveLength(2);
-      expect(
-        result.find(
-          (g: { date: string; items: typeof items }) => g.date === '2023-01-02',
-        )?.items,
-      ).toHaveLength(1);
+      assertDateGrouping(result, [
+        { date: '2023-01-01', count: 2 },
+        { date: '2023-01-02', count: 1 },
+      ]);
     });
 
     it('should handle edge case with empty string dates', () => {
