@@ -14,7 +14,7 @@ EXCLUDE_APPS="sample-app-module"            # comma-separated app dirs to skip
 
 # Load user-specific path overrides (auto-created on first custom path entry)
 CLI_CONF_FILE=".bahmni-cli.conf"
-if [ -f "$CLI_CONF_FILE" ]; then
+if [[ -f "$CLI_CONF_FILE" ]]; then
   source "$CLI_CONF_FILE"
 fi
 
@@ -29,9 +29,9 @@ for app_dir in "${APPS_DIR}"/*/; do
     continue
   fi
   pkg_file="${app_dir}package.json"
-  if [ -f "$pkg_file" ]; then
+  if [[ -f "$pkg_file" ]]; then
     nx_name=$(grep '"name"' "$pkg_file" | head -1 | sed 's/.*"name"[[:space:]]*:[[:space:]]*"\(.*\)".*/\1/')
-    if [ -n "$nx_name" ]; then
+    if [[ -n "$nx_name" ]]; then
       APP_DIRS+=("$dir_name")
       APP_NAMES+=("$nx_name")
       # Display name: capitalize first letter of dir name
@@ -57,20 +57,21 @@ RESET='\033[0m'
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-info()    { echo -e "${CYAN}[INFO]${RESET}  $*"; }
-success() { echo -e "${GREEN}[OK]${RESET}    $*"; }
-warn()    { echo -e "${YELLOW}[WARN]${RESET}  $*"; }
-error()   { echo -e "${RED}[ERROR]${RESET} $*"; }
+info()    { echo -e "${CYAN}[INFO]${RESET}  $*"; return 0; }
+success() { echo -e "${GREEN}[OK]${RESET}    $*"; return 0; }
+warn()    { echo -e "${YELLOW}[WARN]${RESET}  $*"; return 0; }
+error()   { echo -e "${RED}[ERROR]${RESET} $*" >&2; return 1; }
 
 elapsed() {
   local seconds=$1
   local mins=$(( seconds / 60 ))
   local secs=$(( seconds % 60 ))
-  if [ "$mins" -gt 0 ]; then
+  if [[ "$mins" -gt 0 ]]; then
     echo "${mins}m ${secs}s"
   else
     echo "${secs}s"
   fi
+  return 0
 }
 
 run_timed() {
@@ -85,7 +86,7 @@ run_timed() {
   end=$(date +%s)
   local took
   took=$(elapsed $(( end - start )))
-  if [ $status -eq 0 ]; then
+  if [[ $status -eq 0 ]]; then
     success "Done: ${desc} (took ${took})"
   else
     error "Failed: ${desc} (took ${took})"
@@ -97,6 +98,7 @@ pause() {
   echo ""
   echo -e "${YELLOW}Press Enter to return to the menu...${RESET}"
   read -r
+  return 0
 }
 
 # Shows a sub-menu of app modules and runs an nx command on the selected one
@@ -117,18 +119,18 @@ pick_app_and_run() {
   echo -e "  ${CYAN}0)${RESET} Back"
   echo ""
   read -rp "Choose an option: " sub
-  if [ "$sub" = "0" ]; then
+  if [[ "$sub" = "0" ]]; then
     return
   fi
 
   # --- All Modules ---
-  if [ "$sub" = "1" ]; then
+  if [[ "$sub" = "1" ]]; then
     run_timed "All ${title}" yarn "${yarn_all_cmd}"
     return
   fi
 
   # --- Specific Module ---
-  if [ "$sub" = "2" ]; then
+  if [[ "$sub" = "2" ]]; then
     echo ""
     echo -e "  ${BOLD}Select module:${RESET}"
     local i=1
@@ -139,13 +141,13 @@ pick_app_and_run() {
     echo -e "  ${CYAN}0)${RESET} Back"
     echo ""
     read -rp "Choose module: " mod_choice
-    if [ "$mod_choice" = "0" ]; then
+    if [[ "$mod_choice" = "0" ]]; then
       return
     fi
 
     # Run specific module
     local mod_idx=$(( mod_choice - 1 ))
-    if [ "$mod_idx" -ge 0 ] && [ "$mod_idx" -lt "${#APP_NAMES[@]}" ]; then
+    if [[ "$mod_idx" -ge 0 && "$mod_idx" -lt "${#APP_NAMES[@]}" ]]; then
       local project="${APP_NAMES[$mod_idx]}"
       local label="${APP_DISPLAY[$mod_idx]}"
       run_timed "${label} ${title}" npx nx "${nx_target}" "${project}" "${extra_args[@]}"
@@ -156,14 +158,14 @@ pick_app_and_run() {
   fi
 
   # --- Specific File ---
-  if [ "$sub" = "3" ]; then
+  if [[ "$sub" = "3" ]]; then
     echo ""
     read -rp "Enter file path (relative to repo root): " file_path
-    if [ -z "$file_path" ]; then
+    if [[ -z "$file_path" ]]; then
       warn "No file path provided."
       return
     fi
-    if [ ! -f "$file_path" ]; then
+    if [[ ! -f "$file_path" ]]; then
       warn "File not found: ${file_path}"
       return
     fi
@@ -176,22 +178,22 @@ pick_app_and_run() {
         break
       fi
     done
-    if [ "$nx_target" = "lint" ]; then
+    if [[ "$nx_target" = "lint" ]]; then
       local eslint_config=""
-      if [ -n "$matched_project" ]; then
+      if [[ -n "$matched_project" ]]; then
         eslint_config="${APPS_DIR}/${APP_DIRS[$idx]}/eslint.config.ts"
       fi
       local eslint_cmd=(npx eslint)
-      if [ -n "$eslint_config" ]; then
+      if [[ -n "$eslint_config" ]]; then
         eslint_cmd+=(--config "$eslint_config")
       fi
       eslint_cmd+=("${file_path}" "${extra_args[@]}")
       "${eslint_cmd[@]}"
-      if [ $? -eq 0 ]; then
+      if [[ $? -eq 0 ]]; then
         success "No lint errors found."
       fi
     else
-      if [ -n "$matched_project" ]; then
+      if [[ -n "$matched_project" ]]; then
         npx nx test "$matched_project" --testPathPattern="${file_path}" --verbose "${extra_args[@]}"
       else
         # Fallback for files outside apps/
@@ -221,6 +223,7 @@ print_header() {
   echo -e "${MAGENTA}${BOLD}  ║      Apps Frontend Developer CLI         ║${RESET}"
   echo -e "${MAGENTA}${BOLD}  ╚══════════════════════════════════════════╝${RESET}"
   echo ""
+  return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -230,12 +233,13 @@ save_path_to_conf() {
   local var_name="$1"
   local value="$2"
   # Update or add the variable in .bahmni-cli.conf
-  if [ -f "$CLI_CONF_FILE" ] && grep -q "^${var_name}=" "$CLI_CONF_FILE"; then
+  if [[ -f "$CLI_CONF_FILE" ]] && grep -q "^${var_name}=" "$CLI_CONF_FILE"; then
     # Update existing entry
     sed -i '' "s|^${var_name}=.*|${var_name}=\"${value}\"|" "$CLI_CONF_FILE"
   else
     echo "${var_name}=\"${value}\"" >> "$CLI_CONF_FILE"
   fi
+  return 0
 }
 
 validate_path() {
@@ -243,7 +247,7 @@ validate_path() {
   local var_name="$2"  # variable name: STANDARD_CONFIG_PATH or BAHMNI_DOCKER_PATH
   local path="${!var_name}"
 
-  if [ -d "$path" ]; then
+  if [[ -d "$path" ]]; then
     return 0
   fi
 
@@ -251,17 +255,17 @@ validate_path() {
 
   while true; do
     read -rp "Enter the correct path for ${label} (or 'q' to cancel): " new_path
-    if [ "$new_path" = "q" ] || [ "$new_path" = "Q" ]; then
+    if [[ "$new_path" = "q" || "$new_path" = "Q" ]]; then
       error "Cancelled. Cannot proceed without a valid path."
       return 1
     fi
 
-    if [ -z "$new_path" ]; then
+    if [[ -z "$new_path" ]]; then
       warn "Path cannot be empty. Try again or enter 'q' to cancel."
       continue
     fi
 
-    if [ ! -d "$new_path" ]; then
+    if [[ ! -d "$new_path" ]]; then
       warn "Path does not exist: '${new_path}'. Try again or enter 'q' to cancel."
       continue
     fi
@@ -288,8 +292,9 @@ cmd_build_and_serve() {
     yarn dev
   )
   local status=$?
-  [ $status -ne 0 ] && error "Build and Serve encountered an error (exit code ${status})."
+  [[ $status -ne 0 ]] && error "Build and Serve encountered an error (exit code ${status})."
   pause
+  return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -299,6 +304,7 @@ cmd_test() {
   echo -e "\n${BOLD}=== Run Tests ===${RESET}\n"
   pick_app_and_run "tests" "test" "test"
   pause
+  return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -324,7 +330,7 @@ cmd_clean_build() {
     yarn dev
   )
   local status=$?
-  if [ $status -ne 0 ]; then
+  if [[ $status -ne 0 ]]; then
     error "Clean build and serve failed (exit code ${status})."
   fi
   pause
@@ -360,7 +366,7 @@ _do_update_standard_config() {
     # Detect default branch (master or main)
     local default_branch
     default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
-    if [ -z "$default_branch" ]; then
+    if [[ -z "$default_branch" ]]; then
       # Fallback: check if master or main exists
       if git show-ref --verify --quiet refs/heads/master; then
         default_branch="master"
@@ -371,7 +377,7 @@ _do_update_standard_config() {
     info "Default branch: ${default_branch}"
 
     # Switch to default branch if not already on it
-    if [ "$current_branch" != "$default_branch" ]; then
+    if [[ "$current_branch" != "$default_branch" ]]; then
       info "Switching to ${default_branch}..."
       git checkout "$default_branch"
     else
@@ -382,13 +388,13 @@ _do_update_standard_config() {
     run_timed "git pull (standard-config ${default_branch})" git pull
 
     # Switch back to original branch
-    if [ "$current_branch" != "$default_branch" ]; then
+    if [[ "$current_branch" != "$default_branch" ]]; then
       info "Switching back to ${current_branch}..."
       git checkout "$current_branch"
     fi
 
     # Restore stashed changes
-    if [ "$stashed" = true ]; then
+    if [[ "$stashed" = true ]]; then
       local pop_output
       pop_output=$(git stash pop 2>&1)
       if echo "$pop_output" | grep -qi "conflict\|error"; then
@@ -400,7 +406,7 @@ _do_update_standard_config() {
     fi
   )
   local status=$?
-  if [ $status -eq 0 ]; then
+  if [[ $status -eq 0 ]]; then
     success "Standard config updated."
   else
     error "Standard config update failed (exit code ${status})."
@@ -411,6 +417,7 @@ _do_update_standard_config() {
 cmd_update_standard_config() {
   _do_update_standard_config
   pause
+  return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -419,7 +426,7 @@ cmd_update_standard_config() {
 _docker_compose_dir() {
   validate_path "Bahmni Docker" "BAHMNI_DOCKER_PATH" || return 1
   local compose_dir="${BAHMNI_DOCKER_PATH}/bahmni-standard"
-  if [ ! -d "$compose_dir" ]; then
+  if [[ ! -d "$compose_dir" ]]; then
     error "bahmni-standard directory not found inside ${BAHMNI_DOCKER_PATH}"
     return 1
   fi
@@ -482,7 +489,7 @@ cmd_update_docker_images() {
         docker compose --env-file "$_docker_env_file" ps
         echo ""
         read -rp "Enter service name to restart: " svc_name
-        if [ -n "$svc_name" ]; then
+        if [[ -n "$svc_name" ]]; then
           docker compose --env-file "$_docker_env_file" restart "$svc_name"
           success "Restarted ${svc_name}."
           read -rp "Show logs? (y/N): " show_logs
@@ -497,7 +504,7 @@ cmd_update_docker_images() {
         docker compose --env-file "$_docker_env_file" $_docker_all_profiles ps
         echo ""
         read -rp "Enter service name: " svc_name
-        if [ -n "$svc_name" ]; then
+        if [[ -n "$svc_name" ]]; then
           docker compose --env-file "$_docker_env_file" logs "$svc_name" -f
         fi
       ) ;;
@@ -507,7 +514,7 @@ cmd_update_docker_images() {
         docker compose --env-file "$_docker_env_file" $_docker_all_profiles ps
         echo ""
         read -rp "Enter service name to SSH into: " svc_name
-        if [ -n "$svc_name" ]; then
+        if [[ -n "$svc_name" ]]; then
           docker compose --env-file "$_docker_env_file" exec "$svc_name" /bin/sh
         fi
       ) ;;
@@ -543,13 +550,13 @@ cmd_update_all() {
 
   local compose_dir
   compose_dir=$(_docker_compose_dir)
-  if [ $? -eq 0 ]; then
+  if [[ $? -eq 0 ]]; then
     (
       set -e
       cd "$compose_dir"
       run_timed "docker compose pull" docker compose --env-file "$_docker_env_file" pull
     )
-    if [ $? -eq 0 ]; then
+    if [[ $? -eq 0 ]]; then
       success "Docker images pulled."
     else
       error "Docker pull failed."
@@ -559,6 +566,7 @@ cmd_update_all() {
   echo ""
   success "Update All complete."
   pause
+  return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -568,6 +576,7 @@ cmd_coverage() {
   echo -e "\n${BOLD}=== Coverage Reports ===${RESET}\n"
   pick_app_and_run "coverage" "test" "test:coverage" --coverage
   pause
+  return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -577,6 +586,7 @@ cmd_lint() {
   echo -e "\n${BOLD}=== Lint Check ===${RESET}\n"
   pick_app_and_run "lint" "lint" "lint"
   pause
+  return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -617,6 +627,7 @@ main_menu() {
         ;;
     esac
   done
+  return 0
 }
 
 # ---------------------------------------------------------------------------
