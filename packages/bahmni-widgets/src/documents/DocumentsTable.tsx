@@ -11,6 +11,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
+import { DOCUMENT_ICON_SIZE } from './constants';
 import { DocumentViewModel } from './models';
 import styles from './styles/DocumentsTable.module.scss';
 import {
@@ -20,6 +21,13 @@ import {
   createDocumentHeaders,
 } from './utils';
 
+const DEFAULT_DOCUMENT_FIELDS = [
+  'documentIdentifier',
+  'documentType',
+  'uploadedOn',
+  'uploadedBy',
+];
+
 const fetchDocuments = async (
   patientUUID: string,
   encounterUuids?: string[],
@@ -28,9 +36,23 @@ const fetchDocuments = async (
   return mapDocumentReferencesToViewModels(bundle.entry ?? []);
 };
 
-/**
- * Component to display patient documents using SortableDataTable
- */
+const renderFileIcon = (contentType?: string) => {
+  const fileType = getFileTypeCategory(contentType);
+  switch (fileType) {
+    case 'pdf':
+      return (
+        <DocumentPdf size={DOCUMENT_ICON_SIZE} className={styles.pdfIcon} />
+      );
+    case 'image':
+      return <Image size={DOCUMENT_ICON_SIZE} className={styles.imageIcon} />;
+    case 'document':
+    default:
+      return (
+        <Document size={DOCUMENT_ICON_SIZE} className={styles.documentIcon} />
+      );
+  }
+};
+
 const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<DocumentViewModel | null>(
@@ -66,72 +88,57 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
     }
   }, [isError, error, addNotification, t]);
 
-  // Define table headers based on configured fields
-  const headers = useMemo(() => {
-    const fields = config?.fields as string[];
-    if (!fields || fields.length === 0) {
-      return [];
-    }
-    return createDocumentHeaders(fields, t);
-  }, [config?.fields, t]);
+  const fields = useMemo(
+    () => (config?.fields as string[]) ?? DEFAULT_DOCUMENT_FIELDS,
+    [config?.fields],
+  );
 
-  const sortable = useMemo(() => {
-    const fields = config?.fields as string[];
-    if (!fields || fields.length === 0) {
-      return [];
-    }
-    return fields.map((field) => ({
-      key: field,
-      sortable: true,
-    }));
-  }, [config?.fields]);
+  const headers = useMemo(() => createDocumentHeaders(fields, t), [fields, t]);
 
-  const renderFileIcon = (contentType?: string) => {
-    const fileType = getFileTypeCategory(contentType);
-    switch (fileType) {
-      case 'pdf':
-        return <DocumentPdf size={16} className={styles.pdfIcon} />;
-      case 'image':
-        return <Image size={16} className={styles.imageIcon} />;
-      case 'document':
-      default:
-        return <Document size={16} className={styles.documentIcon} />;
-    }
-  };
+  const sortable = useMemo(
+    () =>
+      fields.map((field) => ({
+        key: field,
+        sortable: true,
+      })),
+    [fields],
+  );
 
-  // Function to render cell content based on the cell ID
-  const renderCell = (doc: DocumentViewModel, cellId: string) => {
-    switch (cellId) {
-      case 'documentIdentifier':
-        return (
-          <div className={styles.nameCell}>
-            <button
-              className={styles.fileIconButton}
-              onClick={() => handleIconClick(doc)}
-              aria-label={`View ${doc.documentIdentifier}`}
-              disabled={!doc.documentUrl}
-            >
-              {renderFileIcon(doc.contentType)}
-            </button>
-            <span>{doc.documentIdentifier}</span>
-          </div>
-        );
-      case 'documentType':
-        return doc.documentType ?? t('DOCUMENTS_NOT_AVAILABLE');
-      case 'uploadedOn': {
-        const formattedDate = formatDate(
-          doc.uploadedOn,
-          t,
-          DATE_TIME_FORMAT,
-        ).formattedResult;
-        return formattedDate ?? t('DOCUMENTS_NOT_AVAILABLE');
+  const renderCell = useCallback(
+    (doc: DocumentViewModel, cellId: string) => {
+      switch (cellId) {
+        case 'documentIdentifier':
+          return (
+            <div className={styles.nameCell}>
+              <button
+                className={styles.fileIconButton}
+                onClick={() => handleIconClick(doc)}
+                aria-label={`View ${doc.documentIdentifier}`}
+                disabled={!doc.documentUrl}
+              >
+                {renderFileIcon(doc.contentType)}
+              </button>
+              <span>{doc.documentIdentifier}</span>
+            </div>
+          );
+        case 'documentType':
+          return doc.documentType ?? t('DOCUMENTS_NOT_AVAILABLE');
+        case 'uploadedOn': {
+          const formattedDate = formatDate(
+            doc.uploadedOn,
+            t,
+            DATE_TIME_FORMAT,
+          ).formattedResult;
+          return formattedDate || t('DOCUMENTS_NOT_AVAILABLE');
+        }
+        case 'uploadedBy':
+          return doc.uploadedBy ?? t('DOCUMENTS_NOT_AVAILABLE');
+        default:
+          return null;
       }
-      case 'uploadedBy':
-        return doc.uploadedBy ?? t('DOCUMENTS_NOT_AVAILABLE');
-      default:
-        return null;
-    }
-  };
+    },
+    [handleIconClick, t],
+  );
 
   const docUrl = selectedDoc ? buildDocumentUrl(selectedDoc.documentUrl) : '';
   const isPDF = selectedDoc?.contentType?.toLowerCase().includes('pdf');
@@ -156,7 +163,7 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
 
       {isModalOpen && selectedDoc && (
         <Modal
-          id="modalIdForActionAreaLayout"
+          id="documents-view-modal"
           open={isModalOpen}
           onRequestClose={handleCloseModal}
           modalHeading={selectedDoc.documentIdentifier}
@@ -186,3 +193,13 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
 };
 
 export default DocumentsTable;
+
+// i18n keys used:
+// DOCUMENTS_TABLE_HEADING
+// DOCUMENTS_NO_RECORDS
+// DOCUMENTS_DOCUMENT_IDENTIFIER
+// DOCUMENTS_TYPE
+// DOCUMENTS_UPLOADED_ON
+// DOCUMENTS_UPLOADED_BY
+// DOCUMENTS_NOT_AVAILABLE
+// ERROR_DEFAULT_TITLE

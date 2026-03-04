@@ -285,7 +285,7 @@ describe('Documents Utils', () => {
       });
       expect(result[1]).toEqual({
         key: 'documentType',
-        header: 'DOCUMENTS_DOCUMENT_TYPE',
+        header: 'DOCUMENTS_TYPE',
       });
       expect(result[2]).toEqual({
         key: 'uploadedOn',

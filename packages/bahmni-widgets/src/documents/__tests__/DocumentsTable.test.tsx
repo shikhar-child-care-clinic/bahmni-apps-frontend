@@ -180,7 +180,7 @@ describe('DocumentsTable', () => {
       expect(
         screen.getByText('DOCUMENTS_DOCUMENT_IDENTIFIER'),
       ).toBeInTheDocument();
-      expect(screen.getByText('DOCUMENTS_DOCUMENT_TYPE')).toBeInTheDocument();
+      expect(screen.getByText('DOCUMENTS_TYPE')).toBeInTheDocument();
       expect(screen.getByText('DOCUMENTS_UPLOADED_ON')).toBeInTheDocument();
       expect(screen.getByText('DOCUMENTS_UPLOADED_BY')).toBeInTheDocument();
     });
