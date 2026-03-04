@@ -191,7 +191,9 @@ describe('ObsByEncounter', () => {
       );
 
       // PdfTile renders a button with the PDF icon
-      const pdfButton = container.querySelector('button[aria-label*="lab-report"]');
+      const pdfButton = container.querySelector(
+        'button[aria-label*="lab-report"]',
+      );
       expect(pdfButton).toBeInTheDocument();
     });
   });
