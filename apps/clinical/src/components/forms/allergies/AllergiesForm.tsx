@@ -5,14 +5,15 @@ import {
   SelectedItem,
   InlineNotification,
 } from '@bahmni/design-system';
-import { useTranslation, getFormattedAllergies } from '@bahmni/services';
-import { useNotification, usePatientUUID } from '@bahmni/widgets';
+import { useTranslation, getFormattedAllergies, hasPrivilege } from '@bahmni/services';
+import { useNotification, usePatientUUID, useUserPrivilege } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import useAllergenSearch from '../../../hooks/useAllergenSearch';
 import { AllergenConcept } from '../../../models/allergy';
 import { useAllergyStore } from '../../../stores/allergyStore';
 import { getCategoryDisplayName } from '../../../utils/allergy';
+import { CONSULTATION_PAD_PRIVILEGES } from '../../../constants/consultationPadPrivileges';
 import SelectedAllergyItem from './SelectedAllergyItem';
 import styles from './styles/AllergiesForm.module.scss';
 
@@ -30,6 +31,7 @@ const AllergiesForm: React.FC = React.memo(() => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
   const { addNotification } = useNotification();
+  const { userPrivileges } = useUserPrivilege();
   const [searchAllergenTerm, setSearchAllergenTerm] = useState('');
   const [selectedAllergenItem, setSelectedAllergenItem] =
     useState<AllergenConcept | null>(null);
@@ -56,6 +58,11 @@ const AllergiesForm: React.FC = React.memo(() => {
     isLoading,
     error,
   } = useAllergenSearch(searchAllergenTerm);
+
+  // Privilege check - hide form if user lacks 'Add Allergies' privilege
+  if (!hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.ALLERGIES)) {
+    return null;
+  }
 
   // Fetch existing allergies from backend
   const {

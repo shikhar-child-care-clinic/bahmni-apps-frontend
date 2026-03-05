@@ -31,6 +31,9 @@ jest.mock('@bahmni/widgets', () => ({
     addNotification: jest.fn(),
   })),
   usePatientUUID: jest.fn(() => 'test-patient-uuid'),
+  useUserPrivilege: jest.fn(() => ({
+    userPrivileges: ['Add Allergies'],
+  })),
 }));
 
 // Mock @bahmni/services
@@ -58,6 +61,10 @@ jest.mock('@bahmni/services', () => ({
     },
   })),
   getFormattedAllergies: jest.fn(() => Promise.resolve([])),
+  hasPrivilege: jest.fn((privileges: string[] | null, privilege: string) => {
+    if (!privileges) return false;
+    return privileges.includes(privilege);
+  }),
 }));
 
 // Mock utils/allergy
@@ -799,6 +806,33 @@ describe('AllergiesForm', () => {
         selectedAllergies: [mockSelectedAllergy],
       });
       expect(container).toMatchSnapshot();
+    });
+  });
+
+  describe('Privilege-Based Access', () => {
+    it('renders form when user has Add Allergies privilege', () => {
+      renderAllergiesForm();
+      expect(screen.getByTestId('allergies-form-tile')).toBeInTheDocument();
+    });
+
+    it('hides form when user lacks Add Allergies privilege', () => {
+      const { useUserPrivilege } = require('@bahmni/widgets');
+      useUserPrivilege.mockReturnValueOnce({
+        userPrivileges: [],
+      });
+
+      const { container } = renderAllergiesForm();
+      expect(container.firstChild).toBeNull();
+    });
+
+    it('hides form when userPrivileges is null', () => {
+      const { useUserPrivilege } = require('@bahmni/widgets');
+      useUserPrivilege.mockReturnValueOnce({
+        userPrivileges: null,
+      });
+
+      const { container } = renderAllergiesForm();
+      expect(container.firstChild).toBeNull();
     });
   });
 });

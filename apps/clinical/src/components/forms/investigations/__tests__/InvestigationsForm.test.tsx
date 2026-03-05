@@ -33,6 +33,10 @@ jest.mock('@bahmni/services', () => ({
     ],
   }),
   getExistingServiceRequestsForAllCategories: jest.fn().mockResolvedValue([]),
+  hasPrivilege: jest.fn((privileges: string[] | null, privilege: string) => {
+    if (!privileges) return false;
+    return privileges.includes(privilege);
+  }),
 }));
 
 jest.mock('@bahmni/widgets', () => ({
@@ -40,6 +44,9 @@ jest.mock('@bahmni/widgets', () => ({
   usePatientUUID: jest.fn().mockReturnValue('mock-patient-uuid'),
   useActivePractitioner: jest.fn().mockReturnValue({
     practitioner: { uuid: 'mock-practitioner-uuid' },
+  }),
+  useUserPrivilege: jest.fn().mockReturnValue({
+    userPrivileges: ['Add Investigations'],
   }),
 }));
 
@@ -1695,6 +1702,39 @@ describe('InvestigationsForm', () => {
       // Run axe check - this will check for violations in the basic form structure
       const results = await axe(container!);
       expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('Privilege-Based Access', () => {
+    test('renders form when user has Add Investigations privilege', async () => {
+      await act(async () => {
+        render(<InvestigationsForm />, { wrapper: createWrapper() });
+      });
+      expect(screen.getByTestId('investigations-form-tile')).toBeInTheDocument();
+    });
+
+    test('hides form when user lacks Add Investigations privilege', async () => {
+      const { useUserPrivilege } = require('@bahmni/widgets');
+      useUserPrivilege.mockReturnValueOnce({
+        userPrivileges: [],
+      });
+
+      const { container } = render(<InvestigationsForm />, {
+        wrapper: createWrapper(),
+      });
+      expect(container.firstChild).toBeNull();
+    });
+
+    test('hides form when userPrivileges is null', async () => {
+      const { useUserPrivilege } = require('@bahmni/widgets');
+      useUserPrivilege.mockReturnValueOnce({
+        userPrivileges: null,
+      });
+
+      const { container } = render(<InvestigationsForm />, {
+        wrapper: createWrapper(),
+      });
+      expect(container.firstChild).toBeNull();
     });
   });
 });

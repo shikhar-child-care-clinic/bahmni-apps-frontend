@@ -1,9 +1,10 @@
 import { Button } from '@bahmni/design-system';
-import { hasPrivilege, useTranslation } from '@bahmni/services';
-import { useActivePractitioner, useUserPrivilege } from '@bahmni/widgets';
+import { hasPrivilege, useTranslation, hasPrivilege } from '@bahmni/services';
+import { useActivePractitioner, useUserPrivilege, useUserPrivilege } from '@bahmni/widgets';
 import React from 'react';
 import { CONSULTATION_PAD_PRIVILEGES } from '../../constants/consultationPadPrivileges';
 import { useEncounterSession } from '../../hooks/useEncounterSession';
+import { CONSULTATION_PAD_PRIVILEGES } from '../../constants/consultationPadPrivileges';
 import styles from './styles/PatientHeader.module.scss';
 
 interface ConsultationActionButtonProps {
@@ -27,6 +28,18 @@ const ConsultationActionButton: React.FC<ConsultationActionButtonProps> = ({
   const { editActiveEncounter, isLoading } = useEncounterSession({
     practitioner,
   });
+  const { userPrivileges } = useUserPrivilege();
+
+  // Check if user has permission to add encounters
+  const canAddEncounter = hasPrivilege(
+    userPrivileges,
+    CONSULTATION_PAD_PRIVILEGES.ENCOUNTER,
+  );
+
+  // Hide button if user lacks privilege
+  if (!canAddEncounter) {
+    return null;
+  }
   const { userPrivileges } = useUserPrivilege();
 
   // Button should only appear with EDIT privileges, not view-only

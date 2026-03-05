@@ -46,8 +46,8 @@ jest.mock('@carbon/react', () => ({
       </div>
     ),
   ),
-  Tile: jest.fn(({ children, className }) => (
-    <div data-testid="tile" className={className}>
+  Tile: jest.fn(({ children, className, 'data-testid': dataTestId }) => (
+    <div data-testid={dataTestId || 'tile'} className={className}>
       {children}
     </div>
   )),
@@ -93,8 +93,8 @@ jest.mock('@bahmni/design-system', () => ({
       </div>
     ),
   ),
-  Tile: jest.fn(({ children, className }) => (
-    <div data-testid="tile" className={className}>
+  Tile: jest.fn(({ children, className, 'data-testid': dataTestId }) => (
+    <div data-testid={dataTestId || 'tile'} className={className}>
       {children}
     </div>
   )),
@@ -170,6 +170,30 @@ jest.mock('@bahmni/design-system', () => ({
 
 // BahmniIcon is already mocked as part of the design system mock above
 
+// Mock @bahmni/services
+jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
+  hasPrivilege: jest.fn((privileges: string[] | null, privilege: string) => {
+    if (!privileges) return false;
+    return privileges.includes(privilege);
+  }),
+}));
+
+// Mock @bahmni/widgets
+jest.mock('@bahmni/widgets', () => ({
+  ...jest.requireActual('@bahmni/widgets'),
+  useUserPrivilege: jest.fn(() => ({
+    userPrivileges: ['Add Observations'],
+  })),
+}));
+
+// Mock store
+jest.mock('../../../../stores/observationFormsStore', () => ({
+  useObservationFormsStore: jest.fn(() => ({
+    getFormData: jest.fn(),
+  })),
+}));
+
 describe('ObservationForms', () => {
   // Test data factories
   const createForm = (
@@ -239,7 +263,7 @@ describe('ObservationForms', () => {
     it('should render the ObservationForms component', () => {
       render(<ObservationForms {...defaultProps} />);
 
-      expect(screen.getByTestId('tile')).toBeInTheDocument();
+      expect(screen.getByTestId('observation-forms-tile')).toBeInTheDocument();
       expect(
         screen.getByText('translated_OBSERVATION_FORMS_SECTION_TITLE'),
       ).toBeInTheDocument();
@@ -834,6 +858,33 @@ describe('ObservationForms', () => {
 
       // This covers the onActionClick callback (line 208) - should call updatePinnedForms with filtered array
       expect(mockUpdatePinnedForms).toHaveBeenCalledWith([]);
+    });
+  });
+
+  describe('Privilege-Based Access', () => {
+    it('renders form when user has Add Observations privilege', () => {
+      render(<ObservationForms {...defaultProps} />);
+      expect(screen.getByTestId('observation-forms-tile')).toBeInTheDocument();
+    });
+
+    it('hides form when user lacks Add Observations privilege', () => {
+      const { useUserPrivilege } = require('@bahmni/widgets');
+      useUserPrivilege.mockReturnValueOnce({
+        userPrivileges: [],
+      });
+
+      const { container } = render(<ObservationForms {...defaultProps} />);
+      expect(container.firstChild).toBeNull();
+    });
+
+    it('hides form when userPrivileges is null', () => {
+      const { useUserPrivilege } = require('@bahmni/widgets');
+      useUserPrivilege.mockReturnValueOnce({
+        userPrivileges: null,
+      });
+
+      const { container } = render(<ObservationForms {...defaultProps} />);
+      expect(container.firstChild).toBeNull();
     });
   });
 });

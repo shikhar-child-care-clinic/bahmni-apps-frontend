@@ -1,4 +1,5 @@
 /**
+<<<<<<< HEAD
  * Privilege constants for Consultation Pad sections
  *
  * Edit privileges (Add X) - allow full form with input controls
@@ -19,3 +20,15 @@ export const CONSULTATION_PAD_PRIVILEGES = {
   VIEW_MEDICATIONS: 'View Medications',
   VIEW_VACCINATIONS: 'View Vaccinations',
 };
+=======
+ * Privilege names for consultation pad controls
+ * These privileges control access to various consultation features
+ */
+export const CONSULTATION_PAD_PRIVILEGES = {
+  ENCOUNTER: 'Add Encounters',
+  ALLERGIES: 'Add Allergies',
+  INVESTIGATIONS: 'Add Investigations',
+  MEDICATIONS: 'Add Medications',
+  OBSERVATIONS: 'Add Observations',
+} as const;
+>>>>>>> 688a8997 (BAH-4447 Add support for privilege checks in Consultation pad)

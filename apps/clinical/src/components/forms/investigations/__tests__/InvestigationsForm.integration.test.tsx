@@ -24,6 +24,10 @@ jest.mock('@bahmni/services', () => ({
     ],
   }),
   getExistingServiceRequestsForAllCategories: jest.fn().mockResolvedValue([]),
+  hasPrivilege: jest.fn((privileges: string[] | null, privilege: string) => {
+    if (!privileges) return false;
+    return privileges.includes(privilege);
+  }),
 }));
 
 jest.mock('@bahmni/widgets', () => ({
@@ -31,6 +35,9 @@ jest.mock('@bahmni/widgets', () => ({
   usePatientUUID: jest.fn().mockReturnValue('mock-patient-uuid'),
   useActivePractitioner: jest.fn().mockReturnValue({
     practitioner: { uuid: 'mock-practitioner-uuid' },
+  }),
+  useUserPrivilege: jest.fn().mockReturnValue({
+    userPrivileges: ['Add Investigations'],
   }),
 }));
 

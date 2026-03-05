@@ -44,6 +44,9 @@ jest.mock('@bahmni/widgets', () => {
     ...widgets,
     useNotification: jest.fn(),
     usePatientUUID: jest.fn(),
+    useUserPrivilege: jest.fn(() => ({
+      userPrivileges: ['Add Medications'],
+    })),
   };
 });
 
@@ -52,6 +55,15 @@ jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),
   useQuery: jest.fn(),
   useQueryClient: jest.fn(),
+}));
+
+// Mock @bahmni/services
+jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
+  hasPrivilege: jest.fn((privileges: string[] | null, privilege: string) => {
+    if (!privileges) return false;
+    return privileges.includes(privilege);
+  }),
 }));
 
 // Mock CSS modules
@@ -877,6 +889,34 @@ describe('MedicationsForm', () => {
 
       const { container } = renderWithQueryClient(<MedicationsForm />);
       expect(container).toMatchSnapshot();
+    });
+  });
+
+  // PRIVILEGE-BASED ACCESS TESTS
+  describe('Privilege-Based Access', () => {
+    test('renders form when user has Add Medications privilege', () => {
+      render(<MedicationsForm />);
+      expect(screen.getByTestId('medications-form-tile')).toBeInTheDocument();
+    });
+
+    test('hides form when user lacks Add Medications privilege', () => {
+      const { useUserPrivilege } = require('@bahmni/widgets');
+      useUserPrivilege.mockReturnValueOnce({
+        userPrivileges: [],
+      });
+
+      const { container } = render(<MedicationsForm />);
+      expect(container.firstChild).toBeNull();
+    });
+
+    test('hides form when userPrivileges is null', () => {
+      const { useUserPrivilege } = require('@bahmni/widgets');
+      useUserPrivilege.mockReturnValueOnce({
+        userPrivileges: null,
+      });
+
+      const { container } = render(<MedicationsForm />);
+      expect(container.firstChild).toBeNull();
     });
   });
 });

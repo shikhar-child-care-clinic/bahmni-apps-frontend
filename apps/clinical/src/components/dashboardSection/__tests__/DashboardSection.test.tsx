@@ -107,6 +107,13 @@ const MockTreatmentWidget = () => (
   <div data-testid="treatment-widget">Treatment Widget</div>
 );
 
+const MockEmptyWidget = ({ onEmpty }: { onEmpty?: () => void }) => {
+  useEffect(() => {
+    onEmpty?.();
+  }, [onEmpty]);
+  return null;
+};
+
 const renderDashboardSectionWithProvider = (
   section: DashboardSectionConfig,
   ref: React.RefObject<HTMLDivElement | null>,
@@ -611,6 +618,174 @@ describe('DashboardSection Component', () => {
       expect(
         screen.getByText('No widgets configured for this section'),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe('onEmpty Behavior', () => {
+    it('hides a control when it calls onEmpty', async () => {
+      mockGetWidget.mockImplementation((type: string) => {
+        if (type === 'allergies') {
+          return React.lazy(() =>
+            Promise.resolve({ default: MockEmptyWidget }),
+          );
+        }
+        return undefined;
+      });
+
+      const section: DashboardSectionConfig = {
+        id: 'empty-widget-section',
+        name: 'Empty Widget Section',
+        icon: 'test-icon',
+        controls: [{ type: 'allergies', config: {} }],
+      };
+
+      renderDashboardSectionWithProvider(section, mockRef);
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('allergies-widget')).not.toBeInTheDocument();
+      });
+    });
+
+    it('hides the entire section when all controls call onEmpty', async () => {
+      mockGetWidget.mockImplementation((type: string) => {
+        if (type === 'allergies' || type === 'conditions') {
+          return React.lazy(() =>
+            Promise.resolve({ default: MockEmptyWidget }),
+          );
+        }
+        return undefined;
+      });
+
+      const section: DashboardSectionConfig = {
+        id: 'all-empty-section',
+        name: 'All Empty Section',
+        icon: 'test-icon',
+        controls: [
+          { type: 'allergies', config: {} },
+          { type: 'conditions', config: {} },
+        ],
+      };
+
+      const { container } = renderDashboardSectionWithProvider(section, mockRef);
+
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId('dashboard-section-wrapper-All Empty Section'),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    it('suppresses the divider for a control that calls onEmpty', async () => {
+      mockGetWidget.mockImplementation((type: string) => {
+        if (type === 'allergies') {
+          return React.lazy(() =>
+            Promise.resolve({ default: MockAllergiesWidget }),
+          );
+        }
+        if (type === 'conditions') {
+          return React.lazy(() =>
+            Promise.resolve({ default: MockEmptyWidget }),
+          );
+        }
+        if (type === 'diagnosis') {
+          return React.lazy(() =>
+            Promise.resolve({ default: MockDiagnosisWidget }),
+          );
+        }
+        return undefined;
+      });
+
+      const section: DashboardSectionConfig = {
+        id: 'partial-empty-section',
+        name: 'Partial Empty Section',
+        icon: 'test-icon',
+        controls: [
+          { type: 'allergies', config: {} },
+          { type: 'conditions', config: {} },
+          { type: 'diagnosis', config: {} },
+        ],
+      };
+
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+
+      const { container } = render(
+        <QueryClientProvider client={queryClient}>
+          <ClinicalAppProvider episodeUuids={['episode-1']}>
+            <Suspense fallback={<div>Loading...</div>}>
+              <DashboardSection
+                section={section}
+                ref={mockRef}
+                encounterUuids={[]}
+                visitUuids={[]}
+              />
+            </Suspense>
+          </ClinicalAppProvider>
+        </QueryClientProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('allergies-widget')).toBeInTheDocument();
+        expect(screen.getByTestId('diagnosis-widget')).toBeInTheDocument();
+      });
+
+      // Only 1 divider between allergies and diagnosis (conditions is empty/hidden)
+      const dividers = container.querySelectorAll('.divider');
+      expect(dividers).toHaveLength(1);
+    });
+
+    it('does not render a trailing divider when the last control calls onEmpty', async () => {
+      mockGetWidget.mockImplementation((type: string) => {
+        if (type === 'allergies') {
+          return React.lazy(() =>
+            Promise.resolve({ default: MockAllergiesWidget }),
+          );
+        }
+        if (type === 'conditions') {
+          return React.lazy(() =>
+            Promise.resolve({ default: MockEmptyWidget }),
+          );
+        }
+        return undefined;
+      });
+
+      const section: DashboardSectionConfig = {
+        id: 'trailing-empty-section',
+        name: 'Trailing Empty Section',
+        icon: 'test-icon',
+        controls: [
+          { type: 'allergies', config: {} },
+          { type: 'conditions', config: {} },
+        ],
+      };
+
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+
+      const { container } = render(
+        <QueryClientProvider client={queryClient}>
+          <ClinicalAppProvider episodeUuids={['episode-1']}>
+            <Suspense fallback={<div>Loading...</div>}>
+              <DashboardSection
+                section={section}
+                ref={mockRef}
+                encounterUuids={[]}
+                visitUuids={[]}
+              />
+            </Suspense>
+          </ClinicalAppProvider>
+        </QueryClientProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('allergies-widget')).toBeInTheDocument();
+      });
+
+      // No divider — the only non-empty control has no non-empty control after it
+      const dividers = container.querySelectorAll('.divider');
+      expect(dividers).toHaveLength(0);
     });
   });
 

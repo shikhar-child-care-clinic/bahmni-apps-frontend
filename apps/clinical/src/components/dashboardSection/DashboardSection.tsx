@@ -27,12 +27,18 @@ const DashboardSection: React.FC<DashboardSectionProps> = ({
   visitUuids,
 }) => {
   const { t } = useTranslation();
+  const [emptyControls, setEmptyControls] = useState<Set<number>>(new Set());
 
-  const renderControl = (
-    control: ControlConfig,
-    index: number,
-    totalControls: number,
-  ) => {
+  const handleControlEmpty = useCallback((index: number) => {
+    setEmptyControls((prev) => {
+      if (prev.has(index)) return prev;
+      const next = new Set(prev);
+      next.add(index);
+      return next;
+    });
+  }, []);
+
+  const renderControl = (control: ControlConfig, index: number) => {
     const WidgetComponent = getWidget(control.type);
 
     if (!WidgetComponent) {
@@ -43,7 +49,13 @@ const DashboardSection: React.FC<DashboardSectionProps> = ({
       );
     }
 
-    const showDivider = index < totalControls - 1;
+    if (emptyControls.has(index)) return null;
+
+    const hasNonEmptyAfter = section.controls
+      .slice(index + 1)
+      .some((_, i) => !emptyControls.has(index + 1 + i));
+    const showDivider = hasNonEmptyAfter;
+
     return (
       <React.Fragment key={`${control.type}-${index}`}>
         <Suspense
@@ -58,12 +70,17 @@ const DashboardSection: React.FC<DashboardSectionProps> = ({
             episodeOfCareUuids={episodeOfCareUuids}
             encounterUuids={encounterUuids}
             visitUuids={visitUuids}
+            onEmpty={() => handleControlEmpty(index)}
           />
         </Suspense>
         {showDivider && <div className={styles.divider} />}
       </React.Fragment>
     );
   };
+
+  const allControlsEmpty =
+    (section.controls?.length ?? 0) > 0 &&
+    emptyControls.size === (section.controls?.length ?? 0);
 
   const renderSectionContent = (section: DashboardSectionConfig) => {
     if (!section.controls || section.controls.length === 0) {
@@ -74,12 +91,12 @@ const DashboardSection: React.FC<DashboardSectionProps> = ({
 
     return (
       <>
-        {section.controls.map((control, index) =>
-          renderControl(control, index, section.controls.length),
-        )}
+        {section.controls.map((control, index) => renderControl(control, index))}
       </>
     );
   };
+
+  if (allControlsEmpty) return null;
 
   return (
     <div

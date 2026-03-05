@@ -15,6 +15,32 @@ jest.mock('@bahmni/services', () => ({
   fetchAndFormatAllergenConcepts: jest.fn(),
   fetchReactionConcepts: jest.fn(),
   getFormattedAllergies: jest.fn(() => Promise.resolve([])),
+  hasPrivilege: jest.fn((privileges: string[] | null, privilege: string) => {
+    if (!privileges) return false;
+    return privileges.includes(privilege);
+  }),
+  useTranslation: jest.fn(() => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        ALLERGIES_FORM_TITLE: 'Allergies',
+        ALLERGIES_SEARCH_PLACEHOLDER: 'Search for allergies',
+        ALLERGIES_SEARCH_ARIA_LABEL: 'Search for allergies',
+        ALLERGIES_ADDED_ALLERGIES: 'Added Allergies',
+        ALLERGY_ALREADY_ADDED: 'Allergen is already added',
+        LOADING_CONCEPTS: 'Loading concepts...',
+        NO_MATCHING_ALLERGEN_FOUND:
+          'No matching allergen recorded for this term',
+        ERROR_FETCHING_CONCEPTS:
+          'An unexpected error occurred. Please try again later.',
+        ERROR_DEFAULT_TITLE: 'Error',
+        ALLERGY_CATEGORY_DRUG: 'Drug',
+        ALLERGY_CATEGORY_FOOD: 'Food',
+        ALLERGY_CATEGORY_ENVIRONMENT: 'Environment',
+        ALLERGY_CATEGORY_OTHER: 'Other',
+      };
+      return translations[key] || key;
+    },
+  })),
 }));
 
 jest.mock('@bahmni/widgets', () => ({
@@ -23,6 +49,9 @@ jest.mock('@bahmni/widgets', () => ({
     addNotification: jest.fn(),
   })),
   usePatientUUID: jest.fn(() => 'test-patient-uuid'),
+  useUserPrivilege: jest.fn(() => ({
+    userPrivileges: ['Add Allergies'],
+  })),
 }));
 
 // Mock @tanstack/react-query

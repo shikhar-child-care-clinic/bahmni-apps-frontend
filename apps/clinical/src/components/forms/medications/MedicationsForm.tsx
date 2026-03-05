@@ -13,8 +13,9 @@ import {
   getPatientMedicationBundle,
   useSubscribeConsultationSaved,
   ConsultationSavedEventPayload,
+  hasPrivilege,
 } from '@bahmni/services';
-import { useNotification, usePatientUUID } from '@bahmni/widgets';
+import { useNotification, usePatientUUID, useUserPrivilege } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
 import { Bundle } from 'fhir/r4';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -35,6 +36,7 @@ import {
 } from '../../../utils/fhir/medicationUtilities';
 import { MEDICATIONS_CONFIG_URL } from './constants';
 import medicationConfigSchema from './schema.json';
+import { CONSULTATION_PAD_PRIVILEGES } from '../../../constants/consultationPadPrivileges';
 import SelectedMedicationItem from './SelectedMedicationItem';
 import styles from './styles/MedicationsForm.module.scss';
 
@@ -49,6 +51,7 @@ const MedicationsForm: React.FC = React.memo(() => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
   const { addNotification } = useNotification();
+  const { userPrivileges } = useUserPrivilege();
   const [searchMedicationTerm, setSearchMedicationTerm] = useState('');
   const [showDuplicateNotification, setShowDuplicateNotification] =
     useState(false);

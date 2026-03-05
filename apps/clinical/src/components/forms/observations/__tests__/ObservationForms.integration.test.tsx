@@ -41,6 +41,30 @@ jest.mock('../../../../hooks/usePinnedObservationForms', () => ({
   usePinnedObservationForms: () => mockUsePinnedObservationForms(),
 }));
 
+// Mock @bahmni/services
+jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
+  hasPrivilege: jest.fn((privileges: string[] | null, privilege: string) => {
+    if (!privileges) return false;
+    return privileges.includes(privilege);
+  }),
+}));
+
+// Mock @bahmni/widgets
+jest.mock('@bahmni/widgets', () => ({
+  ...jest.requireActual('@bahmni/widgets'),
+  useUserPrivilege: jest.fn(() => ({
+    userPrivileges: ['Add Observations'],
+  })),
+}));
+
+// Mock store
+jest.mock('../../../../stores/observationFormsStore', () => ({
+  useObservationFormsStore: jest.fn(() => ({
+    getFormData: jest.fn(),
+  })),
+}));
+
 describe('ObservationForms Integration Tests', () => {
   const mockAvailableForms: ObservationForm[] = [
     {

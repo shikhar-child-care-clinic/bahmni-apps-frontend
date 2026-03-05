@@ -5,7 +5,8 @@ import {
   FormCardContainer,
   SkeletonText,
 } from '@bahmni/design-system';
-import { ObservationForm } from '@bahmni/services';
+import { ObservationForm, hasPrivilege } from '@bahmni/services';
+import { useUserPrivilege } from '@bahmni/widgets';
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -15,6 +16,7 @@ import {
   VALIDATION_STATE_INVALID,
   VALIDATION_STATE_SCRIPT_ERROR,
 } from '../../../constants/forms';
+import { CONSULTATION_PAD_PRIVILEGES } from '../../../constants/consultationPadPrivileges';
 import { useObservationFormsStore } from '../../../stores/observationFormsStore';
 import styles from './styles/ObservationForms.module.scss';
 
@@ -59,6 +61,7 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
     observationFormsError,
   }) => {
     const { t } = useTranslation();
+    const { userPrivileges } = useUserPrivilege();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedItem, setSelectedItem] = useState<{
       id: string;
@@ -66,6 +69,11 @@ const ObservationForms: React.FC<ObservationFormsProps> = React.memo(
       disabled?: boolean;
     } | null>(null);
     const { getFormData } = useObservationFormsStore();
+
+    // Privilege check - hide form if user lacks 'Add Observations' privilege
+    if (!hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.OBSERVATIONS)) {
+      return null;
+    }
 
     // Client-side filtering based on search term
     // Uses OR logic: searching "Vitals History" matches forms containing either "vitals" OR "history"

@@ -12,8 +12,9 @@ import {
   ORDER_TYPE_QUERY_KEY,
   useSubscribeConsultationSaved,
   ConsultationSavedEventPayload,
+  hasPrivilege,
 } from '@bahmni/services';
-import { usePatientUUID, useActivePractitioner } from '@bahmni/widgets';
+import { usePatientUUID, useActivePractitioner, useUserPrivilege } from '@bahmni/widgets';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, {
   useMemo,
@@ -27,6 +28,7 @@ import { useEncounterSession } from '../../../hooks/useEncounterSession';
 import useInvestigationsSearch from '../../../hooks/useInvestigationsSearch';
 import type { FlattenedInvestigations } from '../../../models/investigations';
 import useServiceRequestStore from '../../../stores/serviceRequestStore';
+import { CONSULTATION_PAD_PRIVILEGES } from '../../../constants/consultationPadPrivileges';
 import SelectedInvestigationItem from './SelectedInvestigationItem';
 import styles from './styles/InvestigationsForm.module.scss';
 
@@ -35,8 +37,14 @@ const InvestigationsForm: React.FC = React.memo(() => {
   const patientUUID = usePatientUUID();
   const queryClient = useQueryClient();
   const { practitioner } = useActivePractitioner();
+  const { userPrivileges } = useUserPrivilege();
   const { activeEncounter } = useEncounterSession({ practitioner });
   const { episodeOfCare, visit, encounter } = useClinicalAppData();
+
+  // Privilege check - hide form if user lacks 'Add Investigations' privilege
+  if (!hasPrivilege(userPrivileges, CONSULTATION_PAD_PRIVILEGES.INVESTIGATIONS)) {
+    return null;
+  }
 
   const currentEncounterId = activeEncounter?.id;
   const currentPractitionerUuid = practitioner?.uuid;

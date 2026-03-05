@@ -251,6 +251,7 @@ export {
 } from './constants/app';
 export {
   getCurrentUserPrivileges,
+  getCurrentUserPrivilegesFromSession,
   hasPrivilege,
   type UserPrivilege,
 } from './privilegeService';
