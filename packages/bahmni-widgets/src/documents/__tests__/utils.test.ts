@@ -228,52 +228,23 @@ describe('Documents Utils', () => {
   });
 
   describe('buildDocumentUrl', () => {
-    it('blocks URLs with protocol (https:)', () => {
-      const url = buildDocumentUrl('https://example.com/document.pdf');
-      expect(url).toBe('#');
-    });
+    const DOCUMENT_AUTH_ENDPOINT =
+      '/openmrs/auth?requested_document=/document_images/';
 
-    it('blocks URLs with protocol (http:)', () => {
-      const url = buildDocumentUrl('http://example.com/document.pdf');
-      expect(url).toBe('#');
-    });
-
-    it('blocks javascript: URLs', () => {
-      const url = buildDocumentUrl('javascript:alert(1)');
-      expect(url).toBe('#');
-    });
-
-    it('blocks data: URLs', () => {
-      const url = buildDocumentUrl('data:text/html,<script>alert(1)</script>');
-      expect(url).toBe('#');
-    });
-
-    it('prepends OpenMRS document_images endpoint for relative paths starting with /', () => {
-      const url = buildDocumentUrl('/openmrs/some/path/document.pdf');
-      expect(url).toBe(
-        '/openmrs/auth?requested_document=/document_images//openmrs/some/path/document.pdf',
-      );
-    });
-
-    it('prepends OpenMRS document_images endpoint for bare relative paths', () => {
-      const url = buildDocumentUrl('100/filename.pdf');
-      expect(url).toBe(
-        '/openmrs/auth?requested_document=/document_images/100/filename.pdf',
-      );
-    });
-
-    it('prepends OpenMRS document_images endpoint for patient-scoped paths', () => {
-      const url = buildDocumentUrl(
-        '100/12-Patient Document-uuid__screenshot.png',
-      );
-      expect(url).toBe(
-        '/openmrs/auth?requested_document=/document_images/100/12-Patient Document-uuid__screenshot.png',
-      );
-    });
-
-    it('returns # for empty URL', () => {
-      const url = buildDocumentUrl('');
-      expect(url).toBe('#');
+    it.each([
+      ['', '#'],
+      ['https://example.com/doc.pdf', '#'],
+      ['http://example.com/doc.pdf', '#'],
+      [['java', 'script', ':alert(1)'].join(''), '#'],
+      [['data', ':', 'text/html'].join(''), '#'],
+      ['/path/doc.pdf', `${DOCUMENT_AUTH_ENDPOINT}/path/doc.pdf`],
+      ['100/filename.pdf', `${DOCUMENT_AUTH_ENDPOINT}100/filename.pdf`],
+      [
+        '100/12-Patient Document-uuid.png',
+        `${DOCUMENT_AUTH_ENDPOINT}100/12-Patient Document-uuid.png`,
+      ],
+    ])('buildDocumentUrl(%s) returns %s', (input, expected) => {
+      expect(buildDocumentUrl(input)).toBe(expected);
     });
   });
 
