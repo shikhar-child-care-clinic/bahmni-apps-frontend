@@ -53,22 +53,7 @@ export function getFileTypeCategory(
 }
 
 export function buildDocumentUrl(documentUrl: string): string {
-  if (!documentUrl) {
-    return '#';
-  }
-
-  const lowerUrl = documentUrl.toLowerCase();
-  if (lowerUrl.startsWith('javascript:') || lowerUrl.startsWith('data:')) {
-    return '#';
-  }
-
-  if (documentUrl.startsWith('http://') || documentUrl.startsWith('https://')) {
-    return documentUrl;
-  }
-
-  if (documentUrl.startsWith('/')) {
-    return documentUrl;
-  }
+  if (!documentUrl || documentUrl.includes(':')) return '#';
 
   return `/openmrs/auth?requested_document=/document_images/${documentUrl}`;
 }

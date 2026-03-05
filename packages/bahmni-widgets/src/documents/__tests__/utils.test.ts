@@ -228,19 +228,31 @@ describe('Documents Utils', () => {
   });
 
   describe('buildDocumentUrl', () => {
-    it('returns absolute HTTPS URL as-is', () => {
+    it('blocks URLs with protocol (https:)', () => {
       const url = buildDocumentUrl('https://example.com/document.pdf');
-      expect(url).toBe('https://example.com/document.pdf');
+      expect(url).toBe('#');
     });
 
-    it('returns absolute HTTP URL as-is', () => {
+    it('blocks URLs with protocol (http:)', () => {
       const url = buildDocumentUrl('http://example.com/document.pdf');
-      expect(url).toBe('http://example.com/document.pdf');
+      expect(url).toBe('#');
     });
 
-    it('returns relative path starting with / as-is', () => {
+    it('blocks javascript: URLs', () => {
+      const url = buildDocumentUrl('javascript:alert(1)');
+      expect(url).toBe('#');
+    });
+
+    it('blocks data: URLs', () => {
+      const url = buildDocumentUrl('data:text/html,<script>alert(1)</script>');
+      expect(url).toBe('#');
+    });
+
+    it('prepends OpenMRS document_images endpoint for relative paths starting with /', () => {
       const url = buildDocumentUrl('/openmrs/some/path/document.pdf');
-      expect(url).toBe('/openmrs/some/path/document.pdf');
+      expect(url).toBe(
+        '/openmrs/auth?requested_document=/document_images//openmrs/some/path/document.pdf',
+      );
     });
 
     it('prepends OpenMRS document_images endpoint for bare relative paths', () => {

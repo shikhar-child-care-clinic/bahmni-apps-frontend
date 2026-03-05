@@ -193,13 +193,3 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
 };
 
 export default DocumentsTable;
-
-// i18n keys used:
-// DOCUMENTS_TABLE_HEADING
-// DOCUMENTS_NO_RECORDS
-// DOCUMENTS_DOCUMENT_IDENTIFIER
-// DOCUMENTS_TYPE
-// DOCUMENTS_UPLOADED_ON
-// DOCUMENTS_UPLOADED_BY
-// DOCUMENTS_NOT_AVAILABLE
-// ERROR_DEFAULT_TITLE
