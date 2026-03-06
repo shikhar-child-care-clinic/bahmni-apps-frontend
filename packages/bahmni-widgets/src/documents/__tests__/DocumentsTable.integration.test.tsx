@@ -174,7 +174,7 @@ describe('DocumentsTable Integration', () => {
 
   it('opens modal with PDF iframe when icon button is clicked', async () => {
     const user = userEvent.setup();
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce(prescriptionDoc);
+    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([prescriptionDoc]);
 
     renderComponent();
 
