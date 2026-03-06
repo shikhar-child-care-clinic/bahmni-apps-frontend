@@ -442,6 +442,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
                 renderCell={renderCell}
                 className={styles.radiologyInvestigationTableBody}
                 dataTestId={`radiology-investigations-table-${formattedDate}`}
+                pageSize={10}
               />
             </AccordionItem>
           );

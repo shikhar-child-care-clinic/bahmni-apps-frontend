@@ -12,6 +12,7 @@ import {
   getDiagnosticReports,
   useSubscribeConsultationSaved,
 } from '@bahmni/services';
+import { Pagination } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
 import type { DiagnosticReport } from 'fhir/r4';
 import React, { useMemo, useEffect, useState } from 'react';
@@ -65,6 +66,11 @@ const LabInvestigation: React.FC<WidgetProps> = ({
   );
   const [currentOpenedAccordionIndex, setCurrentOpenedAccordionIndex] =
     useState<number>(0);
+  const [labPagination, setLabPagination] = useState<Record<string, number>>(
+    {},
+  );
+
+  const LAB_PAGE_SIZE = 10;
 
   const emptyEncounterFilter = shouldEnableEncounterFilter(
     episodeOfCareUuids,
@@ -217,36 +223,58 @@ const LabInvestigation: React.FC<WidgetProps> = ({
 
   return (
     <Accordion align="start">
-      {updatedLabInvestigations.map((group: LabInvestigationsByDate, index) => (
-        <AccordionItem
-          key={group.date}
-          className={styles.accordionItem}
-          open={openAccordionIndices.has(index)}
-          onHeadingClick={() => {
-            setOpenAccordionIndices((prev) => {
-              const newSet = new Set(prev);
-              if (newSet.has(index)) {
-                newSet.delete(index);
-              } else {
-                newSet.add(index);
-                setCurrentOpenedAccordionIndex(index);
-              }
-              return newSet;
-            });
-          }}
-          title={group.date}
-        >
-          {group.tests?.map((test) => (
-            <LabInvestigationItem
-              key={`${group.date}-${test.testName}-${test.id || test.testName}`}
-              test={test}
-              isOpen={openAccordionIndices.has(index)}
-              hasProcessedReport={!!test.reportId}
-              reportId={test.reportId}
-            />
-          ))}
-        </AccordionItem>
-      ))}
+      {updatedLabInvestigations.map((group: LabInvestigationsByDate, index) => {
+        const currentPage = labPagination[group.date] ?? 1;
+        const totalTests = group.tests?.length ?? 0;
+        const paginatedTests =
+          group.tests?.slice(
+            (currentPage - 1) * LAB_PAGE_SIZE,
+            currentPage * LAB_PAGE_SIZE,
+          ) ?? [];
+
+        return (
+          <AccordionItem
+            key={group.date}
+            className={styles.accordionItem}
+            open={openAccordionIndices.has(index)}
+            onHeadingClick={() => {
+              setOpenAccordionIndices((prev) => {
+                const newSet = new Set(prev);
+                if (newSet.has(index)) {
+                  newSet.delete(index);
+                } else {
+                  newSet.add(index);
+                  setCurrentOpenedAccordionIndex(index);
+                }
+                return newSet;
+              });
+            }}
+            title={group.date}
+          >
+            {paginatedTests.map((test) => (
+              <LabInvestigationItem
+                key={`${group.date}-${test.testName}-${test.id || test.testName}`}
+                test={test}
+                isOpen={openAccordionIndices.has(index)}
+                hasProcessedReport={!!test.reportId}
+                reportId={test.reportId}
+              />
+            ))}
+            {totalTests > LAB_PAGE_SIZE && (
+              <Pagination
+                page={currentPage}
+                pageSize={LAB_PAGE_SIZE}
+                pageSizes={[LAB_PAGE_SIZE]}
+                totalItems={totalTests}
+                onChange={({ page }: { page: number }) =>
+                  setLabPagination((prev) => ({ ...prev, [group.date]: page }))
+                }
+                data-testid={`lab-pagination-${group.date}`}
+              />
+            )}
+          </AccordionItem>
+        );
+      })}
     </Accordion>
   );
 };

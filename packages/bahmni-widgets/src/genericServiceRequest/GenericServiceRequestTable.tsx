@@ -277,6 +277,7 @@ const GenericServiceRequestTable: React.FC<WidgetProps> = ({
                   renderCell={renderCell}
                   className={styles.serviceRequestTableBody}
                   dataTestId={`generic-service-request-table-${formattedDate}`}
+                  pageSize={10}
                 />
               </AccordionItem>
             );

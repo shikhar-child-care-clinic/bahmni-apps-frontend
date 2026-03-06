@@ -70,7 +70,7 @@ describe('labInvestigationService', () => {
       );
 
       expect(get).toHaveBeenCalledWith(
-        '/openmrs/ws/fhir2/R4/ServiceRequest?_sort=-_lastUpdated&category=category-uuid-123&patient=58493859-63f7-48b6-bd0b-698d5a119a21',
+        '/openmrs/ws/fhir2/R4/ServiceRequest?_count=100&_sort=-_lastUpdated&category=category-uuid-123&patient=58493859-63f7-48b6-bd0b-698d5a119a21',
       );
       expect(result).toEqual(mockBundle);
       expect(result.entry).toHaveLength(2);
@@ -103,7 +103,7 @@ describe('labInvestigationService', () => {
       );
 
       expect(get).toHaveBeenCalledWith(
-        '/openmrs/ws/fhir2/R4/ServiceRequest?_sort=-_lastUpdated&category=category-uuid-123&patient=58493859-63f7-48b6-bd0b-698d5a119a21&encounter=encounter-1,encounter-2',
+        '/openmrs/ws/fhir2/R4/ServiceRequest?_count=100&_sort=-_lastUpdated&category=category-uuid-123&patient=58493859-63f7-48b6-bd0b-698d5a119a21&encounter=encounter-1,encounter-2',
       );
     });
 
@@ -121,7 +121,7 @@ describe('labInvestigationService', () => {
       );
 
       expect(get).toHaveBeenCalledWith(
-        '/openmrs/ws/fhir2/R4/ServiceRequest?_sort=-_lastUpdated&category=category-uuid-123&patient=58493859-63f7-48b6-bd0b-698d5a119a21&numberOfVisits=5',
+        '/openmrs/ws/fhir2/R4/ServiceRequest?_count=100&_sort=-_lastUpdated&category=category-uuid-123&patient=58493859-63f7-48b6-bd0b-698d5a119a21&numberOfVisits=5',
       );
     });
 

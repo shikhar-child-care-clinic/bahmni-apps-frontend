@@ -290,6 +290,78 @@ describe('SortableDataTable', () => {
     expect(headers[1].querySelector('button')).toBeNull();
   });
 
+  describe('Pagination', () => {
+    it('does not render pagination when pageSize is not provided', () => {
+      render(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={mockMedicationRows}
+          ariaLabel="No Pagination"
+          renderCell={renderCell}
+        />,
+      );
+
+      expect(
+        screen.queryByTestId('sortable-data-table-pagination'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('does not render pagination when rows fit within pageSize', () => {
+      render(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={mockMedicationRows}
+          ariaLabel="Pagination Not Needed"
+          renderCell={renderCell}
+          pageSize={10}
+        />,
+      );
+
+      expect(
+        screen.queryByTestId('sortable-data-table-pagination'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('renders pagination when rows exceed pageSize', () => {
+      render(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={mockMedicationRows}
+          ariaLabel="With Pagination"
+          renderCell={renderCell}
+          pageSize={3}
+        />,
+      );
+
+      expect(
+        screen.getByTestId('sortable-data-table-pagination'),
+      ).toBeInTheDocument();
+    });
+
+    it('shows only first page rows when pageSize is set', () => {
+      render(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={mockMedicationRows}
+          ariaLabel="Paginated Table"
+          renderCell={renderCell}
+          pageSize={3}
+        />,
+      );
+
+      // First 3 rows should be visible
+      expect(
+        screen.getByText('Acetylsalicylic acid 150 mg'),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Paroxetine 12.5 mg')).toBeInTheDocument();
+      expect(
+        screen.getByText('Chlorpheniramine maleate 4 mg'),
+      ).toBeInTheDocument();
+      // 4th row should not be visible
+      expect(screen.queryByText('Paracetamol 650 mg')).not.toBeInTheDocument();
+    });
+  });
+
   describe('Snapshots', () => {
     it('matches snapshot with full data', () => {
       const { container } = render(
