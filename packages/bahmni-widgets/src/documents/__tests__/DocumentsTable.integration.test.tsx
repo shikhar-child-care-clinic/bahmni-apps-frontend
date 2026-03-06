@@ -1,5 +1,5 @@
 import {
-  getDocumentReferences,
+  getFormattedDocumentReferences,
   useSubscribeConsultationSaved,
 } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -18,7 +18,7 @@ jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   useTranslation: () => ({ t: (key: string) => key }),
   formatDate: () => ({ formattedResult: '2024-01-15 10:30 AM' }),
-  getDocumentReferences: jest.fn(),
+  getFormattedDocumentReferences: jest.fn(),
   useSubscribeConsultationSaved: jest.fn(),
 }));
 
@@ -35,74 +35,40 @@ jest.mock('@carbon/icons-react', () => ({
   Document: DocIcon,
 }));
 
-const mockedGetDocumentReferences =
-  getDocumentReferences as jest.MockedFunction<typeof getDocumentReferences>;
+const mockedGetFormattedDocumentReferences =
+  getFormattedDocumentReferences as jest.MockedFunction<
+    typeof getFormattedDocumentReferences
+  >;
 const mockAddNotification = jest.fn();
 
-const makeFhirBundle = (docs: any[]) => ({
-  resourceType: 'Bundle',
-  type: 'searchset',
-  entry: docs.map((doc) => ({ resource: doc })),
-});
-
-const fhirPrescriptionDoc = {
-  resourceType: 'DocumentReference',
+const prescriptionDoc = {
   id: 'doc-1',
-  masterIdentifier: { value: 'Prescription_2024' },
-  status: 'current',
-  type: {
-    coding: [{ display: 'Prescription' }],
-  },
-  date: '2024-01-15T10:30:00Z',
-  author: [{ display: 'Dr. Smith' }],
-  content: [
-    {
-      attachment: {
-        contentType: 'application/pdf',
-        url: '100/doc-uuid__prescription.pdf',
-      },
-    },
-  ],
+  documentIdentifier: 'Prescription_2024',
+  documentType: 'Prescription',
+  uploadedOn: '2024-01-15T10:30:00Z',
+  uploadedBy: 'Dr. Smith',
+  contentType: 'application/pdf',
+  documentUrl: '100/doc-uuid__prescription.pdf',
 };
 
-const fhirXrayDoc = {
-  resourceType: 'DocumentReference',
+const xrayDoc = {
   id: 'doc-2',
-  masterIdentifier: { value: 'XRay_Report_2024' },
-  status: 'current',
-  type: {
-    coding: [{ display: 'Radiology Report' }],
-  },
-  date: '2024-01-10T14:45:00Z',
-  author: [{ display: 'Dr. Williams' }],
-  content: [
-    {
-      attachment: {
-        contentType: 'image/jpeg',
-        url: '100/doc-uuid__xray.jpg',
-      },
-    },
-  ],
+  documentIdentifier: 'XRay_Report_2024',
+  documentType: 'Radiology Report',
+  uploadedOn: '2024-01-10T14:45:00Z',
+  uploadedBy: 'Dr. Williams',
+  contentType: 'image/jpeg',
+  documentUrl: '100/doc-uuid__xray.jpg',
 };
 
-const fhirLabDoc = {
-  resourceType: 'DocumentReference',
+const labDoc = {
   id: 'doc-3',
-  masterIdentifier: { value: 'Lab_Result_2024' },
-  status: 'current',
-  type: {
-    coding: [{ display: 'Lab Result' }],
-  },
-  date: '2024-01-08T09:00:00Z',
-  author: [{ display: 'Dr. Martinez' }],
-  content: [
-    {
-      attachment: {
-        contentType: 'application/pdf',
-        url: '100/doc-uuid__lab.pdf',
-      },
-    },
-  ],
+  documentIdentifier: 'Lab_Result_2024',
+  documentType: 'Lab Result',
+  uploadedOn: '2024-01-08T09:00:00Z',
+  uploadedBy: 'Dr. Martinez',
+  contentType: 'application/pdf',
+  documentUrl: '100/doc-uuid__lab.pdf',
 };
 
 describe('DocumentsTable Integration', () => {
@@ -139,9 +105,9 @@ describe('DocumentsTable Integration', () => {
   });
 
   it('displays patient documents with all clinical information after fetch', async () => {
-    mockedGetDocumentReferences.mockResolvedValueOnce(
-      makeFhirBundle([fhirPrescriptionDoc]) as any,
-    );
+    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
+      prescriptionDoc,
+    ]);
 
     renderComponent();
 
@@ -157,9 +123,7 @@ describe('DocumentsTable Integration', () => {
   });
 
   it('shows empty state when patient has no recorded documents', async () => {
-    mockedGetDocumentReferences.mockResolvedValueOnce(
-      makeFhirBundle([]) as any,
-    );
+    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([]);
 
     renderComponent();
 
@@ -170,7 +134,9 @@ describe('DocumentsTable Integration', () => {
 
   it('shows error notification when document data cannot be fetched', async () => {
     const errorMessage = 'Failed to fetch documents';
-    mockedGetDocumentReferences.mockRejectedValueOnce(new Error(errorMessage));
+    mockedGetFormattedDocumentReferences.mockRejectedValueOnce(
+      new Error(errorMessage),
+    );
 
     renderComponent();
 
@@ -186,9 +152,11 @@ describe('DocumentsTable Integration', () => {
   });
 
   it('displays multiple documents with correct icons', async () => {
-    mockedGetDocumentReferences.mockResolvedValueOnce(
-      makeFhirBundle([fhirPrescriptionDoc, fhirXrayDoc, fhirLabDoc]) as any,
-    );
+    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
+      prescriptionDoc,
+      xrayDoc,
+      labDoc,
+    ]);
 
     renderComponent();
 
@@ -206,9 +174,7 @@ describe('DocumentsTable Integration', () => {
 
   it('opens modal with PDF iframe when icon button is clicked', async () => {
     const user = userEvent.setup();
-    mockedGetDocumentReferences.mockResolvedValueOnce(
-      makeFhirBundle([fhirPrescriptionDoc]) as any,
-    );
+    mockedGetFormattedDocumentReferences.mockResolvedValueOnce(prescriptionDoc);
 
     renderComponent();
 
@@ -233,9 +199,7 @@ describe('DocumentsTable Integration', () => {
 
   it('opens modal with img element when image icon button is clicked', async () => {
     const user = userEvent.setup();
-    mockedGetDocumentReferences.mockResolvedValueOnce(
-      makeFhirBundle([fhirXrayDoc]) as any,
-    );
+    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([xrayDoc]);
 
     renderComponent();
 
@@ -254,9 +218,9 @@ describe('DocumentsTable Integration', () => {
 
   it('closes modal after clicking close button', async () => {
     const user = userEvent.setup();
-    mockedGetDocumentReferences.mockResolvedValueOnce(
-      makeFhirBundle([fhirPrescriptionDoc]) as any,
-    );
+    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
+      prescriptionDoc,
+    ]);
 
     renderComponent();
 
@@ -277,15 +241,15 @@ describe('DocumentsTable Integration', () => {
   });
 
   it('passes encounterUuids filter to service when provided', async () => {
-    mockedGetDocumentReferences.mockResolvedValueOnce(
-      makeFhirBundle([fhirPrescriptionDoc]) as any,
-    );
+    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
+      prescriptionDoc,
+    ]);
 
     const encounterUuids = ['encounter-uuid-1', 'encounter-uuid-2'];
     renderComponent({ encounterUuids });
 
     await waitFor(() => {
-      expect(mockedGetDocumentReferences).toHaveBeenCalledWith(
+      expect(mockedGetFormattedDocumentReferences).toHaveBeenCalledWith(
         'test-patient-uuid',
         encounterUuids,
       );
@@ -293,14 +257,14 @@ describe('DocumentsTable Integration', () => {
   });
 
   it('calls service without encounter filter when encounterUuids is not provided', async () => {
-    mockedGetDocumentReferences.mockResolvedValueOnce(
-      makeFhirBundle([fhirPrescriptionDoc]) as any,
-    );
+    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
+      prescriptionDoc,
+    ]);
 
     renderComponent();
 
     await waitFor(() => {
-      expect(mockedGetDocumentReferences).toHaveBeenCalledWith(
+      expect(mockedGetFormattedDocumentReferences).toHaveBeenCalledWith(
         'test-patient-uuid',
         undefined,
       );
@@ -310,9 +274,10 @@ describe('DocumentsTable Integration', () => {
   it('renders documents in the order returned by the service (latest first)', async () => {
     // API returns sorted by _sort=-date (latest first):
     // fhirPrescriptionDoc: Jan 15, fhirXrayDoc: Jan 10
-    mockedGetDocumentReferences.mockResolvedValueOnce(
-      makeFhirBundle([fhirPrescriptionDoc, fhirXrayDoc]) as any,
-    );
+    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
+      prescriptionDoc,
+      xrayDoc,
+    ]);
 
     renderComponent();
 
@@ -334,9 +299,9 @@ describe('DocumentsTable Integration', () => {
       },
     );
 
-    mockedGetDocumentReferences.mockResolvedValueOnce(
-      makeFhirBundle([fhirPrescriptionDoc]) as any,
-    );
+    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
+      prescriptionDoc,
+    ]);
 
     renderComponent();
 
@@ -350,20 +315,18 @@ describe('DocumentsTable Integration', () => {
 
     await act(async () => {});
 
-    expect(mockedGetDocumentReferences).toHaveBeenCalledTimes(1);
+    expect(mockedGetFormattedDocumentReferences).toHaveBeenCalledTimes(1);
   });
 
   it('does not call the API when patientUUID is null', async () => {
     (usePatientUUID as jest.Mock).mockReturnValue(null);
-    mockedGetDocumentReferences.mockResolvedValueOnce(
-      makeFhirBundle([]) as any,
-    );
+    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([]);
 
     renderComponent();
 
     // Wait a render cycle to ensure no query fires
     await act(async () => {});
 
-    expect(mockedGetDocumentReferences).not.toHaveBeenCalled();
+    expect(mockedGetFormattedDocumentReferences).not.toHaveBeenCalled();
   });
 });

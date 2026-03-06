@@ -318,5 +318,7 @@ export {
 
 export {
   getDocumentReferences,
+  getFormattedDocumentReferences,
+  type DocumentViewModel,
   type DocumentReference,
 } from './documentReferenceService';

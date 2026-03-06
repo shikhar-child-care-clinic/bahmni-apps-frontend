@@ -3,7 +3,8 @@ import {
   useTranslation,
   formatDate,
   DATE_TIME_FORMAT,
-  getDocumentReferences,
+  getFormattedDocumentReferences,
+  DocumentViewModel,
 } from '@bahmni/services';
 import { DocumentPdf, Image, Document } from '@carbon/icons-react';
 import { useQuery } from '@tanstack/react-query';
@@ -12,10 +13,8 @@ import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
 import { DOCUMENT_ICON_SIZE } from './constants';
-import { DocumentViewModel } from './models';
 import styles from './styles/DocumentsTable.module.scss';
 import {
-  mapDocumentReferencesToViewModels,
   getFileTypeCategory,
   buildDocumentUrl,
   createDocumentHeaders,
@@ -27,14 +26,6 @@ const DEFAULT_DOCUMENT_FIELDS = [
   'uploadedOn',
   'uploadedBy',
 ];
-
-const fetchDocuments = async (
-  patientUUID: string,
-  encounterUuids?: string[],
-): Promise<DocumentViewModel[]> => {
-  const bundle = await getDocumentReferences(patientUUID, encounterUuids);
-  return mapDocumentReferencesToViewModels(bundle.entry ?? []);
-};
 
 const renderFileIcon = (contentType?: string) => {
   const fileType = getFileTypeCategory(contentType);
@@ -75,7 +66,7 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['documents', patientUUID!, encounterUuids],
     enabled: !!patientUUID,
-    queryFn: () => fetchDocuments(patientUUID!, encounterUuids),
+    queryFn: () => getFormattedDocumentReferences(patientUUID!, encounterUuids),
   });
 
   useEffect(() => {

@@ -416,17 +416,6 @@ describe('DocumentsTable', () => {
       expect(iframe.tagName).toBe('IFRAME');
     });
 
-    it('closes modal when close button is clicked', async () => {
-      const user = userEvent.setup();
-      (useQuery as jest.Mock).mockReturnValue(mockQueryData());
-      renderComponent({ config });
-
-      await user.click(
-        screen.getByRole('button', { name: 'View Test Document' }),
-      );
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
-    });
-
     it('modal is not rendered initially', () => {
       (useQuery as jest.Mock).mockReturnValue({
         data: [mockPdfDocument],
