@@ -8,7 +8,6 @@ import {
 } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { Bundle, ServiceRequest, DiagnosticReport } from 'fhir/r4';
 
 import { usePatientUUID } from '../../hooks/usePatientUUID';
@@ -217,12 +216,11 @@ describe('LabInvestigation', () => {
     expect(screen.getByTestId('lab-skeleton')).toBeInTheDocument();
   });
 
-  it('renders lab tests grouped by date', async () => {
+  it('renders all lab tests as a flat list', async () => {
     render(renderLabInvestigations());
 
     await waitFor(() => {
-      expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
-      expect(screen.getByText(/April 9, 2025/i)).toBeInTheDocument();
+      expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
     });
 
     const labItems = screen.getAllByTestId('lab-investigation-item');
@@ -253,7 +251,7 @@ describe('LabInvestigation', () => {
     });
   });
 
-  it('renders urgent tests before non-urgent tests within each date group', async () => {
+  it('renders tests sorted by date descending with urgent tests first for same date', async () => {
     render(renderLabInvestigations());
 
     await waitFor(() => {
@@ -264,11 +262,13 @@ describe('LabInvestigation', () => {
     const testNames = screen.getAllByTestId('test-name');
     const testPriorities = screen.getAllByTestId('test-priority');
 
+    // test-1 (May 8, newest) comes first
     expect(testNames[0]).toHaveTextContent('Complete Blood Count');
     expect(testPriorities[0]).toHaveTextContent(
       LabInvestigationPriority.routine,
     );
 
+    // test-2 (April 9, stat=Urgent) comes before test-3 (same date, routine)
     expect(testNames[1]).toHaveTextContent('Lipid Panel');
     expect(testPriorities[1]).toHaveTextContent(LabInvestigationPriority.stat);
 
@@ -276,24 +276,6 @@ describe('LabInvestigation', () => {
     expect(testPriorities[2]).toHaveTextContent(
       LabInvestigationPriority.routine,
     );
-  });
-
-  it('opens first accordion item by default', async () => {
-    render(renderLabInvestigations());
-
-    await waitFor(() => {
-      expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
-    });
-
-    const firstAccordionButton = screen.getByRole('button', {
-      name: /May 8, 2025/i,
-    });
-    const secondAccordionButton = screen.getByRole('button', {
-      name: /April 9, 2025/i,
-    });
-
-    expect(firstAccordionButton).toHaveAttribute('aria-expanded', 'true');
-    expect(secondAccordionButton).toHaveAttribute('aria-expanded', 'false');
   });
 
   describe('emptyEncounterFilter condition', () => {
@@ -325,7 +307,7 @@ describe('LabInvestigation', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
       });
 
       expect(mockGetLabInvestigationsBundle).toHaveBeenCalled();
@@ -341,7 +323,7 @@ describe('LabInvestigation', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
       });
 
       expect(mockGetLabInvestigationsBundle).toHaveBeenCalled();
@@ -351,66 +333,15 @@ describe('LabInvestigation', () => {
       render(renderLabInvestigations({ orderType: 'Lab Order' }));
 
       await waitFor(() => {
-        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
       });
 
       expect(mockGetLabInvestigationsBundle).toHaveBeenCalled();
     });
   });
 
-  describe('Accordion interactions', () => {
-    it('should allow multiple accordions to be open at the same time', async () => {
-      const user = userEvent.setup();
-      render(renderLabInvestigations());
-
-      await waitFor(() => {
-        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
-      });
-
-      const secondAccordionButton = screen.getByRole('button', {
-        name: /April 9, 2025/i,
-      });
-
-      await user.click(secondAccordionButton);
-
-      await waitFor(() => {
-        expect(secondAccordionButton).toHaveAttribute('aria-expanded', 'true');
-      });
-
-      const firstAccordionButton = screen.getByRole('button', {
-        name: /May 8, 2025/i,
-      });
-      // Both accordions should be open
-      expect(firstAccordionButton).toHaveAttribute('aria-expanded', 'true');
-      expect(secondAccordionButton).toHaveAttribute('aria-expanded', 'true');
-    });
-
-    it('should close accordion when clicking on open accordion', async () => {
-      const user = userEvent.setup();
-      render(renderLabInvestigations());
-
-      await waitFor(() => {
-        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
-      });
-
-      const firstAccordionButton = screen.getByRole('button', {
-        name: /May 8, 2025/i,
-      });
-
-      expect(firstAccordionButton).toHaveAttribute('aria-expanded', 'true');
-
-      await user.click(firstAccordionButton);
-
-      await waitFor(() => {
-        expect(firstAccordionButton).toHaveAttribute('aria-expanded', 'false');
-      });
-    });
-  });
-
   describe('Diagnostic reports fetching', () => {
-    it('should fetch diagnostic reports when accordion is opened', async () => {
-      const user = userEvent.setup();
-
+    it('should fetch diagnostic reports for all investigations in a single query', async () => {
       const mockDiagnosticReports: Bundle<DiagnosticReport> = {
         resourceType: 'Bundle',
         type: 'searchset',
@@ -432,12 +363,14 @@ describe('LabInvestigation', () => {
       render(renderLabInvestigations());
 
       await waitFor(() => {
-        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
       });
 
       await waitFor(() => {
         expect(mockGetDiagnosticReports).toHaveBeenCalledWith('patient-123', [
           'test-1',
+          'test-2',
+          'test-3',
         ]);
       });
     });
@@ -464,12 +397,14 @@ describe('LabInvestigation', () => {
       render(renderLabInvestigations());
 
       await waitFor(() => {
-        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
       });
 
       await waitFor(() => {
         expect(mockGetDiagnosticReports).toHaveBeenCalledWith('patient-123', [
           'test-1',
+          'test-2',
+          'test-3',
         ]);
       });
     });
@@ -493,7 +428,7 @@ describe('LabInvestigation', () => {
       render(renderLabInvestigations({ orderType: 'Lab Order' }));
 
       await waitFor(() => {
-        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
       });
 
       // Clear the mock to track new calls
@@ -525,7 +460,7 @@ describe('LabInvestigation', () => {
       render(renderLabInvestigations({ orderType: 'Lab Order' }));
 
       await waitFor(() => {
-        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
       });
 
       // Clear the mock to track new calls
@@ -558,7 +493,7 @@ describe('LabInvestigation', () => {
       render(renderLabInvestigations({ orderType: 'Lab Order' }));
 
       await waitFor(() => {
-        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
       });
 
       // Clear the mock to track new calls
@@ -591,7 +526,7 @@ describe('LabInvestigation', () => {
       render(renderLabInvestigations({ orderType: 'Lab Order' }));
 
       await waitFor(() => {
-        expect(screen.getByText(/May 8, 2025/i)).toBeInTheDocument();
+        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
       });
 
       // Clear the mock to track new calls

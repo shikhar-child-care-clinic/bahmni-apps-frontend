@@ -360,6 +360,61 @@ describe('SortableDataTable', () => {
       // 4th row should not be visible
       expect(screen.queryByText('Paracetamol 650 mg')).not.toBeInTheDocument();
     });
+
+    it('does not reset to page 1 when rows are updated', () => {
+      const { rerender } = render(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={mockMedicationRows}
+          ariaLabel="Stay On Page"
+          renderCell={renderCell}
+          pageSize={3}
+        />,
+      );
+
+      // Navigate to page 2
+      const nextPageButton = screen.getByRole('button', { name: /next page/i });
+      fireEvent.click(nextPageButton);
+
+      // Page 2 should show row 4 (Paracetamol), not row 1 (Acetylsalicylic)
+      expect(
+        screen.queryByText('Acetylsalicylic acid 150 mg'),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText('Paracetamol 650 mg')).toBeInTheDocument();
+
+      // Simulate rows update (e.g. new order added)
+      const updatedRows = [
+        ...mockMedicationRows,
+        {
+          id: 'new-row-id',
+          name: 'New Medicine',
+          dosage: '1 Tablet | Once a day | 1 day',
+          dosageUnit: 'Tablet',
+          instruction: 'Oral',
+          startDate: '09/03/2026',
+          orderDate: '09/03/2026',
+          orderedBy: 'Dr New',
+          quantity: '1 Tablet',
+          status: 'active',
+        },
+      ];
+
+      rerender(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={updatedRows}
+          ariaLabel="Stay On Page"
+          renderCell={renderCell}
+          pageSize={3}
+        />,
+      );
+
+      // Should still be on page 2 — NOT reset to page 1
+      expect(
+        screen.queryByText('Acetylsalicylic acid 150 mg'),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText('Paracetamol 650 mg')).toBeInTheDocument();
+    });
   });
 
   describe('Snapshots', () => {

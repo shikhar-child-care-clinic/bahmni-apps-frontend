@@ -561,8 +561,8 @@ describe('RadiologyInvestigationTable', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('should fetch diagnostic reports only for opened accordion', async () => {
-    const mockBundleWithTwoDateGroups = {
+  it('should fetch diagnostic reports for all investigations in a single query', async () => {
+    const mockBundleWithTwoInvestigations = {
       resourceType: 'Bundle' as const,
       type: 'searchset' as const,
       entry: [
@@ -590,7 +590,7 @@ describe('RadiologyInvestigationTable', () => {
     };
 
     mockGetPatientRadiologyInvestigationBundleWithImagingStudy.mockResolvedValue(
-      mockBundleWithTwoDateGroups,
+      mockBundleWithTwoInvestigations,
     );
 
     mockGetDiagnosticReports.mockResolvedValue({
@@ -603,16 +603,18 @@ describe('RadiologyInvestigationTable', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Chest X-Ray')).toBeInTheDocument();
+      expect(screen.getByText('CT Scan')).toBeInTheDocument();
     });
 
     expect(mockGetDiagnosticReports).toHaveBeenCalledTimes(1);
-    expect(mockGetDiagnosticReports).toHaveBeenCalledWith('test-patient-uuid', [
-      'investigation-1',
-    ]);
+    expect(mockGetDiagnosticReports).toHaveBeenCalledWith(
+      'test-patient-uuid',
+      expect.arrayContaining(['investigation-1', 'investigation-2']),
+    );
   });
 
-  it('should not refetch diagnostic reports for previously opened accordion', async () => {
-    const mockBundleWithTwoDateGroups = {
+  it('should show view report links for all investigations with reports', async () => {
+    const mockBundleWithTwoInvestigations = {
       resourceType: 'Bundle' as const,
       type: 'searchset' as const,
       entry: [
@@ -640,7 +642,7 @@ describe('RadiologyInvestigationTable', () => {
     };
 
     mockGetPatientRadiologyInvestigationBundleWithImagingStudy.mockResolvedValue(
-      mockBundleWithTwoDateGroups,
+      mockBundleWithTwoInvestigations,
     );
 
     mockGetDiagnosticReports.mockResolvedValue({
@@ -676,26 +678,14 @@ describe('RadiologyInvestigationTable', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Chest X-Ray')).toBeInTheDocument();
+      expect(screen.getByText('CT Scan')).toBeInTheDocument();
       expect(
         screen.getByTestId('investigation-1-view-report-link-test-id'),
       ).toBeInTheDocument();
-    });
-
-    const accordionHeaders = screen.getAllByTestId('accordian-table-title');
-    await userEvent.click(accordionHeaders[1]);
-
-    await waitFor(() => {
       expect(
         screen.getByTestId('investigation-2-view-report-link-test-id'),
       ).toBeInTheDocument();
     });
-
-    expect(
-      screen.getByTestId('investigation-1-view-report-link-test-id'),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByTestId('investigation-2-view-report-link-test-id'),
-    ).toBeInTheDocument();
   });
 
   describe('Accessibility', () => {

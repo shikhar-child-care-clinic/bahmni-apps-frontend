@@ -11,7 +11,7 @@ import {
   DataTableSkeleton,
 } from '@carbon/react';
 import classnames from 'classnames';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styles from './styles/SortableDataTable.module.scss';
 
 interface SortableDataTableProps<T> {
@@ -43,10 +43,6 @@ export const SortableDataTable = <T extends { id: string }>({
   pageSize,
 }: SortableDataTableProps<T>) => {
   const [currentPage, setCurrentPage] = useState(1);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [rows]);
 
   const paginatedRows = pageSize
     ? rows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
