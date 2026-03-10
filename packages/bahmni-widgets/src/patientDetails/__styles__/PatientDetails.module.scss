@@ -17,6 +17,7 @@
 
   .patientName {
     @include type-style("heading-compact-02");
+    text-transform: capitalize;
   }
 }
 

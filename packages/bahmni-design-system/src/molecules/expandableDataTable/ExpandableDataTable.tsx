@@ -37,7 +37,7 @@ export const ExpandableDataTable = <T extends { id: string }>({
   sortable = headers.map((header) => ({ key: header.key, sortable: true })),
   loading = false,
   errorStateMessage = null,
-  emptyStateMessage = 'No data available.',
+  emptyStateMessage = 'No data available',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   renderCell = (row, cellId) => (row as any)[cellId],
   renderExpandedContent,
