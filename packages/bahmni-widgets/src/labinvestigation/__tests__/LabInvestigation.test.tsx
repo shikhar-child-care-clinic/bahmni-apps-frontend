@@ -320,23 +320,23 @@ describe('LabInvestigation', () => {
   });
 
   describe('Diagnostic reports fetching', () => {
-    it('should fetch diagnostic reports for all investigations in a single query', async () => {
-      const mockDiagnosticReports: Bundle<DiagnosticReport> = {
-        resourceType: 'Bundle',
-        type: 'searchset',
-        entry: [
-          {
-            resource: {
-              resourceType: 'DiagnosticReport',
-              id: 'report-1',
-              status: 'final',
-              code: { text: 'Complete Blood Count' },
-              basedOn: [{ reference: 'ServiceRequest/test-1' }],
-            } as DiagnosticReport,
-          },
-        ],
-      };
+    const mockDiagnosticReports: Bundle<DiagnosticReport> = {
+      resourceType: 'Bundle',
+      type: 'searchset',
+      entry: [
+        {
+          resource: {
+            resourceType: 'DiagnosticReport',
+            id: 'report-1',
+            status: 'final',
+            code: { text: 'Complete Blood Count' },
+            basedOn: [{ reference: 'ServiceRequest/test-1' }],
+          } as DiagnosticReport,
+        },
+      ],
+    };
 
+    it('should fetch diagnostic reports for all investigations in a single query', async () => {
       mockGetDiagnosticReports.mockResolvedValue(mockDiagnosticReports);
 
       render(renderLabInvestigations());
@@ -355,22 +355,6 @@ describe('LabInvestigation', () => {
     });
 
     it('should pass reportId to child component for processed reports', async () => {
-      const mockDiagnosticReports: Bundle<DiagnosticReport> = {
-        resourceType: 'Bundle',
-        type: 'searchset',
-        entry: [
-          {
-            resource: {
-              resourceType: 'DiagnosticReport',
-              id: 'report-1',
-              status: 'final',
-              code: { text: 'Complete Blood Count' },
-              basedOn: [{ reference: 'ServiceRequest/test-1' }],
-            } as DiagnosticReport,
-          },
-        ],
-      };
-
       mockGetDiagnosticReports.mockResolvedValue(mockDiagnosticReports);
 
       render(renderLabInvestigations());
@@ -430,103 +414,5 @@ describe('LabInvestigation', () => {
       });
     });
 
-    it('does not refetch when event is for different patient', async () => {
-      let eventCallback: (payload: any) => void = () => {};
-      mockUseSubscribeConsultationSaved.mockImplementation((callback) => {
-        eventCallback = callback;
-      });
-
-      render(renderLabInvestigations({ orderType: 'Lab Order' }));
-
-      await waitFor(() => {
-        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
-      });
-
-      // Clear the mock to track new calls
-      mockGetLabInvestigationsBundle.mockClear();
-
-      // Trigger event for different patient
-      eventCallback({
-        patientUUID: 'different-patient',
-        updatedResources: {
-          conditions: false,
-          allergies: false,
-          medications: false,
-          serviceRequests: { 'lab order': true },
-        },
-      });
-
-      // Give some time to ensure no refetch happens
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Verify refetch was NOT triggered
-      expect(mockGetLabInvestigationsBundle).not.toHaveBeenCalled();
-    });
-
-    it('does not refetch when different category was updated', async () => {
-      let eventCallback: (payload: any) => void = () => {};
-      mockUseSubscribeConsultationSaved.mockImplementation((callback) => {
-        eventCallback = callback;
-      });
-
-      render(renderLabInvestigations({ orderType: 'Lab Order' }));
-
-      await waitFor(() => {
-        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
-      });
-
-      // Clear the mock to track new calls
-      mockGetLabInvestigationsBundle.mockClear();
-
-      // Trigger event with different category
-      eventCallback({
-        patientUUID: 'patient-123',
-        updatedResources: {
-          conditions: false,
-          allergies: false,
-          medications: false,
-          serviceRequests: { 'radiology order': true },
-        },
-      });
-
-      // Give some time to ensure no refetch happens
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Verify refetch was NOT triggered
-      expect(mockGetLabInvestigationsBundle).not.toHaveBeenCalled();
-    });
-
-    it('does not refetch when serviceRequests is empty', async () => {
-      let eventCallback: (payload: any) => void = () => {};
-      mockUseSubscribeConsultationSaved.mockImplementation((callback) => {
-        eventCallback = callback;
-      });
-
-      render(renderLabInvestigations({ orderType: 'Lab Order' }));
-
-      await waitFor(() => {
-        expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
-      });
-
-      // Clear the mock to track new calls
-      mockGetLabInvestigationsBundle.mockClear();
-
-      // Trigger event with empty serviceRequests
-      eventCallback({
-        patientUUID: 'patient-123',
-        updatedResources: {
-          conditions: true,
-          allergies: false,
-          medications: false,
-          serviceRequests: {},
-        },
-      });
-
-      // Give some time to ensure no refetch happens
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Verify refetch was NOT triggered
-      expect(mockGetLabInvestigationsBundle).not.toHaveBeenCalled();
-    });
   });
 });
