@@ -170,6 +170,29 @@ describe('ObsByEncounter', () => {
 
       expect(screen.getByText('98.6°F')).toBeInTheDocument();
     });
+
+    it('should render FileTile when observation value is a PDF document', () => {
+      const pdfPath = '100/55-Consultation-27627c65.pdf';
+      mockGetValueType.mockReturnValue('PDF');
+      mockTransformObservationToRowCell.mockReturnValueOnce({
+        index: 0,
+        header: 'Consultation Document',
+        value: pdfPath,
+        provider: 'Dr. Smith',
+      });
+
+      const result = extractObservationsFromBundle(
+        mockBundleWithMixedObservations,
+      );
+      const groupedData = groupObservationsByEncounter(result);
+
+      const { container } = render(
+        <ObsByEncounter groupedData={groupedData} />,
+      );
+
+      const fileButtons = container.querySelectorAll('button[type="button"]');
+      expect(fileButtons.length).toBeGreaterThan(0);
+    });
   });
 
   describe('Grouped observations', () => {
