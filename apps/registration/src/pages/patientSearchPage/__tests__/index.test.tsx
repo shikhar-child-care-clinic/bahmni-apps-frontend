@@ -424,7 +424,7 @@ describe('PatientSearchPage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          'Patient results (' + mockSearchPatientData.length + ')',
+          'Patient Results (' + mockSearchPatientData.length + ')',
         ),
       ).toBeInTheDocument();
     });
@@ -858,7 +858,7 @@ describe('PatientSearchPage', () => {
       fireEvent.click(screen.getByTestId('search-patient-search-button'));
 
       await waitFor(() => {
-        expect(screen.getByText('Patient results (3)')).toBeInTheDocument();
+        expect(screen.getByText('Patient Results (3)')).toBeInTheDocument();
       });
     });
 

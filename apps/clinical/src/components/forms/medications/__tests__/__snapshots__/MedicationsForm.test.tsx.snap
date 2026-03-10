@@ -784,7 +784,7 @@ exports[`MedicationsForm Snapshot Tests matches snapshot with selected medicatio
                         dir="auto"
                         for="start-date-test-medication-1"
                       >
-                        Start date
+                        Start Date
                       </label>
                       <div
                         class="cds--date-picker-input__wrapper"
