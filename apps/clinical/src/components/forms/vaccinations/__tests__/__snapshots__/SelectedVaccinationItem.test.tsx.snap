@@ -2131,7 +2131,7 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
             data-testid="vaccination-note-entry-1"
             id="vaccination-note-entry-1"
             maxlength="1024"
-            placeholder="Add notes for the vaccination"
+            placeholder="Add notes for the Vaccination"
             rows="4"
             style="width: 100%;"
             type="default"

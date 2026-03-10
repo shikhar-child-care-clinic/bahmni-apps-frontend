@@ -214,7 +214,7 @@ describe('SelectedDiagnosisItem', () => {
     describe('Link State and Text', () => {
       test('renders "Add as condition" link enabled when not an existing condition', () => {
         render(<SelectedDiagnosisItem {...defaultProps} />);
-        const addLink = screen.getByRole('link', { name: 'Add as condition' });
+        const addLink = screen.getByRole('link', { name: 'Add as Condition' });
         expect(addLink).toBeInTheDocument();
         expect(addLink).toHaveAttribute('aria-disabled', 'false');
         expect(addLink).not.toHaveAttribute('disabled');
@@ -228,7 +228,7 @@ describe('SelectedDiagnosisItem', () => {
 
         render(<SelectedDiagnosisItem {...propsWithExistingCondition} />);
         const addLink = screen.getByRole('link', {
-          name: 'Added as a condition',
+          name: 'Added as a Condition',
         });
         expect(addLink).toBeInTheDocument();
         expect(addLink).toHaveAttribute('aria-disabled', 'true');
@@ -241,7 +241,7 @@ describe('SelectedDiagnosisItem', () => {
         const user = userEvent.setup();
         render(<SelectedDiagnosisItem {...defaultProps} />);
 
-        const addLink = screen.getByRole('link', { name: 'Add as condition' });
+        const addLink = screen.getByRole('link', { name: 'Add as Condition' });
         await user.click(addLink);
 
         expect(defaultProps.onMarkAsCondition).toHaveBeenCalledWith(
@@ -258,7 +258,7 @@ describe('SelectedDiagnosisItem', () => {
 
         render(<SelectedDiagnosisItem {...propsWithExistingCondition} />);
         const addLink = screen.getByRole('link', {
-          name: 'Added as a condition',
+          name: 'Added as a Condition',
         });
         await user.click(addLink);
 

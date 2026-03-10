@@ -225,7 +225,7 @@ describe('MedicationsForm', () => {
     test('renders form title correctly', () => {
       renderWithQueryClient(<MedicationsForm />);
 
-      expect(screen.getByText(/prescribe medication/i)).toBeInTheDocument();
+      expect(screen.getByText(/Medications/i)).toBeInTheDocument();
     });
 
     test('adds medication when selected from search', async () => {
@@ -379,7 +379,7 @@ describe('MedicationsForm', () => {
 
       renderWithQueryClient(<MedicationsForm />);
 
-      expect(screen.getByText(/added medicines/i)).toBeInTheDocument();
+      expect(screen.getByText(/Added Medications/i)).toBeInTheDocument();
       expect(screen.getByText(/Paracetamol 500mg/)).toBeInTheDocument();
     });
 
@@ -490,7 +490,7 @@ describe('MedicationsForm', () => {
       renderWithQueryClient(<MedicationsForm />);
 
       // Should show the selected medication in the added medicines section
-      expect(screen.getByText(/added medicines/i)).toBeInTheDocument();
+      expect(screen.getByText(/Added Medications/i)).toBeInTheDocument();
       expect(screen.getByText(/Paracetamol 500mg/)).toBeInTheDocument();
     });
 
