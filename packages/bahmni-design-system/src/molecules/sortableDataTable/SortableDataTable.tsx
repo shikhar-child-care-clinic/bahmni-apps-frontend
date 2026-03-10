@@ -92,7 +92,7 @@ export const SortableDataTable = <T extends { id: string }>({
       className={classnames(className, styles.sortableDataTableBody)}
       data-testid={dataTestId}
     >
-      <DataTable rows={paginatedRows} headers={headers} isSortable size="md">
+      <DataTable rows={paginatedRows} headers={headers} isSortable={!pageSize} size="md">
         {({
           rows: tableRows,
           headers: tableHeaders,
