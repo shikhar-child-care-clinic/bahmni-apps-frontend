@@ -13,7 +13,7 @@ import classnames from 'classnames';
 import React from 'react';
 import styles from './styles/SortableDataTable.module.scss';
 
-interface SortableDataTableProps<T> {
+export interface SortableDataTableProps<T> {
   headers: DataTableHeader[];
   rows: T[];
   sortable?: { key: string; sortable: boolean }[];
