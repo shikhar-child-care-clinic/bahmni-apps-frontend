@@ -35,12 +35,16 @@ jest.mock('../../hooks/usePatientUUID', () => ({
 }));
 
 const mockUseTranslation = jest.mocked(useTranslation);
-const mockGetCategoryUuidFromOrderTypes = jest.mocked(getCategoryUuidFromOrderTypes);
+const mockGetCategoryUuidFromOrderTypes = jest.mocked(
+  getCategoryUuidFromOrderTypes,
+);
 const mockGetLabTestBundle = jest.mocked(getLabInvestigationsBundle);
 const mockGetDiagnosticReports = jest.mocked(getDiagnosticReports);
 const mockUseNotification = jest.mocked(useNotification);
 const mockUsePatientUUID = jest.mocked(usePatientUUID);
-const mockUseSubscribeConsultationSaved = jest.mocked(useSubscribeConsultationSaved);
+const mockUseSubscribeConsultationSaved = jest.mocked(
+  useSubscribeConsultationSaved,
+);
 
 const createMockBundle = (
   serviceRequests: ServiceRequest[],

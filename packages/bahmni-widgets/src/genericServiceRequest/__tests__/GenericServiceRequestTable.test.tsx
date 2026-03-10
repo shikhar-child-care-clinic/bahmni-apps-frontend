@@ -49,15 +49,23 @@ jest.mock('../../notification', () => ({
 
 const mockUseTranslation = jest.mocked(useTranslation);
 const mockGetFormattedError = jest.mocked(getFormattedError);
-const mockGetCategoryUuidFromOrderTypes = jest.mocked(getCategoryUuidFromOrderTypes);
+const mockGetCategoryUuidFromOrderTypes = jest.mocked(
+  getCategoryUuidFromOrderTypes,
+);
 const mockGetServiceRequests = jest.mocked(getServiceRequests);
-const mockFilterServiceRequestReplacementEntries = jest.mocked(filterServiceRequestReplacementEntries);
+const mockFilterServiceRequestReplacementEntries = jest.mocked(
+  filterServiceRequestReplacementEntries,
+);
 const mockGetServiceRequestPriority = jest.mocked(getServiceRequestPriority);
 const mockMapServiceRequest = jest.mocked(mapServiceRequest);
 const mockUsePatientUUID = jest.mocked(usePatientUUID);
 const mockUseNotification = jest.mocked(useNotification);
-const mockUseSubscribeConsultationSaved = jest.mocked(useSubscribeConsultationSaved);
-const mockShouldEnableEncounterFilter = jest.mocked(shouldEnableEncounterFilter);
+const mockUseSubscribeConsultationSaved = jest.mocked(
+  useSubscribeConsultationSaved,
+);
+const mockShouldEnableEncounterFilter = jest.mocked(
+  shouldEnableEncounterFilter,
+);
 
 const createWrapper = () => {
   const queryClient = new QueryClient({

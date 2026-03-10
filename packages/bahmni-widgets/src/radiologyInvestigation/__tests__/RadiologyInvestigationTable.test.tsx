@@ -48,14 +48,18 @@ jest.mock('../../radiologyInvestigationReport', () => ({
 }));
 
 const mockUseTranslation = jest.mocked(useTranslation);
-const mockGetCategoryUuidFromOrderTypes = jest.mocked(getCategoryUuidFromOrderTypes);
+const mockGetCategoryUuidFromOrderTypes = jest.mocked(
+  getCategoryUuidFromOrderTypes,
+);
 const mockGetPatientRadiologyInvestigationBundleWithImagingStudy = jest.mocked(
   getPatientRadiologyInvestigationBundleWithImagingStudy,
 );
 const mockGetDiagnosticReports = jest.mocked(getDiagnosticReports);
 const mockDispatchAuditEvent = jest.mocked(dispatchAuditEvent);
 const mockUseNotification = jest.mocked(useNotification);
-const mockUseSubscribeConsultationSaved = jest.mocked(useSubscribeConsultationSaved);
+const mockUseSubscribeConsultationSaved = jest.mocked(
+  useSubscribeConsultationSaved,
+);
 
 const renderRadiologyInvestigationTable = (
   config: Record<string, unknown> = { orderType: 'Radiology Order' },
@@ -744,6 +748,5 @@ describe('RadiologyInvestigationTable', () => {
         ).toHaveBeenCalled();
       });
     });
-
   });
 });

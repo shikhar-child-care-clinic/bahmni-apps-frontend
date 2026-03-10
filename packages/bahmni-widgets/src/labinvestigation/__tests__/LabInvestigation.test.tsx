@@ -51,13 +51,17 @@ jest.mock('../LabInvestigationItem', () => ({
 }));
 
 const mockUseTranslation = jest.mocked(useTranslation);
-const mockGetCategoryUuidFromOrderTypes = jest.mocked(getCategoryUuidFromOrderTypes);
+const mockGetCategoryUuidFromOrderTypes = jest.mocked(
+  getCategoryUuidFromOrderTypes,
+);
 const mockGetLabInvestigationsBundle = jest.mocked(getLabInvestigationsBundle);
 const mockGetDiagnosticReports = jest.mocked(getDiagnosticReports);
 const mockGetDiagnosticReportBundle = jest.mocked(getDiagnosticReportBundle);
 const mockUseNotification = jest.mocked(useNotification);
 const mockUsePatientUUID = jest.mocked(usePatientUUID);
-const mockUseSubscribeConsultationSaved = jest.mocked(useSubscribeConsultationSaved);
+const mockUseSubscribeConsultationSaved = jest.mocked(
+  useSubscribeConsultationSaved,
+);
 
 const createQueryClient = () =>
   new QueryClient({
