@@ -47,30 +47,15 @@ jest.mock('../../radiologyInvestigationReport', () => ({
   ),
 }));
 
-const mockUseTranslation = useTranslation as jest.MockedFunction<
-  typeof useTranslation
->;
-const mockGetCategoryUuidFromOrderTypes =
-  getCategoryUuidFromOrderTypes as jest.MockedFunction<
-    typeof getCategoryUuidFromOrderTypes
-  >;
-const mockGetPatientRadiologyInvestigationBundleWithImagingStudy =
-  getPatientRadiologyInvestigationBundleWithImagingStudy as jest.MockedFunction<
-    typeof getPatientRadiologyInvestigationBundleWithImagingStudy
-  >;
-const mockGetDiagnosticReports = getDiagnosticReports as jest.MockedFunction<
-  typeof getDiagnosticReports
->;
-const mockDispatchAuditEvent = dispatchAuditEvent as jest.MockedFunction<
-  typeof dispatchAuditEvent
->;
-const mockUseNotification = useNotification as jest.MockedFunction<
-  typeof useNotification
->;
-const mockUseSubscribeConsultationSaved =
-  useSubscribeConsultationSaved as jest.MockedFunction<
-    typeof useSubscribeConsultationSaved
-  >;
+const mockUseTranslation = jest.mocked(useTranslation);
+const mockGetCategoryUuidFromOrderTypes = jest.mocked(getCategoryUuidFromOrderTypes);
+const mockGetPatientRadiologyInvestigationBundleWithImagingStudy = jest.mocked(
+  getPatientRadiologyInvestigationBundleWithImagingStudy,
+);
+const mockGetDiagnosticReports = jest.mocked(getDiagnosticReports);
+const mockDispatchAuditEvent = jest.mocked(dispatchAuditEvent);
+const mockUseNotification = jest.mocked(useNotification);
+const mockUseSubscribeConsultationSaved = jest.mocked(useSubscribeConsultationSaved);
 
 const renderRadiologyInvestigationTable = (
   config: Record<string, unknown> = { orderType: 'Radiology Order' },

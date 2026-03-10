@@ -34,30 +34,13 @@ jest.mock('../../hooks/usePatientUUID', () => ({
   usePatientUUID: jest.fn(),
 }));
 
-const mockUseTranslation = useTranslation as jest.MockedFunction<
-  typeof useTranslation
->;
-
-const mockGetCategoryUuidFromOrderTypes =
-  getCategoryUuidFromOrderTypes as jest.MockedFunction<
-    typeof getCategoryUuidFromOrderTypes
-  >;
-const mockGetLabTestBundle = getLabInvestigationsBundle as jest.MockedFunction<
-  typeof getLabInvestigationsBundle
->;
-const mockGetDiagnosticReports = getDiagnosticReports as jest.MockedFunction<
-  typeof getDiagnosticReports
->;
-const mockUseNotification = useNotification as jest.MockedFunction<
-  typeof useNotification
->;
-const mockUsePatientUUID = usePatientUUID as jest.MockedFunction<
-  typeof usePatientUUID
->;
-const mockUseSubscribeConsultationSaved =
-  useSubscribeConsultationSaved as jest.MockedFunction<
-    typeof useSubscribeConsultationSaved
-  >;
+const mockUseTranslation = jest.mocked(useTranslation);
+const mockGetCategoryUuidFromOrderTypes = jest.mocked(getCategoryUuidFromOrderTypes);
+const mockGetLabTestBundle = jest.mocked(getLabInvestigationsBundle);
+const mockGetDiagnosticReports = jest.mocked(getDiagnosticReports);
+const mockUseNotification = jest.mocked(useNotification);
+const mockUsePatientUUID = jest.mocked(usePatientUUID);
+const mockUseSubscribeConsultationSaved = jest.mocked(useSubscribeConsultationSaved);
 
 const createMockBundle = (
   serviceRequests: ServiceRequest[],
