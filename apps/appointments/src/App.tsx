@@ -11,6 +11,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { Routes } from 'react-router-dom';
 import { queryClientConfig } from './config/tanstackQuery';
 import { BAHMNI_APPOINTMENTS_NAMESPACE } from './constants/app';
+import { AppointmentsConfigProvider } from './providers/appointmentsConfig';
 import { routes, renderRoutes } from './routes';
 
 const queryClient = new QueryClient(queryClientConfig);
@@ -42,10 +43,12 @@ export function App() {
       <NotificationProvider>
         <UserPrivilegeProvider>
           <NotificationServiceComponent />
-          <Suspense fallback={<Loading />}>
-            <Routes>{renderRoutes(routes)}</Routes>
-          </Suspense>
-          <ReactQueryDevtools initialIsOpen={false} />
+          <AppointmentsConfigProvider>
+            <Suspense fallback={<Loading />}>
+              <Routes>{renderRoutes(routes)}</Routes>
+            </Suspense>
+            <ReactQueryDevtools initialIsOpen={false} />
+          </AppointmentsConfigProvider>
         </UserPrivilegeProvider>
       </NotificationProvider>
     </QueryClientProvider>
