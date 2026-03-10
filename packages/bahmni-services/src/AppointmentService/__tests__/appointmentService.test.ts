@@ -1,11 +1,10 @@
 import { post, get } from '../../api';
-import { BAHMNI_SQL_URL } from '../../constants/app';
 import {
   searchAppointmentsByAttribute,
   getAppointmentById,
   getUpcomingAppointments,
   getPastAppointments,
-} from '../appointmmetService';
+} from '../appointmentService';
 import {
   APPOINTMENTS_SEARCH_URL,
   getAppointmentByIdUrl,

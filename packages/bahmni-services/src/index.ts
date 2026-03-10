@@ -76,7 +76,7 @@ export {
   getUpcomingAppointments,
   getPastAppointments,
   getAllAppointmentServices,
-} from './AppointmentService/appointmmetService';
+} from './AppointmentService/appointmentService';
 export {
   type Appointment,
   type AppointmentSearchResult,

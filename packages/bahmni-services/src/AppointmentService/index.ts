@@ -5,7 +5,7 @@ export {
   getUpcomingAppointments,
   getPastAppointments,
   getAllAppointmentServices,
-} from './appointmmetService';
+} from './appointmentService';
 export {
   type Appointment,
   type AppointmentSearchResult,
