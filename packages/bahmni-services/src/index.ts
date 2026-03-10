@@ -43,6 +43,10 @@ export {
   type PersonAttributeTypesResponse,
   type ConceptAnswer,
   type PersonAttributeConcept,
+  type PatientSearchField,
+  type AppointmentSearchField,
+  type ExpectedFieldConfig,
+  type SearchActionConfig,
   AttributeFormat,
   AttributeInputType,
   getInputTypeForFormat,
@@ -73,13 +77,9 @@ export {
   getPastAppointments,
 } from './AppointmentService/appointmmetService';
 export {
-  type Appointment,
-  type AppointmentSearchResult,
-  type Patient,
-  type AppointmentService,
-  type Location,
-  type Reason,
-} from './AppointmentService/models';
+  APPOINTMENT_STATUSES,
+  APPOINTMENT_IDENTIFIER_SYSTEM,
+} from './AppointmentService/constants';
 export { getFormattedError } from './errorHandling';
 export {
   capitalize,
@@ -94,6 +94,7 @@ export {
   formatUrl,
   getValueType,
   camelToScreamingSnakeCase,
+  convertToSentenceCase,
 } from './utils';
 export {
   type FormatDateResult,
@@ -168,6 +169,7 @@ export {
   getDiagnosticReportBundle,
   PROCESSED_REPORT_STATUSES,
   PENDING_REPORT_STATUSES,
+  updateDiagnosticReportBundle,
 } from './diagnosticReportService';
 export {
   getFlattenedInvestigations,
@@ -182,26 +184,7 @@ export {
   ORDER_TYPE_QUERY_KEY,
 } from './investigationService';
 
-export {
-  getClinicalConfig,
-  getDashboardConfig,
-  getMedicationConfig,
-  getRegistrationConfig,
-  type ClinicalConfig,
-  type DashboardConfig,
-  type MedicationJSONConfig,
-  type DashboardSectionConfig,
-  type Dashboard,
-  type Frequency,
-  type RegistrationConfig,
-  type PatientSearchConfig,
-  type PatientSearchField,
-  type PatientInformationConfig,
-  type SearchActionConfig,
-  type ControlConfig,
-  type AppExtensionConfig,
-  type ExtensionPoint,
-} from './configService';
+export { getConfig } from './configService';
 
 export { getCurrentUser, getUserLoginLocation, type User } from './userService';
 export { USER_PINNED_PREFERENCE_URL } from './observationFormsService/constants';
@@ -313,3 +296,10 @@ export {
   CONSULTATION_SAVED_EVENT,
   type ConsultationSavedEventPayload,
 } from './events/consultationEvents';
+
+export {
+  getDocumentReferences,
+  getFormattedDocumentReferences,
+  type DocumentViewModel,
+  type DocumentReference,
+} from './documentReferenceService';

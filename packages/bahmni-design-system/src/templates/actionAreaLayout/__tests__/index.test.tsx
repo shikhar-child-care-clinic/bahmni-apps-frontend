@@ -87,4 +87,40 @@ describe('ActionAreaLayout', () => {
     });
     expect(results).toHaveNoViolations();
   });
+
+  test('applies collapse class when action area is visible and hasSideNav is true', () => {
+    const { container } = render(
+      <ActionAreaLayout {...defaultProps} isActionAreaVisible hasSideNav />,
+    );
+
+    const mainDisplay = container.querySelector('#main-display-area');
+    expect(mainDisplay?.className).toMatch(/collapse/);
+  });
+
+  test('does not apply collapse class when action area is visible and hasSideNav is false', () => {
+    const { container } = render(
+      <ActionAreaLayout
+        {...defaultProps}
+        isActionAreaVisible
+        hasSideNav={false}
+      />,
+    );
+
+    const mainDisplay = container.querySelector('#main-display-area');
+    // Using word boundary to match 'collapse' but not 'collapsedModal'
+    expect(mainDisplay?.className).not.toMatch(/\bcollapse\b/);
+  });
+
+  test('does not apply collapse class when action area is not visible', () => {
+    const { container } = render(
+      <ActionAreaLayout
+        {...defaultProps}
+        isActionAreaVisible={false}
+        hasSideNav={false}
+      />,
+    );
+
+    const mainDisplay = container.querySelector('#main-display-area');
+    expect(mainDisplay?.className).not.toMatch(/collapse/);
+  });
 });
