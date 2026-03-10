@@ -1,12 +1,13 @@
 import { post, get } from '../api';
 import {
+  ALL_APPOINTMENT_SERVICES_URL,
   APPOINTMENTS_SEARCH_URL,
   getAppointmentByIdUrl,
   getUpcomingAppointmentsUrl,
   getPastAppointmentsUrl,
   updateAppointmentStatusUrl,
 } from './constants';
-import { Appointment } from './models';
+import { Appointment, AppointmentService } from './models';
 
 export const searchAppointmentsByAttribute = async (
   searchParam: Record<string, string>,
@@ -122,3 +123,9 @@ export const updateAppointmentStatus = async (
 export async function getAppointmentById(uuid: string): Promise<Appointment> {
   return await get<Appointment>(getAppointmentByIdUrl(uuid));
 }
+
+export const getAllAppointmentServices = async (): Promise<
+  AppointmentService[]
+> => {
+  return await get<AppointmentService[]>(ALL_APPOINTMENT_SERVICES_URL);
+};

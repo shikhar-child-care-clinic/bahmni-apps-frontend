@@ -75,6 +75,7 @@ export {
   getAppointmentById,
   getUpcomingAppointments,
   getPastAppointments,
+  getAllAppointmentServices,
 } from './AppointmentService/appointmmetService';
 export {
   type Appointment,
@@ -83,6 +84,7 @@ export {
   type AppointmentService,
   type Location,
   type Reason,
+  type Speciality,
 } from './AppointmentService/models';
 export { getFormattedError } from './errorHandling';
 export {

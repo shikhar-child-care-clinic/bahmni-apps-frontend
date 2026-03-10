@@ -19,3 +19,6 @@ export const getPastAppointmentsUrl = (patientUuid: string): string =>
 
 export const updateAppointmentStatusUrl = (appointmentUuid: string): string =>
   `${APPOINTMENTS_URL}/${appointmentUuid}/status-change`;
+
+export const ALL_APPOINTMENT_SERVICES_URL =
+  OPENMRS_REST_V1 + '/appointmentService/all/full';

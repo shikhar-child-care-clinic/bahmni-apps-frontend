@@ -38,22 +38,28 @@ export interface Patient {
   customAttributes: [];
 }
 
-export interface AppointmentService {
-  appointmentServiceId: number;
-  name: string;
-  description: string | null;
-  speciality: null;
-  startTime: string;
-  endTime: string;
-  location: Location;
+export interface Speciality {
   uuid: string;
-  color: string;
-  initialAppointmentStatus: string | null;
+  name: string;
 }
 
 export interface Location {
   name: string;
   uuid: string;
+}
+
+export interface AppointmentService {
+  appointmentServiceId: number;
+  uuid: string;
+  name: string;
+  description: string | null;
+  speciality: Speciality | null;
+  startTime: string;
+  endTime: string;
+  location: Location | null;
+  durationMins?: number | null;
+  color: string;
+  initialAppointmentStatus: string | null;
 }
 
 export interface Provider {
