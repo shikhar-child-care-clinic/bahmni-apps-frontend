@@ -37,9 +37,6 @@
       "path": "../apps/registration/tsconfig.lib.json"
     },
     {
-      "path": "../apps/clinical/tsconfig.lib.json"
-    },
-    {
       "path": "../packages/bahmni-design-system/tsconfig.lib.json"
     }
   ]

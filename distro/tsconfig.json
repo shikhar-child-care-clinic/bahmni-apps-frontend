@@ -9,9 +9,6 @@
       "path": "../apps/registration"
     },
     {
-      "path": "../apps/clinical"
-    },
-    {
       "path": "../packages/bahmni-design-system"
     },
     {
