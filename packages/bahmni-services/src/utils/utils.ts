@@ -292,10 +292,39 @@ export const getValueType = (value: string | number): string => {
   return 'object';
 };
 
+/**
+ * Converts a string to SCREAMING_SNAKE_CASE.
+ *
+ * Handles:
+ * - camelCase (e.g., "helloWorld" → "HELLO_WORLD")
+ * - PascalCase (e.g., "TestCase" → "TEST_CASE")
+ * - Acronyms (e.g., "XMLParser" → "XML_PARSER")
+ * - Spaces and hyphens (e.g., "Checked - in" → "CHECKED_IN")
+ *
+ * Multiple spaces or hyphens are normalized to a single underscore.
+ *
+ * @param str - The input string to convert.
+ * @returns The transformed string in SCREAMING_SNAKE_CASE format.
+ */
 export function camelToScreamingSnakeCase(str: string): string {
   return str
     .replaceAll(/\s+/g, '_')
     .replaceAll(/([a-z])([A-Z])/g, '$1_$2')
     .replaceAll(/([A-Z])([A-Z][a-z])/g, '$1_$2')
     .toUpperCase();
+}
+
+export function convertToSentenceCase(str: string): string {
+  if (!str) return '';
+
+  return str
+    .replaceAll(/[_-]/g, ' ')
+    .replaceAll(/([a-z])([A-Z])/g, '$1 $2')
+    .replaceAll(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+    .replaceAll(/([a-z])(\d)/gi, '$1 $2')
+    .replaceAll(/(\d)([a-z])/gi, '$1 $2')
+    .replaceAll(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+    .replace(/^./, (char) => char.toUpperCase());
 }

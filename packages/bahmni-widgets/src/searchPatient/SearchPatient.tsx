@@ -1,9 +1,9 @@
-import { Search, Button, Dropdown, Tag } from '@bahmni/design-system';
+import { Button, Dropdown, Search, Tag } from '@bahmni/design-system';
 import {
+  AppointmentSearchField,
+  PatientSearchField,
   PatientSearchResultBundle,
   useTranslation,
-  getRegistrationConfig,
-  PatientSearchField,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
@@ -15,6 +15,10 @@ import styles from './styles/SearchPatient.module.scss';
 interface SearchPatientProps {
   buttonTitle: string;
   searchBarPlaceholder: string;
+  patientSearch?: {
+    customAttributes: PatientSearchField[];
+    appointment: AppointmentSearchField[];
+  };
   onSearch: (
     data: PatientSearchResultBundle | undefined,
     searchTerm: string,
@@ -25,11 +29,12 @@ interface SearchPatientProps {
   ) => void;
 }
 
-const SearchPatient: React.FC<SearchPatientProps> = ({
+const SearchPatient = ({
   buttonTitle,
   searchBarPlaceholder,
+  patientSearch,
   onSearch,
-}) => {
+}: SearchPatientProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [advanceSearchInput, setAdvanceSearchInput] = useState('');
@@ -40,17 +45,6 @@ const SearchPatient: React.FC<SearchPatientProps> = ({
   const [dropdownItems, setDropdownItems] = useState<string[]>([]);
   const [selectedDropdownItem, setSelectedDropdownItem] = useState<string>('');
   const [searchFields, setSearchFields] = useState<PatientSearchField[]>([]);
-
-  const {
-    data: configData,
-    isError: configIsError,
-    error: configError,
-  } = useQuery({
-    queryKey: ['registrationConfig'],
-    queryFn: () => getRegistrationConfig(),
-    staleTime: 0,
-    gcTime: 0,
-  });
 
   const getSearchType = (
     searchField?: PatientSearchField,
@@ -201,22 +195,10 @@ const SearchPatient: React.FC<SearchPatientProps> = ({
   };
 
   useEffect(() => {
-    if (configIsError) {
-      addNotification({
-        title: t('CONFIG_ERROR_SCHEMA_VALIDATION_FAILED'),
-        message:
-          configError instanceof Error
-            ? configError.message
-            : String(configError),
-        type: 'error',
-      });
-      setDropdownItems([]);
-      setSelectedDropdownItem('');
-    } else if (configData?.patientSearch?.customAttributes) {
-      const combinedFields = [
-        ...(configData.patientSearch.customAttributes || []),
-        ...(configData.patientSearch.appointment || []),
-      ];
+    if (patientSearch?.customAttributes || patientSearch?.appointment) {
+      const combinedFields = Object.values(patientSearch)
+        .filter(Array.isArray)
+        .flat();
       setSearchFields(combinedFields);
 
       const labels = combinedFields.map((field: PatientSearchField) =>
@@ -224,7 +206,7 @@ const SearchPatient: React.FC<SearchPatientProps> = ({
       );
       setDropdownItems(labels);
       setSelectedDropdownItem(labels[0] || '');
-    } else if (configData && dropdownItems.length === 0) {
+    } else if (patientSearch && dropdownItems.length === 0) {
       addNotification({
         title: t('CONFIG_ERROR_NOT_FOUND'),
         message: 'No patient search configuration found',
@@ -233,7 +215,7 @@ const SearchPatient: React.FC<SearchPatientProps> = ({
       setDropdownItems([]);
       setSelectedDropdownItem('');
     }
-  }, [configData, configIsError, configError, addNotification, t]);
+  }, [patientSearch]);
 
   useEffect(() => {
     if (isError && searchTerm) {

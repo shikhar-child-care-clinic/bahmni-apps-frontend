@@ -23,7 +23,7 @@ import {
 } from '../../../__mocks__/consultationPadMocks';
 import { FhirEncounter, FhirEncounterType } from '../../../models/encounter';
 import { ClinicalAppProvider } from '../../../providers/ClinicalAppProvider';
-import { ClinicalConfigProvider } from '../../../providers/ClinicalConfigProvider';
+import { ClinicalConfigProvider } from '../../../providers/clinicalConfig';
 import * as consultationBundleService from '../../../services/consultationBundleService';
 import { getEncounterConcepts } from '../../../services/encounterConceptsService';
 import { getLocations } from '../../../services/locationService';
@@ -48,6 +48,12 @@ jest.mock('@bahmni/form2-controls', () => ({
 
 // Mock the form2-controls CSS
 jest.mock('@bahmni/form2-controls/dist/bundle.css', () => ({}));
+
+jest.mock('../../forms/medications/MedicationsForm', () => {
+  return function MockMedicationsForm() {
+    return <div data-testid="medications-form">Medications Form</div>;
+  };
+});
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),

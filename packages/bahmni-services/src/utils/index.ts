@@ -13,4 +13,5 @@ export {
   blobToDataUrl,
   getValueType,
   camelToScreamingSnakeCase,
+  convertToSentenceCase,
 } from './utils';

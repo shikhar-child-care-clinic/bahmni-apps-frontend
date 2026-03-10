@@ -8,8 +8,8 @@ import {
   useMemo,
 } from 'react';
 import { usePersonAttributeFields } from '../../../hooks/usePersonAttributeFields';
-import { useRegistrationConfig } from '../../../hooks/useRegistrationConfig';
 import type { PersonAttributesData } from '../../../models/patient';
+import { useRegistrationConfig } from '../../../providers/registrationConfig';
 
 import {
   getFieldsToShow,
@@ -81,8 +81,8 @@ export const AdditionalInfo = ({ initialData, ref }: AdditionalInfoProps) => {
     const result = validateAllFields(
       fieldsToShow,
       formData,
-      fieldValidationConfig,
       t,
+      fieldValidationConfig,
     );
     setErrors(result.errors);
     return result.isValid;
