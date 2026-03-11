@@ -485,7 +485,7 @@ const createMockEncounterDetailsStore = () => ({
 });
 
 const createMockDiagnosesStore = () => ({
-  selectedDiagnoses: [],
+  selectedDiagnoses: [{ id: 'mock-diagnosis-1' }] as any[],
   selectedConditions: [],
   validate: jest.fn(() => true),
   reset: jest.fn(),
@@ -760,6 +760,65 @@ describe('ConsultationPad', () => {
     });
 
     it('should enable Done button when all required data is present', () => {
+      mockDiagnosesStore.selectedDiagnoses = [{ id: 'diag-1' }] as any;
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('primary-button')).not.toBeDisabled();
+    });
+
+    it('should disable Done button when no clinical data has been captured', () => {
+      mockDiagnosesStore.selectedDiagnoses = [];
+      mockDiagnosesStore.selectedConditions = [];
+      mockAllergyStore.selectedAllergies = [];
+      mockMedicationStore.selectedMedications = [];
+      mockServiceRequestStore.selectedServiceRequests = new Map();
+      mockObservationFormsStoreState.selectedForms = [];
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('primary-button')).toBeDisabled();
+    });
+
+    it('should enable Done button when a diagnosis is added', () => {
+      mockDiagnosesStore.selectedDiagnoses = [{ id: 'diag-1' }] as any;
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('primary-button')).not.toBeDisabled();
+    });
+
+    it('should enable Done button when an allergy is added', () => {
+      mockAllergyStore.selectedAllergies = [{ id: 'allergy-1' }] as any;
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('primary-button')).not.toBeDisabled();
+    });
+
+    it('should enable Done button when a medication is added', () => {
+      mockMedicationStore.selectedMedications = [{ id: 'med-1' }] as any;
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('primary-button')).not.toBeDisabled();
+    });
+
+    it('should enable Done button when a service request is added', () => {
+      mockServiceRequestStore.selectedServiceRequests = new Map([
+        ['category-1', [{ id: 'sr-1' }] as any],
+      ]);
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('primary-button')).not.toBeDisabled();
+    });
+
+    it('should enable Done button when an observation form is selected', async () => {
+      mockObservationFormsStoreState.selectedForms = [
+        { uuid: 'form-1', name: 'Test Form' },
+      ] as any;
+
       renderWithProvider();
 
       expect(screen.getByTestId('primary-button')).not.toBeDisabled();
@@ -1669,7 +1728,7 @@ describe('ConsultationPad', () => {
         expect(
           consultationBundleService.createDiagnosisBundleEntries,
         ).toHaveBeenCalledWith({
-          selectedDiagnoses: [],
+          selectedDiagnoses: [{ id: 'mock-diagnosis-1' }],
           encounterSubject: { reference: 'Patient/patient-123' },
           encounterReference: 'urn:uuid:mock-encounter-uuid',
           practitionerUUID: 'practitioner-123',

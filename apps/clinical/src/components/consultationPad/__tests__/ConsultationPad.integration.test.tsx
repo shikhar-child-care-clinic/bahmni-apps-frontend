@@ -408,6 +408,14 @@ describe('ConsultationPad Integration', () => {
       store.setActiveVisit(fullMockActiveVisit);
       store.setConsultationDate(new Date());
       store.setEncounterDetailsFormReady(true);
+
+      // Add a service request so hasConsultationData is true (no validation runs for service requests)
+      const serviceRequestStore = useServiceRequestStore.getState();
+      serviceRequestStore.addServiceRequest(
+        'procedure-category',
+        'concept-uuid-1',
+        'Test Procedure',
+      );
     });
 
     // Find the submit button
@@ -461,6 +469,14 @@ describe('ConsultationPad Integration', () => {
       store.setActiveVisit(fullMockActiveVisit);
       store.setConsultationDate(new Date());
       store.setEncounterDetailsFormReady(true);
+
+      // Add a service request so hasConsultationData is true (no validation runs for service requests)
+      const serviceRequestStore = useServiceRequestStore.getState();
+      serviceRequestStore.addServiceRequest(
+        'procedure-category',
+        'concept-uuid-2',
+        'Test Procedure 2',
+      );
     });
 
     // Find the submit button
