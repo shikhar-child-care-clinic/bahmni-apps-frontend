@@ -1,9 +1,9 @@
 import { get } from '../../api';
 import {
-  createMockFhirAppointment,
+  createMockAppointment,
   createEmptyBundle,
   createBundleWithAppointments,
-} from '../_mocks_/mockData';
+} from '../__mocks__/mocks';
 import {
   getUpcomingAppointments,
   getPastAppointments,
@@ -30,14 +30,14 @@ const setupEmptyBundle = () => {
 };
 
 const SINGLE_APPOINTMENT = {
-  upcoming: createMockFhirAppointment(
+  upcoming: createMockAppointment(
     'appt-uuid-1',
     'APT-001',
     '2025-02-15T10:30:00Z',
     'Dr. Smith',
     'booked',
   ),
-  past: createMockFhirAppointment(
+  past: createMockAppointment(
     'appt-uuid-past-1',
     'APT-OLD-001',
     '2025-01-10T10:30:00Z',
@@ -71,14 +71,14 @@ describe('Appointment Service', () => {
 
     it('should return FHIR Bundle with appointments and participant information', async () => {
       const mockBundle = setupMockBundle([
-        createMockFhirAppointment(
+        createMockAppointment(
           'appt-uuid-1',
           'APT-001',
           '2025-02-15T10:30:00Z',
           'Dr. Smith',
           'booked',
         ),
-        createMockFhirAppointment(
+        createMockAppointment(
           'appt-uuid-2',
           'APT-002',
           '2025-02-20T14:00:00Z',
@@ -135,14 +135,14 @@ describe('Appointment Service', () => {
 
     it('should return FHIR Bundle with past appointments and location information in participant', async () => {
       const mockBundle = setupMockBundle([
-        createMockFhirAppointment(
+        createMockAppointment(
           'appt-uuid-past-1',
           'APT-OLD-001',
           '2025-01-10T10:30:00Z',
           'Dr. Johnson',
           'fulfilled',
         ),
-        createMockFhirAppointment(
+        createMockAppointment(
           'appt-uuid-past-2',
           'APT-OLD-002',
           '2025-01-05T11:00:00Z',
