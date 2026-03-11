@@ -205,7 +205,13 @@ export const RadiologyInvestigationReport: React.FC<
 
   if (isLoadingReportBundle) {
     return (
-      <SortableDataTable headers={headers} rows={[]} loading ariaLabel={''} />
+      <SortableDataTable
+        headers={headers}
+        rows={[]}
+        loading
+        ariaLabel={''}
+        className={styles.fullWidth}
+      />
     );
   }
 

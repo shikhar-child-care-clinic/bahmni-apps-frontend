@@ -74,6 +74,7 @@ export const VideoTile: React.FC<VideoTileProps> = ({
           passiveModal
           size="lg"
           id="modalIdForActionAreaLayout"
+          portalId={'main-display-area'}
           testId={`${id}-modal-test-id`}
         >
           <div className={styles.modalVideoContainer}>

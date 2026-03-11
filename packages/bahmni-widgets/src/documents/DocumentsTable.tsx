@@ -154,7 +154,8 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
 
       {isModalOpen && selectedDoc && (
         <Modal
-          id="documents-view-modal"
+          id="modalIdForActionAreaLayout"
+          portalId={'main-display-area'}
           open={isModalOpen}
           onRequestClose={handleCloseModal}
           modalHeading={selectedDoc.documentIdentifier}
