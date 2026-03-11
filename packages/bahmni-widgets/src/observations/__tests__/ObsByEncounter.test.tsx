@@ -190,7 +190,9 @@ describe('ObsByEncounter', () => {
         <ObsByEncounter groupedData={groupedData} />,
       );
 
-      const fileTileButton = container.querySelector(`[data-testid="${pdfPath}-pdf-test-id"]`);
+      const fileTileButton = container.querySelector(
+        `[data-testid="${pdfPath}-pdf-test-id"]`,
+      );
       expect(fileTileButton).toBeInTheDocument();
       expect(fileTileButton?.tagName).toBe('BUTTON');
     });
