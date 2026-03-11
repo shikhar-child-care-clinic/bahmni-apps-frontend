@@ -8,12 +8,20 @@ interface Location {
   uuid: string;
 }
 
+interface AppointmentAttribute {
+  uuid: string;
+  attributeType: string;
+  attributeTypeUuid: string;
+  value: string;
+}
+
 export interface AppointmentService {
   appointmentServiceId: number;
   uuid: string;
   name: string;
   description: string | null;
   speciality: Speciality | null;
+  attributes: AppointmentAttribute[] | null;
   startTime: string;
   endTime: string;
   location: Location | null;
