@@ -152,8 +152,8 @@ const ConsultationPage: React.FC = () => {
 
   const sidebarItems = useMemo(() => {
     if (!dashboardConfig) return [];
-    return getSidebarItems(dashboardConfig, t);
-  }, [dashboardConfig, t]);
+    return getSidebarItems(dashboardConfig, t, userPrivileges);
+  }, [dashboardConfig, t, userPrivileges]);
 
   const { activeItemId, handleItemClick } = useSidebarNavigation(sidebarItems);
 

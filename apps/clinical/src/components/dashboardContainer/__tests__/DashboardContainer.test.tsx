@@ -19,9 +19,10 @@ jest.mock('@bahmni/services', () => ({
   })),
 }));
 
-// Mock the usePatientUUID hook
+// Mock the usePatientUUID and useUserPrivilege hooks
 jest.mock('@bahmni/widgets', () => ({
   usePatientUUID: jest.fn(),
+  useUserPrivilege: jest.fn(() => ({ userPrivileges: [] })),
 }));
 
 jest.mock('@tanstack/react-query', () => ({

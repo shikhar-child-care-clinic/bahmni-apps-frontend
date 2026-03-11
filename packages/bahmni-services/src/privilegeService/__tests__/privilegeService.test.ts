@@ -26,8 +26,13 @@ describe('privilegeService', () => {
         { name: 'edit:forms' },
         { name: 'delete:forms' },
       ];
+      const mockSessionResponse = {
+        user: {
+          privileges: mockPrivileges,
+        },
+      };
 
-      mockedGet.mockResolvedValue(mockPrivileges);
+      mockedGet.mockResolvedValue(mockSessionResponse);
 
       // Act
       const result = await getCurrentUserPrivileges();
@@ -36,7 +41,7 @@ describe('privilegeService', () => {
       expect(result).toEqual(mockPrivileges);
       expect(result).toHaveLength(4);
       expect(mockedGet).toHaveBeenCalledWith(
-        '/openmrs/ws/rest/v1/bahmnicore/whoami',
+        '/openmrs/ws/rest/v1/session',
       );
       expect(mockedGet).toHaveBeenCalledTimes(1);
     });
@@ -44,8 +49,13 @@ describe('privilegeService', () => {
     it('should return single privilege when user has only one privilege', async () => {
       // Arrange
       const mockPrivileges = [{ name: 'app:clinical:observationForms' }];
+      const mockSessionResponse = {
+        user: {
+          privileges: mockPrivileges,
+        },
+      };
 
-      mockedGet.mockResolvedValue(mockPrivileges);
+      mockedGet.mockResolvedValue(mockSessionResponse);
 
       // Act
       const result = await getCurrentUserPrivileges();
@@ -55,7 +65,7 @@ describe('privilegeService', () => {
       expect(result).toHaveLength(1);
       expect(result![0].name).toBe('app:clinical:observationForms');
       expect(mockedGet).toHaveBeenCalledWith(
-        '/openmrs/ws/rest/v1/bahmnicore/whoami',
+        '/openmrs/ws/rest/v1/session',
       );
     });
 
@@ -67,8 +77,13 @@ describe('privilegeService', () => {
         { name: 'app:clinical:observationForms:delete' },
         { name: 'app:clinical:consultationPad:access' },
       ];
+      const mockSessionResponse = {
+        user: {
+          privileges: mockPrivileges,
+        },
+      };
 
-      mockedGet.mockResolvedValue(mockPrivileges);
+      mockedGet.mockResolvedValue(mockSessionResponse);
 
       // Act
       const result = await getCurrentUserPrivileges();
@@ -80,13 +95,19 @@ describe('privilegeService', () => {
         result!.every((privilege) => privilege.name.includes('app:clinical')),
       ).toBe(true);
       expect(mockedGet).toHaveBeenCalledWith(
-        '/openmrs/ws/rest/v1/bahmnicore/whoami',
+        '/openmrs/ws/rest/v1/session',
       );
     });
 
     it('should return empty array when user has no privileges', async () => {
       // Arrange
-      mockedGet.mockResolvedValue([]);
+      const mockSessionResponse = {
+        user: {
+          privileges: [],
+        },
+      };
+
+      mockedGet.mockResolvedValue(mockSessionResponse);
 
       // Act
       const result = await getCurrentUserPrivileges();
@@ -95,7 +116,7 @@ describe('privilegeService', () => {
       expect(result).toEqual([]);
       expect(result).toHaveLength(0);
       expect(mockedGet).toHaveBeenCalledWith(
-        '/openmrs/ws/rest/v1/bahmnicore/whoami',
+        '/openmrs/ws/rest/v1/session',
       );
     });
 
@@ -118,7 +139,7 @@ describe('privilegeService', () => {
       expect(mockedGetFormattedError).toHaveBeenCalledWith(serverError);
     });
 
-    it('should handle undefined response', async () => {
+    it('should handle undefined session response', async () => {
       // Arrange
       mockedGet.mockResolvedValue(undefined);
 
@@ -126,9 +147,9 @@ describe('privilegeService', () => {
       const result = await getCurrentUserPrivileges();
 
       // Assert
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
       expect(mockedGet).toHaveBeenCalledWith(
-        '/openmrs/ws/rest/v1/bahmnicore/whoami',
+        '/openmrs/ws/rest/v1/session',
       );
     });
 
@@ -139,8 +160,13 @@ describe('privilegeService', () => {
         { name: 'valid:privilege' },
         { name: '   ' },
       ];
+      const mockSessionResponse = {
+        user: {
+          privileges: mockPrivileges,
+        },
+      };
 
-      mockedGet.mockResolvedValue(mockPrivileges);
+      mockedGet.mockResolvedValue(mockSessionResponse);
 
       // Act
       const result = await getCurrentUserPrivileges();
@@ -149,15 +175,20 @@ describe('privilegeService', () => {
       expect(result).toEqual(mockPrivileges);
       expect(result).toHaveLength(3);
       expect(mockedGet).toHaveBeenCalledWith(
-        '/openmrs/ws/rest/v1/bahmnicore/whoami',
+        '/openmrs/ws/rest/v1/session',
       );
     });
 
     it('should handle response with null privilege objects', async () => {
       // Arrange
       const mockPrivileges = [null, { name: 'valid:privilege' }, undefined];
+      const mockSessionResponse = {
+        user: {
+          privileges: mockPrivileges,
+        },
+      };
 
-      mockedGet.mockResolvedValue(mockPrivileges);
+      mockedGet.mockResolvedValue(mockSessionResponse);
 
       // Act
       const result = await getCurrentUserPrivileges();
@@ -166,7 +197,25 @@ describe('privilegeService', () => {
       expect(result).toEqual(mockPrivileges);
       expect(result).toHaveLength(3);
       expect(mockedGet).toHaveBeenCalledWith(
-        '/openmrs/ws/rest/v1/bahmnicore/whoami',
+        '/openmrs/ws/rest/v1/session',
+      );
+    });
+
+    it('should return null when session response is missing user.privileges', async () => {
+      // Arrange
+      const mockSessionResponse = {
+        user: {},
+      };
+
+      mockedGet.mockResolvedValue(mockSessionResponse);
+
+      // Act
+      const result = await getCurrentUserPrivileges();
+
+      // Assert
+      expect(result).toBeNull();
+      expect(mockedGet).toHaveBeenCalledWith(
+        '/openmrs/ws/rest/v1/session',
       );
     });
   });
