@@ -79,7 +79,7 @@ export {
   APPOINTMENT_STATUSES,
   APPOINTMENT_IDENTIFIER_SYSTEM,
   type AppointmentService,
-} from './appointment';
+} from './appointmentService';
 export { getFormattedError } from './errorHandling';
 export {
   capitalize,
