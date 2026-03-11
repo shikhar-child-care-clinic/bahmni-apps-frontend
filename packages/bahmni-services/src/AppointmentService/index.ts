@@ -6,11 +6,8 @@ export {
   getPastAppointments,
   getAllAppointmentServices,
 } from './appointmentService';
+export { type AppointmentService } from './models';
 export {
-  type Appointment,
-  type AppointmentSearchResult,
-  type AppointmentService,
-  type Location,
-  type Reason,
-  type Speciality,
-} from './models';
+  APPOINTMENT_STATUSES,
+  APPOINTMENT_IDENTIFIER_SYSTEM,
+} from './constants';

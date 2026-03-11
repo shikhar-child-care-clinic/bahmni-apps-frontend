@@ -76,16 +76,10 @@ export {
   getUpcomingAppointments,
   getPastAppointments,
   getAllAppointmentServices,
-} from './AppointmentService/appointmentService';
-export {
-  type Appointment,
-  type AppointmentSearchResult,
-  type Patient,
+  APPOINTMENT_STATUSES,
+  APPOINTMENT_IDENTIFIER_SYSTEM,
   type AppointmentService,
-  type Location,
-  type Reason,
-  type Speciality,
-} from './AppointmentService/models';
+} from './AppointmentService';
 export { getFormattedError } from './errorHandling';
 export {
   capitalize,
