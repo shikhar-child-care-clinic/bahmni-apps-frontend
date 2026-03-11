@@ -389,5 +389,74 @@ describe('LabInvestigation', () => {
         expect(mockGetLabInvestigationsBundle).toHaveBeenCalled();
       });
     });
+
+    it('does not refetch when event is for different patient', async () => {
+      let eventCallback: (payload: any) => void = () => {};
+      mockUseSubscribeConsultationSaved.mockImplementation((callback) => {
+        eventCallback = callback;
+      });
+      render(renderLabInvestigations({ orderType: 'Lab Order' }));
+      await waitForData();
+
+      mockGetLabInvestigationsBundle.mockClear();
+      eventCallback({
+        patientUUID: 'different-patient',
+        updatedResources: {
+          conditions: false,
+          allergies: false,
+          medications: false,
+          serviceRequests: { 'lab order': true },
+        },
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(mockGetLabInvestigationsBundle).not.toHaveBeenCalled();
+    });
+
+    it('does not refetch when different category was updated', async () => {
+      let eventCallback: (payload: any) => void = () => {};
+      mockUseSubscribeConsultationSaved.mockImplementation((callback) => {
+        eventCallback = callback;
+      });
+      render(renderLabInvestigations({ orderType: 'Lab Order' }));
+      await waitForData();
+
+      mockGetLabInvestigationsBundle.mockClear();
+      eventCallback({
+        patientUUID: 'patient-123',
+        updatedResources: {
+          conditions: false,
+          allergies: false,
+          medications: false,
+          serviceRequests: { 'radiology order': true },
+        },
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(mockGetLabInvestigationsBundle).not.toHaveBeenCalled();
+    });
+
+    it('does not refetch when serviceRequests is empty', async () => {
+      let eventCallback: (payload: any) => void = () => {};
+      mockUseSubscribeConsultationSaved.mockImplementation((callback) => {
+        eventCallback = callback;
+      });
+      render(renderLabInvestigations({ orderType: 'Lab Order' }));
+      await waitForData();
+
+      mockGetLabInvestigationsBundle.mockClear();
+      eventCallback({
+        patientUUID: 'patient-123',
+        updatedResources: {
+          conditions: true,
+          allergies: false,
+          medications: false,
+          serviceRequests: {},
+        },
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(mockGetLabInvestigationsBundle).not.toHaveBeenCalled();
+    });
   });
 });
