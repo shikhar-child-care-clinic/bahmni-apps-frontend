@@ -389,6 +389,5 @@ describe('LabInvestigation', () => {
         expect(mockGetLabInvestigationsBundle).toHaveBeenCalled();
       });
     });
-
   });
 });
