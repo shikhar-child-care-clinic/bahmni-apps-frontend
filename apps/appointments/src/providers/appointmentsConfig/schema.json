@@ -3,7 +3,6 @@
   "title": "Appointments App Configuration Schema",
   "description": "Schema for global appointments app configuration",
   "type": "object",
-  "required": ["serviceTableFields"],
   "additionalProperties": false,
   "properties": {
     "serviceTableFields": {

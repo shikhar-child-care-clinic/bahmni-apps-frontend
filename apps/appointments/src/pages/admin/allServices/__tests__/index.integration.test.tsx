@@ -9,6 +9,22 @@ jest.mock('@bahmni/services', () => ({
   getAllAppointmentServices: jest.fn(),
 }));
 
+jest.mock('../../../../providers/appointmentsConfig', () => ({
+  useAppointmentsConfig: jest.fn(() => ({
+    appointmentsConfig: {
+      serviceTableFields: [
+        'name',
+        'location',
+        'speciality',
+        'durationMins',
+        'description',
+      ],
+    },
+    isLoading: false,
+    error: null,
+  })),
+}));
+
 describe('AllServicesPage Integration', () => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: 0 } },

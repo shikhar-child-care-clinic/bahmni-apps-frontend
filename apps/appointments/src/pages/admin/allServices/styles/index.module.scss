@@ -9,16 +9,16 @@
 }
 
 .table {
-  td:nth-child(1) {
+  [data-testid$="-name"] {
     @include type-style("body-compact-01");
     font-weight: 700;
   }
-  tr > :nth-child(1),
-  tr > :nth-child(5) {
+  td[data-testid$="-name"],
+  td[data-testid$="-description"] {
     width: 25%;
   }
-  tr > :nth-child(4),
-  tr > :nth-child(6) {
+  td[data-testid$="-durationMins"],
+  td[data-testid$="-actions"] {
     width: 11%;
   }
 }

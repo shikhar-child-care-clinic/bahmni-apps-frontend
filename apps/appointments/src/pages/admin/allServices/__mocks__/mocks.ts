@@ -13,6 +13,14 @@ export const mockAppointmentServices: AppointmentService[] = [
     durationMins: 15,
     color: '#00FF00',
     initialAppointmentStatus: 'Scheduled',
+    attributes: [
+      {
+        uuid: 'attr-uuid-1',
+        attributeType: 'serviceType',
+        attributeTypeUuid: 'attr-type-uuid-1',
+        value: 'OPD',
+      },
+    ],
   },
   {
     appointmentServiceId: 2,
@@ -26,6 +34,14 @@ export const mockAppointmentServices: AppointmentService[] = [
     durationMins: 30,
     color: '#0000FF',
     initialAppointmentStatus: 'Scheduled',
+    attributes: [
+      {
+        uuid: 'attr-uuid-2',
+        attributeType: 'serviceType',
+        attributeTypeUuid: 'attr-type-uuid-1',
+        value: 'OPD',
+      },
+    ],
   },
   {
     appointmentServiceId: 3,
@@ -39,5 +55,6 @@ export const mockAppointmentServices: AppointmentService[] = [
     durationMins: null,
     color: '#FF0000',
     initialAppointmentStatus: null,
+    attributes: null,
   },
 ];

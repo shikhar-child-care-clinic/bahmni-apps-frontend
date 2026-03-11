@@ -1,71 +1,56 @@
 import { ActionDataTable, BaseLayout, Header } from '@bahmni/design-system';
 import {
-  AppointmentService,
   BAHMNI_HOME_PATH,
   getAllAppointmentServices,
   useTranslation,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useAppointmentsConfig } from '../../../providers/appointmentsConfig';
 import { KNOWN_FIELDS } from './constants';
+import { AppointmentServiceViewModel } from './model';
 import styles from './styles/index.module.scss';
-
-type ServiceRow = AppointmentService & { id: string };
+import {
+  createAppointmentServiceViewModels,
+  createServiceHeaders,
+  extractServiceAttributeNames,
+} from './utils';
 
 const AllServicesPage: React.FC = () => {
   const { t } = useTranslation();
+  const { appointmentsConfig } = useAppointmentsConfig();
+  const serviceTableFields = appointmentsConfig?.serviceTableFields ?? [
+    ...KNOWN_FIELDS,
+  ];
+
+  const attributeNames = useMemo(
+    () => extractServiceAttributeNames(serviceTableFields),
+    [serviceTableFields],
+  );
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ['allAppointmentServices'],
     queryFn: getAllAppointmentServices,
   });
 
-  const headers = [
-    {
-      key: KNOWN_FIELDS.NAME,
-      header: t('ADMIN_ALL_SERVICES_COLUMN_SERVICE_NAME'),
-    },
-    {
-      key: KNOWN_FIELDS.LOCATION,
-      header: t('ADMIN_ALL_SERVICES_COLUMN_LOCATION'),
-    },
-    {
-      key: KNOWN_FIELDS.SPECIALITY,
-      header: t('ADMIN_ALL_SERVICES_COLUMN_SPECIALITY'),
-    },
-    {
-      key: KNOWN_FIELDS.DURATION_MINS,
-      header: t('ADMIN_ALL_SERVICES_COLUMN_DURATION'),
-    },
-    {
-      key: KNOWN_FIELDS.DESCRIPTION,
-      header: t('ADMIN_ALL_SERVICES_COLUMN_DESCRIPTION'),
-    },
-    {
-      key: KNOWN_FIELDS.ACTIONS,
-      header: t('ADMIN_ALL_SERVICES_COLUMN_ACTIONS'),
-    },
-  ];
+  const headers = useMemo(
+    () => createServiceHeaders(serviceTableFields, t),
+    [serviceTableFields],
+  );
 
-  const rows: ServiceRow[] = (data ?? []).map((service) => ({
-    ...service,
-    id: service.uuid,
-  }));
+  const rows: AppointmentServiceViewModel[] = useMemo(
+    () => createAppointmentServiceViewModels(data ?? [], attributeNames),
+    [data, attributeNames],
+  );
 
-  const renderCell = (row: ServiceRow, cellId: string): React.ReactNode => {
-    switch (cellId) {
-      case KNOWN_FIELDS.LOCATION:
-        return row.location?.name ?? '-';
-      case KNOWN_FIELDS.SPECIALITY:
-        return row.speciality?.name ?? '-';
-      case KNOWN_FIELDS.DURATION_MINS:
-        return row.durationMins ?? '-';
-      case KNOWN_FIELDS.DESCRIPTION:
-        return row.description ?? '-';
-      case KNOWN_FIELDS.ACTIONS:
-        return null;
-      default:
-        return String(row[cellId as keyof ServiceRow] ?? '-');
-    }
+  const renderCell = (
+    row: AppointmentServiceViewModel,
+    cellId: string,
+  ): React.ReactNode => {
+    if (cellId === 'actions') return null;
+    if (KNOWN_FIELDS.includes(cellId))
+      return row[cellId as keyof AppointmentServiceViewModel] ?? '-';
+    return row.attributes[cellId] ?? '-';
   };
 
   const breadcrumbs = [

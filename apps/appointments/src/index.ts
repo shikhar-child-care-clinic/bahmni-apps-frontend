@@ -1,4 +1,4 @@
-import '@bahmni/design-system/styles';
+import '@bahmni/widgets/styles';
 import './styles.scss';
 
 export { default as AppointmentsApp } from './App';

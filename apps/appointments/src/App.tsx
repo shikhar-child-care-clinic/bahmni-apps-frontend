@@ -1,4 +1,4 @@
-import { Loading, initFontAwesome } from '@bahmni/design-system';
+import { Content, Loading, initFontAwesome } from '@bahmni/design-system';
 import { initAppI18n } from '@bahmni/services';
 import {
   NotificationProvider,
@@ -39,19 +39,21 @@ export function App() {
     return <Loading />;
   }
   return (
-    <QueryClientProvider client={queryClient}>
-      <NotificationProvider>
-        <UserPrivilegeProvider>
-          <NotificationServiceComponent />
-          <AppointmentsConfigProvider>
-            <Suspense fallback={<Loading />}>
-              <Routes>{renderRoutes(routes)}</Routes>
-            </Suspense>
-            <ReactQueryDevtools initialIsOpen={false} />
-          </AppointmentsConfigProvider>
-        </UserPrivilegeProvider>
-      </NotificationProvider>
-    </QueryClientProvider>
+    <Content>
+      <QueryClientProvider client={queryClient}>
+        <NotificationProvider>
+          <UserPrivilegeProvider>
+            <NotificationServiceComponent />
+            <AppointmentsConfigProvider>
+              <Suspense fallback={<Loading />}>
+                <Routes>{renderRoutes(routes)}</Routes>
+              </Suspense>
+              <ReactQueryDevtools initialIsOpen={false} />
+            </AppointmentsConfigProvider>
+          </UserPrivilegeProvider>
+        </NotificationProvider>
+      </QueryClientProvider>
+    </Content>
   );
 }
 

@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-query';
 import { render, screen, act } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
+import { useAppointmentsConfig } from '../../../../providers/appointmentsConfig';
 import { mockAppointmentServices } from '../__mocks__/mocks';
 import AllServicesPage from '../index';
 
@@ -13,6 +14,22 @@ expect.extend(toHaveNoViolations);
 jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),
   useQuery: jest.fn(),
+}));
+
+jest.mock('../../../../providers/appointmentsConfig', () => ({
+  useAppointmentsConfig: jest.fn(() => ({
+    appointmentsConfig: {
+      serviceTableFields: [
+        'name',
+        'location',
+        'speciality',
+        'durationMins',
+        'description',
+      ],
+    },
+    isLoading: false,
+    error: null,
+  })),
 }));
 
 describe('AllServicesPage', () => {
@@ -104,6 +121,48 @@ describe('AllServicesPage', () => {
         ).toHaveTextContent('-');
       },
     );
+  });
+
+  it('should use KNOWN_FIELDS as default when serviceTableFields is not configured', () => {
+    jest.mocked(useAppointmentsConfig).mockReturnValue({
+      appointmentsConfig: null,
+      isLoading: false,
+      error: null,
+    });
+    (useQuery as jest.Mock).mockReturnValue({
+      data: mockAppointmentServices,
+      isError: false,
+      isLoading: false,
+    });
+    render(wrapper);
+    [
+      'Service Name',
+      'Location',
+      'Speciality',
+      'Duration (mins)',
+      'Description',
+    ].forEach((header) => expect(screen.getByText(header)).toBeInTheDocument());
+  });
+
+  it('should render attribute columns from config', () => {
+    jest.mocked(useAppointmentsConfig).mockReturnValue({
+      appointmentsConfig: {
+        serviceTableFields: ['name', 'serviceType'],
+      },
+      isLoading: false,
+      error: null,
+    });
+    (useQuery as jest.Mock).mockReturnValue({
+      data: mockAppointmentServices,
+      isError: false,
+      isLoading: false,
+    });
+    render(wrapper);
+    expect(screen.getAllByText('OPD')).toHaveLength(2);
+    const rowId = mockAppointmentServices[1].uuid;
+    expect(
+      screen.getByTestId(`table-cell-${rowId}-serviceType`),
+    ).toHaveTextContent('OPD');
   });
 
   describe('Snapshot', () => {

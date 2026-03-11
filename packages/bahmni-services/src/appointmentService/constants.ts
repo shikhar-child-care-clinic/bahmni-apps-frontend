@@ -19,7 +19,7 @@ export const APPOINTMENTS_URL = OPENMRS_REST_V1 + '/appointments';
 
 // FHIR Appointment identifier system
 export const APPOINTMENT_IDENTIFIER_SYSTEM =
-  'https://fhir.bahmni.org/code-system/appointments';
+  'http://fhir.bahmni.org/code-system/appointments';
 
 export const getAppointmentByIdUrl = (uuid: string): string =>
   `${APPOINTMENTS_URL}/${uuid}`;
