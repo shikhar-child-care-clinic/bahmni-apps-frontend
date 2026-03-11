@@ -32,7 +32,7 @@ exports[`ConditionsAndDiagnoses Snapshot Tests duplicate diagnosis search should
             class="cds--text-input cds--text-input--empty"
             data-testid="diagnoses-search-combobox"
             id="diagnoses-search"
-            placeholder="Search to add new diagnosis"
+            placeholder="Search to add new Diagnosis"
             role="combobox"
             tabindex="0"
             title=""
@@ -113,7 +113,7 @@ exports[`ConditionsAndDiagnoses Snapshot Tests duplicate diagnosis search should
                   data-testid="add-as-condition-link"
                   href="#"
                 >
-                  Add as condition
+                  Add as Condition
                 </a>
               </div>
               <div
@@ -270,7 +270,7 @@ exports[`ConditionsAndDiagnoses Snapshot Tests empty form matches snapshot 1`] =
             class="cds--text-input cds--text-input--empty"
             data-testid="diagnoses-search-combobox"
             id="diagnoses-search"
-            placeholder="Search to add new diagnosis"
+            placeholder="Search to add new Diagnosis"
             role="combobox"
             tabindex="0"
             title=""
@@ -348,7 +348,7 @@ exports[`ConditionsAndDiagnoses Snapshot Tests form with both diagnoses and cond
             class="cds--text-input cds--text-input--empty"
             data-testid="diagnoses-search-combobox"
             id="diagnoses-search"
-            placeholder="Search to add new diagnosis"
+            placeholder="Search to add new Diagnosis"
             role="combobox"
             tabindex="0"
             title=""
@@ -429,7 +429,7 @@ exports[`ConditionsAndDiagnoses Snapshot Tests form with both diagnoses and cond
                   data-testid="add-as-condition-link"
                   href="#"
                 >
-                  Add as condition
+                  Add as Condition
                 </a>
               </div>
               <div
@@ -952,7 +952,7 @@ exports[`ConditionsAndDiagnoses Snapshot Tests form with search results matches 
             class="cds--text-input cds--text-input--empty"
             data-testid="diagnoses-search-combobox"
             id="diagnoses-search"
-            placeholder="Search to add new diagnosis"
+            placeholder="Search to add new Diagnosis"
             role="combobox"
             tabindex="0"
             title=""
@@ -1030,7 +1030,7 @@ exports[`ConditionsAndDiagnoses Snapshot Tests form with selected conditions mat
             class="cds--text-input cds--text-input--empty"
             data-testid="diagnoses-search-combobox"
             id="diagnoses-search"
-            placeholder="Search to add new diagnosis"
+            placeholder="Search to add new Diagnosis"
             role="combobox"
             tabindex="0"
             title=""
@@ -1474,7 +1474,7 @@ exports[`ConditionsAndDiagnoses Snapshot Tests form with selected diagnoses matc
             class="cds--text-input cds--text-input--empty"
             data-testid="diagnoses-search-combobox"
             id="diagnoses-search"
-            placeholder="Search to add new diagnosis"
+            placeholder="Search to add new Diagnosis"
             role="combobox"
             tabindex="0"
             title=""
@@ -1555,7 +1555,7 @@ exports[`ConditionsAndDiagnoses Snapshot Tests form with selected diagnoses matc
                   data-testid="add-as-condition-link"
                   href="#"
                 >
-                  Add as condition
+                  Add as Condition
                 </a>
               </div>
               <div
