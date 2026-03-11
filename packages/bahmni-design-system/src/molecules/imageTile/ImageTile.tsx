@@ -65,6 +65,7 @@ export const ImageTile: React.FC<ImageTileProps> = ({
           passiveModal
           size="lg"
           id="modalIdForActionAreaLayout"
+          portalId={'main-display-area'}
           testId={`${id}-modal-test-id`}
         >
           <div className={styles.modalImageContainer}>
