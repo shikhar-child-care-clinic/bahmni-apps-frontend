@@ -5,3 +5,6 @@ export const KNOWN_FIELDS: string[] = [
   'durationMins',
   'description',
 ];
+
+export const MANAGE_APPOINTMENT_SERVICES_PRIVILEGE =
+  'app:appointments:manageServices';
