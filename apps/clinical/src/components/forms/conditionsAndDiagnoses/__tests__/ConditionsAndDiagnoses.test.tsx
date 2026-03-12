@@ -289,7 +289,7 @@ describe('ConditionsAndDiagnoses', () => {
       renderComponent();
       expect(screen.getByText('Conditions and Diagnoses')).toBeInTheDocument();
       expect(
-        screen.getByPlaceholderText('Search to add new diagnosis'),
+        screen.getByPlaceholderText('Search to add new Diagnosis'),
       ).toBeInTheDocument();
     });
 
@@ -346,7 +346,7 @@ describe('ConditionsAndDiagnoses', () => {
       renderComponent([], [], mockConcepts);
 
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
       await user.type(searchInput, 'hyper');
       await user.click(screen.getByText('Hypertension'));
@@ -361,7 +361,7 @@ describe('ConditionsAndDiagnoses', () => {
       renderComponent([], [], mockConcepts);
 
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
 
       // First selection
@@ -397,7 +397,7 @@ describe('ConditionsAndDiagnoses', () => {
       renderComponent([existingDiagnosis], [], mockConcepts);
 
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
       await user.type(searchInput, 'hyper');
 
@@ -419,7 +419,7 @@ describe('ConditionsAndDiagnoses', () => {
       renderComponent([existingDiagnosis], [], mockConcepts);
 
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
       await user.type(searchInput, 'hyper');
 
@@ -471,7 +471,7 @@ describe('ConditionsAndDiagnoses', () => {
       renderComponent([], [], [], true);
 
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
 
       await user.type(searchInput, 'test');
@@ -479,7 +479,7 @@ describe('ConditionsAndDiagnoses', () => {
 
       expect(mockedUseConceptSearch).toHaveBeenCalledWith('');
       expect(
-        screen.queryByText('No matching diagnosis recorded'),
+        screen.queryByText('No matching Diagnosis recorded'),
       ).not.toBeInTheDocument();
     });
 
@@ -488,7 +488,7 @@ describe('ConditionsAndDiagnoses', () => {
       renderComponent([], [], [], true);
 
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
       await user.type(searchInput, 'hyper');
 
@@ -501,7 +501,7 @@ describe('ConditionsAndDiagnoses', () => {
       renderComponent([], [], mockConcepts);
 
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
       await user.type(searchInput, 'hyper');
 
@@ -514,12 +514,12 @@ describe('ConditionsAndDiagnoses', () => {
       renderComponent([], [], []);
 
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
       await user.type(searchInput, 'nonexistent');
 
       expect(
-        screen.getByText('No matching diagnosis recorded'),
+        screen.getByText('No matching Diagnosis recorded'),
       ).toBeInTheDocument();
     });
 
@@ -528,7 +528,7 @@ describe('ConditionsAndDiagnoses', () => {
       renderComponent([], [], [], false, new Error('API Error'));
 
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
       await user.type(searchInput, 'test');
 
@@ -544,7 +544,7 @@ describe('ConditionsAndDiagnoses', () => {
       const user = userEvent.setup();
       renderComponent();
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
       await user.type(searchInput, 'hy');
 
@@ -661,7 +661,7 @@ describe('ConditionsAndDiagnoses', () => {
       renderComponent([], [], [], false, null, [], true); // Existing conditions loading
 
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
       await user.type(searchInput, 'test');
 
@@ -682,11 +682,11 @@ describe('ConditionsAndDiagnoses', () => {
       );
 
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
       await user.type(searchInput, 'test');
       expect(
-        screen.getByText('No matching diagnosis recorded'),
+        screen.getByText('No matching Diagnosis recorded'),
       ).toBeInTheDocument();
     });
 
@@ -704,7 +704,7 @@ describe('ConditionsAndDiagnoses', () => {
       );
 
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
       await user.type(searchInput, 'test');
 
@@ -734,7 +734,7 @@ describe('ConditionsAndDiagnoses', () => {
       );
 
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
       await user.type(searchInput, 'hyper');
 
@@ -758,7 +758,7 @@ describe('ConditionsAndDiagnoses', () => {
       );
 
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
       await user.type(searchInput, 'hyper');
 
@@ -825,7 +825,7 @@ describe('ConditionsAndDiagnoses', () => {
 
       renderComponent([], [], [mockConceptMissingUuid]);
       const searchInput = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
       await userEvent.type(searchInput, 'Test');
 
@@ -878,7 +878,7 @@ describe('ConditionsAndDiagnoses', () => {
       renderComponent([], [], mockConcepts);
 
       const searchBox = screen.getByPlaceholderText(
-        'Search to add new diagnosis',
+        'Search to add new Diagnosis',
       );
 
       // Type to open dropdown
