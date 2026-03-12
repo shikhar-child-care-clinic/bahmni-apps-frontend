@@ -29,10 +29,4 @@
   td[data-testid$="-actions"] {
     width: 11%;
   }
-  button[id^="delete-service-"]:hover {
-    background-color: $support-error !important;
-    svg {
-      fill: $background;
-    }
-  }
 }
