@@ -2,6 +2,7 @@ import { DocumentView } from '@carbon/icons-react';
 import classNames from 'classnames';
 import React, { useState } from 'react';
 import { Modal } from '../../atoms/modal';
+import { DOCUMENT_AUTH_BASE_URL } from '../shared/constants';
 import styles from './styles/FileTile.module.scss';
 
 export interface FileTileProps {
@@ -12,8 +13,6 @@ export interface FileTileProps {
   onModalOpen?: () => void;
   onModalClose?: () => void;
 }
-
-const baseURL = '/openmrs/auth?requested_document=/document_images/';
 
 export const FileTile: React.FC<FileTileProps> = ({
   src,
@@ -68,7 +67,7 @@ export const FileTile: React.FC<FileTileProps> = ({
               id={`${id}-modal-iframe`}
               data-testid={`${id}-modal-iframe-test-id`}
               aria-label={`${id}-modal-iframe-aria-label`}
-              src={baseURL + src}
+              src={DOCUMENT_AUTH_BASE_URL + src + '#toolbar=0'}
               className={styles.modalIframe}
               title={modalTitle ?? 'Document Viewer'}
             />
