@@ -77,9 +77,18 @@ export {
   getPastAppointments,
   getAllAppointmentServices,
   deleteAppointmentService,
+  createAppointmentService,
+  getServiceAttributeTypes,
+  getAppointmentLocations,
+  getAppointmentSpecialities,
   APPOINTMENT_STATUSES,
   APPOINTMENT_IDENTIFIER_SYSTEM,
   type AppointmentService,
+  type AppointmentServiceAttributeType,
+  type AppointmentLocation,
+  type AppointmentSpeciality,
+  type CreateAppointmentServiceRequest,
+  type CreateServiceWeeklyAvailability,
 } from './appointmentService';
 export { getFormattedError } from './errorHandling';
 export {
