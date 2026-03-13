@@ -12,6 +12,12 @@ const AllServicesPage = lazy(() =>
   })),
 );
 
+const AddServicePage = lazy(() =>
+  import('../pages/admin/addService').then((module) => ({
+    default: module.default,
+  })),
+);
+
 export const routes: Routes = [
   {
     path: '/',
@@ -22,6 +28,11 @@ export const routes: Routes = [
     path: '/admin/services',
     component: AllServicesPage,
     name: 'AdminAllServices',
+  },
+  {
+    path: '/admin/services/add',
+    component: AddServicePage,
+    name: 'AdminAddService',
   },
 ];
 
