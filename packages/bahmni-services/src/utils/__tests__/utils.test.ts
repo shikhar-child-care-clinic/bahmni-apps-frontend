@@ -13,6 +13,7 @@ import {
   getValueType,
   camelToScreamingSnakeCase,
   convertToSentenceCase,
+  resolveComboBoxItems,
 } from '../utils';
 
 describe('common utility functions', () => {
@@ -1123,6 +1124,85 @@ describe('common utility functions', () => {
       expect(convertToSentenceCase('PHONE_NUMBER')).toBe('Phone number');
       expect(convertToSentenceCase('address1')).toBe('Address 1');
       expect(convertToSentenceCase('')).toBe('');
+    });
+  });
+
+  describe('resolveComboBoxItems', () => {
+    const items = [
+      { uuid: 'uuid-1', name: 'General Medicine' },
+      { uuid: 'uuid-2', name: 'ENT' },
+    ];
+    const toSentinel = (message: string) => ({ uuid: '', name: message });
+    const messages = {
+      loading: 'Loading...',
+      error: 'Failed to load',
+      empty: 'No items found',
+    };
+
+    it.each([
+      {
+        scenario: 'isLoading is true',
+        isLoading: true,
+        isError: false,
+        expectedMessage: 'Loading...',
+      },
+      {
+        scenario: 'isError is true',
+        isLoading: false,
+        isError: true,
+        expectedMessage: 'Failed to load',
+      },
+    ])(
+      'should return a single disabled sentinel item when $scenario',
+      ({ isLoading, isError, expectedMessage }) => {
+        const result = resolveComboBoxItems(
+          isLoading,
+          isError,
+          items,
+          toSentinel,
+          messages,
+        );
+        expect(result).toEqual([
+          { uuid: '', name: expectedMessage, disabled: true },
+        ]);
+      },
+    );
+
+    it('should return a single disabled sentinel item when items is empty', () => {
+      const result = resolveComboBoxItems(
+        false,
+        false,
+        [],
+        toSentinel,
+        messages,
+      );
+      expect(result).toEqual([
+        { uuid: '', name: 'No items found', disabled: true },
+      ]);
+    });
+
+    it('should return the original items when not loading, not errored, and items exist', () => {
+      const result = resolveComboBoxItems(
+        false,
+        false,
+        items,
+        toSentinel,
+        messages,
+      );
+      expect(result).toEqual(items);
+    });
+
+    it('should prioritise isLoading over isError when both are true', () => {
+      const result = resolveComboBoxItems(
+        true,
+        true,
+        items,
+        toSentinel,
+        messages,
+      );
+      expect(result).toEqual([
+        { uuid: '', name: 'Loading...', disabled: true },
+      ]);
     });
   });
 });

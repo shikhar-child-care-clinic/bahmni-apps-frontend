@@ -305,6 +305,34 @@ export function camelToScreamingSnakeCase(str: string): string {
     .toUpperCase();
 }
 
+/**
+ * Resolves the items array for a ComboBox based on the current query state.
+ * Returns a single disabled sentinel item for loading, error, or empty states,
+ * otherwise returns the actual items.
+ *
+ * @param isLoading - Whether the data is currently loading
+ * @param isError - Whether the query encountered an error
+ * @param items - The actual data items to display when available
+ * @param toSentinel - Factory that creates a sentinel item of type T from a message string
+ * @param messages - The translated message strings for each state
+ */
+export function resolveComboBoxItems<T extends object>(
+  isLoading: boolean,
+  isError: boolean,
+  items: T[],
+  toSentinel: (message: string) => T,
+  messages: { loading: string; error: string; empty: string },
+): (T & { disabled?: boolean })[] {
+  const withDisabled = (msg: string): T & { disabled: true } => ({
+    ...toSentinel(msg),
+    disabled: true,
+  });
+  if (isLoading) return [withDisabled(messages.loading)];
+  if (isError) return [withDisabled(messages.error)];
+  if (!items.length) return [withDisabled(messages.empty)];
+  return items;
+}
+
 export function convertToSentenceCase(str: string): string {
   if (!str) return '';
 
