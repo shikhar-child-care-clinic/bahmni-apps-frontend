@@ -79,7 +79,7 @@ describe('FileTile', () => {
       expect(iframe).toBeInTheDocument();
       expect(iframe).toHaveAttribute(
         'src',
-        '/openmrs/auth?requested_document=/document_images/100/9-Consultation-27627c65-5f95-4118-b8e5-89f0aa8cc3b8.pdf#toolbar=0',
+        '/openmrs/auth?requested_document=/document_images/100/9-Consultation-27627c65-5f95-4118-b8e5-89f0aa8cc3b8.pdf',
       );
     });
   });
