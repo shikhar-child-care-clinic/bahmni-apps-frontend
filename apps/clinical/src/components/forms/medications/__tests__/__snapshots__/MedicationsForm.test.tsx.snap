@@ -10,7 +10,7 @@ exports[`MedicationsForm Snapshot Tests matches snapshot with no medications 1`]
       class="medicationsFormTitle"
       data-testid="medications-form-title"
     >
-      Prescribe medication
+      Medications
     </div>
     <div
       class="cds--list-box__wrapper"
@@ -27,12 +27,12 @@ exports[`MedicationsForm Snapshot Tests matches snapshot with no medications 1`]
             aria-controls="downshift-_r_af_-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
-            aria-label="Search to add medication"
+            aria-label="Search to add Medication"
             autocomplete="off"
             class="cds--text-input cds--text-input--empty"
             data-testid="medications-search-combobox"
             id="medications-search"
-            placeholder="Search to add medication"
+            placeholder="Search to add Medication"
             role="combobox"
             tabindex="0"
             title=""
@@ -88,7 +88,7 @@ exports[`MedicationsForm Snapshot Tests matches snapshot with selected medicatio
       class="medicationsFormTitle"
       data-testid="medications-form-title"
     >
-      Prescribe medication
+      Medications
     </div>
     <div
       class="cds--list-box__wrapper"
@@ -105,12 +105,12 @@ exports[`MedicationsForm Snapshot Tests matches snapshot with selected medicatio
             aria-controls="downshift-_r_ai_-menu"
             aria-expanded="false"
             aria-haspopup="listbox"
-            aria-label="Search to add medication"
+            aria-label="Search to add Medication"
             autocomplete="off"
             class="cds--text-input cds--text-input--empty"
             data-testid="medications-search-combobox"
             id="medications-search"
-            placeholder="Search to add medication"
+            placeholder="Search to add Medication"
             role="combobox"
             tabindex="0"
             title=""
@@ -153,7 +153,7 @@ exports[`MedicationsForm Snapshot Tests matches snapshot with selected medicatio
       </div>
     </div>
     <div
-      aria-label="Added medicines"
+      aria-label="Added Medications"
       class="_box_1jr6a_1 medicationsBox cds--css-grid cds--css-grid--narrow cds--css-grid--full-width"
       data-testid="box-w-title"
       role="region"
@@ -161,7 +161,7 @@ exports[`MedicationsForm Snapshot Tests matches snapshot with selected medicatio
       <div
         class="_header_1jr6a_8 cds--sm:col-span-4 cds--md:col-span-8 cds--lg:col-span-16 cds--xlg:col-span-16 cds--css-grid-column"
       >
-        Added medicines
+        Added Medications
       </div>
       <div
         class="cds--sm:col-span-4 cds--md:col-span-8 cds--lg:col-span-16 cds--xlg:col-span-16 cds--css-grid-column"
@@ -784,7 +784,7 @@ exports[`MedicationsForm Snapshot Tests matches snapshot with selected medicatio
                         dir="auto"
                         for="start-date-test-medication-1"
                       >
-                        Start date
+                        Start Date
                       </label>
                       <div
                         class="cds--date-picker-input__wrapper"

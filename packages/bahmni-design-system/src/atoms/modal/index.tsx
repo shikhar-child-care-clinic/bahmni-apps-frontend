@@ -10,19 +10,21 @@ import { createPortal } from 'react-dom';
 
 export type ModalProps = CarbonModalProps & {
   testId?: string;
+  portalId?: string;
 };
 
 export const Modal: React.FC<ModalProps> & {
   Header: typeof ModalHeader;
   Body: typeof ModalBody;
   Footer: typeof ModalFooter;
-} = ({ testId, children, ...carbonProps }) => {
+} = ({ testId, children, portalId, ...carbonProps }) => {
   /*
     Portal to div with id main-display-area for consistent positioning and stacking with
     layout-based modals and falls back to document.body if main-display-area doesn't exist.
     This ensures, consistent z-index stacking and positioning across all modals and
     layout-specific styling
   */
+
   return createPortal(
     <div
       id="modal-root"
@@ -33,7 +35,7 @@ export const Modal: React.FC<ModalProps> & {
         {children}
       </CarbonModal>
     </div>,
-    document.getElementById('main-display-area') ?? document.body,
+    (portalId ? document.getElementById(portalId) : null) ?? document.body,
   );
 };
 

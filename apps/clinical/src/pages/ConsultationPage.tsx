@@ -38,15 +38,15 @@ import dashboardConfigSchema from './schema.json';
 import styles from './styles/ConsultationPage.module.scss';
 import { getDefaultDashboard, getSidebarItems } from './util';
 
-const breadcrumbItems = [
-  { id: 'home', label: 'Home', href: BAHMNI_HOME_PATH },
-  {
-    id: 'clinical',
-    label: 'Clinical',
-    href: BAHMNI_CLINICAL_PATH,
-  },
-  { id: 'current', label: 'Current Patient', isCurrentPage: true },
-];
+const addSectionIds = (config: DashboardConfig): DashboardConfig => {
+  if (!config?.sections?.length) return config;
+  return {
+    ...config,
+    sections: config.sections.map((section) =>
+      section.id ? section : { ...section, id: generateId() },
+    ),
+  };
+};
 
 const globalActions = [
   {
@@ -90,6 +90,16 @@ const ConsultationPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const viewingForm = useObservationFormsStore((state) => state.viewingForm);
 
+  const breadcrumbItems = [
+    { id: 'home', label: 'Home', href: BAHMNI_HOME_PATH },
+    {
+      id: 'clinical',
+      label: 'Clinical',
+      href: BAHMNI_CLINICAL_PATH,
+    },
+    { id: 'current', label: t('CURRENT_PATIENT'), isCurrentPage: true },
+  ];
+
   const episodeUuids = useMemo(() => {
     const episodeUuid = searchParams.get(EPISODE_UUID_SEARCH_PARAMS_KEY);
     if (!episodeUuid) return [];
@@ -128,15 +138,7 @@ const ConsultationPage: React.FC = () => {
         DASHBOARD_CONFIG_URL(dashboardURL),
         dashboardConfigSchema,
       ),
-    select: (config) => {
-      if (!config?.sections?.length) return config;
-      return {
-        ...config,
-        sections: config.sections.map((section) =>
-          section.id ? section : { ...section, id: generateId() },
-        ),
-      };
-    },
+    select: addSectionIds,
     enabled: !!dashboardURL,
   });
 

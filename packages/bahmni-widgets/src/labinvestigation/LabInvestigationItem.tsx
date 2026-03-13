@@ -170,6 +170,7 @@ const LabInvestigationItem: React.FC<LabInvestigationItemProps> = ({
           testId="attachments-modal"
           size="lg"
           id="modalIdForActionAreaLayout"
+          portalId={'main-display-area'}
         >
           <Modal.Body>
             <div className={styles.attachmentsContainer}>

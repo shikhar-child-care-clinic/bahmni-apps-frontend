@@ -251,7 +251,7 @@ describe('VaccinationForm', () => {
       [
         'loading state while fetching vaccinations',
         { data: undefined, isLoading: true, error: null },
-        /Loading vaccinations\.\.\./,
+        /Loading Vaccinations\.\.\./,
       ],
       [
         'error when vaccination search fails',
@@ -260,7 +260,7 @@ describe('VaccinationForm', () => {
           isLoading: false,
           error: new Error('Search failed'),
         },
-        /error searching vaccinations/i,
+        /Error searching Vaccinations/i,
       ],
       [
         'no results message when no vaccinations found',
@@ -269,7 +269,7 @@ describe('VaccinationForm', () => {
           isLoading: false,
           error: null,
         },
-        /no matching vaccinations found/i,
+        /No matching Vaccinations found/i,
       ],
     ])('shows %s', async (_, mockQueryData, expectedText) => {
       const user = userEvent.setup();
