@@ -10,6 +10,10 @@
     color: $text-primary !important;
     height: $spacing-10;
     align-content: start;
+    input {
+      background-color: $layer-01 !important;
+      inline-size: 100% !important;
+    }
   }
   th,
   th * {
