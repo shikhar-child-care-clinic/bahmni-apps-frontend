@@ -358,6 +358,8 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
           modalHeading={selectedInvestigation.testName}
           testId="diagnostic-report-modal"
           size="lg"
+          id="modalIdForActionAreaLayout"
+          portalId={'main-display-area'}
         >
           <Modal.Body>
             <RadiologyInvestigationReport
