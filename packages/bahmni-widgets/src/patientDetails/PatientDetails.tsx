@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 import styles from './__styles__/PatientDetails.module.scss';
 import { usePatient } from './usePatient';
 
-// TODO: Extract this as a PatientDetails Display Control Component
 const PatientDetails: React.FC = () => {
   const { t } = useTranslation();
   const { patient, loading, error } = usePatient();

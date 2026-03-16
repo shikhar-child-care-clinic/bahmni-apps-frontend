@@ -676,7 +676,6 @@ describe('Patient Service', () => {
         birthDate: null,
         formattedAddress: null,
         formattedContact: null,
-        age: null,
         identifiers: new Map<string, string>(),
       });
     });
@@ -734,11 +733,6 @@ describe('Patient Service', () => {
         birthDate: '1990-01-01',
         formattedAddress: '123 Main St, Boston, MA 02115',
         formattedContact: 'phone: 555-123-4567',
-        age: {
-          days: 23,
-          months: 2,
-          years: 35,
-        },
         identifiers: new Map<string, string>(),
       });
     });
@@ -937,36 +931,6 @@ describe('Patient Service', () => {
       // Assert
       expect(result.identifiers).toEqual(new Map<string, string>());
       expect(result.identifiers.size).toBe(0);
-    });
-
-    it('should handle patient with invalid birthDate format', () => {
-      // Arrange
-      const patient: Patient = {
-        resourceType: 'Patient',
-        id: 'test-uuid',
-        birthDate: 'invalid-date', // Invalid date format
-      };
-
-      // Act
-      const result = formatPatientData(patient);
-
-      // Assert
-      expect(result.age).toBeNull();
-    });
-
-    it('should handle patient with future birthDate', () => {
-      // Arrange
-      const patient: Patient = {
-        resourceType: 'Patient',
-        id: 'test-uuid',
-        birthDate: '2030-01-01', // Future date
-      };
-
-      // Act
-      const result = formatPatientData(patient);
-
-      // Assert
-      expect(result.age).toBeNull();
     });
 
     it('should handle patient with identifier that has no value', () => {
@@ -1205,11 +1169,6 @@ describe('Patient Service', () => {
         birthDate: '1990-01-01',
         formattedAddress: '123 Main St, Boston, MA 02115',
         formattedContact: 'phone: 555-123-4567',
-        age: {
-          days: 23,
-          months: 2,
-          years: 35,
-        },
         identifiers: new Map([['MRN', '123456']]),
       });
     });

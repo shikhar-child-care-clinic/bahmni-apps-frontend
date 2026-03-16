@@ -62,11 +62,6 @@ const createMockPatient = (
   formattedAddress: null,
   formattedContact: null,
   identifiers: new Map([['MRN', 'MRN123456']]),
-  age: {
-    years: 35,
-    months: 2,
-    days: 15,
-  },
   ...overrides,
 });
 
@@ -132,7 +127,6 @@ describe('PatientDetails Component', () => {
         fullName: 'Jane Doe',
         gender: null,
         birthDate: null,
-        age: null,
         identifiers: new Map([['ID', 'ID123']]),
       });
 

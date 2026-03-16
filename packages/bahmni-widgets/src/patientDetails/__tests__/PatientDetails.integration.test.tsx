@@ -72,7 +72,6 @@ describe('PatientDetails Integration', () => {
       formattedAddress: null,
       formattedContact: null,
       identifiers: new Map([['MRN', 'MRN123456']]),
-      age: { years: 35, months: 2, days: 15 },
     };
 
     mockedUsePatient.mockReturnValue({
@@ -125,7 +124,6 @@ describe('PatientDetails Integration', () => {
       formattedAddress: null,
       formattedContact: null,
       identifiers: new Map([['ID', 'ID123']]),
-      age: { years: 1, months: 1, days: 1 },
     };
 
     mockedUsePatient.mockReturnValue({
