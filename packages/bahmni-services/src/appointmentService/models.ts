@@ -33,6 +33,12 @@ export interface AppointmentService {
 export interface AppointmentServiceAttributeType {
   uuid: string;
   name: string;
+  description: string | null;
+  format: string | null;
+  datatype: string;
+  minOccurs: number | null;
+  maxOccurs: number | null;
+  retired: boolean;
 }
 
 export interface AppointmentLocation {

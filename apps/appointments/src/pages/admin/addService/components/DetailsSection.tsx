@@ -6,10 +6,8 @@ import {
   TextInput,
 } from '@bahmni/design-system';
 import {
-  camelToScreamingSnakeCase,
   getAppointmentLocations,
   getAppointmentSpecialities,
-  getServiceAttributeTypes,
   resolveComboBoxItems,
   useTranslation,
 } from '@bahmni/services';
@@ -28,19 +26,12 @@ const DetailsSection: React.FC = () => {
     durationMins,
     specialityUuid,
     locationUuid,
-    attributes,
     setName,
     setDescription,
     setDurationMins,
     setSpecialityUuid,
     setLocationUuid,
-    setAttribute,
   } = useAddServiceStore();
-
-  const { data: attributeTypes = [] } = useQuery({
-    queryKey: ['serviceAttributeTypes'],
-    queryFn: getServiceAttributeTypes,
-  });
 
   const {
     data: locationsData,
@@ -189,25 +180,6 @@ const DetailsSection: React.FC = () => {
               }}
             />
           </Column>
-          {attributeTypes.map((attrType) => (
-            <Column key={attrType.uuid} sm={4} md={4} lg={4}>
-              <TextInput
-                id={`add-appointment-details-service-attribute-${attrType.name}`}
-                data-testid={`add-appointment-details-service-attribute-${attrType.name}-test-id`}
-                aria-label={`add-appointment-details-service-attribute-${attrType.name}-aria-label`}
-                labelText={t(
-                  `APPOINTMENT_FIELD_LABEL_${camelToScreamingSnakeCase(attrType.name)}`,
-                )}
-                placeholder={t(
-                  `ADMIN_ADD_SERVICE_FIELD_${camelToScreamingSnakeCase(attrType.name)}_PLACEHOLDER`,
-                )}
-                value={attributes[attrType.uuid]}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setAttribute(attrType.uuid, e.target.value)
-                }
-              />
-            </Column>
-          ))}
         </Grid>
       </div>
     </div>

@@ -22,7 +22,6 @@ const mockSetDescription = jest.fn();
 const mockSetDurationMins = jest.fn();
 const mockSetSpecialityUuid = jest.fn();
 const mockSetLocationUuid = jest.fn();
-const mockSetAttribute = jest.fn();
 
 const mockSpecialities = [
   { uuid: 'spec-uuid-1', name: 'General Medicine' },
@@ -34,8 +33,6 @@ const mockLocations = [
   { uuid: 'loc-uuid-2', display: 'ENT Ward' },
 ];
 
-const mockAttributeTypes = [{ uuid: 'attr-uuid-1', name: 'serviceType' }];
-
 const defaultStoreState = {
   name: '',
   nameError: null,
@@ -43,13 +40,11 @@ const defaultStoreState = {
   durationMins: null,
   specialityUuid: null,
   locationUuid: null,
-  attributes: {},
   setName: mockSetName,
   setDescription: mockSetDescription,
   setDurationMins: mockSetDurationMins,
   setSpecialityUuid: mockSetSpecialityUuid,
   setLocationUuid: mockSetLocationUuid,
-  setAttribute: mockSetAttribute,
 };
 
 describe('DetailsSection', () => {
@@ -67,8 +62,6 @@ describe('DetailsSection', () => {
     jest.clearAllMocks();
     jest.mocked(useAddServiceStore).mockReturnValue(defaultStoreState);
     (useQuery as jest.Mock).mockImplementation(({ queryKey }) => {
-      if (queryKey[0] === 'serviceAttributeTypes')
-        return { data: mockAttributeTypes, isLoading: false, isError: false };
       if (queryKey[0] === 'appointmentLocations')
         return {
           data: { results: mockLocations },
@@ -109,49 +102,6 @@ describe('DetailsSection', () => {
 
   it.each([
     {
-      scenario: 'attributeTypes data is undefined',
-      attributeTypesData: undefined,
-    },
-    { scenario: 'attributeTypes data is []', attributeTypesData: [] },
-  ])(
-    'should render no attribute TextInputs when $scenario',
-    ({ attributeTypesData }) => {
-      (useQuery as jest.Mock).mockImplementation(({ queryKey }) => {
-        if (queryKey[0] === 'serviceAttributeTypes')
-          return { data: attributeTypesData, isLoading: false, isError: false };
-        if (queryKey[0] === 'appointmentLocations')
-          return {
-            data: { results: mockLocations },
-            isLoading: false,
-            isError: false,
-          };
-        if (queryKey[0] === 'appointmentSpecialities')
-          return { data: mockSpecialities, isLoading: false, isError: false };
-        return { data: undefined, isLoading: false, isError: false };
-      });
-
-      render(wrapper);
-
-      expect(
-        screen.queryAllByTestId(
-          /add-appointment-details-service-attribute-.*-test-id/,
-        ),
-      ).toHaveLength(0);
-    },
-  );
-
-  it('should render a TextInput for each fetched attribute type', () => {
-    render(wrapper);
-
-    expect(
-      screen.getByTestId(
-        `add-appointment-details-service-attribute-${mockAttributeTypes[0].name}-test-id`,
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it.each([
-    {
       scenario: 'setName when service name input changes',
       testId: 'add-appointment-details-service-name-test-id',
       inputValue: 'General Consultation',
@@ -164,13 +114,6 @@ describe('DetailsSection', () => {
       inputValue: 'A general consultation service',
       setter: () => mockSetDescription,
       expectedArgs: ['A general consultation service'],
-    },
-    {
-      scenario: 'setAttribute when an attribute input changes',
-      testId: `add-appointment-details-service-attribute-${mockAttributeTypes[0].name}-test-id`,
-      inputValue: 'OPD',
-      setter: () => mockSetAttribute,
-      expectedArgs: [mockAttributeTypes[0].uuid, 'OPD'],
     },
     {
       scenario: 'setDurationMins when duration input changes',
@@ -295,8 +238,6 @@ describe('DetailsSection', () => {
     async ({ queryKey, mockState, comboboxLabel, expectedMessage }) => {
       (useQuery as jest.Mock).mockImplementation(({ queryKey: key }) => {
         if (key[0] === queryKey) return mockState;
-        if (key[0] === 'serviceAttributeTypes')
-          return { data: mockAttributeTypes, isLoading: false, isError: false };
         if (key[0] === 'appointmentLocations')
           return {
             data: { results: mockLocations },

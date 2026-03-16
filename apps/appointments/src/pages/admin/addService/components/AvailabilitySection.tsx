@@ -113,9 +113,9 @@ const AvailabilitySection: React.FC = () => {
                   testId={`days-of-week-${row.id}-${day}-btn-test-id`}
                   aria-label={`days-of-week-${row.id}-${day}-btn-aria-label`}
                   key={day}
-                  kind={row.daysOfWeek.includes(day) ? 'primary' : 'ghost'}
+                  kind={row.daysOfWeek.includes(day) ? 'primary' : 'tertiary'}
                   label={t(`DAY_${day}`)}
-                  size="sm"
+                  size="md"
                   onClick={() => toggleDayOfWeek(row.id, day)}
                 >
                   {day[0]}
