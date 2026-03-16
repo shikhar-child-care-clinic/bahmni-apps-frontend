@@ -33,16 +33,14 @@
 }
 
 .modalIframeContainer {
-  width: 100%;
-  height: 88vh;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: $spacing-04;
 }
 
 .modalIframe {
   width: 100%;
-  height: 100%;
+  height: $spacing-06 * 25;
   border: none;
 }
