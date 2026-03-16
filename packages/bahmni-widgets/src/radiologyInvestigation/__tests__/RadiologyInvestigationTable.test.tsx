@@ -361,163 +361,103 @@ describe('RadiologyInvestigationTable', () => {
     });
   });
 
-  it('should render "View Report" link when investigation has reportId', async () => {
-    const mockBundleWithReport =
-      createMockBundleWithServiceRequestAndImagingStudy(
-        createMockServiceRequest({
-          id: 'investigation-1',
-          code: { text: 'Chest X-Ray' },
-          priority: 'stat',
-          status: 'completed',
-          requester: { display: 'Dr. Smith' },
-          occurrencePeriod: { start: '2023-12-01T10:30:00.000Z' },
-        }),
-        [],
-      );
-
-    mockGetPatientRadiologyInvestigationBundleWithImagingStudy.mockResolvedValue(
-      mockBundleWithReport,
-    );
-    mockGetDiagnosticReports.mockResolvedValue({
-      resourceType: 'Bundle',
-      type: 'searchset',
-      entry: [
-        {
-          resource: {
-            resourceType: 'DiagnosticReport',
-            id: 'report-123',
-            status: 'final',
+  describe('View Report functionality', () => {
+    beforeEach(() => {
+      const mockBundleWithReport =
+        createMockBundleWithServiceRequestAndImagingStudy(
+          createMockServiceRequest({
+            id: 'investigation-1',
             code: { text: 'Chest X-Ray' },
-            basedOn: [{ reference: 'ServiceRequest/investigation-1' }],
-            resultsInterpreter: [{ display: 'Dr. Radiologist' }],
-            issued: '2023-12-02T14:30:00.000Z',
-          } as any,
-        },
-      ],
-    });
+            priority: 'stat',
+            status: 'completed',
+            requester: { display: 'Dr. Smith' },
+            occurrencePeriod: { start: '2023-12-01T10:30:00.000Z' },
+          }),
+          [],
+        );
 
-    render(renderRadiologyInvestigationTable());
-
-    await waitFor(() => {
-      expect(
-        screen.getByTestId('investigation-1-view-report-link-test-id'),
-      ).toBeInTheDocument();
-      expect(screen.getByText('View Report')).toBeInTheDocument();
-    });
-  });
-
-  it('should open modal when "View Report" link is clicked', async () => {
-    const mockBundleWithReport =
-      createMockBundleWithServiceRequestAndImagingStudy(
-        createMockServiceRequest({
-          id: 'investigation-1',
-          code: { text: 'Chest X-Ray' },
-          priority: 'stat',
-          status: 'completed',
-          requester: { display: 'Dr. Smith' },
-          occurrencePeriod: { start: '2023-12-01T10:30:00.000Z' },
-        }),
-        [],
+      mockGetPatientRadiologyInvestigationBundleWithImagingStudy.mockResolvedValue(
+        mockBundleWithReport,
       );
-
-    mockGetPatientRadiologyInvestigationBundleWithImagingStudy.mockResolvedValue(
-      mockBundleWithReport,
-    );
-    mockGetDiagnosticReports.mockResolvedValue({
-      resourceType: 'Bundle',
-      type: 'searchset',
-      entry: [
-        {
-          resource: {
-            resourceType: 'DiagnosticReport',
-            id: 'report-123',
-            status: 'final',
-            code: { text: 'Chest X-Ray' },
-            basedOn: [{ reference: 'ServiceRequest/investigation-1' }],
-            resultsInterpreter: [{ display: 'Dr. Radiologist' }],
-            issued: '2023-12-02T14:30:00.000Z',
-          } as any,
-        },
-      ],
+      mockGetDiagnosticReports.mockResolvedValue({
+        resourceType: 'Bundle',
+        type: 'searchset',
+        entry: [
+          {
+            resource: {
+              resourceType: 'DiagnosticReport',
+              id: 'report-123',
+              status: 'final',
+              code: { text: 'Chest X-Ray' },
+              basedOn: [{ reference: 'ServiceRequest/investigation-1' }],
+              resultsInterpreter: [{ display: 'Dr. Radiologist' }],
+              issued: '2023-12-02T14:30:00.000Z',
+            } as any,
+          },
+        ],
+      });
     });
 
-    render(renderRadiologyInvestigationTable());
+    it('should render "View Report" link when investigation has reportId', async () => {
+      render(renderRadiologyInvestigationTable());
 
-    await waitFor(() => {
-      expect(
-        screen.getByTestId('investigation-1-view-report-link-test-id'),
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('investigation-1-view-report-link-test-id'),
+        ).toBeInTheDocument();
+        expect(screen.getByText('View Report')).toBeInTheDocument();
+      });
     });
 
-    const viewReportLink = screen.getByTestId(
-      'investigation-1-view-report-link-test-id',
-    );
-    await userEvent.click(viewReportLink);
+    it('should open modal when "View Report" link is clicked', async () => {
+      render(renderRadiologyInvestigationTable());
 
-    await waitFor(() => {
-      expect(screen.getByTestId('diagnostic-report-modal')).toBeInTheDocument();
-    });
-  });
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('investigation-1-view-report-link-test-id'),
+        ).toBeInTheDocument();
+      });
 
-  it('should close modal when close is requested', async () => {
-    const mockBundleWithReport =
-      createMockBundleWithServiceRequestAndImagingStudy(
-        createMockServiceRequest({
-          id: 'investigation-1',
-          code: { text: 'Chest X-Ray' },
-          priority: 'stat',
-          status: 'completed',
-          requester: { display: 'Dr. Smith' },
-          occurrencePeriod: { start: '2023-12-01T10:30:00.000Z' },
-        }),
-        [],
+      const viewReportLink = screen.getByTestId(
+        'investigation-1-view-report-link-test-id',
       );
+      await userEvent.click(viewReportLink);
 
-    mockGetPatientRadiologyInvestigationBundleWithImagingStudy.mockResolvedValue(
-      mockBundleWithReport,
-    );
-    mockGetDiagnosticReports.mockResolvedValue({
-      resourceType: 'Bundle',
-      type: 'searchset',
-      entry: [
-        {
-          resource: {
-            resourceType: 'DiagnosticReport',
-            id: 'report-123',
-            status: 'final',
-            code: { text: 'Chest X-Ray' },
-            basedOn: [{ reference: 'ServiceRequest/investigation-1' }],
-            resultsInterpreter: [{ display: 'Dr. Radiologist' }],
-            issued: '2023-12-02T14:30:00.000Z',
-          } as any,
-        },
-      ],
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('diagnostic-report-modal'),
+        ).toBeInTheDocument();
+      });
     });
 
-    render(renderRadiologyInvestigationTable());
+    it('should close modal when close is requested', async () => {
+      render(renderRadiologyInvestigationTable());
 
-    await waitFor(() => {
-      expect(
-        screen.getByTestId('investigation-1-view-report-link-test-id'),
-      ).toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('investigation-1-view-report-link-test-id'),
+        ).toBeInTheDocument();
+      });
 
-    const viewReportLink = screen.getByTestId(
-      'investigation-1-view-report-link-test-id',
-    );
-    await userEvent.click(viewReportLink);
+      const viewReportLink = screen.getByTestId(
+        'investigation-1-view-report-link-test-id',
+      );
+      await userEvent.click(viewReportLink);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('diagnostic-report-modal')).toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('diagnostic-report-modal'),
+        ).toBeInTheDocument();
+      });
 
-    const closeButton = screen.getByLabelText(/close/i);
-    await userEvent.click(closeButton);
+      const closeButton = screen.getByLabelText(/close/i);
+      await userEvent.click(closeButton);
 
-    await waitFor(() => {
-      expect(
-        screen.queryByTestId('diagnostic-report-modal'),
-      ).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId('diagnostic-report-modal'),
+        ).not.toBeInTheDocument();
+      });
     });
   });
 

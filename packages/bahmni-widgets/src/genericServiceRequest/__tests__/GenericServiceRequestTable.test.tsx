@@ -136,6 +136,7 @@ describe('GenericServiceRequestTable', () => {
           IN_PROGRESS_STATUS: 'In Progress',
           COMPLETED_STATUS: 'Completed',
           REVOKED_STATUS: 'Revoked',
+          UNKNOWN_STATUS: 'Unknown',
         };
         return translations[key] || key;
       },
@@ -744,27 +745,6 @@ describe('GenericServiceRequestTable', () => {
 
       mockMapServiceRequest.mockReturnValue([unknownServiceRequest]);
 
-      mockUseTranslation.mockReturnValue({
-        t: (key: string) => {
-          const translations: Record<string, string> = {
-            SERVICE_REQUEST_TEST_NAME: 'Test Name',
-            SERVICE_REQUEST_ORDERED_BY: 'Ordered By',
-            SERVICE_REQUEST_ORDERED_STATUS: 'Status',
-            SERVICE_REQUEST_HEADING: 'Service Requests',
-            NO_SERVICE_REQUESTS: 'No service requests recorded',
-            SERVICE_REQUEST_PRIORITY_URGENT: 'Urgent',
-            ERROR_DEFAULT_TITLE: 'Error',
-            IN_PROGRESS_STATUS: 'In Progress',
-            COMPLETED_STATUS: 'Completed',
-            REVOKED_STATUS: 'Revoked',
-            UNKNOWN_STATUS: 'Unknown',
-          };
-          return translations[key] || key;
-        },
-        i18n: {} as any,
-        ready: true,
-      } as any);
-
       render(
         <GenericServiceRequestTable config={{ orderType: 'Lab Order' }} />,
         {
@@ -1007,163 +987,87 @@ describe('GenericServiceRequestTable', () => {
       });
     });
 
-    it('refetches data when consultation saved event is triggered with matching category', async () => {
-      let eventCallback: (payload: any) => void = () => {};
-      mockUseSubscribeConsultationSaved.mockImplementation((callback) => {
-        eventCallback = callback;
+    describe('event-driven refetch behavior', () => {
+      let eventCallback: (payload: any) => void;
+
+      beforeEach(async () => {
+        eventCallback = () => {};
+        mockUseSubscribeConsultationSaved.mockImplementation((callback) => {
+          eventCallback = callback;
+        });
+
+        render(
+          <GenericServiceRequestTable
+            config={{ orderType: 'Procedure Order' }}
+          />,
+          { wrapper: createWrapper() },
+        );
+
+        await screen.findByText('Blood Test');
+
+        mockGetServiceRequests.mockClear();
       });
 
-      render(
-        <GenericServiceRequestTable
-          config={{ orderType: 'Procedure Order' }}
-        />,
-        {
-          wrapper: createWrapper(),
-        },
-      );
+      it('refetches data when consultation saved event is triggered with matching category', async () => {
+        eventCallback({
+          patientUUID: 'patient-123',
+          updatedResources: {
+            conditions: false,
+            allergies: false,
+            medications: false,
+            serviceRequests: { 'procedure order': true },
+          },
+        });
 
-      await waitFor(() => {
-        expect(screen.getByText('Blood Test')).toBeInTheDocument();
+        await waitFor(() => {
+          expect(mockGetServiceRequests).toHaveBeenCalled();
+        });
       });
 
-      // Clear the mock to track new calls
-      mockGetServiceRequests.mockClear();
+      it('does not refetch when event is for different patient', async () => {
+        eventCallback({
+          patientUUID: 'different-patient',
+          updatedResources: {
+            conditions: false,
+            allergies: false,
+            medications: false,
+            serviceRequests: { 'procedure order': true },
+          },
+        });
 
-      // Trigger the event with matching category
-      eventCallback({
-        patientUUID: 'patient-123',
-        updatedResources: {
-          conditions: false,
-          allergies: false,
-          medications: false,
-          serviceRequests: { 'procedure order': true },
-        },
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        expect(mockGetServiceRequests).not.toHaveBeenCalled();
       });
 
-      // Verify refetch was triggered
-      await waitFor(() => {
-        expect(mockGetServiceRequests).toHaveBeenCalled();
-      });
-    });
+      it('does not refetch when different category was updated', async () => {
+        eventCallback({
+          patientUUID: 'patient-123',
+          updatedResources: {
+            conditions: false,
+            allergies: false,
+            medications: false,
+            serviceRequests: { 'lab order': true },
+          },
+        });
 
-    it('does not refetch when event is for different patient', async () => {
-      let eventCallback: (payload: any) => void = () => {};
-      mockUseSubscribeConsultationSaved.mockImplementation((callback) => {
-        eventCallback = callback;
-      });
-
-      render(
-        <GenericServiceRequestTable
-          config={{ orderType: 'Procedure Order' }}
-        />,
-        {
-          wrapper: createWrapper(),
-        },
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('Blood Test')).toBeInTheDocument();
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        expect(mockGetServiceRequests).not.toHaveBeenCalled();
       });
 
-      // Clear the mock to track new calls
-      mockGetServiceRequests.mockClear();
+      it('does not refetch when serviceRequests is empty', async () => {
+        eventCallback({
+          patientUUID: 'patient-123',
+          updatedResources: {
+            conditions: true,
+            allergies: false,
+            medications: false,
+            serviceRequests: {},
+          },
+        });
 
-      // Trigger event for different patient
-      eventCallback({
-        patientUUID: 'different-patient',
-        updatedResources: {
-          conditions: false,
-          allergies: false,
-          medications: false,
-          serviceRequests: { 'procedure order': true },
-        },
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        expect(mockGetServiceRequests).not.toHaveBeenCalled();
       });
-
-      // Give some time to ensure no refetch happens
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Verify refetch was NOT triggered
-      expect(mockGetServiceRequests).not.toHaveBeenCalled();
-    });
-
-    it('does not refetch when different category was updated', async () => {
-      let eventCallback: (payload: any) => void = () => {};
-      mockUseSubscribeConsultationSaved.mockImplementation((callback) => {
-        eventCallback = callback;
-      });
-
-      render(
-        <GenericServiceRequestTable
-          config={{ orderType: 'Procedure Order' }}
-        />,
-        {
-          wrapper: createWrapper(),
-        },
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('Blood Test')).toBeInTheDocument();
-      });
-
-      // Clear the mock to track new calls
-      mockGetServiceRequests.mockClear();
-
-      // Trigger event with different category
-      eventCallback({
-        patientUUID: 'patient-123',
-        updatedResources: {
-          conditions: false,
-          allergies: false,
-          medications: false,
-          serviceRequests: { 'lab order': true },
-        },
-      });
-
-      // Give some time to ensure no refetch happens
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Verify refetch was NOT triggered
-      expect(mockGetServiceRequests).not.toHaveBeenCalled();
-    });
-
-    it('does not refetch when serviceRequests is empty', async () => {
-      let eventCallback: (payload: any) => void = () => {};
-      mockUseSubscribeConsultationSaved.mockImplementation((callback) => {
-        eventCallback = callback;
-      });
-
-      render(
-        <GenericServiceRequestTable
-          config={{ orderType: 'Procedure Order' }}
-        />,
-        {
-          wrapper: createWrapper(),
-        },
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('Blood Test')).toBeInTheDocument();
-      });
-
-      // Clear the mock to track new calls
-      mockGetServiceRequests.mockClear();
-
-      // Trigger event with empty serviceRequests
-      eventCallback({
-        patientUUID: 'patient-123',
-        updatedResources: {
-          conditions: true,
-          allergies: false,
-          medications: false,
-          serviceRequests: {},
-        },
-      });
-
-      // Give some time to ensure no refetch happens
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Verify refetch was NOT triggered
-      expect(mockGetServiceRequests).not.toHaveBeenCalled();
     });
   });
 
