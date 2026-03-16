@@ -368,50 +368,81 @@ export function formatDateAndTime(date: number, includeTime: boolean): string {
   return formattedDate;
 }
 /**
- * Calculate and format age for display in patient search results.
+ * Calculate and format age for display.
  * For infants under 3 months, displays age in total days only.
  * For all others, displays age in years, months, and days format.
  *
- * @param birthDateMillis - Birth date in milliseconds
+ * @param birthDate - Birth date in milliseconds (timestamp) or ISO date string (yyyy-mm-dd)
  * @param t - Optional translation function for Y/M/D labels
- * @returns Formatted age string (e.g., "45d" for infants, "25y 6m 15d" for others)
+ * @param format - Format type: 'short' (e.g., "25y 6m 15d") or 'full' (e.g., "25 Years, 6 Months, 15 Days")
+ * @returns Formatted age string
  */
 export function calculateAgeinYearsAndMonths(
-  birthDateMillis: number,
+  birthDate: number | string,
   t?: (key: string, options?: { count?: number }) => string,
+  format: 'short' | 'full' = 'short',
 ): string {
-  const birthDate = new Date(birthDateMillis);
+  const birthDateObj =
+    typeof birthDate === 'string' ? parseISO(birthDate) : new Date(birthDate);
   const today = new Date();
 
-  const years = differenceInYears(today, birthDate);
-  const lastBirthday = addYears(birthDate, years);
+  const years = differenceInYears(today, birthDateObj);
+  const lastBirthday = addYears(birthDateObj, years);
   const months = differenceInMonths(today, lastBirthday);
   const lastMonthAnniversary = addMonths(lastBirthday, months);
   const days = differenceInDays(today, lastMonthAnniversary);
 
+  // For infants under 3 months, show total days only
   if (years === 0 && months < 3) {
-    const totalDays = differenceInDays(today, birthDate);
+    const totalDays = differenceInDays(today, birthDateObj);
     if (!t) {
-      return `${totalDays} days`;
+      return format === 'full' ? `${totalDays} days` : `${totalDays}d`;
     }
-    const dayUnit = t('REGISTRATION_DAYS_SHORT', { count: totalDays });
-    return `${totalDays}${dayUnit}`;
-  }
-  if (!t) {
-    return `${years} years ${months} months ${days} days`;
+    const dayKey =
+      format === 'full'
+        ? 'CLINICAL_DAYS_TRANSLATION_KEY'
+        : 'REGISTRATION_DAYS_SHORT';
+    const dayUnit = t(dayKey, { count: totalDays });
+    return format === 'full'
+      ? `${totalDays} ${dayUnit}`
+      : `${totalDays}${dayUnit}`;
   }
 
+  if (!t) {
+    return format === 'full'
+      ? `${years} years, ${months} months, ${days} days`
+      : `${years}y ${months}m ${days}d`;
+  }
+
+  const isFullFormat = format === 'full';
+  const yearKey = isFullFormat
+    ? 'CLINICAL_YEARS_TRANSLATION_KEY'
+    : 'REGISTRATION_YEARS_SHORT';
+  const monthKey = isFullFormat
+    ? 'CLINICAL_MONTHS_TRANSLATION_KEY'
+    : 'REGISTRATION_MONTHS_SHORT';
+  const dayKey = isFullFormat
+    ? 'CLINICAL_DAYS_TRANSLATION_KEY'
+    : 'REGISTRATION_DAYS_SHORT';
+
   const ageComponents: Array<[number, string]> = [
-    [years, 'REGISTRATION_YEARS_SHORT'],
-    [months, 'REGISTRATION_MONTHS_SHORT'],
-    [days, 'REGISTRATION_DAYS_SHORT'],
+    [years, yearKey],
+    [months, monthKey],
+    [days, dayKey],
   ];
 
   const parts = ageComponents
     .filter(([value]) => value > 0)
-    .map(([value, key]) => `${value}${t(key, { count: value })}`);
+    .map(([value, key]) => {
+      const unit = t(key, { count: value });
+      return isFullFormat ? `${value} ${unit}` : `${value}${unit}`;
+    });
 
-  return parts.join(' ') || '0d';
+  const separator = isFullFormat ? ', ' : ' ';
+  return (
+    parts.join(separator) ||
+    (isFullFormat ? `0 ${t(dayKey, { count: 0 })}` : '0d')
+  );
 }
 /**
  * Sorts an array of objects by a date field

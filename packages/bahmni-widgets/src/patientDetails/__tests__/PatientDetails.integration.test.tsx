@@ -54,6 +54,13 @@ const mockedUsePatient = usePatient as jest.MockedFunction<
 describe('PatientDetails Integration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Mock Date to return a fixed date for consistent age calculations
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2025-03-16'));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('integrates usePatient hook with loading to success state', async () => {
@@ -114,7 +121,7 @@ describe('PatientDetails Integration', () => {
       id: 'test-uuid',
       fullName: 'Jane Doe',
       gender: 'female',
-      birthDate: '2023-01-01',
+      birthDate: '2024-02-15',
       formattedAddress: null,
       formattedContact: null,
       identifiers: new Map([['ID', 'ID123']]),

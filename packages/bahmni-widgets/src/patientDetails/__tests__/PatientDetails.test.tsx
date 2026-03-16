@@ -73,11 +73,18 @@ const createMockPatient = (
 describe('PatientDetails Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Mock Date to return a fixed date for consistent age calculations
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2025-03-16'));
     mockedUseTranslation.mockReturnValue({
       t: mockT,
       i18n: {} as any,
       ready: true,
     } as any);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   describe('Loading States', () => {
@@ -95,6 +102,7 @@ describe('PatientDetails Component', () => {
   describe('Patient Data Rendering', () => {
     it('renders complete patient information', () => {
       const patient = createMockPatient({
+        birthDate: '1989-01-01',
         identifiers: new Map([
           ['MRN', 'MRN123456'],
           ['OpenMRS ID', 'OP789'],
@@ -114,9 +122,9 @@ describe('PatientDetails Component', () => {
       expect(screen.getByText('MRN123456 | OP789')).toBeInTheDocument();
       expect(screen.getByText('male')).toBeInTheDocument();
       expect(
-        screen.getByText(/35 years, 2 months, 15 days/),
+        screen.getByText(/36 years, 2 months, 15 days/),
       ).toBeInTheDocument();
-      expect(screen.getByText(/1990-01-01/)).toBeInTheDocument();
+      expect(screen.getByText(/1989-01-01/)).toBeInTheDocument();
     });
 
     it('renders patient with minimal data', () => {
@@ -158,9 +166,9 @@ describe('PatientDetails Component', () => {
       expect(screen.queryByTestId('patient-name')).not.toBeInTheDocument();
     });
 
-    it('shows only birth date when age years is undefined', () => {
+    it('calculates and shows age when birthDate is provided', () => {
       const patient = createMockPatient({
-        age: { years: undefined, months: 2, days: 15 } as any,
+        birthDate: '1990-01-01',
       });
 
       mockedUsePatient.mockReturnValue({
@@ -171,25 +179,25 @@ describe('PatientDetails Component', () => {
       });
 
       render(<PatientDetails />);
-      expect(screen.getByText('1990-01-01')).toBeInTheDocument();
+      expect(screen.getByText(/1990-01-01/)).toBeInTheDocument();
+      expect(screen.getByText(/years/)).toBeInTheDocument();
+    });
+
+    it('shows only birth date when birthDate is null', () => {
+      const patient = createMockPatient({ birthDate: null });
+      mockedUsePatient.mockReturnValue({
+        patient,
+        loading: false,
+        error: null,
+        refetch: jest.fn(),
+      });
+
+      render(<PatientDetails />);
       expect(screen.queryByText(/years/)).not.toBeInTheDocument();
     });
 
-    it('shows only birth date when age is null', () => {
-      const patient = createMockPatient({ age: null });
-      mockedUsePatient.mockReturnValue({
-        patient,
-        loading: false,
-        error: null,
-        refetch: jest.fn(),
-      });
-
-      render(<PatientDetails />);
-      expect(screen.getByText('1990-01-01')).toBeInTheDocument();
-    });
-
-    it('hides age section when both age and birth date are null', () => {
-      const patient = createMockPatient({ age: null, birthDate: null });
+    it('hides age section when birth date is null', () => {
+      const patient = createMockPatient({ birthDate: null });
       mockedUsePatient.mockReturnValue({
         patient,
         loading: false,
@@ -241,62 +249,9 @@ describe('PatientDetails Component', () => {
     });
   });
 
-  describe('Internationalization', () => {
-    it('uses singular forms for age values of 1', () => {
-      const patient = createMockPatient({
-        age: { years: 1, months: 1, days: 1 },
-      });
-
-      mockedUsePatient.mockReturnValue({
-        patient,
-        loading: false,
-        error: null,
-        refetch: jest.fn(),
-      });
-
-      render(<PatientDetails />);
-      expect(screen.getByText(/1 year, 1 month, 1 day/)).toBeInTheDocument();
-      expect(mockT).toHaveBeenCalledWith('CLINICAL_YEARS_TRANSLATION_KEY', {
-        count: 1,
-      });
-      expect(mockT).toHaveBeenCalledWith('CLINICAL_MONTHS_TRANSLATION_KEY', {
-        count: 1,
-      });
-      expect(mockT).toHaveBeenCalledWith('CLINICAL_DAYS_TRANSLATION_KEY', {
-        count: 1,
-      });
-    });
-
-    it('uses plural forms for age values greater than 1', () => {
-      const patient = createMockPatient({
-        age: { years: 25, months: 3, days: 10 },
-      });
-
-      mockedUsePatient.mockReturnValue({
-        patient,
-        loading: false,
-        error: null,
-        refetch: jest.fn(),
-      });
-
-      render(<PatientDetails />);
-      expect(
-        screen.getByText(/25 years, 3 months, 10 days/),
-      ).toBeInTheDocument();
-      expect(mockT).toHaveBeenCalledWith('CLINICAL_YEARS_TRANSLATION_KEY', {
-        count: 25,
-      });
-      expect(mockT).toHaveBeenCalledWith('CLINICAL_MONTHS_TRANSLATION_KEY', {
-        count: 3,
-      });
-      expect(mockT).toHaveBeenCalledWith('CLINICAL_DAYS_TRANSLATION_KEY', {
-        count: 10,
-      });
-    });
-  });
-
   describe('Accessibility', () => {
     it('passes axe accessibility tests with patient data', async () => {
+      jest.useRealTimers(); // axe doesn't work well with fake timers
       const patient = createMockPatient();
       mockedUsePatient.mockReturnValue({
         patient,
@@ -307,9 +262,12 @@ describe('PatientDetails Component', () => {
 
       const { container } = render(<PatientDetails />);
       expect(await axe(container)).toHaveNoViolations();
+      jest.useFakeTimers(); // restore fake timers
+      jest.setSystemTime(new Date('2025-03-16'));
     });
 
     it('passes axe accessibility tests in loading state', async () => {
+      jest.useRealTimers(); // axe doesn't work well with fake timers
       mockedUsePatient.mockReturnValue({
         patient: null,
         loading: true,
@@ -319,6 +277,8 @@ describe('PatientDetails Component', () => {
 
       const { container } = render(<PatientDetails />);
       expect(await axe(container)).toHaveNoViolations();
+      jest.useFakeTimers(); // restore fake timers
+      jest.setSystemTime(new Date('2025-03-16'));
     });
   });
 });

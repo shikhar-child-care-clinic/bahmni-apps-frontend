@@ -596,18 +596,126 @@ describe('calculateAgeinYearsAndMonths', () => {
     jest.useRealTimers();
   });
 
-  it('should calculate age correctly', () => {
-    const birthDate = new Date(2000, 2, 28);
-    const birthDateMillis = birthDate.getTime();
-    const result = calculateAgeinYearsAndMonths(birthDateMillis);
-    expect(result).toBe('24 years 0 months 0 days');
+  describe('Short format (default)', () => {
+    const mockT = (key: string, options?: { count?: number }) => {
+      if (key === 'REGISTRATION_YEARS_SHORT') return 'y';
+      if (key === 'REGISTRATION_MONTHS_SHORT') return 'm';
+      if (key === 'REGISTRATION_DAYS_SHORT') return 'd';
+      return key;
+    };
+
+    it('should calculate age correctly with timestamp input', () => {
+      const birthDate = new Date(2000, 2, 28);
+      const birthDateMillis = birthDate.getTime();
+      const result = calculateAgeinYearsAndMonths(birthDateMillis, mockT);
+      expect(result).toBe('24y');
+    });
+
+    it('should calculate age correctly with string input', () => {
+      const result = calculateAgeinYearsAndMonths('2000-03-28', mockT);
+      expect(result).toBe('24y');
+    });
+
+    it('should show all non-zero components', () => {
+      const birthDate = new Date(2018, 11, 28);
+      const result = calculateAgeinYearsAndMonths(birthDate.getTime(), mockT);
+      expect(result).toBe('5y 3m');
+    });
+
+    it('should handle infants under 3 months showing only days', () => {
+      const birthDate = new Date(2024, 1, 29);
+      const result = calculateAgeinYearsAndMonths(birthDate.getTime(), mockT);
+      expect(result).toBe('28d');
+    });
+
+    it('should return 0d for newborn (same day)', () => {
+      const birthDate = new Date(2024, 2, 28);
+      const result = calculateAgeinYearsAndMonths(birthDate.getTime(), mockT);
+      expect(result).toBe('0d');
+    });
+
+    it('should format age with short fallback units when no translation function is passed', () => {
+      const birthDate = new Date(2000, 2, 28);
+      const result = calculateAgeinYearsAndMonths(birthDate.getTime());
+      expect(result).toBe('24y 0m 0d');
+    });
   });
 
-  it('should calculate age correctly for someone born 5 years and 3 months ago', () => {
-    const birthDate = new Date(2018, 11, 28);
-    const birthDateMillis = birthDate.getTime();
-    const result = calculateAgeinYearsAndMonths(birthDateMillis);
-    expect(result).toBe('5 years 3 months 0 days');
+  describe('Full format', () => {
+    const mockT = jest.fn((key: string, options?: { count?: number }) => {
+      if (key === 'CLINICAL_YEARS_TRANSLATION_KEY')
+        return options?.count === 1 ? 'Year' : 'Years';
+      if (key === 'CLINICAL_MONTHS_TRANSLATION_KEY')
+        return options?.count === 1 ? 'Month' : 'Months';
+      if (key === 'CLINICAL_DAYS_TRANSLATION_KEY')
+        return options?.count === 1 ? 'Day' : 'Days';
+      return key;
+    });
+
+    it('should show all non-zero components in full format', () => {
+      const birthDate = new Date(1999, 1, 28);
+      const result = calculateAgeinYearsAndMonths(
+        birthDate.getTime(),
+        mockT,
+        'full',
+      );
+      expect(result).toBe('25 Years, 1 Month');
+    });
+
+    it('should use singular forms for values of 1', () => {
+      const birthDate = new Date(2023, 1, 27); // 1 year, 1 month, 1 day
+      const result = calculateAgeinYearsAndMonths(
+        birthDate.getTime(),
+        mockT,
+        'full',
+      );
+      expect(result).toBe('1 Year, 1 Month, 1 Day');
+    });
+
+    it('should show years, months, and days when all are non-zero', () => {
+      const birthDate = new Date(2018, 11, 26); // 5 years, 3 months, 2 days
+      const result = calculateAgeinYearsAndMonths(
+        birthDate.getTime(),
+        mockT,
+        'full',
+      );
+      expect(result).toBe('5 Years, 3 Months, 2 Days');
+    });
+
+    it('should handle infants under 3 months in full format', () => {
+      const birthDate = new Date(2024, 1, 29); // 28 days old
+      const result = calculateAgeinYearsAndMonths(
+        birthDate.getTime(),
+        mockT,
+        'full',
+      );
+      expect(result).toBe('28 Days');
+    });
+
+    it('should return 0 Days for newborn in full format', () => {
+      const birthDate = new Date(2024, 2, 28);
+      const result = calculateAgeinYearsAndMonths(
+        birthDate.getTime(),
+        mockT,
+        'full',
+      );
+      expect(result).toBe('0 Days');
+    });
+
+    it('should handle string birthDate input in full format', () => {
+      const result = calculateAgeinYearsAndMonths('2000-03-28', mockT, 'full');
+      expect(result).toBe('24 Years');
+    });
+
+    it('should format age with full fallback units when no translation function is passed', () => {
+      const birthDate = new Date(2000, 2, 28);
+      const result = calculateAgeinYearsAndMonths(
+        birthDate.getTime(),
+        undefined,
+        'full',
+      );
+      expect(result).toBe('24 years, 0 months, 0 days');
+    });
   });
 });
 
