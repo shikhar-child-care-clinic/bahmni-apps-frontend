@@ -179,13 +179,16 @@ describe('DetailsSection', () => {
       setter: () => mockSetDurationMins,
       expectedArgs: [30],
     },
-  ])('should call $scenario', ({ testId, inputValue, setter, expectedArgs }) => {
-    render(wrapper);
-    fireEvent.change(screen.getByTestId(testId), {
-      target: { value: inputValue },
-    });
-    expect(setter()).toHaveBeenCalledWith(...expectedArgs);
-  });
+  ])(
+    'should call $scenario',
+    ({ testId, inputValue, setter, expectedArgs }) => {
+      render(wrapper);
+      fireEvent.change(screen.getByTestId(testId), {
+        target: { value: inputValue },
+      });
+      expect(setter()).toHaveBeenCalledWith(...expectedArgs);
+    },
+  );
 
   it.each([
     {
@@ -229,7 +232,7 @@ describe('DetailsSection', () => {
     },
   ])(
     'should not call setter when $scenario selection is cleared',
-    async ({ comboboxLabel, storeOverride, setter }) => {
+    async ({ storeOverride, setter }) => {
       jest.mocked(useAddServiceStore).mockReturnValue({
         ...defaultStoreState,
         ...storeOverride,

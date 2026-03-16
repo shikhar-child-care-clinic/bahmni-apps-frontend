@@ -116,6 +116,7 @@ const DetailsSection: React.FC = () => {
           labelText={t('ADMIN_ADD_SERVICE_FIELD_SERVICE_NAME')}
           placeholder={t('ADMIN_ADD_SERVICE_FIELD_SERVICE_NAME_PLACEHOLDER')}
           value={name}
+          required
           invalid={!!nameError}
           invalidText={nameError ? t(nameError) : ''}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
