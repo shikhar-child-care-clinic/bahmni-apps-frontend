@@ -326,6 +326,48 @@
         }
       }
     },
+    "registrationForm": {
+      "type": "object",
+      "description": "Configuration for registration form sections and controls",
+      "additionalProperties": false,
+      "properties": {
+        "sections": {
+          "type": "array",
+          "description": "Array of form sections to display",
+          "items": {
+            "type": "object",
+            "required": ["name", "translationKey", "controls"],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Display name of the section"
+              },
+              "translationKey": {
+                "type": "string",
+                "description": "Translation key for the section title"
+              },
+              "controls": {
+                "type": "array",
+                "description": "Array of form controls in this section",
+                "items": {
+                  "type": "object",
+                  "required": ["type"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": ["profile", "address", "contactInfo", "additionalInfo", "additionalIdentifiers", "relationships"],
+                      "description": "Type of form control to render"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "extensionPoints": {
       "type": "array",
       "description": "Array of extension point definitions that extensions can attach to",
