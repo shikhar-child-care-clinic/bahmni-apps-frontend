@@ -2,12 +2,13 @@ import { BaseLayout, Button, Header } from '@bahmni/design-system';
 import {
   BAHMNI_HOME_PATH,
   createAppointmentService,
+  hasPrivilege,
   useTranslation,
 } from '@bahmni/services';
-import { useNotification } from '@bahmni/widgets';
+import { useNotification, useUserPrivilege } from '@bahmni/widgets';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PATHS } from '../../../constants/app';
+import { MANAGE_APPOINTMENT_SERVICES_PRIVILEGE, PATHS } from '../../../constants/app';
 import AvailabilitySection from './components/AvailabilitySection';
 import ServiceDetailsSection from './components/DetailsSection';
 import { useAddServiceStore } from './stores/addServiceStore';
@@ -19,7 +20,13 @@ const AddServicePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { addNotification } = useNotification();
+  const { userPrivileges } = useUserPrivilege();
   const [isSaving, setIsSaving] = useState(false);
+
+  const canManageServices = hasPrivilege(
+    userPrivileges,
+    MANAGE_APPOINTMENT_SERVICES_PRIVILEGE,
+  );
 
   const { validate } = useAddServiceStore();
 
@@ -91,44 +98,57 @@ const AddServicePage: React.FC = () => {
     <BaseLayout
       header={<Header breadcrumbItems={breadcrumbs} />}
       main={
-        <div
-          id="add-appointment-service-page"
-          data-testid="add-appointment-service-page-test-id"
-          aria-label="add-appointment-service-page-aria-label"
-        >
-          <div className={styles.page}>
-            <h2
-              id="add-new-appointment-service-title"
-              data-testid="add-new-appointment-service-title-test-id"
-              aria-label="add-new-appointment-service-title-aria-label"
-            >
-              {t('ADMIN_ADD_SERVICE_TITLE')}
-            </h2>
-            <ServiceDetailsSection />
-            <AvailabilitySection />
+        canManageServices ? (
+          <div
+            id="add-appointment-service-page"
+            data-testid="add-appointment-service-page-test-id"
+            aria-label="add-appointment-service-page-aria-label"
+          >
+            <div className={styles.page}>
+              <h2
+                id="add-new-appointment-service-title"
+                data-testid="add-new-appointment-service-title-test-id"
+                aria-label="add-new-appointment-service-title-aria-label"
+              >
+                {t('ADMIN_ADD_SERVICE_TITLE')}
+              </h2>
+              <ServiceDetailsSection />
+              <AvailabilitySection />
+            </div>
           </div>
-        </div>
+        ) : (
+          <div
+            id="add-appointment-service-no-manage-privilege"
+            data-testid="add-appointment-service-no-manage-privilege-test-id"
+            aria-label="add-appointment-service-no-manage-privilege-aria-label"
+            className={styles.noPrivilegeContainer}
+          >
+            {t('ADMIN_ADD_SERVICE_ERROR_MESSAGE_NO_MANAGE_PRIVILEGE')}
+          </div>
+        )
       }
       footer={
-        <div className={styles.footer}>
-          <Button
-            id="back-btn"
-            data-testid="back-btn-test-id"
-            kind="tertiary"
-            onClick={() => navigate(PATHS.ADMIN_SERVICES)}
-          >
-            {t('ADMIN_ADD_SERVICE_BACK_BUTTON')}
-          </Button>
-          <Button
-            id="save-btn"
-            data-testid="save-btn-test-id"
-            kind="primary"
-            disabled={isSaving}
-            onClick={handleSave}
-          >
-            {t('ADMIN_ADD_SERVICE_SAVE_BUTTON')}
-          </Button>
-        </div>
+        canManageServices ? (
+          <div className={styles.footer}>
+            <Button
+              id="back-btn"
+              data-testid="back-btn-test-id"
+              kind="tertiary"
+              onClick={() => navigate(PATHS.ADMIN_SERVICES)}
+            >
+              {t('ADMIN_ADD_SERVICE_BACK_BUTTON')}
+            </Button>
+            <Button
+              id="save-btn"
+              data-testid="save-btn-test-id"
+              kind="primary"
+              disabled={isSaving}
+              onClick={handleSave}
+            >
+              {t('ADMIN_ADD_SERVICE_SAVE_BUTTON')}
+            </Button>
+          </div>
+        ) : undefined
       }
     />
   );

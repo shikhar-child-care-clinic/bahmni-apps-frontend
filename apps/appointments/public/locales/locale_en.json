@@ -4,6 +4,7 @@
   "ADMIN_ADD_SERVICE_AVAILABILITY_TITLE": "Service Availability",
   "ADMIN_ADD_SERVICE_BACK_BUTTON": "Back",
   "ADMIN_ADD_SERVICE_ERROR_MESSAGE": "Failed to create service. Please try again.",
+  "ADMIN_ADD_SERVICE_ERROR_MESSAGE_NO_MANAGE_PRIVILEGE": "You are not authorized to manage appointment services",
   "ADMIN_ADD_SERVICE_ERROR_TITLE": "Save Failed",
   "ADMIN_ADD_SERVICE_FIELD_DESCRIPTION": "Description",
   "ADMIN_ADD_SERVICE_FIELD_DESCRIPTION_PLACEHOLDER": "Enter a description",

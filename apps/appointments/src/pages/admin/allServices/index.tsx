@@ -16,13 +16,11 @@ import { useNotification, useUserPrivilege } from '@bahmni/widgets';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PATHS } from '../../../constants/app';
+import { ADMIN_TAB_PRIVILEGE, MANAGE_APPOINTMENT_SERVICES_PRIVILEGE, PATHS } from '../../../constants/app';
 import { useAppointmentsConfig } from '../../../providers/appointmentsConfig';
 import DeleteServiceModal from './components/DeleteServiceModal';
 import {
-  ADMIN_TAB_PRIVILEGE,
   KNOWN_FIELDS,
-  MANAGE_APPOINTMENT_SERVICES_PRIVILEGE,
 } from './constants';
 import { AppointmentServiceViewModel } from './model';
 import styles from './styles/index.module.scss';

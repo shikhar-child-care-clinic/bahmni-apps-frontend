@@ -4,6 +4,7 @@
   "ADMIN_ADD_SERVICE_AVAILABILITY_TITLE": "Disponibilidad del servicio",
   "ADMIN_ADD_SERVICE_BACK_BUTTON": "Volver",
   "ADMIN_ADD_SERVICE_ERROR_MESSAGE": "Error al crear el servicio. Por favor, inténtelo de nuevo.",
+  "ADMIN_ADD_SERVICE_ERROR_MESSAGE_NO_MANAGE_PRIVILEGE": "No está autorizado para gestionar los servicios de citas",
   "ADMIN_ADD_SERVICE_ERROR_TITLE": "Error al guardar",
   "ADMIN_ADD_SERVICE_FIELD_DESCRIPTION": "Descripción",
   "ADMIN_ADD_SERVICE_FIELD_DESCRIPTION_PLACEHOLDER": "Ingrese una descripción",

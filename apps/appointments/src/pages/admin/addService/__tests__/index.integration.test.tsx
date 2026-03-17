@@ -15,6 +15,7 @@ import {
 import userEvent from '@testing-library/user-event';
 import AddServicePage from '../index';
 import { useAddServiceStore } from '../stores/addServiceStore';
+import { MANAGE_APPOINTMENT_SERVICES_PRIVILEGE } from '../../../../constants/app';
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -33,7 +34,11 @@ const mockAddNotification = jest.fn();
 jest.mock('@bahmni/widgets', () => ({
   ...jest.requireActual('@bahmni/widgets'),
   useNotification: jest.fn(() => ({ addNotification: mockAddNotification })),
+  useUserPrivilege: jest.fn(),
 }));
+
+const mockUseUserPrivilege =
+  jest.requireMock('@bahmni/widgets').useUserPrivilege;
 
 const mockNavigate = jest.fn();
 
@@ -56,6 +61,9 @@ describe('AddServicePage Integration', () => {
     useAddServiceStore.getState().reset();
     jest.mocked(getAppointmentLocations).mockResolvedValue({ results: [] });
     jest.mocked(getAppointmentSpecialities).mockResolvedValue([]);
+    mockUseUserPrivilege.mockReturnValue({
+      userPrivileges: [{ name: MANAGE_APPOINTMENT_SERVICES_PRIVILEGE }],
+    });
   });
 
   afterEach(() => {

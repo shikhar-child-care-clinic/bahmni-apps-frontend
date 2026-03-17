@@ -8,6 +8,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AddServicePage from '../index';
 import { useAddServiceStore } from '../stores/addServiceStore';
+import { MANAGE_APPOINTMENT_SERVICES_PRIVILEGE } from '../../../../constants/app';
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -22,7 +23,11 @@ jest.mock('@bahmni/services', () => ({
 jest.mock('@bahmni/widgets', () => ({
   ...jest.requireActual('@bahmni/widgets'),
   useNotification: jest.fn(() => ({ addNotification: mockAddNotification })),
+  useUserPrivilege: jest.fn(),
 }));
+
+const mockUseUserPrivilege =
+  jest.requireMock('@bahmni/widgets').useUserPrivilege;
 
 jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),
@@ -84,6 +89,9 @@ describe('AddServicePage', () => {
       isLoading: false,
       isError: false,
     });
+    mockUseUserPrivilege.mockReturnValue({
+      userPrivileges: [{ name: MANAGE_APPOINTMENT_SERVICES_PRIVILEGE }],
+    });
   });
 
   const renderPage = () =>
@@ -92,6 +100,21 @@ describe('AddServicePage', () => {
         <AddServicePage />
       </QueryClientProvider>,
     );
+
+  it('should render no-privilege message when user lacks manage services privilege', () => {
+    mockUseUserPrivilege.mockReturnValue({ userPrivileges: [] });
+    renderPage();
+
+    expect(
+      screen.getByTestId(
+        'add-appointment-service-no-manage-privilege-test-id',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId('add-appointment-service-page-test-id'),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId('save-btn-test-id')).not.toBeInTheDocument();
+  });
 
   it('should render page with title, service details, availability section, and action buttons', () => {
     renderPage();
