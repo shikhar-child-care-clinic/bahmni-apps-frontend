@@ -8,21 +8,25 @@
   margin-inline: calc($spacing-12 + $spacing-05);
   display: flex;
   flex-direction: column;
-  gap: $spacing-08;
   box-shadow: 0px 4px 4px 0px $shadow;
   h2 {
     @include type-style("heading-compact-02");
     padding: $spacing-05;
-    padding-inline-start: $spacing-06;
+    padding-inline: $spacing-06;
     background: $layer-01;
+  }
+
+  >div[id$="add-appointment-details-section"] {
+    padding-top: $spacing-06 !important;
   }
 }
 
 .section {
+  padding-top: $spacing-08;
   h3 {
     @include type-style("body-compact-02");
     padding-bottom: $spacing-05;
-    padding-inline-start: $spacing-06;
+    padding-inline: $spacing-06;
   }
 }
 
@@ -43,6 +47,7 @@
 
 .addRowBtn {
   margin: $spacing-05;
+  margin-left: $spacing-06;
 }
 
 .footer {

@@ -39,7 +39,7 @@ const mockValidate = jest.fn();
 
 const defaultRow = {
   id: 'row-1',
-  daysOfWeek: ['MONDAY'] as DayOfWeek[],
+  daysOfWeek: ['MONDAY'],
   startTime: '09:00',
   startMeridiem: 'AM' as const,
   endTime: '10:00',
@@ -227,7 +227,7 @@ describe('AddServicePage', () => {
       availabilityRows: [
         {
           ...defaultRow,
-          daysOfWeek: ['TUESDAY', 'WEDNESDAY'] as DayOfWeek[],
+          daysOfWeek: ['TUESDAY', 'WEDNESDAY'],
           startTime: '08:30',
           endTime: '17:00',
           endMeridiem: 'PM' as const,
