@@ -19,11 +19,11 @@ const mockT = (key: string, options?: { count?: number }) => {
   const { count = 1 } = options ?? {};
 
   switch (key) {
-    case 'CLINICAL_DAYS_TRANSLATION_KEY':
+    case 'DAYS_FULL_FORMAT':
       return count === 1 ? 'day' : 'days';
-    case 'CLINICAL_MONTHS_TRANSLATION_KEY':
+    case 'MONTHS_FULL_FORMAT':
       return count === 1 ? 'month' : 'months';
-    case 'CLINICAL_YEARS_TRANSLATION_KEY':
+    case 'YEARS_FULL_FORMAT':
       return count === 1 ? 'year' : 'years';
     case 'DATE_ERROR_PARSE':
       return 'Parse Error';
@@ -598,9 +598,9 @@ describe('calculateAgeinYearsAndMonths', () => {
 
   describe('Short format (default)', () => {
     const mockT = (key: string, options?: { count?: number }) => {
-      if (key === 'REGISTRATION_YEARS_SHORT') return 'y';
-      if (key === 'REGISTRATION_MONTHS_SHORT') return 'm';
-      if (key === 'REGISTRATION_DAYS_SHORT') return 'd';
+      if (key === 'YEARS_SHORT_FORMAT') return 'y';
+      if (key === 'MONTHS_SHORT_FORMAT') return 'm';
+      if (key === 'DAYS_SHORT_FORMAT') return 'd';
       return key;
     };
 
@@ -643,11 +643,11 @@ describe('calculateAgeinYearsAndMonths', () => {
 
   describe('Full format', () => {
     const mockT = jest.fn((key: string, options?: { count?: number }) => {
-      if (key === 'CLINICAL_YEARS_TRANSLATION_KEY')
+      if (key === 'YEARS_FULL_FORMAT')
         return options?.count === 1 ? 'Year' : 'Years';
-      if (key === 'CLINICAL_MONTHS_TRANSLATION_KEY')
+      if (key === 'MONTHS_FULL_FORMAT')
         return options?.count === 1 ? 'Month' : 'Months';
-      if (key === 'CLINICAL_DAYS_TRANSLATION_KEY')
+      if (key === 'DAYS_FULL_FORMAT')
         return options?.count === 1 ? 'Day' : 'Days';
       return key;
     });
@@ -659,7 +659,7 @@ describe('calculateAgeinYearsAndMonths', () => {
         mockT,
         'full',
       );
-      expect(result).toBe('25 Years, 1 Month');
+      expect(result).toBe('25 Years 1 Month');
     });
 
     it('should use singular forms for values of 1', () => {
@@ -669,7 +669,7 @@ describe('calculateAgeinYearsAndMonths', () => {
         mockT,
         'full',
       );
-      expect(result).toBe('1 Year, 1 Month, 1 Day');
+      expect(result).toBe('1 Year 1 Month 1 Day');
     });
 
     it('should show years, months, and days when all are non-zero', () => {
@@ -679,7 +679,7 @@ describe('calculateAgeinYearsAndMonths', () => {
         mockT,
         'full',
       );
-      expect(result).toBe('5 Years, 3 Months, 2 Days');
+      expect(result).toBe('5 Years 3 Months 2 Days');
     });
 
     it('should handle infants under 3 months in full format', () => {
@@ -714,7 +714,7 @@ describe('calculateAgeinYearsAndMonths', () => {
         undefined,
         'full',
       );
-      expect(result).toBe('24 years, 0 months, 0 days');
+      expect(result).toBe('24 years 0 months 0 days');
     });
   });
 });

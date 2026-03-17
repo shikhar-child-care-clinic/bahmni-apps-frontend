@@ -295,24 +295,25 @@ export function formatDateDistance(
   if (diffInYears >= 5) {
     const monthInFraction = diffInMonths % 12;
     const yearValue = monthInFraction > 6 ? diffInYears + 1 : diffInYears;
-    const yearUnit = t('CLINICAL_YEARS_TRANSLATION_KEY', {
+    const yearUnit = t('YEARS_FULL_FORMAT', {
       count: yearValue,
     });
     formattedResult = `${yearValue} ${yearUnit}`;
   } else if (diffInYears >= 1) {
     // Use years for periods >= 1 year
     const monthInFraction = diffInMonths % 12;
-    const yearUnit = t('CLINICAL_YEARS_TRANSLATION_KEY', {
+    const yearUnit = t('YEARS_FULL_FORMAT', {
       count: diffInYears + monthInFraction,
     });
+    const newLocal = diffInYears + 1;
     formattedResult =
       monthInFraction === 0
         ? `${diffInYears} ${yearUnit}`
         : monthInFraction > 6
-          ? `${diffInYears + 1} ${yearUnit}`
+          ? `${newLocal} ${yearUnit}`
           : `${diffInYears}.5 ${yearUnit}`;
   } else if (diffInMonths >= 11) {
-    const yearUnit = t('CLINICAL_YEARS_TRANSLATION_KEY', {
+    const yearUnit = t('YEARS_FULL_FORMAT', {
       count: 1,
     });
     formattedResult = `1 ${yearUnit}`;
@@ -320,14 +321,14 @@ export function formatDateDistance(
     // Use months for periods >= 1 month but < 1 year
     const daysInFraction = diffInDays % 30;
     const monthValue = daysInFraction > 15 ? diffInMonths + 1 : diffInMonths;
-    const monthUnit = t('CLINICAL_MONTHS_TRANSLATION_KEY', {
+    const monthUnit = t('MONTHS_FULL_FORMAT', {
       count: monthValue,
     });
     formattedResult = `${monthValue} ${monthUnit}`;
   } else {
     // Use days for everything else (including hours, minutes - round up to at least 1 day)
     const days = Math.max(1, diffInDays);
-    const dayUnit = t('CLINICAL_DAYS_TRANSLATION_KEY', {
+    const dayUnit = t('DAYS_FULL_FORMAT', {
       count: days,
     });
     formattedResult = `${days} ${dayUnit}`;
@@ -398,10 +399,7 @@ export function calculateAgeinYearsAndMonths(
     if (!t) {
       return format === 'full' ? `${totalDays} days` : `${totalDays}d`;
     }
-    const dayKey =
-      format === 'full'
-        ? 'CLINICAL_DAYS_TRANSLATION_KEY'
-        : 'REGISTRATION_DAYS_SHORT';
+    const dayKey = format === 'full' ? 'DAYS_FULL_FORMAT' : 'DAYS_SHORT_FORMAT';
     const dayUnit = t(dayKey, { count: totalDays });
     return format === 'full'
       ? `${totalDays} ${dayUnit}`
@@ -410,20 +408,14 @@ export function calculateAgeinYearsAndMonths(
 
   if (!t) {
     return format === 'full'
-      ? `${years} years, ${months} months, ${days} days`
+      ? `${years} years ${months} months ${days} days`
       : `${years}y ${months}m ${days}d`;
   }
 
   const isFullFormat = format === 'full';
-  const yearKey = isFullFormat
-    ? 'CLINICAL_YEARS_TRANSLATION_KEY'
-    : 'REGISTRATION_YEARS_SHORT';
-  const monthKey = isFullFormat
-    ? 'CLINICAL_MONTHS_TRANSLATION_KEY'
-    : 'REGISTRATION_MONTHS_SHORT';
-  const dayKey = isFullFormat
-    ? 'CLINICAL_DAYS_TRANSLATION_KEY'
-    : 'REGISTRATION_DAYS_SHORT';
+  const yearKey = isFullFormat ? 'YEARS_FULL_FORMAT' : 'YEARS_SHORT_FORMAT';
+  const monthKey = isFullFormat ? 'MONTHS_FULL_FORMAT' : 'MONTHS_SHORT_FORMAT';
+  const dayKey = isFullFormat ? 'DAYS_FULL_FORMAT' : 'DAYS_SHORT_FORMAT';
 
   const ageComponents: Array<[number, string]> = [
     [years, yearKey],
@@ -438,10 +430,8 @@ export function calculateAgeinYearsAndMonths(
       return isFullFormat ? `${value} ${unit}` : `${value}${unit}`;
     });
 
-  const separator = isFullFormat ? ', ' : ' ';
   return (
-    parts.join(separator) ||
-    (isFullFormat ? `0 ${t(dayKey, { count: 0 })}` : '0d')
+    parts.join(' ') || (isFullFormat ? `0 ${t(dayKey, { count: 0 })}` : '0d')
   );
 }
 /**

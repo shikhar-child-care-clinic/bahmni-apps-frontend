@@ -44,10 +44,9 @@ const mockT = jest
   .fn()
   .mockImplementation((key: string, options?: { count?: number }) => {
     const translations: Record<string, string> = {
-      CLINICAL_YEARS_TRANSLATION_KEY: options?.count === 1 ? 'year' : 'years',
-      CLINICAL_MONTHS_TRANSLATION_KEY:
-        options?.count === 1 ? 'month' : 'months',
-      CLINICAL_DAYS_TRANSLATION_KEY: options?.count === 1 ? 'day' : 'days',
+      YEARS_FULL_FORMAT: options?.count === 1 ? 'year' : 'years',
+      MONTHS_FULL_FORMAT: options?.count === 1 ? 'month' : 'months',
+      DAYS_FULL_FORMAT: options?.count === 1 ? 'day' : 'days',
     };
     return translations[key] || key;
   }) as any;
@@ -116,9 +115,7 @@ describe('PatientDetails Component', () => {
       expect(screen.getByTestId('patient-name')).toHaveTextContent('John Doe');
       expect(screen.getByText('MRN123456 | OP789')).toBeInTheDocument();
       expect(screen.getByText('male')).toBeInTheDocument();
-      expect(
-        screen.getByText(/36 years, 2 months, 15 days/),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/36 years 2 months 15 days/)).toBeInTheDocument();
       expect(screen.getByText(/1989-01-01/)).toBeInTheDocument();
     });
 

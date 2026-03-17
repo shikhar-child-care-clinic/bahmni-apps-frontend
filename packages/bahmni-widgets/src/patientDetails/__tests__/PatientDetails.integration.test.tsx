@@ -11,10 +11,9 @@ jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: jest.fn((key: string, options?: { count?: number }) => {
       const translations: Record<string, string> = {
-        CLINICAL_YEARS_TRANSLATION_KEY: options?.count === 1 ? 'year' : 'years',
-        CLINICAL_MONTHS_TRANSLATION_KEY:
-          options?.count === 1 ? 'month' : 'months',
-        CLINICAL_DAYS_TRANSLATION_KEY: options?.count === 1 ? 'day' : 'days',
+        YEARS_FULL_FORMAT: options?.count === 1 ? 'year' : 'years',
+        MONTHS_FULL_FORMAT: options?.count === 1 ? 'month' : 'months',
+        DAYS_FULL_FORMAT: options?.count === 1 ? 'day' : 'days',
       };
       return translations[key] || key;
     }),
@@ -86,7 +85,7 @@ describe('PatientDetails Integration', () => {
     expect(screen.getByTestId('patient-name')).toHaveTextContent('John Doe');
     expect(screen.getByText('MRN123456')).toBeInTheDocument();
     expect(screen.getByText('male')).toBeInTheDocument();
-    expect(screen.getByText(/35 years, 2 months, 15 days/)).toBeInTheDocument();
+    expect(screen.getByText(/35 years 2 months 15 days/)).toBeInTheDocument();
   });
 
   it('integrates usePatient hook with error state', () => {
@@ -135,6 +134,6 @@ describe('PatientDetails Integration', () => {
 
     render(<PatientDetails />);
 
-    expect(screen.getByText(/1 year, 1 month, 1 day/)).toBeInTheDocument();
+    expect(screen.getByText(/1 year 1 month 1 day/)).toBeInTheDocument();
   });
 });
