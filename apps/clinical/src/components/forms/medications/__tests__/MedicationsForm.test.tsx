@@ -285,7 +285,9 @@ describe('MedicationsForm', () => {
 
       // Verify search box is cleared
       await waitFor(() => {
-        expect(searchBox).toHaveValue('');
+        expect(
+          screen.getByRole('combobox', { name: /search to add medication/i }),
+        ).toHaveValue('');
       });
     });
 
@@ -305,7 +307,9 @@ describe('MedicationsForm', () => {
       });
       await user.click(screen.getByText('Paracetamol 500mg'));
       await waitFor(() => {
-        expect(searchBox).toHaveValue('');
+        expect(
+          screen.getByRole('combobox', { name: /search to add medication/i }),
+        ).toHaveValue('');
       });
     });
 

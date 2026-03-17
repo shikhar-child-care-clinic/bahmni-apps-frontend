@@ -352,7 +352,9 @@ describe('ConditionsAndDiagnoses', () => {
       await user.click(screen.getByText('Hypertension'));
 
       await waitFor(() => {
-        expect(searchInput).toHaveValue('');
+        expect(
+          screen.getByPlaceholderText('Search to add new Diagnosis'),
+        ).toHaveValue('');
       });
     });
 
@@ -370,11 +372,16 @@ describe('ConditionsAndDiagnoses', () => {
 
       // Verify combobox is reset (selectedItem is null, allowing new searches)
       await waitFor(() => {
-        expect(searchInput).toHaveValue('');
+        expect(
+          screen.getByPlaceholderText('Search to add new Diagnosis'),
+        ).toHaveValue('');
       });
 
       // Verify we can immediately search for another item (proves selectedItem was reset to null)
-      await user.type(searchInput, 'diab');
+      await user.type(
+        screen.getByPlaceholderText('Search to add new Diagnosis'),
+        'diab',
+      );
       await waitFor(() => {
         expect(screen.getByText('Diabetes')).toBeInTheDocument();
       });

@@ -385,7 +385,7 @@ describe('InvestigationsForm', () => {
       });
       await user.click(screen.getByText('Complete Blood Count'));
       await waitFor(() => {
-        expect(combobox).toHaveValue('');
+        expect(screen.getByRole('combobox')).toHaveValue('');
       });
     });
 
@@ -408,11 +408,11 @@ describe('InvestigationsForm', () => {
 
       // Verify combobox is reset (selectedItem is null, allowing new searches)
       await waitFor(() => {
-        expect(combobox).toHaveValue('');
+        expect(screen.getByRole('combobox')).toHaveValue('');
       });
 
       // Verify we can immediately search for another item (proves selectedItem was reset to null)
-      await user.type(combobox, 'glucose');
+      await user.type(screen.getByRole('combobox'), 'glucose');
       await waitFor(() => {
         expect(screen.getByText('Blood Glucose Test')).toBeInTheDocument();
       });
@@ -1101,7 +1101,9 @@ describe('InvestigationsForm', () => {
         ).toBeInTheDocument();
       });
 
-      await user.clear(combobox);
+      // The combobox resets automatically after selection; trigger an input event
+      // to clear the parent's search state and hide the duplicate notification.
+      await user.type(screen.getByRole('combobox'), ' {backspace}');
 
       await waitFor(() => {
         expect(
@@ -1239,7 +1241,7 @@ describe('InvestigationsForm', () => {
       });
 
       // Clear the combobox — resets the dismissal ref
-      await user.clear(combobox);
+      await user.clear(screen.getByRole('combobox'));
       await waitFor(() => {
         expect(
           screen.queryByText('Investigation is already ordered'),
@@ -1247,7 +1249,7 @@ describe('InvestigationsForm', () => {
       });
 
       // Select a different duplicate (Blood Glucose) — notification should reappear
-      await user.type(combobox, 'glucose');
+      await user.type(screen.getByRole('combobox'), 'glucose');
       await waitFor(() => {
         expect(screen.getByText('Blood Glucose Test')).toBeInTheDocument();
       });

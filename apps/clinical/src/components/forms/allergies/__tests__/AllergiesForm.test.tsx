@@ -271,7 +271,7 @@ describe('AllergiesForm', () => {
       });
       await user.click(screen.getByText('Peanut Allergy [Food]'));
       await waitFor(() => {
-        expect(searchBox).toHaveValue('');
+        expect(getSearchCombobox()).toHaveValue('');
       });
     });
 
@@ -300,11 +300,11 @@ describe('AllergiesForm', () => {
 
       // Verify combobox is reset (selectedItem is null, allowing new searches)
       await waitFor(() => {
-        expect(searchBox).toHaveValue('');
+        expect(getSearchCombobox()).toHaveValue('');
       });
 
       // Verify we can immediately search for another item (proves selectedItem was reset to null)
-      await user.type(searchBox, 'shellfish');
+      await user.type(getSearchCombobox(), 'shellfish');
       await waitFor(() => {
         expect(
           screen.getByText('Shellfish Allergy [Food]'),

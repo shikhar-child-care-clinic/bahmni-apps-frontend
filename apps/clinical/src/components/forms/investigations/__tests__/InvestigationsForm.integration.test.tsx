@@ -272,8 +272,8 @@ describe('InvestigationsForm Integration Tests', () => {
         screen.getByRole('option', { name: 'Blood Glucose Test' }),
       );
 
-      await user.clear(combobox);
-      await user.type(combobox, 'chest');
+      await user.clear(screen.getByRole('combobox'));
+      await user.type(screen.getByRole('combobox'), 'chest');
       await waitFor(() => {
         const option = screen.getByRole('option', { name: 'Chest X-Ray' });
         expect(option).toBeInTheDocument();
@@ -463,8 +463,8 @@ describe('InvestigationsForm Integration Tests', () => {
         'Complete Blood Count',
       );
 
-      await user.clear(combobox);
-      await user.type(combobox, 'hemoglobin');
+      await user.clear(screen.getByRole('combobox'));
+      await user.type(screen.getByRole('combobox'), 'hemoglobin');
       await waitFor(() => {
         const option = screen.getByRole('option', { name: 'Hemoglobin' });
         expect(option).toBeInTheDocument();
@@ -500,7 +500,7 @@ describe('InvestigationsForm Integration Tests', () => {
 
       // After selection, the combobox value should be reset to allow new searches
       await waitFor(() => {
-        expect(combobox).toHaveValue('');
+        expect(screen.getByRole('combobox')).toHaveValue('');
       });
     });
 
