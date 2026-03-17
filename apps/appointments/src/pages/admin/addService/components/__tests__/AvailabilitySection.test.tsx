@@ -19,6 +19,7 @@ const defaultRow = {
   id: ROW_ID,
   startTime: '',
   endTime: '',
+  isEndTimeUserSet: false,
   maxLoad: null,
   daysOfWeek: [...DAYS_OF_WEEK],
   errors: {},
@@ -44,7 +45,7 @@ describe('ServiceAvailabilitySection', () => {
     expect(
       screen.getByTestId('add-appointment-availability-section-test-id'),
     ).toBeInTheDocument();
-    expect(screen.getByText('Add Service Availability')).toBeInTheDocument();
+    expect(screen.getByText('Service Availability')).toBeInTheDocument();
     expect(
       screen.getByTestId('service-availability-table-test-id'),
     ).toBeInTheDocument();
