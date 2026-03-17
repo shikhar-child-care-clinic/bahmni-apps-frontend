@@ -6,8 +6,8 @@ import {
 import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { useAppointmentsConfig } from '../../../../providers/appointmentsConfig';
 import { PATHS } from '../../../../constants/app';
+import { useAppointmentsConfig } from '../../../../providers/appointmentsConfig';
 import { mockAppointmentServices } from '../__mocks__/mocks';
 import {
   ADMIN_TAB_PRIVILEGE,
@@ -234,7 +234,9 @@ describe('AllServicesPage', () => {
     render(wrapper);
 
     await userEvent.click(
-      screen.getByTestId('all-services-action-data-table-action-button-test-id'),
+      screen.getByTestId(
+        'all-services-action-data-table-action-button-test-id',
+      ),
     );
 
     expect(mockNavigate).toHaveBeenCalledWith(PATHS.ADMIN_ADD_SERVICE);

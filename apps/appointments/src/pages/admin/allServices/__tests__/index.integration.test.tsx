@@ -19,6 +19,11 @@ jest.mock('@bahmni/services', () => ({
   deleteAppointmentService: jest.fn(),
 }));
 
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => jest.fn(),
+}));
+
 const mockAddNotification = jest.fn();
 
 jest.mock('@bahmni/widgets', () => ({
