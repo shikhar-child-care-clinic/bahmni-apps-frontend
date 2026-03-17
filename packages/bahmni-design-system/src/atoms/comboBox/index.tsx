@@ -10,6 +10,26 @@ export type ComboBoxProps<T> = CarbonComboBoxProps<T> & {
   clearSelectedOnChange?: boolean;
 };
 
+// Carbon's autoAlign uses floating-ui autoUpdate which installs a ResizeObserver.
+// When the dropdown opens/closes, the browser may not deliver all ResizeObserver
+// notifications in a single frame, dispatching this as a window ErrorEvent. It is
+// benign — the browser recovers automatically — but React's dev overlay shows it as
+// a fatal error. Registered once at module scope (not per instance) using capture
+// phase so it runs before React's overlay handler, rather than suppressing globally
+// in index.html. startsWith covers all browser variants (Chrome appends a period,
+// Firefox does not).
+if (typeof window !== 'undefined') {
+  window.addEventListener(
+    'error',
+    (e: ErrorEvent) => {
+      if (e.message.startsWith('ResizeObserver loop')) {
+        e.stopImmediatePropagation();
+      }
+    },
+    true,
+  );
+}
+
 export const ComboBox = <T,>({
   testId,
   'data-testid': dataTestId,
@@ -19,7 +39,7 @@ export const ComboBox = <T,>({
   ...carbonProps
 }: ComboBoxProps<T>) => {
   const [displayItem, setDisplayItem] = useState<T | null>(
-    (externalSelectedItem as T) || null,
+    (externalSelectedItem as T) ?? null,
   );
   const [comboboxKey, setComboboxKey] = useState(0);
   const clearTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -35,32 +55,11 @@ export const ComboBox = <T,>({
       clearTimerRef.current = setTimeout(() => setComboboxKey((k) => k + 1), 0);
       return () => clearTimeout(clearTimerRef.current);
     } else {
-      setDisplayItem((externalSelectedItem as T) || null);
+      setDisplayItem((externalSelectedItem as T) ?? null);
     }
   }, [externalSelectedItem, clearSelectedOnChange]);
 
   useEffect(() => () => clearTimeout(clearTimerRef.current), []);
-
-  // Carbon's autoAlign uses floating-ui autoUpdate which installs a ResizeObserver.
-  // When the dropdown opens/closes, the browser may not deliver all ResizeObserver
-  // notifications in a single frame, dispatching this as a window ErrorEvent. It is
-  // benign — the browser recovers automatically — but React's dev overlay shows it as
-  // a fatal error. Suppressed here (co-located with the cause) using a capture-phase
-  // listener that runs before React's overlay handler, rather than suppressing globally
-  // in index.html.
-  useEffect(() => {
-    const handler = (e: ErrorEvent) => {
-      if (
-        e.message ===
-          'ResizeObserver loop completed with undelivered notifications' ||
-        e.message === 'ResizeObserver loop limit exceeded'
-      ) {
-        e.stopImmediatePropagation();
-      }
-    };
-    window.addEventListener('error', handler, true);
-    return () => window.removeEventListener('error', handler, true);
-  }, []);
 
   // Path 2: parent never updates selectedItem (VaccinationForm keeps it null always).
   // Same deferred key-remount approach as Path 1.
