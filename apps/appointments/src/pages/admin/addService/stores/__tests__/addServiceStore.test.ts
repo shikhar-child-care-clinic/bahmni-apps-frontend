@@ -100,6 +100,84 @@ describe('addServiceStore', () => {
       expect(getStore().availabilityRows[0][field]).toBe(value);
     });
 
+    describe('auto-endTime when startTime is updated', () => {
+      it.each([
+        {
+          scenario: 'same meridiem — no crossing',
+          startTime: '09:00',
+          startMeridiem: 'AM' as const,
+          durationMins: 30,
+          expectedEndTime: '09:30',
+          expectedEndMeridiem: 'AM',
+        },
+        {
+          scenario: 'AM to PM crossing at noon',
+          startTime: '11:40',
+          startMeridiem: 'AM' as const,
+          durationMins: 30,
+          expectedEndTime: '12:10',
+          expectedEndMeridiem: 'PM',
+        },
+        {
+          scenario: 'PM to AM crossing at midnight',
+          startTime: '11:50',
+          startMeridiem: 'PM' as const,
+          durationMins: 30,
+          expectedEndTime: '12:20',
+          expectedEndMeridiem: 'AM',
+        },
+      ])(
+        'should auto-compute endTime when durationMins is set and endTime is not user-set ($scenario)',
+        ({
+          startTime,
+          startMeridiem,
+          durationMins,
+          expectedEndTime,
+          expectedEndMeridiem,
+        }) => {
+          useAddServiceStore.setState({
+            durationMins,
+            availabilityRows: [
+              { ...getStore().availabilityRows[0], startMeridiem },
+            ],
+          });
+
+          getStore().updateAvailabilityRow(
+            INITIAL_ROW_ID,
+            'startTime',
+            startTime,
+          );
+
+          const row = getStore().availabilityRows[0];
+          expect(row.endTime).toBe(expectedEndTime);
+          expect(row.endMeridiem).toBe(expectedEndMeridiem);
+        },
+      );
+
+      it('should not auto-compute endTime when durationMins is null', () => {
+        getStore().updateAvailabilityRow(INITIAL_ROW_ID, 'startTime', '09:00');
+
+        expect(getStore().availabilityRows[0].endTime).toBe('');
+      });
+
+      it('should not auto-compute endTime when startTime is not a valid complete time', () => {
+        getStore().setDurationMins(30);
+
+        getStore().updateAvailabilityRow(INITIAL_ROW_ID, 'startTime', '9');
+
+        expect(getStore().availabilityRows[0].endTime).toBe('');
+      });
+
+      it('should not auto-compute endTime when user has manually set endTime', () => {
+        getStore().setDurationMins(30);
+        getStore().updateAvailabilityRow(INITIAL_ROW_ID, 'endTime', '10:00');
+
+        getStore().updateAvailabilityRow(INITIAL_ROW_ID, 'startTime', '09:00');
+
+        expect(getStore().availabilityRows[0].endTime).toBe('10:00');
+      });
+    });
+
     it.each([
       {
         field: 'startTime' as const,

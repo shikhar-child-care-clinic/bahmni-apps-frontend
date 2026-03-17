@@ -1,4 +1,4 @@
-import { generateId, timeToMinutes } from '@bahmni/services';
+import { addMinutesToTime, generateId, timeToMinutes } from '@bahmni/services';
 import { create } from 'zustand';
 import { DAYS_OF_WEEK } from '../constants';
 
@@ -54,14 +54,33 @@ const updateRowField = (
   id: string,
   field: UpdateField,
   value: string | number | null,
+  durationMins: number | null,
 ): AvailabilityRow => {
   if (row.id !== id) return row;
   const errors = { ...row.errors };
 
   if (field === 'startTime') {
     delete errors.startTime;
-    //TODO: Auto increase endTime
-    return { ...row, startTime: value as string, errors };
+    const newStartTime = value as string;
+    if (
+      !row.isEndTimeUserSet &&
+      durationMins !== null &&
+      isValidTime(newStartTime)
+    ) {
+      const { time: endTime, meridiem: endMeridiem } = addMinutesToTime(
+        newStartTime,
+        row.startMeridiem,
+        durationMins,
+      );
+      return {
+        ...row,
+        startTime: newStartTime,
+        endTime,
+        endMeridiem,
+        errors,
+      };
+    }
+    return { ...row, startTime: newStartTime, errors };
   }
 
   if (field === 'endTime') {
@@ -186,7 +205,7 @@ export const useAddServiceStore = create<AddServiceState>((set, get) => ({
   updateAvailabilityRow: (id, field, value) =>
     set((state) => ({
       availabilityRows: state.availabilityRows.map((row) =>
-        updateRowField(row, id, field, value),
+        updateRowField(row, id, field, value, state.durationMins),
       ),
     })),
 
