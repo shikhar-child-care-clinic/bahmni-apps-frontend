@@ -122,6 +122,8 @@ export {
   DURATION_UNIT_TO_DAYS,
   calculateEndDate,
   doDateRangesOverlap,
+  timeToMinutes,
+  addMinutesToTime,
 } from './date';
 export { type Notification, notificationService } from './notification';
 export {
