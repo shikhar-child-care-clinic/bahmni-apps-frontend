@@ -175,7 +175,9 @@ describe('AllServicesPage Integration', () => {
       expect(deleteAppointmentService).toHaveBeenCalledWith(
         mockAppointmentServices[0].uuid,
       );
-      expect(getAllAppointmentServices).toHaveBeenCalledTimes(expectedFetchCount);
+      expect(getAllAppointmentServices).toHaveBeenCalledTimes(
+        expectedFetchCount,
+      );
     },
   );
 

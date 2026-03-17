@@ -281,6 +281,7 @@ const FormsTable: React.FC<WidgetProps> = ({
       {isModalOpen && selectedRecord && (
         <Modal
           id="modalIdForActionAreaLayout"
+          portalId={'main-display-area'}
           open={isModalOpen}
           onRequestClose={handleCloseModal}
           modalHeading={selectedRecord.formName}

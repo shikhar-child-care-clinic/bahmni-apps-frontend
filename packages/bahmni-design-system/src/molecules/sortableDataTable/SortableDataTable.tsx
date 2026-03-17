@@ -1,5 +1,6 @@
 import {
   DataTable,
+  Pagination,
   Table,
   TableHead,
   TableRow,
@@ -10,7 +11,7 @@ import {
   DataTableSkeleton,
 } from '@carbon/react';
 import classnames from 'classnames';
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './styles/SortableDataTable.module.scss';
 
 export interface SortableDataTableProps<T> {
@@ -24,6 +25,7 @@ export interface SortableDataTableProps<T> {
   renderCell?: (row: T, cellId: string) => React.ReactNode;
   className?: string;
   dataTestId?: string;
+  pageSize?: number;
 }
 
 export const SortableDataTable = <T extends { id: string }>({
@@ -33,12 +35,19 @@ export const SortableDataTable = <T extends { id: string }>({
   sortable = headers.map((header) => ({ key: header.key, sortable: true })),
   loading = false,
   errorStateMessage = null,
-  emptyStateMessage = 'No data available.',
+  emptyStateMessage = 'No data available',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   renderCell = (row, cellId) => (row as any)[cellId],
   className = 'sortable-data-table',
   dataTestId = 'sortable-data-table',
+  pageSize,
 }: SortableDataTableProps<T>) => {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const paginatedRows = pageSize
+    ? rows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    : rows;
+
   if (errorStateMessage) {
     return (
       <p
@@ -83,7 +92,12 @@ export const SortableDataTable = <T extends { id: string }>({
       className={classnames(className, styles.sortableDataTableBody)}
       data-testid={dataTestId}
     >
-      <DataTable rows={rows} headers={headers} isSortable size="md">
+      <DataTable
+        rows={paginatedRows}
+        headers={headers}
+        isSortable={!pageSize}
+        size="md"
+      >
         {({
           rows: tableRows,
           headers: tableHeaders,
@@ -138,6 +152,16 @@ export const SortableDataTable = <T extends { id: string }>({
           </Table>
         )}
       </DataTable>
+      {pageSize && rows.length > pageSize && (
+        <Pagination
+          page={currentPage}
+          pageSize={pageSize}
+          pageSizes={[pageSize]}
+          totalItems={rows.length}
+          onChange={({ page }: { page: number }) => setCurrentPage(page)}
+          data-testid={`${dataTestId}-pagination`}
+        />
+      )}
     </div>
   );
 };

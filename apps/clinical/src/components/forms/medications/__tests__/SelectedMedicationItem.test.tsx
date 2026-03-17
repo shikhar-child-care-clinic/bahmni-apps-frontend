@@ -391,34 +391,19 @@ describe('SelectedMedicationItem', () => {
         // Act
         render(<SelectedMedicationItem {...props} />);
 
-        // Wait for component to mount and useEffect hooks to complete
-        await waitFor(() => {
-          expect(
-            screen.getByRole('combobox', { name: /Duration Unit/i }),
-          ).toBeInTheDocument();
+        const durationUnitDropdown = screen.getByRole('combobox', {
+          name: /Duration Unit/i,
         });
+        await user.click(durationUnitDropdown);
 
-        // Click on the duration unit dropdown and select option
-        await act(async () => {
-          const durationUnitDropdown = screen.getByRole('combobox', {
-            name: /Duration Unit/i,
-          });
-          await user.click(durationUnitDropdown);
-
-          // Find and click the days option (it will show the translated text)
-          const daysOption = await screen.findByRole('option', {
-            name: 'Days',
-          });
-          await user.click(daysOption);
-        });
+        const daysOption = await screen.findByRole('option', { name: 'Days' });
+        await user.click(daysOption);
 
         // Assert - DURATION_UNIT_OPTIONS[2] is the days option
-        await waitFor(() => {
-          expect(updateDurationUnit).toHaveBeenCalledWith(
-            'entry-1',
-            DURATION_UNIT_OPTIONS[2],
-          );
-        });
+        expect(updateDurationUnit).toHaveBeenCalledWith(
+          'entry-1',
+          DURATION_UNIT_OPTIONS[2],
+        );
       });
 
       test('updates instruction when instruction dropdown changes', async () => {
