@@ -31,3 +31,16 @@
     transform: scale(0.98);
   }
 }
+
+.modalIframeContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: $spacing-04;
+}
+
+.modalIframe {
+  width: 100%;
+  height: $spacing-06 * 25;
+  border: none;
+}

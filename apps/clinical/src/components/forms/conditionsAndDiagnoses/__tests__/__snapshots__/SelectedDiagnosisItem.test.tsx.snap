@@ -20,7 +20,7 @@ exports[`SelectedDiagnosisItem Snapshot Tests default rendering matches snapshot
         data-testid="add-as-condition-link"
         href="#"
       >
-        Add as condition
+        Add as Condition
       </a>
     </div>
     <div
@@ -110,7 +110,7 @@ exports[`SelectedDiagnosisItem Snapshot Tests disabled condition link matches sn
         data-testid="add-as-condition-link"
         role="link"
       >
-        Added as a condition
+        Added as a Condition
       </a>
     </div>
     <div
@@ -200,7 +200,7 @@ exports[`SelectedDiagnosisItem Snapshot Tests rendering with null selectedCertai
         data-testid="add-as-condition-link"
         href="#"
       >
-        Add as condition
+        Add as Condition
       </a>
     </div>
     <div

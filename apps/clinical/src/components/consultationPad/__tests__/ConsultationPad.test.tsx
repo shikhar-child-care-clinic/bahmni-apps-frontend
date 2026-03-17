@@ -22,6 +22,7 @@ import { useConditionsAndDiagnosesStore } from '../../../stores/conditionsAndDia
 import { useEncounterDetailsStore } from '../../../stores/encounterDetailsStore';
 import { useMedicationStore } from '../../../stores/medicationsStore';
 import useServiceRequestStore from '../../../stores/serviceRequestStore';
+import { useVaccinationStore } from '../../../stores/vaccinationsStore';
 import ConsultationPad from '../ConsultationPad';
 
 expect.extend(toHaveNoViolations);
@@ -485,7 +486,7 @@ const createMockEncounterDetailsStore = () => ({
 });
 
 const createMockDiagnosesStore = () => ({
-  selectedDiagnoses: [],
+  selectedDiagnoses: [{ id: 'mock-diagnosis-1' }] as any[],
   selectedConditions: [],
   validate: jest.fn(() => true),
   reset: jest.fn(),
@@ -509,12 +510,20 @@ const createMockMedicationStore = () => ({
   getState: jest.fn(() => ({ selectedMedications: [] })),
 });
 
+const createMockVaccinationStore = () => ({
+  selectedVaccinations: [],
+  validateAllVaccinations: jest.fn(() => true),
+  reset: jest.fn(),
+  getState: jest.fn(() => ({ selectedVaccinations: [] })),
+});
+
 // Initialize stores
 let mockEncounterDetailsStore = createMockEncounterDetailsStore();
 let mockDiagnosesStore = createMockDiagnosesStore();
 let mockAllergyStore = createMockAllergyStore();
 let mockServiceRequestStore = createMockServiceRequestStore();
 let mockMedicationStore = createMockMedicationStore();
+let mockVaccinationStore = createMockVaccinationStore();
 
 jest.mock('../../../stores/encounterDetailsStore', () => ({
   useEncounterDetailsStore: jest.fn(() => mockEncounterDetailsStore),
@@ -539,6 +548,12 @@ jest.mock('../../../stores/medicationsStore', () => ({
   __esModule: true,
   useMedicationStore: jest.fn(() => mockMedicationStore),
   default: jest.fn(() => mockMedicationStore),
+}));
+
+jest.mock('../../../stores/vaccinationsStore', () => ({
+  __esModule: true,
+  useVaccinationStore: jest.fn(() => mockVaccinationStore),
+  default: jest.fn(() => mockVaccinationStore),
 }));
 
 // Mock crypto.randomUUID
@@ -576,6 +591,7 @@ describe('ConsultationPad', () => {
     mockAllergyStore = createMockAllergyStore();
     mockServiceRequestStore = createMockServiceRequestStore();
     mockMedicationStore = createMockMedicationStore();
+    mockVaccinationStore = createMockVaccinationStore();
 
     // Mock useEncounterSession hook
     mockUseEncounterSession.mockReturnValue({
@@ -598,6 +614,9 @@ describe('ConsultationPad', () => {
     );
     (useMedicationStore as unknown as jest.Mock).mockReturnValue(
       mockMedicationStore,
+    );
+    (useVaccinationStore as unknown as jest.Mock).mockReturnValue(
+      mockVaccinationStore,
     );
 
     // Reset audit event dispatcher mocks
@@ -760,6 +779,80 @@ describe('ConsultationPad', () => {
     });
 
     it('should enable Done button when all required data is present', () => {
+      mockDiagnosesStore.selectedDiagnoses = [{ id: 'diag-1' }] as any;
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('primary-button')).not.toBeDisabled();
+    });
+
+    it('should disable Done button when no clinical data has been captured', () => {
+      mockDiagnosesStore.selectedDiagnoses = [];
+      mockDiagnosesStore.selectedConditions = [];
+      mockAllergyStore.selectedAllergies = [];
+      mockMedicationStore.selectedMedications = [];
+      mockVaccinationStore.selectedVaccinations = [];
+      mockServiceRequestStore.selectedServiceRequests = new Map();
+      mockObservationFormsStoreState.selectedForms = [];
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('primary-button')).toBeDisabled();
+    });
+
+    it('should enable Done button when a diagnosis is added', () => {
+      mockDiagnosesStore.selectedDiagnoses = [{ id: 'diag-1' }] as any;
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('primary-button')).not.toBeDisabled();
+    });
+
+    it('should enable Done button when an allergy is added', () => {
+      mockAllergyStore.selectedAllergies = [{ id: 'allergy-1' }] as any;
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('primary-button')).not.toBeDisabled();
+    });
+
+    it('should enable Done button when a medication is added', () => {
+      mockMedicationStore.selectedMedications = [{ id: 'med-1' }] as any;
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('primary-button')).not.toBeDisabled();
+    });
+
+    it('should enable Done button when a service request is added', () => {
+      mockServiceRequestStore.selectedServiceRequests = new Map([
+        ['category-1', [{ id: 'sr-1' }] as any],
+      ]);
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('primary-button')).not.toBeDisabled();
+    });
+
+    it('should enable Done button when an observation form is selected', async () => {
+      mockObservationFormsStoreState.selectedForms = [
+        { uuid: 'form-1', name: 'Test Form' },
+      ] as any;
+
+      renderWithProvider();
+
+      expect(screen.getByTestId('primary-button')).not.toBeDisabled();
+    });
+
+    it('should enable Done button when a vaccination is added', () => {
+      mockDiagnosesStore.selectedDiagnoses = [];
+      mockDiagnosesStore.selectedConditions = [];
+      mockAllergyStore.selectedAllergies = [];
+      mockMedicationStore.selectedMedications = [];
+      mockServiceRequestStore.selectedServiceRequests = new Map();
+      mockObservationFormsStoreState.selectedForms = [];
+      mockVaccinationStore.selectedVaccinations = [{ id: 'vac-1' }] as any;
+
       renderWithProvider();
 
       expect(screen.getByTestId('primary-button')).not.toBeDisabled();
@@ -1669,7 +1762,7 @@ describe('ConsultationPad', () => {
         expect(
           consultationBundleService.createDiagnosisBundleEntries,
         ).toHaveBeenCalledWith({
-          selectedDiagnoses: [],
+          selectedDiagnoses: [{ id: 'mock-diagnosis-1' }],
           encounterSubject: { reference: 'Patient/patient-123' },
           encounterReference: 'urn:uuid:mock-encounter-uuid',
           practitionerUUID: 'practitioner-123',

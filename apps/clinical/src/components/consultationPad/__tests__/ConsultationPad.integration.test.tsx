@@ -194,6 +194,24 @@ const fullMockActiveVisit: FhirEncounter = {
   ],
 };
 
+const setupEncounterDetails = async (withConsultationDate = false) => {
+  await act(async () => {
+    const store = useEncounterDetailsStore.getState();
+    store.setSelectedLocation(mockLocations[0]);
+    store.setSelectedEncounterType(mockEncounterConcepts.encounterTypes[0]);
+    store.setSelectedVisitType(mockEncounterConcepts.visitTypes[0]);
+    store.setEncounterParticipants([mockPractitioner]);
+    store.setPractitioner(mockPractitioner);
+    store.setUser(mockUser);
+    store.setPatientUUID('patient-1');
+    store.setActiveVisit(fullMockActiveVisit);
+    if (withConsultationDate) {
+      store.setConsultationDate(new Date());
+    }
+    store.setEncounterDetailsFormReady(true);
+  });
+};
+
 describe('ConsultationPad Integration', () => {
   const onCloseMock = jest.fn();
 
@@ -396,18 +414,16 @@ describe('ConsultationPad Integration', () => {
     });
 
     // Set up the encounter details store with all required data
+    await setupEncounterDetails(true);
+    // Add a service request so hasConsultationData is true (no validation runs for service requests)
     await act(async () => {
-      const store = useEncounterDetailsStore.getState();
-      store.setSelectedLocation(mockLocations[0]);
-      store.setSelectedEncounterType(mockEncounterConcepts.encounterTypes[0]);
-      store.setSelectedVisitType(mockEncounterConcepts.visitTypes[0]);
-      store.setEncounterParticipants([mockPractitioner]);
-      store.setPractitioner(mockPractitioner);
-      store.setUser(mockUser);
-      store.setPatientUUID('patient-1');
-      store.setActiveVisit(fullMockActiveVisit);
-      store.setConsultationDate(new Date());
-      store.setEncounterDetailsFormReady(true);
+      useServiceRequestStore
+        .getState()
+        .addServiceRequest(
+          'procedure-category',
+          'concept-uuid-1',
+          'Test Procedure',
+        );
     });
 
     // Find the submit button
@@ -449,18 +465,16 @@ describe('ConsultationPad Integration', () => {
     });
 
     // Set up the encounter details store with all required data
+    await setupEncounterDetails(true);
+    // Add a service request so hasConsultationData is true (no validation runs for service requests)
     await act(async () => {
-      const store = useEncounterDetailsStore.getState();
-      store.setSelectedLocation(mockLocations[0]);
-      store.setSelectedEncounterType(mockEncounterConcepts.encounterTypes[0]);
-      store.setSelectedVisitType(mockEncounterConcepts.visitTypes[0]);
-      store.setEncounterParticipants([mockPractitioner]);
-      store.setPractitioner(mockPractitioner);
-      store.setUser(mockUser);
-      store.setPatientUUID('patient-1');
-      store.setActiveVisit(fullMockActiveVisit);
-      store.setConsultationDate(new Date());
-      store.setEncounterDetailsFormReady(true);
+      useServiceRequestStore
+        .getState()
+        .addServiceRequest(
+          'procedure-category',
+          'concept-uuid-2',
+          'Test Procedure 2',
+        );
     });
 
     // Find the submit button
@@ -522,19 +536,7 @@ describe('ConsultationPad Integration', () => {
     });
 
     // Set up the encounter details store with all required data
-    await act(async () => {
-      const store = useEncounterDetailsStore.getState();
-      store.setSelectedLocation(mockLocations[0]);
-      store.setSelectedEncounterType(mockEncounterConcepts.encounterTypes[0]);
-      store.setSelectedVisitType(mockEncounterConcepts.visitTypes[0]);
-      store.setEncounterParticipants([mockPractitioner]);
-      store.setPractitioner(mockPractitioner);
-      store.setUser(mockUser);
-      store.setPatientUUID('patient-1');
-      store.setActiveVisit(fullMockActiveVisit);
-      store.setConsultationDate(new Date());
-      store.setEncounterDetailsFormReady(true);
-    });
+    await setupEncounterDetails(true);
 
     // Add a diagnosis without certainty to trigger validation error
     await act(async () => {
@@ -579,18 +581,7 @@ describe('ConsultationPad Integration', () => {
     });
 
     // Set up the encounter details store with all required data
-    await act(async () => {
-      const store = useEncounterDetailsStore.getState();
-      store.setSelectedLocation(mockLocations[0]);
-      store.setSelectedEncounterType(mockEncounterConcepts.encounterTypes[0]);
-      store.setSelectedVisitType(mockEncounterConcepts.visitTypes[0]);
-      store.setEncounterParticipants([mockPractitioner]);
-      store.setPractitioner(mockPractitioner);
-      store.setUser(mockUser);
-      store.setPatientUUID('patient-1');
-      store.setActiveVisit(fullMockActiveVisit);
-      store.setEncounterDetailsFormReady(true);
-    });
+    await setupEncounterDetails();
 
     // Add an allergy without severity or reactions to trigger validation error
     await act(async () => {
@@ -845,18 +836,7 @@ describe('ConsultationPad Integration', () => {
     });
 
     // Set up the encounter details store with all required data
-    await act(async () => {
-      const store = useEncounterDetailsStore.getState();
-      store.setSelectedLocation(mockLocations[0]);
-      store.setSelectedEncounterType(mockEncounterConcepts.encounterTypes[0]);
-      store.setSelectedVisitType(mockEncounterConcepts.visitTypes[0]);
-      store.setEncounterParticipants([mockPractitioner]);
-      store.setPractitioner(mockPractitioner);
-      store.setUser(mockUser);
-      store.setPatientUUID('patient-1');
-      store.setActiveVisit(fullMockActiveVisit);
-      store.setEncounterDetailsFormReady(true);
-    });
+    await setupEncounterDetails();
 
     // Add a condition without required duration to trigger validation error
     await act(async () => {
@@ -915,18 +895,7 @@ describe('ConsultationPad Integration', () => {
     });
 
     // Set up the encounter details store with all required data
-    await act(async () => {
-      const store = useEncounterDetailsStore.getState();
-      store.setSelectedLocation(mockLocations[0]);
-      store.setSelectedEncounterType(mockEncounterConcepts.encounterTypes[0]);
-      store.setSelectedVisitType(mockEncounterConcepts.visitTypes[0]);
-      store.setEncounterParticipants([mockPractitioner]);
-      store.setPractitioner(mockPractitioner);
-      store.setUser(mockUser);
-      store.setPatientUUID('patient-1');
-      store.setActiveVisit(fullMockActiveVisit);
-      store.setEncounterDetailsFormReady(true);
-    });
+    await setupEncounterDetails();
 
     // Add a valid condition to trigger bundle creation
     await act(async () => {
@@ -972,18 +941,7 @@ describe('ConsultationPad Integration', () => {
     });
 
     // Set up the encounter details store with all required data
-    await act(async () => {
-      const store = useEncounterDetailsStore.getState();
-      store.setSelectedLocation(mockLocations[0]);
-      store.setSelectedEncounterType(mockEncounterConcepts.encounterTypes[0]);
-      store.setSelectedVisitType(mockEncounterConcepts.visitTypes[0]);
-      store.setEncounterParticipants([mockPractitioner]);
-      store.setPractitioner(mockPractitioner);
-      store.setUser(mockUser);
-      store.setPatientUUID('patient-1');
-      store.setActiveVisit(fullMockActiveVisit);
-      store.setEncounterDetailsFormReady(true);
-    });
+    await setupEncounterDetails();
 
     // Add invalid data to all forms
     await act(async () => {

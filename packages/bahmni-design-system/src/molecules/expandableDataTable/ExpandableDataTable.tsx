@@ -7,6 +7,7 @@ import {
   TableBody,
   TableCell,
   TableExpandRow,
+  TableExpandedRow,
   TableExpandHeader,
   DataTableHeader,
   DataTableSkeleton,
@@ -37,7 +38,7 @@ export const ExpandableDataTable = <T extends { id: string }>({
   sortable = headers.map((header) => ({ key: header.key, sortable: true })),
   loading = false,
   errorStateMessage = null,
-  emptyStateMessage = 'No data available.',
+  emptyStateMessage = 'No data available',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   renderCell = (row, cellId) => (row as any)[cellId],
   renderExpandedContent,
@@ -146,12 +147,11 @@ export const ExpandableDataTable = <T extends { id: string }>({
                 const { key, ...rowProps } = rowPropsWithKey;
 
                 return (
-                  <>
+                  <React.Fragment key={key}>
                     {isExpandable ? (
                       <>
                         <TableExpandRow
                           {...rowProps}
-                          key={key}
                           isExpanded={isExpanded}
                           onExpand={() => toggleRowExpansion(row.id)}
                           data-testid={`table-row-${row.id}`}
@@ -165,12 +165,15 @@ export const ExpandableDataTable = <T extends { id: string }>({
                             </TableCell>
                           ))}
                         </TableExpandRow>
-                        {isExpanded && renderExpandedContent?.(originalRow)}
+                        {isExpanded && (
+                          <TableExpandedRow colSpan={tableHeaders.length + 1}>
+                            {renderExpandedContent?.(originalRow)}
+                          </TableExpandedRow>
+                        )}
                       </>
                     ) : (
                       <TableRow
                         {...rowProps}
-                        key={key}
                         data-testid={`table-row-${row.id}`}
                       >
                         {hasExpandableRows && (
@@ -186,7 +189,7 @@ export const ExpandableDataTable = <T extends { id: string }>({
                         ))}
                       </TableRow>
                     )}
-                  </>
+                  </React.Fragment>
                 );
               })}
             </TableBody>
