@@ -80,7 +80,7 @@ describe('DetailsSection', () => {
     expect(
       screen.getByTestId('add-appointment-details-section-test-id'),
     ).toBeInTheDocument();
-    expect(screen.getByText('New Service')).toBeInTheDocument();
+    expect(screen.getByText('Service Details')).toBeInTheDocument();
     expect(
       screen.getByTestId('add-appointment-details-service-name-test-id'),
     ).toBeInTheDocument();

@@ -161,13 +161,13 @@ const AvailabilitySection: React.FC = () => {
       aria-label="add-appointment-availability-section-aria-label"
       className={styles.section}
     >
-      <h2
+      <h3
         id="add-appointment-availability-section-title"
         data-testid="add-appointment-availability-section-title-test-id"
         aria-label="add-appointment-availability-section-title-aria-label"
       >
         {t('ADMIN_ADD_SERVICE_AVAILABILITY_TITLE')}
-      </h2>
+      </h3>
       <div className={styles.serviceAvailabilityTable}>
         <SortableDataTable
           headers={availabilityHeaders}

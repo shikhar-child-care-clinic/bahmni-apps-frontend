@@ -92,13 +92,13 @@ const DetailsSection: React.FC = () => {
       aria-label="add-appointment-details-section-aria-label"
       className={styles.section}
     >
-      <h2
+      <h3
         id="add-appointment-details-section-title"
         data-testid="add-appointment-details-section-title-test-id"
         aria-label="add-appointment-details-section-title-aria-label"
       >
         {t('ADMIN_ADD_SERVICE_TITLE')}
-      </h2>
+      </h3>
       <div className={styles.sectionContent}>
         <TextInput
           id="add-appointment-details-service-name"
