@@ -393,26 +393,27 @@ export function calculateAgeinYearsAndMonths(
   const lastMonthAnniversary = addMonths(lastBirthday, months);
   const days = differenceInDays(today, lastMonthAnniversary);
 
+  const isFullFormat = format === 'full';
+
   // For infants under 3 months, show total days only
   if (years === 0 && months < 3) {
     const totalDays = differenceInDays(today, birthDateObj);
     if (!t) {
-      return format === 'full' ? `${totalDays} days` : `${totalDays}d`;
+      return isFullFormat ? `${totalDays} days` : `${totalDays}d`;
     }
-    const dayKey = format === 'full' ? 'DAYS_FULL_FORMAT' : 'DAYS_SHORT_FORMAT';
+    const dayKey = isFullFormat ? 'DAYS_FULL_FORMAT' : 'DAYS_SHORT_FORMAT';
     const dayUnit = t(dayKey, { count: totalDays });
-    return format === 'full'
-      ? `${totalDays} ${dayUnit}`
-      : `${totalDays}${dayUnit}`;
+    const separator = isFullFormat ? ' ' : '';
+    return `${totalDays}${separator}${dayUnit}`;
   }
 
   if (!t) {
-    return format === 'full'
-      ? `${years} years ${months} months ${days} days`
-      : `${years}y ${months}m ${days}d`;
+    if (isFullFormat) {
+      return `${years} years ${months} months ${days} days`;
+    }
+    return `${years}y ${months}m ${days}d`;
   }
 
-  const isFullFormat = format === 'full';
   const yearKey = isFullFormat ? 'YEARS_FULL_FORMAT' : 'YEARS_SHORT_FORMAT';
   const monthKey = isFullFormat ? 'MONTHS_FULL_FORMAT' : 'MONTHS_SHORT_FORMAT';
   const dayKey = isFullFormat ? 'DAYS_FULL_FORMAT' : 'DAYS_SHORT_FORMAT';
@@ -423,16 +424,20 @@ export function calculateAgeinYearsAndMonths(
     [days, dayKey],
   ];
 
+  const separator = isFullFormat ? ' ' : '';
   const parts = ageComponents
     .filter(([value]) => value > 0)
     .map(([value, key]) => {
       const unit = t(key, { count: value });
-      return isFullFormat ? `${value} ${unit}` : `${value}${unit}`;
+      return `${value}${separator}${unit}`;
     });
 
-  return (
-    parts.join(' ') || (isFullFormat ? `0 ${t(dayKey, { count: 0 })}` : '0d')
-  );
+  if (parts.length > 0) {
+    return parts.join(' ');
+  }
+
+  const zeroUnit = t(dayKey, { count: 0 });
+  return isFullFormat ? `0 ${zeroUnit}` : '0d';
 }
 /**
  * Sorts an array of objects by a date field
