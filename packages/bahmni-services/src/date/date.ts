@@ -16,7 +16,7 @@ import type { Locale } from 'date-fns';
 import { enUS, enGB, es, fr, de } from 'date-fns/locale';
 import { getUserPreferredLocale } from '../i18n/translationService';
 import { Age } from '../patientService/models';
-import { DATE_FORMAT, DATE_TIME_FORMAT } from './constants';
+import { DATE_FORMAT } from './constants';
 import { DATE_ERROR_MESSAGES } from './errors';
 
 export interface FormatDateResult {
@@ -180,29 +180,60 @@ function formatDateGeneric(
 }
 
 /**
- * Formats a date string or Date object into the specified date time format.
- * @param date - The date string or Date object to format.
- * @returns A FormatDateResult object containing either a formatted date string or an error.
+ * Universal date formatting method that handles all date/time formatting needs.
+ * Consolidates formatDate(), formatDateTime(), and formatDateAndTime() into one method.
+ *
+ * @param date - The date to format (string, Date object, or timestamp in milliseconds)
+ * @param dateFormat - The date-fns format string (default: 'dd/MM/yyyy')
+ *                     Examples: 'dd/MM/yyyy', 'd MMM yyyy', 'MMMM dd, yyyy'
+ * @param includeTime - Whether to append time to the format (default: false)
+ *                      When true, always adds 12-hour time format (h:mm a)
+ * @param t - Translation function for error messages (default: identity function)
+ * @returns FormatDateResult with formatted string or error
+ *
+ * @example
+ * // Date only (default format)
+ * formatDate(date) // "28/03/2024"
+ *
+ * @example
+ * // Date with custom format
+ * formatDate(date, 'd MMM yyyy') // "28 Mar 2024"
+ *
+ * @example
+ * // Date with time (always 12-hour format)
+ * formatDate(date, 'dd/MM/yyyy', true, t) // "28/03/2024 2:30 PM"
+ *
+ * @example
+ * // Short format with time (always 12-hour format)
+ * formatDate(date, 'd MMM yyyy', true, t) // "28 Mar 2024 2:30 PM"
+ */
+export function formatDate(
+  date: string | Date | number,
+  t?: (key: string, options?: { count?: number }) => string,
+  dateFormat: string = DATE_FORMAT,
+  includeTime: boolean = false,
+): FormatDateResult {
+  const translationFn = t ?? ((key: string) => key);
+
+  // Determine final format with optional time
+  let finalFormat = dateFormat;
+  if (includeTime) {
+    // Always use 12-hour format when time is included
+    finalFormat = `${dateFormat} h:mm a`;
+  }
+
+  return formatDateGeneric(date, finalFormat, translationFn);
+}
+
+/**
+ * @deprecated Use formatDate(date, 'dd/MM/yyyy', true, t) instead
+ * Formats a date string or Date object into date time format.
  */
 export function formatDateTime(
   date: string | Date | number,
   t: (key: string, options?: { count?: number }) => string,
 ): FormatDateResult {
-  return formatDateGeneric(date, DATE_TIME_FORMAT, t);
-}
-
-/**
- * Formats a date string or Date object into the specified date format.
- * @param date - The date string or Date object to format.
- * @param format - The date format to use (default is 'dd/MM/yyyy').
- * @returns A FormatDateResult object containing either a formatted date string or an error.
- */
-export function formatDate(
-  date: string | Date | number,
-  t: (key: string, options?: { count?: number }) => string,
-  format: string = DATE_FORMAT,
-): FormatDateResult {
-  return formatDateGeneric(date, format, t);
+  return formatDate(date, t, DATE_FORMAT, true);
 }
 
 /**
@@ -343,30 +374,27 @@ export const getTodayDate = (): Date => {
   return today;
 };
 
-export function formatDateAndTime(date: number, includeTime: boolean): string {
-  const d = new Date(date);
-
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-  const parts = formatter.formatToParts(d);
-  const day = parts.find((p) => p.type === 'day')?.value;
-  const month = parts.find((p) => p.type === 'month')?.value;
-  const year = parts.find((p) => p.type === 'year')?.value;
-  let formattedDate = `${day} ${month} ${year}`;
-
-  if (includeTime) {
-    let hours = d.getHours();
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12 || 12;
-    const formattedTime = `${hours}:${minutes} ${ampm}`;
-    formattedDate += ` ${formattedTime}`;
-  }
-
-  return formattedDate;
+/**
+ * @deprecated Use formatDate(date, 'd MMM yyyy', includeTime, t) instead
+ * Formats a date in short format with optional time.
+ * Now uses date-fns for consistency and proper locale support.
+ *
+ * @param date - Timestamp in milliseconds
+ * @param includeTime - Whether to include time in the output
+ * @param t - Optional translation function for error messages
+ * @returns Formatted date string
+ *
+ * @example
+ * formatDateAndTime(timestamp, false) // "28 Mar 2024"
+ * formatDateAndTime(timestamp, true)  // "28 Mar 2024 2:30 PM"
+ */
+export function formatDateAndTime(
+  date: number,
+  includeTime: boolean,
+  t?: (key: string, options?: { count?: number }) => string,
+): string {
+  const result = formatDate(date, t, 'd MMM yyyy', includeTime);
+  return result.formattedResult;
 }
 /**
  * Calculate and format age for display.

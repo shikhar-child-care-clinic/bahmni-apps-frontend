@@ -326,7 +326,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
 
   const reportedOn =
     selectedInvestigation?.reportedDate &&
-    formatDate(selectedInvestigation.reportedDate, t, DATE_TIME_FORMAT)
+    formatDate(selectedInvestigation.reportedDate, t, DATE_TIME_FORMAT, false)
       .formattedResult;
 
   return (
