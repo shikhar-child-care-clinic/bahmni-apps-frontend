@@ -6,9 +6,9 @@ import {
 } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MANAGE_APPOINTMENT_SERVICES_PRIVILEGE } from '../../../../constants/app';
 import AddServicePage from '../index';
 import { useAddServiceStore } from '../stores/addServiceStore';
-import { MANAGE_APPOINTMENT_SERVICES_PRIVILEGE } from '../../../../constants/app';
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -106,9 +106,7 @@ describe('AddServicePage', () => {
     renderPage();
 
     expect(
-      screen.getByTestId(
-        'add-appointment-service-no-manage-privilege-test-id',
-      ),
+      screen.getByTestId('add-appointment-service-no-manage-privilege-test-id'),
     ).toBeInTheDocument();
     expect(
       screen.queryByTestId('add-appointment-service-page-test-id'),

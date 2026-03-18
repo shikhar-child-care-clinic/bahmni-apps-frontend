@@ -143,7 +143,7 @@ const AvailabilitySection: React.FC = () => {
             testId={`remove-availability-service-row-${row.id}-btn-test-id`}
             aria-label={`remove-availability-service-row-${row.id}-btn-aria-label`}
             kind="ghost"
-            label={t('ADMIN_ALL_SERVICES_DELETE_ICON_LABEL')}
+            label={t('ADMIN_ALL_SERVICES_REMOVE_ROW_ICON_LABEL')}
             onClick={() => removeAvailabilityRow(row.id)}
           >
             <Close />

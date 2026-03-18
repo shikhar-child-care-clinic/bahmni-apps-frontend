@@ -54,6 +54,7 @@
   "ADMIN_ALL_SERVICES_EMPTY_MESSAGE": "No se encontraron servicios.",
   "ADMIN_ALL_SERVICES_ERROR_MESSAGE": "Error al cargar los servicios. Por favor, inténtelo de nuevo.",
   "ADMIN_ALL_SERVICES_ERROR_MESSAGE_NO_VIEW_PRIVILEGE": "No está autorizado para ver esta página.",
+  "ADMIN_ALL_SERVICES_REMOVE_ROW_ICON_LABEL": "Eliminar fila",
   "ADMIN_ALL_SERVICES_TITLE": "Servicios",
   "BREADCRUMB_ADD_SERVICE": "Añadir servicio",
   "BREADCRUMB_ADMIN": "Admin",

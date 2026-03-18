@@ -54,6 +54,7 @@
   "ADMIN_ALL_SERVICES_EMPTY_MESSAGE": "No services found.",
   "ADMIN_ALL_SERVICES_ERROR_MESSAGE": "Failed to load services. Please try again.",
   "ADMIN_ALL_SERVICES_ERROR_MESSAGE_NO_VIEW_PRIVILEGE": "You are not authorized to view this page.",
+  "ADMIN_ALL_SERVICES_REMOVE_ROW_ICON_LABEL": "Remove row",
   "ADMIN_ALL_SERVICES_TITLE": "Services",
   "BREADCRUMB_ADD_SERVICE": "Add Service",
   "BREADCRUMB_ADMIN": "Admin",

@@ -6,9 +6,12 @@ import { useUserPrivilege } from '@bahmni/widgets';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import {
+  ADMIN_TAB_PRIVILEGE,
+  MANAGE_APPOINTMENT_SERVICES_PRIVILEGE,
+} from '../../../../constants/app';
 import { mockAppointmentServices } from '../__mocks__/mocks';
 import AllServicesPage from '../index';
-import { ADMIN_TAB_PRIVILEGE, MANAGE_APPOINTMENT_SERVICES_PRIVILEGE } from '../../../../constants/app';
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),

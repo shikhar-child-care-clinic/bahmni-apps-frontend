@@ -6,7 +6,11 @@ import {
 import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { ADMIN_TAB_PRIVILEGE, MANAGE_APPOINTMENT_SERVICES_PRIVILEGE, PATHS } from '../../../../constants/app';
+import {
+  ADMIN_TAB_PRIVILEGE,
+  MANAGE_APPOINTMENT_SERVICES_PRIVILEGE,
+  PATHS,
+} from '../../../../constants/app';
 import { useAppointmentsConfig } from '../../../../providers/appointmentsConfig';
 import { mockAppointmentServices } from '../__mocks__/mocks';
 import AllServicesPage from '../index';

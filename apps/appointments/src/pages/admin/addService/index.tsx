@@ -8,7 +8,10 @@ import {
 import { useNotification, useUserPrivilege } from '@bahmni/widgets';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MANAGE_APPOINTMENT_SERVICES_PRIVILEGE, PATHS } from '../../../constants/app';
+import {
+  MANAGE_APPOINTMENT_SERVICES_PRIVILEGE,
+  PATHS,
+} from '../../../constants/app';
 import AvailabilitySection from './components/AvailabilitySection';
 import ServiceDetailsSection from './components/DetailsSection';
 import { useAddServiceStore } from './stores/addServiceStore';

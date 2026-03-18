@@ -10,7 +10,6 @@ export const PATHS = {
   ADMIN_ADD_SERVICE: `${APP_BASE}/admin/services/add`,
 };
 
-
 export const MANAGE_APPOINTMENT_SERVICES_PRIVILEGE =
   'app:appointments:manageServices';
 export const ADMIN_TAB_PRIVILEGE = 'app:appointments:adminTab';
