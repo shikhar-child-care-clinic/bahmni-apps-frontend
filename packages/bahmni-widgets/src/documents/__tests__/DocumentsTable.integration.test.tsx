@@ -23,7 +23,7 @@ jest.mock('@bahmni/services', () => ({
 }));
 
 // Mock fetch to simulate successful document loads
-global.fetch = jest.fn(() =>
+globalThis.fetch = jest.fn(() =>
   Promise.resolve({
     ok: true,
     status: 200,

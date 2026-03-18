@@ -30,7 +30,7 @@ jest.mock('@bahmni/services', () => ({
 }));
 
 // Mock fetch to simulate successful document loads
-global.fetch = jest.fn(() =>
+globalThis.fetch = jest.fn(() =>
   Promise.resolve({
     ok: true,
     status: 200,
@@ -106,9 +106,9 @@ const mockDocumentCorruptUrl = {
   uploadedOn: '2024-01-10T05:00:00Z',
   uploadedBy: 'Dr. Green',
   contentType: 'application/pdf',
-  documentUrl: 'http://corrupt-url.pdf',
+  documentUrl: 'https://corrupt-url.pdf',
   attachments: [
-    { url: 'http://corrupt-url.pdf', contentType: 'application/pdf' },
+    { url: 'https://corrupt-url.pdf', contentType: 'application/pdf' },
   ],
 };
 

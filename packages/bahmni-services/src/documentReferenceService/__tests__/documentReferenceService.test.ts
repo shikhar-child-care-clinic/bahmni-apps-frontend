@@ -33,6 +33,33 @@ const mockBundle: Bundle<DocumentReference> = {
   entry: [{ resource: mockDocumentReference }],
 };
 
+const mockMultiContentDoc: DocumentReference = {
+  resourceType: 'DocumentReference',
+  id: 'doc-multi',
+  status: 'current',
+  masterIdentifier: { value: 'MultiPage_2024' },
+  content: [
+    {
+      attachment: {
+        contentType: 'application/pdf',
+        url: '100/page1.pdf',
+      },
+    },
+    {
+      attachment: {
+        contentType: 'application/pdf',
+        url: '100/page2.pdf',
+      },
+    },
+  ],
+};
+
+const mockMultiBundle: Bundle<DocumentReference> = {
+  resourceType: 'Bundle',
+  type: 'searchset',
+  entry: [{ resource: mockMultiContentDoc }],
+};
+
 describe('documentReferenceService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -146,32 +173,7 @@ describe('documentReferenceService', () => {
     });
 
     it('maps multiple content entries to attachments array', async () => {
-      const multiContentDoc: DocumentReference = {
-        resourceType: 'DocumentReference',
-        id: 'doc-multi',
-        status: 'current',
-        masterIdentifier: { value: 'MultiPage_2024' },
-        content: [
-          {
-            attachment: {
-              contentType: 'application/pdf',
-              url: '100/page1.pdf',
-            },
-          },
-          {
-            attachment: {
-              contentType: 'application/pdf',
-              url: '100/page2.pdf',
-            },
-          },
-        ],
-      };
-      const multiBundle: Bundle<DocumentReference> = {
-        resourceType: 'Bundle',
-        type: 'searchset',
-        entry: [{ resource: multiContentDoc }],
-      };
-      mockedGet.mockResolvedValueOnce(multiBundle);
+      mockedGet.mockResolvedValueOnce(mockMultiBundle);
 
       const result = await getFormattedDocumentReferences(PATIENT_UUID);
 
@@ -187,32 +189,7 @@ describe('documentReferenceService', () => {
     });
 
     it('populates backward-compat documentUrl from first attachment', async () => {
-      const multiContentDoc: DocumentReference = {
-        resourceType: 'DocumentReference',
-        id: 'doc-multi',
-        status: 'current',
-        masterIdentifier: { value: 'MultiPage_2024' },
-        content: [
-          {
-            attachment: {
-              contentType: 'application/pdf',
-              url: '100/page1.pdf',
-            },
-          },
-          {
-            attachment: {
-              contentType: 'application/pdf',
-              url: '100/page2.pdf',
-            },
-          },
-        ],
-      };
-      const multiBundle: Bundle<DocumentReference> = {
-        resourceType: 'Bundle',
-        type: 'searchset',
-        entry: [{ resource: multiContentDoc }],
-      };
-      mockedGet.mockResolvedValueOnce(multiBundle);
+      mockedGet.mockResolvedValueOnce(mockMultiBundle);
 
       const result = await getFormattedDocumentReferences(PATIENT_UUID);
 
