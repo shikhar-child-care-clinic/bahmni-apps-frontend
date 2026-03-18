@@ -170,7 +170,8 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
                 ?.toLowerCase()
                 .includes('image');
               const hasFailed = failedAttachments.has(index);
-              const normalizedAttachments = getNormalizedAttachments(selectedDoc);
+              const normalizedAttachments =
+                getNormalizedAttachments(selectedDoc);
 
               if (url === '#' || hasFailed) {
                 return (
