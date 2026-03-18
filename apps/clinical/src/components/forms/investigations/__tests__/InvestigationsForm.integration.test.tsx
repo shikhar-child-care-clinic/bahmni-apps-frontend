@@ -498,7 +498,6 @@ describe('InvestigationsForm Integration Tests', () => {
         screen.getByRole('option', { name: 'Blood Glucose Test' }),
       );
 
-      // After selection, the combobox value should be reset to allow new searches
       await waitFor(() => {
         expect(screen.getByRole('combobox')).toHaveValue('');
       });

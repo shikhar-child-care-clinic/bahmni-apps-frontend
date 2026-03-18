@@ -291,19 +291,16 @@ describe('AllergiesForm', () => {
 
       const searchBox = getSearchCombobox();
 
-      // First selection
       await user.type(searchBox, 'peanut');
       await waitFor(() => {
         expect(screen.getByText('Peanut Allergy [Food]')).toBeInTheDocument();
       });
       await user.click(screen.getByText('Peanut Allergy [Food]'));
 
-      // Verify combobox is reset (selectedItem is null, allowing new searches)
       await waitFor(() => {
         expect(getSearchCombobox()).toHaveValue('');
       });
 
-      // Verify we can immediately search for another item (proves selectedItem was reset to null)
       await user.type(getSearchCombobox(), 'shellfish');
       await waitFor(() => {
         expect(
@@ -311,8 +308,6 @@ describe('AllergiesForm', () => {
         ).toBeInTheDocument();
       });
 
-      // Verify the new search works correctly - this proves selectedItem is null
-      // because the ComboBox wouldn't accept new input if selectedItem was still set
       await user.click(screen.getByText('Shellfish Allergy [Food]'));
       await waitFor(() => {
         expect(mockAddAllergy).toHaveBeenCalledWith(secondAllergen);

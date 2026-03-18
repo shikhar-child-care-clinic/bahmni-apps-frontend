@@ -243,15 +243,12 @@ describe('MedicationsForm', () => {
 
       await user.type(searchBox, 'paracetamol');
 
-      // Wait for search results to appear
       await waitFor(() => {
         expect(screen.getByText('Paracetamol 500mg')).toBeInTheDocument();
       });
 
-      // Click on the medication
       await user.click(screen.getByText('Paracetamol 500mg'));
 
-      // Verify the store was called correctly
       await waitFor(() => {
         expect(mockStore.addMedication).toHaveBeenCalledWith(
           mockMedication,
@@ -275,15 +272,12 @@ describe('MedicationsForm', () => {
 
       await user.type(searchBox, 'paracetamol');
 
-      // Wait for search results to appear
       await waitFor(() => {
         expect(screen.getByText('Paracetamol 500mg')).toBeInTheDocument();
       });
 
-      // Click on the medication
       await user.click(screen.getByText('Paracetamol 500mg'));
 
-      // Verify search box is cleared
       await waitFor(() => {
         expect(
           screen.getByRole('combobox', { name: /search to add medication/i }),
@@ -332,27 +326,20 @@ describe('MedicationsForm', () => {
         name: /search to add medication/i,
       });
 
-      // Clear any initial calls
       mockSearchHook.mockClear();
 
-      // Type to trigger search
       await user.type(searchBox, 'paracetamol');
 
-      // Verify search was called with the typed term
       expect(mockSearchHook).toHaveBeenCalledWith('paracetamol');
 
-      // Wait for search results to appear
       await waitFor(() => {
         expect(screen.getByText('Paracetamol 500mg')).toBeInTheDocument();
       });
 
-      // Clear the mock to track calls during selection
       mockSearchHook.mockClear();
 
-      // Select the medication
       await user.click(screen.getByText('Paracetamol 500mg'));
 
-      // Verify the medication was added
       await waitFor(() => {
         expect(mockStore.addMedication).toHaveBeenCalledWith(
           mockMedication,
@@ -533,10 +520,8 @@ describe('MedicationsForm', () => {
         name: /search to add medication/i,
       });
 
-      // Type in search box to trigger search results
       await user.type(searchBox, 'med');
 
-      // Wait for search results to appear
       await waitFor(() => {
         // The already selected medication should show with "already selected" text
         expect(
@@ -547,7 +532,6 @@ describe('MedicationsForm', () => {
         expect(screen.getByText('Ibuprofen 400mg')).toBeInTheDocument();
       });
 
-      // Verify that the already selected medication option is disabled
       const options = screen.getAllByRole('option');
       const paracetamolOption = options.find((option) =>
         option.textContent?.includes('Paracetamol 500mg (Already added)'),
