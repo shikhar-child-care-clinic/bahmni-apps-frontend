@@ -30,6 +30,9 @@ export { useUserPrivilege } from './userPrivileges/useUserPrivilege';
 // User Privileges
 export { UserPrivilegeProvider } from './userPrivileges/UserPrivilegeProvider';
 
+// App Context
+export { AppContextProvider } from './appContext';
+
 // Active Practitioner
 export {
   ActivePractitionerProvider,

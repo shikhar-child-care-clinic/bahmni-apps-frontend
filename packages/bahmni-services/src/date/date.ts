@@ -16,7 +16,7 @@ import type { Locale } from 'date-fns';
 import { enUS, enGB, es, fr, de } from 'date-fns/locale';
 import { getUserPreferredLocale } from '../i18n/translationService';
 import { Age } from '../patientService/models';
-import { DATE_FORMAT } from './constants';
+import { DATE_FORMAT, DEFAULT_DATE_FORMAT_STORAGE_KEY } from './constants';
 import { DATE_ERROR_MESSAGES } from './errors';
 
 export interface FormatDateResult {
@@ -216,7 +216,8 @@ export function formatDate(
   const translationFn = t ?? ((key: string) => key);
 
   // Determine final format with optional time
-  let finalFormat = dateFormat;
+  let finalFormat =
+    localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ?? dateFormat;
   if (includeTime) {
     // Always use 12-hour format when time is included
     finalFormat = `${dateFormat} h:mm a`;
