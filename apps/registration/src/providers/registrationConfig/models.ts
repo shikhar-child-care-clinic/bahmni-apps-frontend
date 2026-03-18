@@ -76,7 +76,7 @@ export interface ExtensionPoint {
 }
 
 export interface RegistrationFormControl {
-  type: 'profile' | 'address' | 'contactInfo' | 'additionalInfo' | 'additionalIdentifiers' | 'relationships' | string;
+  type: string;
 }
 
 export interface RegistrationFormSection {
