@@ -1,5 +1,5 @@
 import { Icon, ICON_SIZE } from '@bahmni/design-system';
-import { calculateAgeinYearsAndMonths } from '@bahmni/services';
+import { calculateAgeinYearsAndMonths, formatDateTime } from '@bahmni/services';
 import { SkeletonText } from '@carbon/react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -44,7 +44,10 @@ const PatientDetails: React.FC = () => {
     ? calculateAgeinYearsAndMonths(patient.birthDate, t, 'full')
     : null;
 
-  const details = [formattedAge, formatField(patient.birthDate)]
+  const details = [
+    formattedAge,
+    formatDateTime(patient.birthDate!, t).formattedResult,
+  ]
     .filter(Boolean)
     .join(' | ');
 

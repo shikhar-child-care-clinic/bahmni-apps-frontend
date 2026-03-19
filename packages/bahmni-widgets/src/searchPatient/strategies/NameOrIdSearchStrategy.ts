@@ -1,7 +1,7 @@
 import {
   searchPatientByNameOrId,
   PatientSearchResultBundle,
-  formatDateAndTime,
+  formatDateTime,
   calculateAgeinYearsAndMonths,
 } from '@bahmni/services';
 import {
@@ -76,7 +76,10 @@ export class NameOrIdSearchStrategy implements SearchStrategy {
         return {
           ...patient,
           birthDate: patient.birthDate
-            ? formatDateAndTime(new Date(patient.birthDate).getTime(), false)
+            ? formatDateTime(
+                new Date(patient.birthDate).getTime(),
+                context.translator,
+              ).formattedResult
             : patient.birthDate,
           age: patient.birthDate
             ? calculateAgeinYearsAndMonths(

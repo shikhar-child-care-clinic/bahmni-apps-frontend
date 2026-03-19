@@ -1,18 +1,17 @@
-import { addDays, format, parseISO } from 'date-fns';
+import { addDays } from 'date-fns';
 import { getUserPreferredLocale } from '../../i18n/translationService';
-import { DATE_TIME_FORMAT } from '../constants';
 import {
   calculateAge,
-  formatDate,
   formatDateTime,
   calculateOnsetDate,
   formatDateDistance,
   sortByDate,
-  formatDateAndTime,
   calculateAgeinYearsAndMonths,
   DURATION_UNIT_TO_DAYS,
   calculateEndDate,
   doDateRangesOverlap,
+  convertDateFnsToFlatpickr,
+  getDatePickerFormat,
 } from '../date';
 
 const mockT = (key: string, options?: { count?: number }) => {
@@ -286,64 +285,57 @@ describe('calculateOnsetDate', () => {
   });
 });
 
-describe('formatDate', () => {
+describe('formatDateTime - date only (includeTime=false)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('should format valid dates correctly', () => {
     const date = new Date(2024, 2, 28);
-    const result = formatDate(date, mockT);
+    const result = formatDateTime(date, mockT);
     expect(result.formattedResult).toBe('28/03/2024');
     expect(result.error).toBeUndefined();
   });
 
   it('should format date strings correctly', () => {
-    const result = formatDate('2024-03-28', mockT);
+    const result = formatDateTime('2024-03-28', mockT);
     expect(result.formattedResult).toBe('28/03/2024');
     expect(result.error).toBeUndefined();
   });
 
   it('should format timestamps correctly', () => {
     const timestamp = new Date(2024, 2, 28).getTime();
-    const result = formatDate(timestamp, mockT);
+    const result = formatDateTime(timestamp, mockT);
     expect(result.formattedResult).toBe('28/03/2024');
     expect(result.error).toBeUndefined();
   });
 
-  it('should accept custom format parameter', () => {
-    const date = new Date(2024, 2, 28);
-    const result = formatDate(date, mockT, 'MMMM d, yyyy');
-    expect(result.formattedResult).toBe('March 28, 2024');
-    expect(result.error).toBeUndefined();
-  });
-
   it('should return errors for invalid inputs', () => {
-    const invalidResult = formatDate('invalid-date', mockT);
+    const invalidResult = formatDateTime('invalid-date', mockT);
     expect(invalidResult.formattedResult).toBe('');
     expect(invalidResult.error).toBeDefined();
 
-    const emptyResult = formatDate('', mockT);
+    const emptyResult = formatDateTime('', mockT);
     expect(emptyResult.formattedResult).toBe('');
     expect(emptyResult.error).toBeDefined();
 
-    const nullResult = formatDate(null as unknown as Date, mockT);
+    const nullResult = formatDateTime(null as unknown as Date, mockT);
     expect(nullResult.formattedResult).toBe('');
     expect(nullResult.error).toBeDefined();
   });
 });
 
-describe('formatDateTime', () => {
+describe('formatDateTime - with time (includeTime=true)', () => {
   it('should format valid date-time correctly', () => {
     const date = new Date(2024, 2, 28, 12, 30);
-    const result = formatDateTime(date, mockT);
+    const result = formatDateTime(date, mockT, true);
     expect(result.formattedResult).toBe('28/03/2024 12:30 PM');
     expect(result.error).toBeUndefined();
   });
 
   it('should format date strings with time correctly', () => {
     const dateString = '2024-03-28T12:30:00Z';
-    const result = formatDateTime(dateString, mockT);
+    const result = formatDateTime(dateString, mockT, true);
     // Note: This will be converted to local time, so the hour may differ
     expect(result.formattedResult).toMatch(
       /^\d{2}\/\d{2}\/\d{4} \d{1,2}:\d{2} (AM|PM)$/,
@@ -353,53 +345,81 @@ describe('formatDateTime', () => {
 
   it('should format timestamps correctly', () => {
     const timestamp = new Date(2024, 2, 28, 12, 30).getTime();
-    const result = formatDateTime(timestamp, mockT);
+    const result = formatDateTime(timestamp, mockT, true);
     expect(result.formattedResult).toBe('28/03/2024 12:30 PM');
     expect(result.error).toBeUndefined();
   });
 
   it('should return errors for invalid inputs', () => {
-    expect(formatDateTime('invalid-date', mockT).error).toBeDefined();
-    expect(formatDateTime('', mockT).error).toBeDefined();
-    expect(formatDateTime(null as unknown as Date, mockT).error).toBeDefined();
-    expect(formatDateTime({} as unknown as Date, mockT).error).toBeDefined();
+    expect(formatDateTime('invalid-date', mockT, true).error).toBeDefined();
+    expect(formatDateTime('', mockT, true).error).toBeDefined();
+    expect(
+      formatDateTime(null as unknown as Date, mockT, true).error,
+    ).toBeDefined();
+    expect(
+      formatDateTime({} as unknown as Date, mockT, true).error,
+    ).toBeDefined();
   });
 });
 
-describe('formatDate locale support', () => {
+describe('formatDateTime locale support', () => {
   const mockedGetUserPreferredLocale = jest.mocked(getUserPreferredLocale);
+
+  const originalLocalStorage = global.localStorage;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    Object.defineProperty(global, 'localStorage', {
+      value: {
+        getItem: jest.fn(),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        clear: jest.fn(),
+      },
+      writable: true,
+    });
   });
 
-  it('should format with different locales', () => {
+  afterEach(() => {
+    Object.defineProperty(global, 'localStorage', {
+      value: originalLocalStorage,
+      writable: true,
+    });
+  });
+
+  it('should format with different locales when using month name format', () => {
+    (global.localStorage.getItem as jest.Mock).mockReturnValue('MMMM dd, yyyy');
+
     mockedGetUserPreferredLocale.mockReturnValue('en');
-    expect(
-      formatDate('2024-03-28', mockT, 'MMMM dd, yyyy').formattedResult,
-    ).toBe('March 28, 2024');
+    expect(formatDateTime('2024-03-28', mockT).formattedResult).toBe(
+      'March 28, 2024',
+    );
 
     mockedGetUserPreferredLocale.mockReturnValue('es');
-    expect(
-      formatDate('2024-03-28', mockT, 'MMMM dd, yyyy').formattedResult,
-    ).toBe('marzo 28, 2024');
+    expect(formatDateTime('2024-03-28', mockT).formattedResult).toBe(
+      'marzo 28, 2024',
+    );
 
     mockedGetUserPreferredLocale.mockReturnValue('fr');
-    expect(
-      formatDate('2024-03-28', mockT, 'MMMM dd, yyyy').formattedResult,
-    ).toBe('mars 28, 2024');
+    expect(formatDateTime('2024-03-28', mockT).formattedResult).toBe(
+      'mars 28, 2024',
+    );
   });
 
   it('should fallback to English for unsupported locales', () => {
+    (global.localStorage.getItem as jest.Mock).mockReturnValue('MMMM dd, yyyy');
     mockedGetUserPreferredLocale.mockReturnValue('unsupported-locale');
-    const result = formatDate('2024-03-28', mockT, 'MMMM dd, yyyy');
+
+    const result = formatDateTime('2024-03-28', mockT);
     expect(result.formattedResult).toBe('March 28, 2024');
   });
 
   it('should use numeric format regardless of locale for default format', () => {
+    (global.localStorage.getItem as jest.Mock).mockReturnValue(null);
+
     ['en', 'es', 'fr'].forEach((locale) => {
       mockedGetUserPreferredLocale.mockReturnValue(locale);
-      const result = formatDate('2024-03-28', mockT);
+      const result = formatDateTime('2024-03-28', mockT);
       expect(result.formattedResult).toBe('28/03/2024');
     });
   });
@@ -555,33 +575,6 @@ describe('sortByDate', () => {
 
     const singleItem = [{ id: 1, date: '2025-01-15T10:00:00Z' }];
     expect(sortByDate(singleItem, 'date')).toEqual(singleItem);
-  });
-});
-
-describe('formatDateAndTime', () => {
-  describe('Date formatting without time', () => {
-    it('should format date correctly without time', () => {
-      const date = new Date(2024, 2, 28, 14, 30);
-      const timestamp = date.getTime();
-      const result = formatDateAndTime(timestamp, false);
-      expect(result).toBe('28 Mar 2024');
-    });
-
-    it('should format leap year date correctly', () => {
-      const date = new Date(2024, 1, 29);
-      const timestamp = date.getTime();
-      const result = formatDateAndTime(timestamp, false);
-      expect(result).toBe('29 Feb 2024');
-    });
-  });
-
-  describe('Date and time formatting', () => {
-    it('should format date with time correctly', () => {
-      const date = new Date(2024, 2, 28, 14, 30);
-      const timestamp = date.getTime();
-      const result = formatDateAndTime(timestamp, true);
-      expect(result).toBe('28 Mar 2024 2:30 PM');
-    });
   });
 });
 
@@ -782,5 +775,50 @@ describe('calculateEndDate', () => {
     expect(() => calculateEndDate('invalid-date', 7, 'd')).toThrow(
       'Invalid date',
     );
+  });
+});
+
+describe('convertDateFnsToFlatpickr', () => {
+  it('should convert common date-fns formats to flatpickr format', () => {
+    expect(convertDateFnsToFlatpickr('dd/MM/yyyy')).toBe('d/m/Y');
+    expect(convertDateFnsToFlatpickr('MM/dd/yyyy')).toBe('m/d/Y');
+    expect(convertDateFnsToFlatpickr('yyyy-MM-dd')).toBe('Y-m-d');
+    expect(convertDateFnsToFlatpickr('MMMM dd, yyyy')).toBe('F d, Y');
+  });
+
+  it('should return unknown format as-is', () => {
+    const result = convertDateFnsToFlatpickr('UNKNOWN_FORMAT');
+    expect(result).toBe('UNKNOWN_FORMAT');
+  });
+});
+
+describe('getDatePickerFormat', () => {
+  const originalLocalStorage = global.localStorage;
+
+  beforeEach(() => {
+    Object.defineProperty(global, 'localStorage', {
+      value: {
+        getItem: jest.fn(),
+        setItem: jest.fn(),
+      },
+      writable: true,
+    });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(global, 'localStorage', {
+      value: originalLocalStorage,
+      writable: true,
+    });
+  });
+
+  it('should return converted format from localStorage', () => {
+    (global.localStorage.getItem as jest.Mock).mockReturnValue('MM/dd/yyyy');
+    expect(getDatePickerFormat()).toBe('m/d/Y');
+  });
+
+  it('should return default format when localStorage is null', () => {
+    (global.localStorage.getItem as jest.Mock).mockReturnValue(null);
+    expect(getDatePickerFormat()).toBe('d/m/Y');
   });
 });

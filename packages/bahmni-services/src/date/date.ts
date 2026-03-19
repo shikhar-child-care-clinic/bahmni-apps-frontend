@@ -180,61 +180,39 @@ function formatDateGeneric(
 }
 
 /**
- * Universal date formatting method that handles all date/time formatting needs.
- * Consolidates formatDate(), formatDateTime(), and formatDateAndTime() into one method.
+ * Universal date/time formatting method that retrieves the date format from localStorage.
+ * Automatically uses the format stored in localStorage under DEFAULT_DATE_FORMAT_STORAGE_KEY,
+ * falling back to DATE_FORMAT constant if not found.
  *
  * @param date - The date to format (string, Date object, or timestamp in milliseconds)
- * @param dateFormat - The date-fns format string (default: 'dd/MM/yyyy')
- *                     Examples: 'dd/MM/yyyy', 'd MMM yyyy', 'MMMM dd, yyyy'
+ * @param t - Translation function for error messages (default: identity function)
  * @param includeTime - Whether to append time to the format (default: false)
  *                      When true, always adds 12-hour time format (h:mm a)
- * @param t - Translation function for error messages (default: identity function)
  * @returns FormatDateResult with formatted string or error
  *
  * @example
- * // Date only (default format)
- * formatDate(date) // "28/03/2024"
- *
- * @example
- * // Date with custom format
- * formatDate(date, 'd MMM yyyy') // "28 Mar 2024"
+ * // Date only (uses localStorage format)
+ * formatDateTime(date) // "28/03/2024"
  *
  * @example
  * // Date with time (always 12-hour format)
- * formatDate(date, 'dd/MM/yyyy', true, t) // "28/03/2024 2:30 PM"
- *
- * @example
- * // Short format with time (always 12-hour format)
- * formatDate(date, 'd MMM yyyy', true, t) // "28 Mar 2024 2:30 PM"
+ * formatDateTime(date, t, true) // "28/03/2024 2:30 PM"
  */
-export function formatDate(
+export function formatDateTime(
   date: string | Date | number,
   t?: (key: string, options?: { count?: number }) => string,
-  dateFormat: string = DATE_FORMAT,
   includeTime: boolean = false,
 ): FormatDateResult {
   const translationFn = t ?? ((key: string) => key);
 
-  // Determine final format with optional time
   let finalFormat =
-    localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ?? dateFormat;
+    localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ?? DATE_FORMAT;
+
   if (includeTime) {
-    // Always use 12-hour format when time is included
-    finalFormat = `${dateFormat} h:mm a`;
+    finalFormat = `${finalFormat} h:mm a`;
   }
 
   return formatDateGeneric(date, finalFormat, translationFn);
-}
-
-/**
- * @deprecated Use formatDate(date, 'dd/MM/yyyy', true, t) instead
- * Formats a date string or Date object into date time format.
- */
-export function formatDateTime(
-  date: string | Date | number,
-  t: (key: string, options?: { count?: number }) => string,
-): FormatDateResult {
-  return formatDate(date, t, DATE_FORMAT, true);
 }
 
 /**
@@ -376,27 +354,131 @@ export const getTodayDate = (): Date => {
 };
 
 /**
- * @deprecated Use formatDate(date, 'd MMM yyyy', includeTime, t) instead
- * Formats a date in short format with optional time.
- * Now uses date-fns for consistency and proper locale support.
+ * Direct mapping of common date-fns formats to flatpickr formats.
+ * This lookup map approach is more reliable than regex replacement.
  *
- * @param date - Timestamp in milliseconds
- * @param includeTime - Whether to include time in the output
- * @param t - Optional translation function for error messages
- * @returns Formatted date string
+ * Flatpickr format tokens:
+ * - d: Day of month (1-31)
+ * - m: Month (01-12)
+ * - n: Month (1-12)
+ * - Y: 4-digit year
+ * - y: 2-digit year
+ * - M: Short month name (Jan, Feb, etc.)
+ * - F: Full month name (January, February, etc.)
+ * - H: Hours 24-hour (00-23)
+ * - h: Hours 12-hour (01-12)
+ * - i: Minutes (00-59)
+ * - S: Seconds (00-59)
+ * - K: AM/PM
+ */
+const DATE_FORMAT_MAP: Record<string, string> = {
+  // ========== Day/Month/Year formats (European) ==========
+  'dd/MM/yyyy': 'd/m/Y',
+  'dd-MM-yyyy': 'd-m-Y',
+  'dd.MM.yyyy': 'd.m.Y',
+  'dd MM yyyy': 'd m Y',
+
+  // Day-Month-Year with short month name (e.g., 15-Jan-2024)
+  'dd-MMM-yyyy': 'd-M-Y',
+  'dd/MMM/yyyy': 'd/M/Y',
+  'dd MMM yyyy': 'd M Y',
+  'dd-MMM-yy': 'd-M-y',
+
+  // Day-Month-Year with full month name (e.g., 15-January-2024)
+  'dd-MMMM-yyyy': 'd-F-Y',
+  'dd/MMMM/yyyy': 'd/F/Y',
+  'dd MMMM yyyy': 'd F Y',
+
+  // ========== Month/Day/Year formats (US) ==========
+  'MM/dd/yyyy': 'm/d/Y',
+  'MM-dd-yyyy': 'm-d-Y',
+  'MM.dd.yyyy': 'm.d.Y',
+  'MM dd yyyy': 'm d Y',
+
+  // Month-Day-Year with short month name (e.g., Jan-15-2024)
+  'MMM-dd-yyyy': 'M-d-Y',
+  'MMM/dd/yyyy': 'M/d/Y',
+  'MMM dd, yyyy': 'M d, Y',
+
+  // Month-Day-Year with full month name (e.g., January 15, 2024)
+  'MMMM dd, yyyy': 'F d, Y',
+  'MMMM-dd-yyyy': 'F-d-Y',
+
+  // ========== Year-Month-Day formats (ISO) ==========
+  'yyyy-MM-dd': 'Y-m-d',
+  'yyyy/MM/dd': 'Y/m/d',
+  'yyyy.MM.dd': 'Y.m.d',
+  'yyyy MM dd': 'Y m d',
+
+  // Year-Month-Day with month names
+  'yyyy-MMM-dd': 'Y-M-d',
+  'yyyy/MMM/dd': 'Y/M/d',
+  'yyyy-MMMM-dd': 'Y-F-d',
+
+  // ========== Single digit day/month variants ==========
+  'd/M/yyyy': 'j/n/Y',
+  'd-M-yyyy': 'j-n-Y',
+  'd.M.yyyy': 'j.n.Y',
+  'M/d/yyyy': 'n/j/Y',
+  'M-d-yyyy': 'n-j-Y',
+
+  // ========== 2-digit year variants ==========
+  'dd/MM/yy': 'd/m/y',
+  'dd-MM-yy': 'd-m-y',
+  'MM/dd/yy': 'm/d/y',
+  'MM-dd-yy': 'm-d-y',
+  'yy-MM-dd': 'y-m-d',
+  'd/M/yy': 'j/n/y',
+  'M/d/yy': 'n/j/y',
+
+  // ========== Formats with time ==========
+  'dd/MM/yyyy HH:mm': 'd/m/Y H:i',
+  'dd-MM-yyyy HH:mm': 'd-m-Y H:i',
+  'MM/dd/yyyy HH:mm': 'm/d/Y H:i',
+  'yyyy-MM-dd HH:mm': 'Y-m-d H:i',
+  'dd/MM/yyyy hh:mm a': 'd/m/Y h:i K',
+  'MM/dd/yyyy hh:mm a': 'm/d/Y h:i K',
+  'dd/MM/yyyy h:mm a': 'd/m/Y g:i K',
+  'MM/dd/yyyy h:mm a': 'm/d/Y g:i K',
+
+  // ========== Registration format (ordinal day) ==========
+  'do MMM, yyyy': 'jS M, Y',
+};
+
+/**
+ * Converts date-fns format to flatpickr/Carbon DatePicker format.
+ * Uses a lookup map for known formats, which is more reliable than regex replacement.
+ *
+ * @param dateFnsFormat - date-fns format string (e.g., 'dd/MM/yyyy')
+ * @returns flatpickr format string (e.g., 'd/m/Y')
  *
  * @example
- * formatDateAndTime(timestamp, false) // "28 Mar 2024"
- * formatDateAndTime(timestamp, true)  // "28 Mar 2024 2:30 PM"
+ * convertDateFnsToFlatpickr('dd/MM/yyyy')  // returns 'd/m/Y'
  */
-export function formatDateAndTime(
-  date: number,
-  includeTime: boolean,
-  t?: (key: string, options?: { count?: number }) => string,
-): string {
-  const result = formatDate(date, t, 'd MMM yyyy', includeTime);
-  return result.formattedResult;
+export function convertDateFnsToFlatpickr(dateFnsFormat: string): string {
+  const flatpickrFormat = DATE_FORMAT_MAP[dateFnsFormat];
+
+  if (flatpickrFormat) {
+    return flatpickrFormat;
+  }
+  return dateFnsFormat;
 }
+
+/**
+ * Gets the Carbon DatePicker compatible format by converting the date-fns format.
+ * Reads from localStorage if available, otherwise uses the default DATE_FORMAT.
+ *
+ * @returns Flatpickr format string for use with Carbon DatePicker
+ *
+ * @example
+ * getDatePickerFormat() // returns 'd/m/Y' (if DATE_FORMAT is 'dd/MM/yyyy')
+ */
+export const getDatePickerFormat = (): string => {
+  const dateFnsFormat =
+    localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ?? DATE_FORMAT;
+  return convertDateFnsToFlatpickr(dateFnsFormat);
+};
+
 /**
  * Calculate and format age for display.
  * For infants under 3 months, displays age in total days only.

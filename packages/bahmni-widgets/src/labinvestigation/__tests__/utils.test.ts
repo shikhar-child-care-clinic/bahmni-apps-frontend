@@ -1,4 +1,4 @@
-import { formatDate } from '@bahmni/services';
+import { formatDateTime } from '@bahmni/services';
 import { ServiceRequest, Bundle } from 'fhir/r4';
 
 import {
@@ -20,13 +20,13 @@ import {
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
-  formatDate: jest.fn(),
+  formatDateTime: jest.fn(),
 }));
 
 describe('Lab Investigation Utils', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (formatDate as jest.Mock).mockImplementation((date) => ({
+    (formatDateTime as jest.Mock).mockImplementation((date) => ({
       formattedResult: date.includes('2025-05-08')
         ? 'May 08, 2025'
         : 'April 09, 2025',

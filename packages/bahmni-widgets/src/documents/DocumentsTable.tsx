@@ -1,8 +1,7 @@
 import { SortableDataTable, Modal } from '@bahmni/design-system';
 import {
   useTranslation,
-  formatDate,
-  DATE_TIME_FORMAT,
+  formatDateTime,
   getFormattedDocumentReferences,
   DocumentViewModel,
 } from '@bahmni/services';
@@ -115,10 +114,10 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
         case 'documentType':
           return doc.documentType ?? t('DOCUMENTS_NOT_AVAILABLE');
         case 'uploadedOn': {
-          const formattedDate = formatDate(
+          const formattedDate = formatDateTime(
             doc.uploadedOn,
             t,
-            DATE_TIME_FORMAT,
+            true,
           ).formattedResult;
           return formattedDate || t('DOCUMENTS_NOT_AVAILABLE');
         }

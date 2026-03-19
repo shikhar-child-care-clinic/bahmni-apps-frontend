@@ -8,9 +8,8 @@ import {
 import {
   AUDIT_LOG_EVENT_DETAILS,
   AuditEventType,
-  DATE_TIME_FORMAT,
   dispatchAuditEvent,
-  formatDate,
+  formatDateTime,
   getCategoryUuidFromOrderTypes,
   getDiagnosticReports,
   getFormattedError,
@@ -326,8 +325,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
 
   const reportedOn =
     selectedInvestigation?.reportedDate &&
-    formatDate(selectedInvestigation.reportedDate, t, DATE_TIME_FORMAT, false)
-      .formattedResult;
+    formatDateTime(selectedInvestigation.reportedDate, t, true).formattedResult;
 
   return (
     <div

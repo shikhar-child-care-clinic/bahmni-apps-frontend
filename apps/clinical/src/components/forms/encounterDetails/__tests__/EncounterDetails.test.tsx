@@ -18,10 +18,11 @@ jest.mock('@bahmni/widgets');
 
 // Mock the utils
 jest.mock('@bahmni/services', () => ({
-  formatDate: jest.fn(() => ({
+  formatDateTime: jest.fn(() => ({
     formattedResult: '16/05/2025',
     error: null,
   })),
+  getDatePickerFormat: jest.fn(() => 'd/m/Y'),
   useTranslation: () => ({
     t: (key: string) => {
       switch (key) {

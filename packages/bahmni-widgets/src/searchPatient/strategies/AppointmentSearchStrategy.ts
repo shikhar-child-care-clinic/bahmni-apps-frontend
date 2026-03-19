@@ -2,7 +2,7 @@ import {
   searchAppointmentsByAttribute,
   Appointment,
   Reason,
-  formatDateAndTime,
+  formatDateTime,
   calculateAgeinYearsAndMonths,
   AppointmentSearchResult,
   PatientSearchResultBundle,
@@ -104,7 +104,8 @@ export class AppointmentSearchStrategy implements SearchStrategy {
     middleName: '',
     familyName: '',
     gender: appt.patient.gender,
-    birthDate: formatDateAndTime(appt.patient.birthDate, false),
+    birthDate: formatDateTime(appt.patient.birthDate, translator)
+      .formattedResult,
     age: calculateAgeinYearsAndMonths(appt.patient.birthDate, translator),
     extraIdentifiers: null,
     personId: 0,
@@ -119,7 +120,8 @@ export class AppointmentSearchStrategy implements SearchStrategy {
     // Appointment-specific fields
     appointmentUuid: appt.uuid,
     appointmentNumber: appt.appointmentNumber,
-    appointmentDate: formatDateAndTime(appt.startDateTime, true),
+    appointmentDate: formatDateTime(appt.startDateTime, translator, true)
+      .formattedResult,
     appointmentReason: this.getAppointmentReasons(appt),
     appointmentStatus: appt.status,
   });

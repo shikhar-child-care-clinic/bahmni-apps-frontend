@@ -8,8 +8,8 @@ import {
 } from '@bahmni/design-system';
 import {
   useTranslation,
-  DATE_FORMAT,
-  formatDate,
+  getDatePickerFormat,
+  formatDateTime,
   type Provider,
 } from '@bahmni/services';
 import {
@@ -89,8 +89,8 @@ const EncounterDetails: React.FC<{
   );
 
   const formattedDate = useMemo(
-    () => formatDate(consultationDate, t),
-    [consultationDate],
+    () => formatDateTime(consultationDate, t),
+    [consultationDate, t],
   );
 
   const allLoadingStates = useMemo(
@@ -330,7 +330,7 @@ const EncounterDetails: React.FC<{
       <Column sm={4} md={8} lg={5} className={styles.column}>
         <DatePicker
           datePickerType="single"
-          dateFormat={DATE_FORMAT}
+          dateFormat={getDatePickerFormat()}
           data-testid="encounter-date-picker"
         >
           <DatePickerInput

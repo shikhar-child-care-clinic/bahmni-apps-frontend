@@ -1,4 +1,4 @@
-import { FormattedPatientData } from '@bahmni/services';
+import { FormattedPatientData, formatDateTime } from '@bahmni/services';
 import { render, screen } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +10,10 @@ expect.extend(toHaveNoViolations);
 jest.mock('../usePatient');
 jest.mock('../../hooks/usePatientUUID');
 jest.mock('react-i18next');
+jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
+  formatDateTime: jest.fn(),
+}));
 jest.mock('react-router-dom', () => ({
   useParams: jest.fn(),
 }));
@@ -38,6 +42,9 @@ jest.mock('@bahmni/design-system', () => ({
 const mockedUsePatient = usePatient as jest.MockedFunction<typeof usePatient>;
 const mockedUseTranslation = useTranslation as jest.MockedFunction<
   typeof useTranslation
+>;
+const mockedFormatDateTime = formatDateTime as jest.MockedFunction<
+  typeof formatDateTime
 >;
 
 const mockT = jest
@@ -75,6 +82,10 @@ describe('PatientDetails Component', () => {
       i18n: {} as any,
       ready: true,
     } as any);
+    mockedFormatDateTime.mockImplementation((date: string | number | Date) => ({
+      formattedResult: String(date),
+      error: undefined,
+    }));
   });
 
   afterEach(() => {

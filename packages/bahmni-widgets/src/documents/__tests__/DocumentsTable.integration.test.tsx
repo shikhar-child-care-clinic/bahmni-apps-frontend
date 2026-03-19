@@ -17,7 +17,7 @@ jest.mock('../../hooks/usePatientUUID', () => ({
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   useTranslation: () => ({ t: (key: string) => key }),
-  formatDate: () => ({ formattedResult: '2024-01-15 10:30 AM' }),
+  formatDateTime: () => ({ formattedResult: '15/01/2024 4:00 PM' }),
   getFormattedDocumentReferences: jest.fn(),
   useSubscribeConsultationSaved: jest.fn(),
 }));
