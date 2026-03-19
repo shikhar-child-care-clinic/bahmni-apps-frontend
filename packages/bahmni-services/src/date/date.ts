@@ -395,53 +395,41 @@ export function calculateAgeinYearsAndMonths(
 
   const isFullFormat = format === 'full';
 
-  // For infants under 3 months, show total days only
-  if (years === 0 && months < 3) {
-    const totalDays = differenceInDays(today, birthDateObj);
-    if (!t) {
-      return isFullFormat ? `${totalDays} days` : `${totalDays}d`;
-    }
-    const dayKey = isFullFormat ? 'DAYS_FULL_FORMAT' : 'DAYS_SHORT_FORMAT';
-    const dayUnit = t(dayKey, { count: totalDays });
-    const separator = isFullFormat ? ' ' : '';
-    return `${totalDays}${separator}${dayUnit}`;
-  }
+  const translationKeys = {
+    years: isFullFormat ? 'YEARS_FULL_FORMAT' : 'YEARS_SHORT_FORMAT',
+    months: isFullFormat ? 'MONTHS_FULL_FORMAT' : 'MONTHS_SHORT_FORMAT',
+    days: isFullFormat ? 'DAYS_FULL_FORMAT' : 'DAYS_SHORT_FORMAT',
+  };
 
-  const yearKey = isFullFormat ? 'YEARS_FULL_FORMAT' : 'YEARS_SHORT_FORMAT';
-  const monthKey = isFullFormat ? 'MONTHS_FULL_FORMAT' : 'MONTHS_SHORT_FORMAT';
-  const dayKey = isFullFormat ? 'DAYS_FULL_FORMAT' : 'DAYS_SHORT_FORMAT';
+  const fallbackUnits = {
+    years: isFullFormat ? 'years' : 'y',
+    months: isFullFormat ? 'months' : 'm',
+    days: isFullFormat ? 'days' : 'd',
+  };
 
   const separator = isFullFormat ? ' ' : '';
 
-  let ageComponents: Array<[number, string]>;
-
-  if (years >= 1) {
-    ageComponents = [
-      [years, yearKey],
-      [months, monthKey],
-    ];
-  } else {
-    ageComponents = [
-      [months, monthKey],
-      [days, dayKey],
-    ];
+  if (years === 0 && months < 3) {
+    const totalDays = differenceInDays(today, birthDateObj);
+    const dayUnit = t
+      ? t(translationKeys.days, { count: totalDays })
+      : fallbackUnits.days;
+    return `${totalDays}${separator}${dayUnit}`;
   }
 
-  if (!t) {
-    if (isFullFormat) {
-      if (years >= 1) {
-        return `${years} years ${months} months`;
-      }
-      return `${months} months ${days} days`;
-    }
-    if (years >= 1) {
-      return `${years}y ${months}m`;
-    }
-    return `${months}m ${days}d`;
-  }
+  const ageComponents: Array<[number, string, string]> =
+    years >= 1
+      ? [
+          [years, translationKeys.years, fallbackUnits.years],
+          [months, translationKeys.months, fallbackUnits.months],
+        ]
+      : [
+          [months, translationKeys.months, fallbackUnits.months],
+          [days, translationKeys.days, fallbackUnits.days],
+        ];
 
-  const parts = ageComponents.map(([value, key]) => {
-    const unit = t(key, { count: value });
+  const parts = ageComponents.map(([value, key, fallback]) => {
+    const unit = t ? t(key, { count: value }) : fallback;
     return `${value}${separator}${unit}`;
   });
 
