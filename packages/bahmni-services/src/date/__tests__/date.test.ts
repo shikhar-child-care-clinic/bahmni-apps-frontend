@@ -12,6 +12,7 @@ import {
   doDateRangesOverlap,
   convertDateFnsToFlatpickr,
   getDatePickerFormat,
+  getBrowserLocaleDateFormat,
 } from '../date';
 
 const mockT = (key: string, options?: { count?: number }) => {
@@ -42,6 +43,12 @@ const mockT = (key: string, options?: { count?: number }) => {
 jest.mock('../../i18n/translationService', () => ({
   getUserPreferredLocale: jest.fn(),
 }));
+
+Object.defineProperty(global.navigator, 'language', {
+  value: 'en-GB',
+  writable: true,
+  configurable: true,
+});
 
 describe('calculateAge', () => {
   const mockDate = new Date(2025, 2, 24);
@@ -820,5 +827,51 @@ describe('getDatePickerFormat', () => {
   it('should return default format when localStorage is null', () => {
     (global.localStorage.getItem as jest.Mock).mockReturnValue(null);
     expect(getDatePickerFormat()).toBe('d/m/Y');
+  });
+});
+
+describe('getBrowserLocaleDateFormat', () => {
+  const originalNavigator = global.navigator;
+
+  afterEach(() => {
+    Object.defineProperty(global, 'navigator', {
+      value: originalNavigator,
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  it('should return MM/dd/yyyy for US locale', () => {
+    Object.defineProperty(global.navigator, 'language', {
+      value: 'en-US',
+      writable: true,
+      configurable: true,
+    });
+
+    expect(getBrowserLocaleDateFormat()).toBe('MM/dd/yyyy');
+  });
+
+  it('should return yyyy-MM-dd for Asian locales', () => {
+    const asianLocales = ['ja-JP', 'ko-KR', 'zh-CN', 'vi-VN'];
+
+    asianLocales.forEach((locale) => {
+      Object.defineProperty(global.navigator, 'language', {
+        value: locale,
+        writable: true,
+        configurable: true,
+      });
+
+      expect(getBrowserLocaleDateFormat()).toBe('yyyy-MM-dd');
+    });
+  });
+
+  it('should fallback to dd/MM/yyyy when navigator is unavailable', () => {
+    Object.defineProperty(global, 'navigator', {
+      value: undefined,
+      writable: true,
+      configurable: true,
+    });
+
+    expect(getBrowserLocaleDateFormat()).toBe('dd/MM/yyyy');
   });
 });

@@ -12,6 +12,7 @@ export {
   doDateRangesOverlap,
   convertDateFnsToFlatpickr,
   getDatePickerFormat,
+  getBrowserLocaleDateFormat,
 } from './date';
 export {
   DATE_FORMAT,

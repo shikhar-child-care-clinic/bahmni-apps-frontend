@@ -53,6 +53,55 @@ function getDateFnsLocale(): Locale {
 }
 
 /**
+ * Detects the browser's locale and returns an appropriate date format.
+ * Uses navigator.language to determine the user's locale preference.
+ * Falls back to DATE_FORMAT constant in test/Node.js environments.
+ *
+ * Format mapping:
+ * - US locales (en-US) → MM/dd/yyyy
+ * - UK/European locales (en-GB, de, fr, es, etc.) → dd/MM/yyyy
+ * - Asian locales (ja, ko, zh, etc.) → yyyy-MM-dd
+ * - Default fallback → DATE_FORMAT constant (dd/MM/yyyy)
+ *
+ * @returns Date format string based on browser locale
+ */
+export function getBrowserLocaleDateFormat(): string {
+  try {
+    if (
+      typeof window === 'undefined' ||
+      typeof navigator === 'undefined' ||
+      !navigator.language
+    ) {
+      return DATE_FORMAT;
+    }
+
+    const browserLocale = navigator.language;
+    if (!browserLocale) {
+      return DATE_FORMAT;
+    }
+
+    const locale = browserLocale.toLowerCase();
+
+    if (locale === 'en-us') {
+      return 'MM/dd/yyyy';
+    }
+
+    if (
+      locale.startsWith('ja') ||
+      locale.startsWith('ko') ||
+      locale.startsWith('zh') ||
+      locale.startsWith('vi')
+    ) {
+      return 'yyyy-MM-dd';
+    }
+
+    return DATE_FORMAT;
+  } catch (error) {
+    return DATE_FORMAT;
+  }
+}
+
+/**
  * Calculates age based on a date string in the format yyyy-mm-dd
  * Returns age as an object with years, months, and days properties
  *
@@ -180,9 +229,12 @@ function formatDateGeneric(
 }
 
 /**
- * Universal date/time formatting method that retrieves the date format from localStorage.
- * Automatically uses the format stored in localStorage under DEFAULT_DATE_FORMAT_STORAGE_KEY,
- * falling back to DATE_FORMAT constant if not found.
+ * Universal date/time formatting method that retrieves the date format with intelligent fallback.
+ *
+ * Fallback priority:
+ * 1. localStorage (user-configured format)
+ * 2. Browser locale (detected automatically via getBrowserLocaleDateFormat)
+ * 3. DATE_FORMAT constant (final fallback)
  *
  * @param date - The date to format (string, Date object, or timestamp in milliseconds)
  * @param t - Translation function for error messages (default: identity function)
@@ -191,8 +243,8 @@ function formatDateGeneric(
  * @returns FormatDateResult with formatted string or error
  *
  * @example
- * // Date only (uses localStorage format)
- * formatDateTime(date) // "28/03/2024"
+ * // Date only (uses localStorage or browser locale)
+ * formatDateTime(date) // "28/03/2024" (UK) or "03/28/2024" (US)
  *
  * @example
  * // Date with time (always 12-hour format)
@@ -206,7 +258,8 @@ export function formatDateTime(
   const translationFn = t ?? ((key: string) => key);
 
   let finalFormat =
-    localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ?? DATE_FORMAT;
+    localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ??
+    getBrowserLocaleDateFormat();
 
   if (includeTime) {
     finalFormat = `${finalFormat} h:mm a`;
@@ -372,57 +425,47 @@ export const getTodayDate = (): Date => {
  * - K: AM/PM
  */
 const DATE_FORMAT_MAP: Record<string, string> = {
-  // ========== Day/Month/Year formats (European) ==========
   'dd/MM/yyyy': 'd/m/Y',
   'dd-MM-yyyy': 'd-m-Y',
   'dd.MM.yyyy': 'd.m.Y',
   'dd MM yyyy': 'd m Y',
 
-  // Day-Month-Year with short month name (e.g., 15-Jan-2024)
   'dd-MMM-yyyy': 'd-M-Y',
   'dd/MMM/yyyy': 'd/M/Y',
   'dd MMM yyyy': 'd M Y',
   'dd-MMM-yy': 'd-M-y',
 
-  // Day-Month-Year with full month name (e.g., 15-January-2024)
   'dd-MMMM-yyyy': 'd-F-Y',
   'dd/MMMM/yyyy': 'd/F/Y',
   'dd MMMM yyyy': 'd F Y',
 
-  // ========== Month/Day/Year formats (US) ==========
   'MM/dd/yyyy': 'm/d/Y',
   'MM-dd-yyyy': 'm-d-Y',
   'MM.dd.yyyy': 'm.d.Y',
   'MM dd yyyy': 'm d Y',
 
-  // Month-Day-Year with short month name (e.g., Jan-15-2024)
   'MMM-dd-yyyy': 'M-d-Y',
   'MMM/dd/yyyy': 'M/d/Y',
   'MMM dd, yyyy': 'M d, Y',
 
-  // Month-Day-Year with full month name (e.g., January 15, 2024)
   'MMMM dd, yyyy': 'F d, Y',
   'MMMM-dd-yyyy': 'F-d-Y',
 
-  // ========== Year-Month-Day formats (ISO) ==========
   'yyyy-MM-dd': 'Y-m-d',
   'yyyy/MM/dd': 'Y/m/d',
   'yyyy.MM.dd': 'Y.m.d',
   'yyyy MM dd': 'Y m d',
 
-  // Year-Month-Day with month names
   'yyyy-MMM-dd': 'Y-M-d',
   'yyyy/MMM/dd': 'Y/M/d',
   'yyyy-MMMM-dd': 'Y-F-d',
 
-  // ========== Single digit day/month variants ==========
   'd/M/yyyy': 'j/n/Y',
   'd-M-yyyy': 'j-n-Y',
   'd.M.yyyy': 'j.n.Y',
   'M/d/yyyy': 'n/j/Y',
   'M-d-yyyy': 'n-j-Y',
 
-  // ========== 2-digit year variants ==========
   'dd/MM/yy': 'd/m/y',
   'dd-MM-yy': 'd-m-y',
   'MM/dd/yy': 'm/d/y',
@@ -431,7 +474,6 @@ const DATE_FORMAT_MAP: Record<string, string> = {
   'd/M/yy': 'j/n/y',
   'M/d/yy': 'n/j/y',
 
-  // ========== Formats with time ==========
   'dd/MM/yyyy HH:mm': 'd/m/Y H:i',
   'dd-MM-yyyy HH:mm': 'd-m-Y H:i',
   'MM/dd/yyyy HH:mm': 'm/d/Y H:i',
@@ -441,7 +483,6 @@ const DATE_FORMAT_MAP: Record<string, string> = {
   'dd/MM/yyyy h:mm a': 'd/m/Y g:i K',
   'MM/dd/yyyy h:mm a': 'm/d/Y g:i K',
 
-  // ========== Registration format (ordinal day) ==========
   'do MMM, yyyy': 'jS M, Y',
 };
 
@@ -465,17 +506,22 @@ export function convertDateFnsToFlatpickr(dateFnsFormat: string): string {
 }
 
 /**
- * Gets the Carbon DatePicker compatible format by converting the date-fns format.
- * Reads from localStorage if available, otherwise uses the default DATE_FORMAT.
+ * Gets the Carbon DatePicker compatible format with intelligent fallback.
+ *
+ * Fallback priority:
+ * 1. localStorage (user-configured format)
+ * 2. Browser locale (detected automatically via getBrowserLocaleDateFormat)
+ * 3. DATE_FORMAT constant (final fallback)
  *
  * @returns Flatpickr format string for use with Carbon DatePicker
  *
  * @example
- * getDatePickerFormat() // returns 'd/m/Y' (if DATE_FORMAT is 'dd/MM/yyyy')
+ * getDatePickerFormat() // returns 'd/m/Y' (UK) or 'm/d/Y' (US) based on browser locale
  */
 export const getDatePickerFormat = (): string => {
   const dateFnsFormat =
-    localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ?? DATE_FORMAT;
+    localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ??
+    getBrowserLocaleDateFormat();
   return convertDateFnsToFlatpickr(dateFnsFormat);
 };
 
