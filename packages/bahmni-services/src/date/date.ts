@@ -68,7 +68,7 @@ function getDateFnsLocale(): Locale {
 export function getBrowserLocaleDateFormat(): string {
   try {
     if (
-      typeof globalThis.window === 'undefined' ||
+      globalThis.window === undefined ||
       typeof navigator === 'undefined' ||
       !navigator.language
     ) {
@@ -96,7 +96,7 @@ export function getBrowserLocaleDateFormat(): string {
     }
 
     return DATE_FORMAT;
-  } catch (error) {
+  } catch {
     return DATE_FORMAT;
   }
 }
