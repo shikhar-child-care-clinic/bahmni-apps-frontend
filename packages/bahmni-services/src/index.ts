@@ -23,7 +23,6 @@ export {
   getPatientProfile,
   getPersonAttributeTypes,
   getRelationshipTypes,
-  getDefaultDateFormat,
   type FormattedPatientData,
   type PatientSearchResult,
   type PatientSearchResultBundle,
@@ -188,7 +187,12 @@ export {
 
 export { getConfig } from './configService';
 
-export { getCurrentUser, getUserLoginLocation, type User } from './userService';
+export {
+  getCurrentUser,
+  getUserLoginLocation,
+  getDefaultDateFormat,
+  type User,
+} from './userService';
 export { USER_PINNED_PREFERENCE_URL } from './observationFormsService/constants';
 export {
   getPatientObservationsBundle,

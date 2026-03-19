@@ -10,7 +10,6 @@ import {
   IDENTIFIER_TYPES_URL,
   APP_SETTINGS_URL,
   PRIMARY_IDENTIFIER_TYPE_PROPERTY,
-  DEFAULT_DATE_FORMAT_PROPERTY,
   CREATE_PATIENT_URL,
   UPDATE_PATIENT_URL,
   ADDRESS_HIERARCHY_URL,
@@ -267,18 +266,6 @@ export const getPrimaryIdentifierType = async (): Promise<string | null> => {
     (setting) => setting.property === PRIMARY_IDENTIFIER_TYPE_PROPERTY,
   );
   return primaryIdentifierTypes?.value ?? null;
-};
-
-/**
- * Get default date format from Bahmni app settings (commons module)
- * @returns Promise<string | null> - The default date format string (e.g., 'dd/MM/yyyy') or null if not found
- */
-export const getDefaultDateFormat = async (): Promise<string | null> => {
-  const settings = await get<AppSettingsResponse>(APP_SETTINGS_URL('commons'));
-  const dateFormatSetting = settings.find(
-    (setting) => setting.property === DEFAULT_DATE_FORMAT_PROPERTY,
-  );
-  return dateFormatSetting?.value ?? null;
 };
 
 /**

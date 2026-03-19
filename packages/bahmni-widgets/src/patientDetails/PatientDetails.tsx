@@ -44,10 +44,11 @@ const PatientDetails: React.FC = () => {
     ? calculateAgeinYearsAndMonths(patient.birthDate, t, 'full')
     : null;
 
-  const details = [
-    formattedAge,
-    formatDateTime(patient.birthDate!, t).formattedResult,
-  ]
+  const formattedBirthDate = patient.birthDate
+    ? formatDateTime(patient.birthDate, t).formattedResult
+    : null;
+
+  const details = [formattedAge, formattedBirthDate]
     .filter(Boolean)
     .join(' | ');
 

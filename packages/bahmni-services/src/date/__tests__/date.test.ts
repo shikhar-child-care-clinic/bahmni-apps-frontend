@@ -44,7 +44,7 @@ jest.mock('../../i18n/translationService', () => ({
   getUserPreferredLocale: jest.fn(),
 }));
 
-Object.defineProperty(global.navigator, 'language', {
+Object.defineProperty(globalThis.navigator, 'language', {
   value: 'en-GB',
   writable: true,
   configurable: true,
@@ -372,11 +372,11 @@ describe('formatDateTime - with time (includeTime=true)', () => {
 describe('formatDateTime locale support', () => {
   const mockedGetUserPreferredLocale = jest.mocked(getUserPreferredLocale);
 
-  const originalLocalStorage = global.localStorage;
+  const originalLocalStorage = globalThis.localStorage;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.defineProperty(global, 'localStorage', {
+    Object.defineProperty(globalThis, 'localStorage', {
       value: {
         getItem: jest.fn(),
         setItem: jest.fn(),
@@ -388,14 +388,16 @@ describe('formatDateTime locale support', () => {
   });
 
   afterEach(() => {
-    Object.defineProperty(global, 'localStorage', {
+    Object.defineProperty(globalThis, 'localStorage', {
       value: originalLocalStorage,
       writable: true,
     });
   });
 
   it('should format with different locales when using month name format', () => {
-    (global.localStorage.getItem as jest.Mock).mockReturnValue('MMMM dd, yyyy');
+    (globalThis.localStorage.getItem as jest.Mock).mockReturnValue(
+      'MMMM dd, yyyy',
+    );
 
     mockedGetUserPreferredLocale.mockReturnValue('en');
     expect(formatDateTime('2024-03-28', mockT).formattedResult).toBe(
@@ -414,7 +416,9 @@ describe('formatDateTime locale support', () => {
   });
 
   it('should fallback to English for unsupported locales', () => {
-    (global.localStorage.getItem as jest.Mock).mockReturnValue('MMMM dd, yyyy');
+    (globalThis.localStorage.getItem as jest.Mock).mockReturnValue(
+      'MMMM dd, yyyy',
+    );
     mockedGetUserPreferredLocale.mockReturnValue('unsupported-locale');
 
     const result = formatDateTime('2024-03-28', mockT);
@@ -422,7 +426,7 @@ describe('formatDateTime locale support', () => {
   });
 
   it('should use numeric format regardless of locale for default format', () => {
-    (global.localStorage.getItem as jest.Mock).mockReturnValue(null);
+    (globalThis.localStorage.getItem as jest.Mock).mockReturnValue(null);
 
     ['en', 'es', 'fr'].forEach((locale) => {
       mockedGetUserPreferredLocale.mockReturnValue(locale);
@@ -800,10 +804,10 @@ describe('convertDateFnsToFlatpickr', () => {
 });
 
 describe('getDatePickerFormat', () => {
-  const originalLocalStorage = global.localStorage;
+  const originalLocalStorage = globalThis.localStorage;
 
   beforeEach(() => {
-    Object.defineProperty(global, 'localStorage', {
+    Object.defineProperty(globalThis, 'localStorage', {
       value: {
         getItem: jest.fn(),
         setItem: jest.fn(),
@@ -813,28 +817,30 @@ describe('getDatePickerFormat', () => {
   });
 
   afterEach(() => {
-    Object.defineProperty(global, 'localStorage', {
+    Object.defineProperty(globalThis, 'localStorage', {
       value: originalLocalStorage,
       writable: true,
     });
   });
 
   it('should return converted format from localStorage', () => {
-    (global.localStorage.getItem as jest.Mock).mockReturnValue('MM/dd/yyyy');
+    (globalThis.localStorage.getItem as jest.Mock).mockReturnValue(
+      'MM/dd/yyyy',
+    );
     expect(getDatePickerFormat()).toBe('m/d/Y');
   });
 
   it('should return default format when localStorage is null', () => {
-    (global.localStorage.getItem as jest.Mock).mockReturnValue(null);
+    (globalThis.localStorage.getItem as jest.Mock).mockReturnValue(null);
     expect(getDatePickerFormat()).toBe('d/m/Y');
   });
 });
 
 describe('getBrowserLocaleDateFormat', () => {
-  const originalNavigator = global.navigator;
+  const originalNavigator = globalThis.navigator;
 
   afterEach(() => {
-    Object.defineProperty(global, 'navigator', {
+    Object.defineProperty(globalThis, 'navigator', {
       value: originalNavigator,
       writable: true,
       configurable: true,
@@ -842,7 +848,7 @@ describe('getBrowserLocaleDateFormat', () => {
   });
 
   it('should return MM/dd/yyyy for US locale', () => {
-    Object.defineProperty(global.navigator, 'language', {
+    Object.defineProperty(globalThis.navigator, 'language', {
       value: 'en-US',
       writable: true,
       configurable: true,
@@ -855,7 +861,7 @@ describe('getBrowserLocaleDateFormat', () => {
     const asianLocales = ['ja-JP', 'ko-KR', 'zh-CN', 'vi-VN'];
 
     asianLocales.forEach((locale) => {
-      Object.defineProperty(global.navigator, 'language', {
+      Object.defineProperty(globalThis.navigator, 'language', {
         value: locale,
         writable: true,
         configurable: true,
@@ -866,7 +872,7 @@ describe('getBrowserLocaleDateFormat', () => {
   });
 
   it('should fallback to dd/MM/yyyy when navigator is unavailable', () => {
-    Object.defineProperty(global, 'navigator', {
+    Object.defineProperty(globalThis, 'navigator', {
       value: undefined,
       writable: true,
       configurable: true,
