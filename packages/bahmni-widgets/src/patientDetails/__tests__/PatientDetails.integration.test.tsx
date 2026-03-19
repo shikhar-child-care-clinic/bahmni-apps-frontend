@@ -85,7 +85,7 @@ describe('PatientDetails Integration', () => {
     expect(screen.getByTestId('patient-name')).toHaveTextContent('John Doe');
     expect(screen.getByText('MRN123456')).toBeInTheDocument();
     expect(screen.getByText('male')).toBeInTheDocument();
-    expect(screen.getByText(/35 years 2 months 15 days/)).toBeInTheDocument();
+    expect(screen.getByText(/35 years 2 months/)).toBeInTheDocument();
   });
 
   it('integrates usePatient hook with error state', () => {
@@ -134,6 +134,6 @@ describe('PatientDetails Integration', () => {
 
     render(<PatientDetails />);
 
-    expect(screen.getByText(/1 year 1 month 1 day/)).toBeInTheDocument();
+    expect(screen.getByText(/1 year 1 month/)).toBeInTheDocument();
   });
 });

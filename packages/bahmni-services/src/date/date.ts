@@ -562,49 +562,45 @@ export function calculateAgeinYearsAndMonths(
 
   const isFullFormat = format === 'full';
 
-  // For infants under 3 months, show total days only
+  const translationKeys = {
+    years: isFullFormat ? 'YEARS_FULL_FORMAT' : 'YEARS_SHORT_FORMAT',
+    months: isFullFormat ? 'MONTHS_FULL_FORMAT' : 'MONTHS_SHORT_FORMAT',
+    days: isFullFormat ? 'DAYS_FULL_FORMAT' : 'DAYS_SHORT_FORMAT',
+  };
+
+  const fallbackUnits = {
+    years: isFullFormat ? 'years' : 'y',
+    months: isFullFormat ? 'months' : 'm',
+    days: isFullFormat ? 'days' : 'd',
+  };
+
+  const separator = isFullFormat ? ' ' : '';
+
   if (years === 0 && months < 3) {
     const totalDays = differenceInDays(today, birthDateObj);
-    if (!t) {
-      return isFullFormat ? `${totalDays} days` : `${totalDays}d`;
-    }
-    const dayKey = isFullFormat ? 'DAYS_FULL_FORMAT' : 'DAYS_SHORT_FORMAT';
-    const dayUnit = t(dayKey, { count: totalDays });
-    const separator = isFullFormat ? ' ' : '';
+    const dayUnit = t
+      ? t(translationKeys.days, { count: totalDays })
+      : fallbackUnits.days;
     return `${totalDays}${separator}${dayUnit}`;
   }
 
-  if (!t) {
-    if (isFullFormat) {
-      return `${years} years ${months} months ${days} days`;
-    }
-    return `${years}y ${months}m ${days}d`;
-  }
+  const ageComponents: Array<[number, string, string]> =
+    years >= 1
+      ? [
+          [years, translationKeys.years, fallbackUnits.years],
+          [months, translationKeys.months, fallbackUnits.months],
+        ]
+      : [
+          [months, translationKeys.months, fallbackUnits.months],
+          [days, translationKeys.days, fallbackUnits.days],
+        ];
 
-  const yearKey = isFullFormat ? 'YEARS_FULL_FORMAT' : 'YEARS_SHORT_FORMAT';
-  const monthKey = isFullFormat ? 'MONTHS_FULL_FORMAT' : 'MONTHS_SHORT_FORMAT';
-  const dayKey = isFullFormat ? 'DAYS_FULL_FORMAT' : 'DAYS_SHORT_FORMAT';
+  const parts = ageComponents.map(([value, key, fallback]) => {
+    const unit = t ? t(key, { count: value }) : fallback;
+    return `${value}${separator}${unit}`;
+  });
 
-  const ageComponents: Array<[number, string]> = [
-    [years, yearKey],
-    [months, monthKey],
-    [days, dayKey],
-  ];
-
-  const separator = isFullFormat ? ' ' : '';
-  const parts = ageComponents
-    .filter(([value]) => value > 0)
-    .map(([value, key]) => {
-      const unit = t(key, { count: value });
-      return `${value}${separator}${unit}`;
-    });
-
-  if (parts.length > 0) {
-    return parts.join(' ');
-  }
-
-  const zeroUnit = t(dayKey, { count: 0 });
-  return isFullFormat ? `0 ${zeroUnit}` : '0d';
+  return parts.join(' ');
 }
 /**
  * Sorts an array of objects by a date field

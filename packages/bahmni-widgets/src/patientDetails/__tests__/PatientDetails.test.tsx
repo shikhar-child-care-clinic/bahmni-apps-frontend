@@ -126,7 +126,7 @@ describe('PatientDetails Component', () => {
       expect(screen.getByTestId('patient-name')).toHaveTextContent('John Doe');
       expect(screen.getByText('MRN123456 | OP789')).toBeInTheDocument();
       expect(screen.getByText('male')).toBeInTheDocument();
-      expect(screen.getByText(/36 years 2 months 15 days/)).toBeInTheDocument();
+      expect(screen.getByText(/36 years 2 months/)).toBeInTheDocument();
       expect(screen.getByText(/1989-01-01/)).toBeInTheDocument();
     });
 

@@ -613,18 +613,24 @@ describe('calculateAgeinYearsAndMonths', () => {
       const birthDate = new Date(2000, 2, 28);
       const birthDateMillis = birthDate.getTime();
       const result = calculateAgeinYearsAndMonths(birthDateMillis, mockT);
-      expect(result).toBe('24y');
+      expect(result).toBe('24y 0m');
     });
 
     it('should calculate age correctly with string input', () => {
       const result = calculateAgeinYearsAndMonths('2000-03-28', mockT);
-      expect(result).toBe('24y');
+      expect(result).toBe('24y 0m');
     });
 
-    it('should show all non-zero components', () => {
+    it('should show years and months including zeros for >= 1 year', () => {
       const birthDate = new Date(2018, 11, 28);
       const result = calculateAgeinYearsAndMonths(birthDate.getTime(), mockT);
       expect(result).toBe('5y 3m');
+    });
+
+    it('should show months and days for >= 3 months but < 1 year', () => {
+      const birthDate = new Date(2023, 8, 28);
+      const result = calculateAgeinYearsAndMonths(birthDate.getTime(), mockT);
+      expect(result).toBe('6m 0d');
     });
 
     it('should handle infants under 3 months showing only days', () => {
@@ -642,7 +648,7 @@ describe('calculateAgeinYearsAndMonths', () => {
     it('should format age with short fallback units when no translation function is passed', () => {
       const birthDate = new Date(2000, 2, 28);
       const result = calculateAgeinYearsAndMonths(birthDate.getTime());
-      expect(result).toBe('24y 0m 0d');
+      expect(result).toBe('24y 0m');
     });
   });
 
@@ -657,7 +663,7 @@ describe('calculateAgeinYearsAndMonths', () => {
       return key;
     });
 
-    it('should show all non-zero components in full format', () => {
+    it('should show years and months (no days) in full format for >= 1 year', () => {
       const birthDate = new Date(1999, 1, 28);
       const result = calculateAgeinYearsAndMonths(
         birthDate.getTime(),
@@ -667,24 +673,34 @@ describe('calculateAgeinYearsAndMonths', () => {
       expect(result).toBe('25 Years 1 Month');
     });
 
-    it('should use singular forms for values of 1', () => {
-      const birthDate = new Date(2023, 1, 27); // 1 year, 1 month, 1 day
+    it('should use singular forms for values of 1 (years and months only)', () => {
+      const birthDate = new Date(2023, 1, 27);
       const result = calculateAgeinYearsAndMonths(
         birthDate.getTime(),
         mockT,
         'full',
       );
-      expect(result).toBe('1 Year 1 Month 1 Day');
+      expect(result).toBe('1 Year 1 Month');
     });
 
-    it('should show years, months, and days when all are non-zero', () => {
-      const birthDate = new Date(2018, 11, 26); // 5 years, 3 months, 2 days
+    it('should show only years and months (not days) when >= 1 year', () => {
+      const birthDate = new Date(2018, 11, 26);
       const result = calculateAgeinYearsAndMonths(
         birthDate.getTime(),
         mockT,
         'full',
       );
-      expect(result).toBe('5 Years 3 Months 2 Days');
+      expect(result).toBe('5 Years 3 Months');
+    });
+
+    it('should show months and days for >= 3 months but < 1 year', () => {
+      const birthDate = new Date(2023, 7, 28);
+      const result = calculateAgeinYearsAndMonths(
+        birthDate.getTime(),
+        mockT,
+        'full',
+      );
+      expect(result).toBe('7 Months 0 Days');
     });
 
     it('should handle infants under 3 months in full format', () => {
@@ -709,7 +725,7 @@ describe('calculateAgeinYearsAndMonths', () => {
 
     it('should handle string birthDate input in full format', () => {
       const result = calculateAgeinYearsAndMonths('2000-03-28', mockT, 'full');
-      expect(result).toBe('24 Years');
+      expect(result).toBe('24 Years 0 Months');
     });
 
     it('should format age with full fallback units when no translation function is passed', () => {
@@ -719,7 +735,7 @@ describe('calculateAgeinYearsAndMonths', () => {
         undefined,
         'full',
       );
-      expect(result).toBe('24 years 0 months 0 days');
+      expect(result).toBe('24 years 0 months');
     });
   });
 });
