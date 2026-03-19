@@ -257,9 +257,14 @@ export function formatDateTime(
 ): FormatDateResult {
   const translationFn = t ?? ((key: string) => key);
 
-  let finalFormat =
-    localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ??
-    getBrowserLocaleDateFormat();
+  let finalFormat: string;
+  try {
+    finalFormat =
+      localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ??
+      getBrowserLocaleDateFormat();
+  } catch {
+    finalFormat = getBrowserLocaleDateFormat();
+  }
 
   if (includeTime) {
     finalFormat = `${finalFormat} h:mm a`;
@@ -519,9 +524,14 @@ export function convertDateFnsToFlatpickr(dateFnsFormat: string): string {
  * getDatePickerFormat() // returns 'd/m/Y' (UK) or 'm/d/Y' (US) based on browser locale
  */
 export const getDatePickerFormat = (): string => {
-  const dateFnsFormat =
-    localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ??
-    getBrowserLocaleDateFormat();
+  let dateFnsFormat: string;
+  try {
+    dateFnsFormat =
+      localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ??
+      getBrowserLocaleDateFormat();
+  } catch {
+    dateFnsFormat = getBrowserLocaleDateFormat();
+  }
   return convertDateFnsToFlatpickr(dateFnsFormat);
 };
 
