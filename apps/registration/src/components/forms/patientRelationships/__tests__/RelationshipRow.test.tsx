@@ -9,6 +9,7 @@ jest.mock('@bahmni/services', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
   }),
+  getDatePickerFormat: jest.fn(() => 'd/m/Y'),
 }));
 
 describe('RelationshipRow', () => {

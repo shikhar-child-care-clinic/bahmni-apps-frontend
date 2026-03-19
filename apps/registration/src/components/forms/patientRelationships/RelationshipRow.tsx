@@ -6,6 +6,7 @@ import {
   Close,
   Link,
 } from '@bahmni/design-system';
+import { getDatePickerFormat } from '@bahmni/services';
 import { getPatientUrlExternal } from '../../../constants/app';
 import type { PatientSuggestion } from '../../../hooks/usePatientSearch';
 import type { RelationshipData } from './PatientRelationships';
@@ -162,7 +163,7 @@ export const RelationshipRow = ({
     ),
     tillDate: (
       <DatePicker
-        dateFormat="d/m/Y"
+        dateFormat={getDatePickerFormat()}
         datePickerType="single"
         value={relationship.tillDate}
         minDate={new Date()}

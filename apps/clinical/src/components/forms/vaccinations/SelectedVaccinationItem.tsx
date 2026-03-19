@@ -418,7 +418,7 @@ const SelectedVaccinationItem: React.FC<SelectedVaccinationItemProps> =
             <Column sm={2} md={4} lg={8} className={styles.column}>
               <DatePicker
                 datePickerType="single"
-                dateFormat={datePickerFormat}
+                dateFormat={getDatePickerFormat()}
                 data-testid={`vaccination-start-date-picker-${id}`}
                 value={startDate}
                 minDate={getTodayDate()}

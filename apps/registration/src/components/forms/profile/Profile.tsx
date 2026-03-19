@@ -11,6 +11,7 @@ import {
   MAX_PATIENT_AGE_YEARS,
   MAX_NAME_LENGTH,
   PatientIdentifier,
+  getDatePickerFormat,
 } from '@bahmni/services';
 import { useState, useImperativeHandle, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
@@ -659,7 +660,7 @@ export const Profile = ({
           >
             <div data-testid="date-of-birth-field">
               <DatePicker
-                dateFormat="d/m/Y"
+                dateFormat={getDatePickerFormat()}
                 datePickerType="single"
                 data-testid="date-of-birth-picker"
                 minDate={(() => {

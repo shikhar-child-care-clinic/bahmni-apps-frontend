@@ -21,6 +21,7 @@ jest.mock('@bahmni/services', () => ({
     capture: jest.fn(),
   })),
   MAX_PATIENT_AGE_YEARS: 120,
+  getDatePickerFormat: jest.fn(() => 'd/m/Y'),
 }));
 
 // Create stable mock data outside to prevent infinite re-renders

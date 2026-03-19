@@ -20,6 +20,7 @@ expect.extend(toHaveNoViolations);
 jest.mock('@bahmni/services', () => ({
   getTodayDate: jest.fn().mockReturnValue(new Date('2025-01-01')),
   DATE_PICKER_INPUT_FORMAT: 'd/m/Y',
+  getDatePickerFormat: jest.fn(() => 'd/m/Y'),
   useTranslation: () => ({
     t: (key: string, options?: any) => {
       const translations: Record<string, string> = {

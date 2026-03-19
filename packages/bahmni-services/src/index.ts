@@ -117,6 +117,7 @@ export {
   doDateRangesOverlap,
   convertDateFnsToFlatpickr,
   getDatePickerFormat,
+  getBrowserLocaleDateFormat,
 } from './date';
 export { type Notification, notificationService } from './notification';
 export {

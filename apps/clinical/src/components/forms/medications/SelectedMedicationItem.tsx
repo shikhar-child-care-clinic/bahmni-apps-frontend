@@ -13,6 +13,7 @@ import {
   useTranslation,
   getTodayDate,
   DATE_PICKER_INPUT_FORMAT,
+  getDatePickerFormat,
 } from '@bahmni/services';
 import React, { useEffect, useCallback, useState } from 'react';
 import { DURATION_UNIT_OPTIONS } from '../../../constants/medications';
@@ -432,7 +433,7 @@ const SelectedMedicationItem: React.FC<SelectedMedicationItemProps> =
             <Column sm={2} md={4} lg={8} className={styles.column}>
               <DatePicker
                 datePickerType="single"
-                dateFormat={DATE_PICKER_INPUT_FORMAT}
+                dateFormat={getDatePickerFormat()}
                 data-testid={`medication-start-date-picker-${id}`}
                 value={startDate}
                 minDate={getTodayDate()}
