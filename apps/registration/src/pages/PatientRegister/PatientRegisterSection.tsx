@@ -140,14 +140,18 @@ const PatientRegisterSection: React.FC<PatientRegisterSectionProps> = ({
     );
   };
 
+  const renderedControls = section.controls
+    .map((control) => renderControl(control))
+    .filter(Boolean);
+
   return (
     <div className={styles.formContainer}>
-      {section.translationKey && (
+      {section.translationKey && renderedControls.length > 0 && (
         <Tile className={styles.headerTile} data-testid="section-header-tile">
           <span className={styles.sectionTitle}>{t(section.translationKey)}</span>
         </Tile>
       )}
-      {section.controls.map((control) => renderControl(control))}
+      {renderedControls}
     </div>
   );
 };
