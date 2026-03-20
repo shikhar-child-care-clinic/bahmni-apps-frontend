@@ -31,9 +31,6 @@ jest.mock('@bahmni/services', () => ({
   useTranslation: jest.fn(),
   getObservationsBundleByEncounterUuid: jest.fn(),
   useSubscribeConsultationSaved: jest.fn(),
-  formatDate: jest.fn((date) => ({
-    formattedResult: new Date(date).toLocaleDateString('en-US'),
-  })),
   getUserPreferredLocale: jest.fn(() => 'en'),
   getFormattedError: jest.fn((error) => ({ message: error.message })),
 }));
@@ -85,6 +82,17 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
   unobserve: jest.fn(),
   disconnect: jest.fn(),
 }));
+
+const originalDateTimeFormat = Intl.DateTimeFormat;
+beforeAll(() => {
+  global.Intl.DateTimeFormat = jest.fn((locale, options) => {
+    return new originalDateTimeFormat(locale, { ...options, timeZone: 'UTC' });
+  }) as any;
+});
+
+afterAll(() => {
+  global.Intl.DateTimeFormat = originalDateTimeFormat;
+});
 
 const mockFormResponseData: FormResponseData[] = [
   {

@@ -12,6 +12,7 @@ import {
   MAX_NAME_LENGTH,
   PatientIdentifier,
   getDatePickerFormat,
+  formatDateTime,
 } from '@bahmni/services';
 import { useState, useImperativeHandle, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
@@ -29,7 +30,7 @@ import {
   useIdentifierData,
 } from '../../../utils/identifierGenderUtils';
 import { PatientPhotoUpload } from '../../patientPhotoUpload/PatientPhotoUpload';
-import { createDateAgeHandlers, formatToDisplay } from './dateAgeUtils';
+import { createDateAgeHandlers } from './dateAgeUtils';
 
 export interface ProfileRef {
   getData: () => BasicInfoData & {
@@ -672,7 +673,7 @@ export const Profile = ({
                 maxDate={new Date()}
                 value={
                   formData.dateOfBirth
-                    ? formatToDisplay(formData.dateOfBirth)
+                    ? formatDateTime(formData.dateOfBirth).formattedResult
                     : ''
                 }
                 onChange={handleDateOfBirthChange}

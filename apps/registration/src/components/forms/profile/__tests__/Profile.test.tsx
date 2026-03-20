@@ -11,6 +11,7 @@ import { Profile } from '../Profile';
 import type { ProfileRef } from '../Profile';
 
 jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
   useTranslation: () => ({
     t: (key: string) => key,
   }),
