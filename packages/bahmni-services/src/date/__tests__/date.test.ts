@@ -9,7 +9,7 @@ import {
   formatDateDistance,
   sortByDate,
   formatDateAndTime,
-  calculateAgeinYearsAndMonths,
+  getFormattedAge,
   DURATION_UNIT_TO_DAYS,
   calculateEndDate,
   doDateRangesOverlap,
@@ -19,12 +19,12 @@ const mockT = (key: string, options?: { count?: number }) => {
   const { count = 1 } = options ?? {};
 
   switch (key) {
-    case 'DAYS_FULL_FORMAT':
-      return count === 1 ? 'day' : 'days';
-    case 'MONTHS_FULL_FORMAT':
-      return count === 1 ? 'month' : 'months';
-    case 'YEARS_FULL_FORMAT':
-      return count === 1 ? 'year' : 'years';
+    case 'DAYS':
+      return count === 1 ? ' day' : ' days';
+    case 'MONTHS':
+      return count === 1 ? ' month' : ' months';
+    case 'YEARS':
+      return count === 1 ? ' year' : ' years';
     case 'DATE_ERROR_PARSE':
       return 'Parse Error';
     case 'DATE_ERROR_FORMAT':
@@ -584,7 +584,7 @@ describe('formatDateAndTime', () => {
   });
 });
 
-describe('calculateAgeinYearsAndMonths', () => {
+describe('getFormattedAge', () => {
   const mockDate = new Date(2024, 2, 28);
 
   beforeEach(() => {
@@ -596,135 +596,67 @@ describe('calculateAgeinYearsAndMonths', () => {
     jest.useRealTimers();
   });
 
-  describe('Short format (default)', () => {
-    const mockT = (key: string, options?: { count?: number }) => {
-      if (key === 'YEARS_SHORT_FORMAT') return 'y';
-      if (key === 'MONTHS_SHORT_FORMAT') return 'm';
-      if (key === 'DAYS_SHORT_FORMAT') return 'd';
-      return key;
-    };
-
-    it.each([
-      {
-        description: 'should calculate age correctly with timestamp input',
-        birthDate: new Date(2000, 2, 28).getTime(),
-        translateFn: mockT,
-        expected: '24y 0m 0d',
-      },
-      {
-        description: 'should calculate age correctly with string input',
-        birthDate: '2000-03-28',
-        translateFn: mockT,
-        expected: '24y 0m 0d',
-      },
-      {
-        description:
-          'should show years and months and days including zeros for >= 1 year',
-        birthDate: new Date(2018, 11, 28).getTime(),
-        translateFn: mockT,
-        expected: '5y 3m 0d',
-      },
-      {
-        description: 'should show months and days for >= 3 months but < 1 year',
-        birthDate: new Date(2023, 8, 28).getTime(),
-        translateFn: mockT,
-        expected: '6m 0d',
-      },
-      {
-        description: 'should handle infants under 3 months showing only days',
-        birthDate: new Date(2024, 1, 29).getTime(),
-        translateFn: mockT,
-        expected: '28d',
-      },
-      {
-        description: 'should return 0d for newborn (same day)',
-        birthDate: new Date(2024, 2, 28).getTime(),
-        translateFn: mockT,
-        expected: '0d',
-      },
-      {
-        description:
-          'should format age with short fallback units when no translation function is passed',
-        birthDate: new Date(2000, 2, 28).getTime(),
-        translateFn: undefined,
-        expected: '24y 0m 0d',
-      },
-    ])('$description', ({ birthDate, translateFn, expected }) => {
-      const result = calculateAgeinYearsAndMonths(birthDate, translateFn);
-      expect(result).toBe(expected);
-    });
+  const mockTFunction = jest.fn((key: string, options?: { count?: number }) => {
+    if (key === 'YEARS') return options?.count === 1 ? ' Year' : ' Years';
+    if (key === 'MONTHS') return options?.count === 1 ? ' Month' : ' Months';
+    if (key === 'DAYS') return options?.count === 1 ? ' Day' : ' Days';
+    return key;
   });
 
-  describe('Full format', () => {
-    const mockT = jest.fn((key: string, options?: { count?: number }) => {
-      if (key === 'YEARS_FULL_FORMAT')
-        return options?.count === 1 ? 'Year' : 'Years';
-      if (key === 'MONTHS_FULL_FORMAT')
-        return options?.count === 1 ? 'Month' : 'Months';
-      if (key === 'DAYS_FULL_FORMAT')
-        return options?.count === 1 ? 'Day' : 'Days';
-      return key;
-    });
-
-    it.each([
-      {
-        description:
-          'should show years, months and days in full format for >= 1 year',
-        birthDate: new Date(1999, 1, 28).getTime(),
-        translateFn: mockT,
-        expected: '25 Years 1 Month 0 Days',
-      },
-      {
-        description: 'should use singular forms for values of 1',
-        birthDate: new Date(2023, 1, 27).getTime(),
-        translateFn: mockT,
-        expected: '1 Year 1 Month 1 Day',
-      },
-      {
-        description: 'should show years, months and days when >= 1 year',
-        birthDate: new Date(2018, 11, 26).getTime(),
-        translateFn: mockT,
-        expected: '5 Years 3 Months 2 Days',
-      },
-      {
-        description: 'should show months and days for >= 3 months but < 1 year',
-        birthDate: new Date(2023, 7, 28).getTime(),
-        translateFn: mockT,
-        expected: '7 Months 0 Days',
-      },
-      {
-        description: 'should handle infants under 3 months in full format',
-        birthDate: new Date(2024, 1, 29).getTime(),
-        translateFn: mockT,
-        expected: '28 Days',
-      },
-      {
-        description: 'should return 0 Days for newborn in full format',
-        birthDate: new Date(2024, 2, 28).getTime(),
-        translateFn: mockT,
-        expected: '0 Days',
-      },
-      {
-        description: 'should handle string birthDate input in full format',
-        birthDate: '2000-03-28',
-        translateFn: mockT,
-        expected: '24 Years 0 Months 0 Days',
-      },
-      {
-        description:
-          'should format age with full fallback units when no translation function is passed',
-        birthDate: new Date(2000, 2, 28).getTime(),
-        translateFn: undefined,
-        expected: '24 years 0 months 0 days',
-      },
-    ])('$description', ({ birthDate, translateFn, expected }) => {
-      const result = calculateAgeinYearsAndMonths(
-        birthDate,
-        translateFn,
-        'full',
-      );
-      expect(result).toBe(expected);
-    });
+  it.each([
+    {
+      description: 'should calculate age correctly with timestamp input',
+      birthDate: new Date(2000, 2, 28).getTime(),
+      translateFn: mockTFunction,
+      expected: '24 Years 0 Months 0 Days',
+    },
+    {
+      description: 'should calculate age correctly with string input',
+      birthDate: '2000-03-28',
+      translateFn: mockTFunction,
+      expected: '24 Years 0 Months 0 Days',
+    },
+    {
+      description:
+        'should show years and months and days including zeros for >= 1 year',
+      birthDate: new Date(2018, 11, 28).getTime(),
+      translateFn: mockTFunction,
+      expected: '5 Years 3 Months 0 Days',
+    },
+    {
+      description: 'should show months and days for >= 3 months but < 1 year',
+      birthDate: new Date(2023, 8, 28).getTime(),
+      translateFn: mockTFunction,
+      expected: '6 Months 0 Days',
+    },
+    {
+      description: 'should handle infants under 3 months showing only days',
+      birthDate: new Date(2024, 1, 29).getTime(),
+      translateFn: mockTFunction,
+      expected: '28 Days',
+    },
+    {
+      description: 'should return 0 Days for newborn (same day)',
+      birthDate: new Date(2024, 2, 28).getTime(),
+      translateFn: mockTFunction,
+      expected: '0 Days',
+    },
+    {
+      description: 'should use singular forms for values of 1',
+      birthDate: new Date(2023, 1, 27).getTime(),
+      translateFn: mockTFunction,
+      expected: '1 Year 1 Month 1 Day',
+    },
+    {
+      description:
+        'should format age with fallback units when no translation function is passed',
+      birthDate: new Date(2000, 2, 28).getTime(),
+      translateFn: undefined,
+      expected: '24 years 0 months 0 days',
+    },
+  ])('$description', ({ birthDate, translateFn, expected }) => {
+    const result = getFormattedAge(birthDate, translateFn);
+    expect(result).toBe(expected);
   });
 });
 

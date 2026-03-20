@@ -3,7 +3,7 @@ import {
   Appointment,
   Reason,
   formatDateAndTime,
-  calculateAgeinYearsAndMonths,
+  getFormattedAge,
   AppointmentSearchResult,
   PatientSearchResultBundle,
 } from '@bahmni/services';
@@ -105,7 +105,7 @@ export class AppointmentSearchStrategy implements SearchStrategy {
     familyName: '',
     gender: appt.patient.gender,
     birthDate: formatDateAndTime(appt.patient.birthDate, false),
-    age: calculateAgeinYearsAndMonths(appt.patient.birthDate, translator),
+    age: getFormattedAge(appt.patient.birthDate, translator),
     extraIdentifiers: null,
     personId: 0,
     deathDate: null,

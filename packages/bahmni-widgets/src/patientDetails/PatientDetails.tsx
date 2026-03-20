@@ -1,5 +1,5 @@
 import { Icon, ICON_SIZE } from '@bahmni/design-system';
-import { calculateAgeinYearsAndMonths } from '@bahmni/services';
+import { getFormattedAge } from '@bahmni/services';
 import { SkeletonText } from '@carbon/react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -41,7 +41,7 @@ const PatientDetails: React.FC = () => {
   const formattedGender = formatField(patient.gender);
 
   const formattedAge = patient.birthDate
-    ? calculateAgeinYearsAndMonths(patient.birthDate, t, 'full')
+    ? getFormattedAge(patient.birthDate, t)
     : null;
 
   const details = [formattedAge, formatField(patient.birthDate)]

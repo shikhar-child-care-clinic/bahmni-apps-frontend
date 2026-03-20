@@ -7,7 +7,7 @@ export {
   calculateOnsetDate,
   sortByDate,
   getTodayDate,
-  calculateAgeinYearsAndMonths,
+  getFormattedAge,
   formatDateAndTime,
   DURATION_UNIT_TO_DAYS,
   calculateEndDate,

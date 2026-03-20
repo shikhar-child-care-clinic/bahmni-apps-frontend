@@ -152,10 +152,13 @@
   "NOTIFICATION_UNABLE_TO_GET_ADDRESS_DATA": "No se pueden obtener los datos de dirección del paciente",
   "NOTIFICATION_UNABLE_TO_GET_CONTACT_DATA": "No se pueden obtener los datos de contacto del paciente",
   "NOTIFICATION_UNABLE_TO_GET_ADDITIONAL_DATA": "No se pueden obtener los datos adicionales del paciente",
-  "DAYS_SHORT_FORMAT": "d",
-  "MONTHS_SHORT_FORMAT": "m",
-  "REGISTRATION_PATIENT_SEARCH_APPOINTMENT": "Buscar por Cita",
-  "YEARS_SHORT_FORMAT": "a",
+  "DAYS_one": " día",
+  "DAYS_other": " días",
+  "MONTHS_one": " mes",
+  "MONTHS_other": " meses",
+  "YEARS_one": " año",
+  "YEARS_other": " años",
+  "REGISTRATION_PATIENT_SEARCH_APPOINTMENT": "Búsqueda por cita",
   "SUCCESS": "Éxito",
   "VIEWED_REGISTRATION_PATIENT_SEARCH_MESSAGE": "El usuario {{username}} accedió a la pantalla de búsqueda de pacientes en la aplicación de registro"
 }
