@@ -33,6 +33,21 @@ jest.mock('@bahmni/services', () => ({
   useSubscribeConsultationSaved: jest.fn(),
   getUserPreferredLocale: jest.fn(() => 'en'),
   getFormattedError: jest.fn((error) => ({ message: error.message })),
+  formatDateTime: jest.fn((timestamp: number) => {
+    const date = new Date(timestamp);
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const year = date.getUTCFullYear();
+    const hours = date.getUTCHours();
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+
+    return {
+      formattedResult: `${month}/${day}/${year} ${displayHours}:${minutes} ${ampm}`,
+      isValid: true,
+    };
+  }),
 }));
 
 jest.mock('../../hooks/usePatientUUID', () => ({
@@ -82,17 +97,6 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
   unobserve: jest.fn(),
   disconnect: jest.fn(),
 }));
-
-const originalDateTimeFormat = Intl.DateTimeFormat;
-beforeAll(() => {
-  global.Intl.DateTimeFormat = jest.fn((locale, options) => {
-    return new originalDateTimeFormat(locale, { ...options, timeZone: 'UTC' });
-  }) as any;
-});
-
-afterAll(() => {
-  global.Intl.DateTimeFormat = originalDateTimeFormat;
-});
 
 const mockFormResponseData: FormResponseData[] = [
   {
