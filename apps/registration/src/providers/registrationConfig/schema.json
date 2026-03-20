@@ -336,7 +336,7 @@
           "description": "Array of form sections to display",
           "items": {
             "type": "object",
-            "required": ["name", "translationKey", "controls"],
+            "required": ["name", "controls"],
             "additionalProperties": false,
             "properties": {
               "name": {
@@ -359,6 +359,10 @@
                       "type": "string",
                       "enum": ["profile", "address", "contactInfo", "additionalInfo", "additionalIdentifiers", "relationships"],
                       "description": "Type of form control to render"
+                    },
+                    "titleTranslationKey": {
+                      "type": "string",
+                      "description": "Optional translation key for the control's sub-heading. If absent, no heading is rendered."
                     }
                   }
                 }

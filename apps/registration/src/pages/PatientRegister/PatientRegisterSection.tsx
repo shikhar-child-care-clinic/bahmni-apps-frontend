@@ -1,3 +1,5 @@
+import { Tile } from '@bahmni/design-system';
+import { useTranslation } from '@bahmni/services';
 import React from 'react';
 import { AdditionalIdentifiersRef } from '../../components/forms/additionalIdentifiers/AdditionalIdentifiers';
 import { AdditionalInfoRef } from '../../components/forms/additionalInfo/AdditionalInfo';
@@ -14,7 +16,10 @@ import {
   BasicInfoData,
   PersonAttributesData,
 } from '../../models/patient';
-import { RegistrationFormSection } from '../../providers/registrationConfig/models';
+import {
+  RegistrationFormControl,
+  RegistrationFormSection,
+} from '../../providers/registrationConfig/models';
 import { builtInFormSections } from './formSectionMap';
 import styles from './styles/index.module.scss';
 
@@ -55,7 +60,9 @@ const PatientRegisterSection: React.FC<PatientRegisterSectionProps> = ({
   data,
   guards,
 }) => {
-  const renderControl = (type: string): React.ReactNode => {
+  const { t } = useTranslation();
+
+  const renderComponent = (type: string): React.ReactNode => {
     const sectionConfig = builtInFormSections.find((s) => s.type === type);
     if (!sectionConfig) return null;
 
@@ -65,7 +72,6 @@ const PatientRegisterSection: React.FC<PatientRegisterSectionProps> = ({
       case 'profile':
         return (
           <Component
-            key={type}
             ref={refs.profileRef}
             initialData={data.profileInitialData}
             initialDobEstimated={data.initialDobEstimated}
@@ -75,7 +81,6 @@ const PatientRegisterSection: React.FC<PatientRegisterSectionProps> = ({
       case 'address':
         return (
           <Component
-            key={type}
             ref={refs.addressRef}
             initialData={data.addressInitialData}
           />
@@ -83,7 +88,6 @@ const PatientRegisterSection: React.FC<PatientRegisterSectionProps> = ({
       case 'contactInfo':
         return (
           <Component
-            key={type}
             ref={refs.contactRef}
             initialData={data.personAttributesInitialData}
           />
@@ -91,7 +95,6 @@ const PatientRegisterSection: React.FC<PatientRegisterSectionProps> = ({
       case 'additionalInfo':
         return (
           <Component
-            key={type}
             ref={refs.additionalRef}
             initialData={data.personAttributesInitialData}
           />
@@ -100,7 +103,6 @@ const PatientRegisterSection: React.FC<PatientRegisterSectionProps> = ({
         if (!guards.shouldShowAdditionalIdentifiers) return null;
         return (
           <Component
-            key={type}
             ref={refs.identifiersRef}
             initialData={data.additionalIdentifiersInitialData}
           />
@@ -113,7 +115,6 @@ const PatientRegisterSection: React.FC<PatientRegisterSectionProps> = ({
           return null;
         return (
           <Component
-            key={type}
             ref={refs.relationshipsRef}
             initialData={data.relationshipsInitialData}
           />
@@ -123,9 +124,30 @@ const PatientRegisterSection: React.FC<PatientRegisterSectionProps> = ({
     }
   };
 
+  const renderControl = (control: RegistrationFormControl): React.ReactNode => {
+    const component = renderComponent(control.type);
+    if (!component) return null;
+
+    return (
+      <div key={control.type}>
+        {control.titleTranslationKey && (
+          <div className={styles.controlTitle} data-testid={`control-title-${control.type}`}>
+            <span className={styles.formSectionTitle}>{t(control.titleTranslationKey)}</span>
+          </div>
+        )}
+        {component}
+      </div>
+    );
+  };
+
   return (
     <div className={styles.formContainer}>
-      {section.controls.map((control) => renderControl(control.type))}
+      {section.translationKey && (
+        <Tile className={styles.headerTile} data-testid="section-header-tile">
+          <span className={styles.sectionTitle}>{t(section.translationKey)}</span>
+        </Tile>
+      )}
+      {section.controls.map((control) => renderControl(control))}
     </div>
   );
 };

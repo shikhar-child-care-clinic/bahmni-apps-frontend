@@ -77,11 +77,12 @@ export interface ExtensionPoint {
 
 export interface RegistrationFormControl {
   type: string;
+  titleTranslationKey?: string;
 }
 
 export interface RegistrationFormSection {
   name: string;
-  translationKey: string;
+  translationKey?: string;
   controls: RegistrationFormControl[];
 }
 

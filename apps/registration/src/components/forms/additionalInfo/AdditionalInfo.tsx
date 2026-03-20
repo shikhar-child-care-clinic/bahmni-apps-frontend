@@ -1,4 +1,3 @@
-import { Tile } from '@bahmni/design-system';
 import { useTranslation } from '@bahmni/services';
 import {
   useCallback,
@@ -41,9 +40,6 @@ export const AdditionalInfo = ({ initialData, ref }: AdditionalInfoProps) => {
   const additionalInfoConfig =
     registrationConfig?.patientInformation?.additionalPatientInformation;
   const configAttributes = additionalInfoConfig?.attributes ?? [];
-  const sectionTitle =
-    additionalInfoConfig?.translationKey ??
-    'CREATE_PATIENT_SECTION_ADDITIONAL_INFO';
 
   const fieldsToShow = useMemo(
     () => getFieldsToShow(attributeFields, configAttributes),
@@ -112,9 +108,6 @@ export const AdditionalInfo = ({ initialData, ref }: AdditionalInfoProps) => {
       className={styles.additionalInfoSection}
       data-testid="additional-info-section"
     >
-      <Tile className={styles.headerTile} data-testid="additional-info-header">
-        <span className={styles.headerTitle}>{t(sectionTitle)}</span>
-      </Tile>
       <div
         className={styles.fieldsContainer}
         data-testid="additional-info-fields-container"

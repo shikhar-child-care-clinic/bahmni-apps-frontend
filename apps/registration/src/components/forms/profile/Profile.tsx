@@ -439,21 +439,6 @@ export const Profile = ({
 
   return (
     <div className={styles.formSection} data-testid="profile-section">
-      <span
-        className={styles.formSectionTitle}
-        data-testid="profile-section-title"
-      >
-        {patientIdentifier ? (
-          <span
-            className={styles.patientUuid}
-            data-testid="profile-patient-identifier"
-          >
-            {patientIdentifier}
-          </span>
-        ) : (
-          t('CREATE_PATIENT_SECTION_BASIC_INFO')
-        )}
-      </span>
       <div className={styles.row} data-testid="profile-main-row">
         <PatientPhotoUpload
           onPhotoConfirm={setPatientImage}
