@@ -673,7 +673,7 @@ export const Profile = ({
                 maxDate={new Date()}
                 value={
                   formData.dateOfBirth
-                    ? formatDateTime(formData.dateOfBirth).formattedResult
+                    ? formatDateTime(formData.dateOfBirth, t).formattedResult
                     : ''
                 }
                 onChange={handleDateOfBirthChange}
