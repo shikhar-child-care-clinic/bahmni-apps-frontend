@@ -589,6 +589,7 @@ export function calculateAgeinYearsAndMonths(
       ? [
           [years, translationKeys.years, fallbackUnits.years],
           [months, translationKeys.months, fallbackUnits.months],
+          [days, translationKeys.days, fallbackUnits.days],
         ]
       : [
           [months, translationKeys.months, fallbackUnits.months],
