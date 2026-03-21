@@ -6,7 +6,7 @@ export {
   calculateOnsetDate,
   sortByDate,
   getTodayDate,
-  calculateAgeinYearsAndMonths,
+  getFormattedAge,
   DURATION_UNIT_TO_DAYS,
   calculateEndDate,
   doDateRangesOverlap,

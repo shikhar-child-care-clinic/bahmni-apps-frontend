@@ -111,7 +111,7 @@ export {
   FULL_MONTH_DATE_FORMAT,
   REGISTRATION_DATE_FORMAT,
   getTodayDate,
-  calculateAgeinYearsAndMonths,
+  getFormattedAge,
   DURATION_UNIT_TO_DAYS,
   calculateEndDate,
   doDateRangesOverlap,

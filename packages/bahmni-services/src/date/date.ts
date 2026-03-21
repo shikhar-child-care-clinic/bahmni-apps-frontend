@@ -363,43 +363,43 @@ export function formatDateDistance(
   if (diffInYears >= 5) {
     const monthInFraction = diffInMonths % 12;
     const yearValue = monthInFraction > 6 ? diffInYears + 1 : diffInYears;
-    const yearUnit = t('YEARS_FULL_FORMAT', {
+    const yearUnit = t('YEARS', {
       count: yearValue,
     });
-    formattedResult = `${yearValue} ${yearUnit}`;
+    formattedResult = `${yearValue}${yearUnit}`;
   } else if (diffInYears >= 1) {
     // Use years for periods >= 1 year
     const monthInFraction = diffInMonths % 12;
-    const yearUnit = t('YEARS_FULL_FORMAT', {
+    const yearUnit = t('YEARS', {
       count: diffInYears + monthInFraction,
     });
     const newLocal = diffInYears + 1;
     formattedResult =
       monthInFraction === 0
-        ? `${diffInYears} ${yearUnit}`
+        ? `${diffInYears}${yearUnit}`
         : monthInFraction > 6
-          ? `${newLocal} ${yearUnit}`
-          : `${diffInYears}.5 ${yearUnit}`;
+          ? `${newLocal}${yearUnit}`
+          : `${diffInYears}.5${yearUnit}`;
   } else if (diffInMonths >= 11) {
-    const yearUnit = t('YEARS_FULL_FORMAT', {
+    const yearUnit = t('YEARS', {
       count: 1,
     });
-    formattedResult = `1 ${yearUnit}`;
+    formattedResult = `1${yearUnit}`;
   } else if (diffInMonths >= 1) {
     // Use months for periods >= 1 month but < 1 year
     const daysInFraction = diffInDays % 30;
     const monthValue = daysInFraction > 15 ? diffInMonths + 1 : diffInMonths;
-    const monthUnit = t('MONTHS_FULL_FORMAT', {
+    const monthUnit = t('MONTHS', {
       count: monthValue,
     });
-    formattedResult = `${monthValue} ${monthUnit}`;
+    formattedResult = `${monthValue}${monthUnit}`;
   } else {
     // Use days for everything else (including hours, minutes - round up to at least 1 day)
     const days = Math.max(1, diffInDays);
-    const dayUnit = t('DAYS_FULL_FORMAT', {
+    const dayUnit = t('DAYS', {
       count: days,
     });
-    formattedResult = `${days} ${dayUnit}`;
+    formattedResult = `${days}${dayUnit}`;
   }
 
   return { formattedResult };
@@ -415,16 +415,15 @@ export const getTodayDate = (): Date => {
  * Calculate and format age for display.
  * For infants under 3 months, displays age in total days only.
  * For all others, displays age in years, months, and days format.
+ * Format: "25 Years 6 Months 15 Days" or "28 Days" for infants
  *
  * @param birthDate - Birth date in milliseconds (timestamp) or ISO date string (yyyy-mm-dd)
  * @param t - Optional translation function for Y/M/D labels
- * @param format - Format type: 'short' (e.g., "25y 6m 15d") or 'full' (e.g., "25 Years, 6 Months, 15 Days")
  * @returns Formatted age string
  */
-export function calculateAgeinYearsAndMonths(
+export function getFormattedAge(
   birthDate: number | string,
   t?: (key: string, options?: { count?: number }) => string,
-  format: 'short' | 'full' = 'short',
 ): string {
   const birthDateObj =
     typeof birthDate === 'string' ? parseISO(birthDate) : new Date(birthDate);
@@ -436,28 +435,24 @@ export function calculateAgeinYearsAndMonths(
   const lastMonthAnniversary = addMonths(lastBirthday, months);
   const days = differenceInDays(today, lastMonthAnniversary);
 
-  const isFullFormat = format === 'full';
-
   const translationKeys = {
-    years: isFullFormat ? 'YEARS_FULL_FORMAT' : 'YEARS_SHORT_FORMAT',
-    months: isFullFormat ? 'MONTHS_FULL_FORMAT' : 'MONTHS_SHORT_FORMAT',
-    days: isFullFormat ? 'DAYS_FULL_FORMAT' : 'DAYS_SHORT_FORMAT',
+    years: 'YEARS',
+    months: 'MONTHS',
+    days: 'DAYS',
   };
 
   const fallbackUnits = {
-    years: isFullFormat ? 'years' : 'y',
-    months: isFullFormat ? 'months' : 'm',
-    days: isFullFormat ? 'days' : 'd',
+    years: ' years',
+    months: ' months',
+    days: ' days',
   };
-
-  const separator = isFullFormat ? ' ' : '';
 
   if (years === 0 && months < 3) {
     const totalDays = differenceInDays(today, birthDateObj);
     const dayUnit = t
       ? t(translationKeys.days, { count: totalDays })
       : fallbackUnits.days;
-    return `${totalDays}${separator}${dayUnit}`;
+    return `${totalDays}${dayUnit}`;
   }
 
   const ageComponents: Array<[number, string, string]> =
@@ -474,7 +469,7 @@ export function calculateAgeinYearsAndMonths(
 
   const parts = ageComponents.map(([value, key, fallback]) => {
     const unit = t ? t(key, { count: value }) : fallback;
-    return `${value}${separator}${unit}`;
+    return `${value}${unit}`;
   });
 
   return parts.join(' ');

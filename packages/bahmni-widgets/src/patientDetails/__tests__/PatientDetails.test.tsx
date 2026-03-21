@@ -51,9 +51,9 @@ const mockT = jest
   .fn()
   .mockImplementation((key: string, options?: { count?: number }) => {
     const translations: Record<string, string> = {
-      YEARS_FULL_FORMAT: options?.count === 1 ? 'year' : 'years',
-      MONTHS_FULL_FORMAT: options?.count === 1 ? 'month' : 'months',
-      DAYS_FULL_FORMAT: options?.count === 1 ? 'day' : 'days',
+      YEARS: options?.count === 1 ? ' year' : ' years',
+      MONTHS: options?.count === 1 ? ' month' : ' months',
+      DAYS: options?.count === 1 ? ' day' : ' days',
     };
     return translations[key] || key;
   }) as any;
