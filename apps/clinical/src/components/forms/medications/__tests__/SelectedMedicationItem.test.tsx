@@ -19,8 +19,6 @@ expect.extend(toHaveNoViolations);
 
 jest.mock('@bahmni/services', () => ({
   getTodayDate: jest.fn().mockReturnValue(new Date('2025-01-01')),
-  DATE_PICKER_INPUT_FORMAT: 'd/m/Y',
-  getDatePickerFormat: jest.fn(() => 'd/m/Y'),
   useTranslation: () => ({
     t: (key: string, options?: any) => {
       const translations: Record<string, string> = {
@@ -76,6 +74,62 @@ jest.mock('../styles/SelectedMedicationItem.module.scss', () => ({
   routeControl: 'routeControl',
   dateControl: 'dateControl',
 }));
+
+jest.mock('@bahmni/design-system', () => {
+  const actual = jest.requireActual('@bahmni/design-system');
+
+  return {
+    ...actual,
+    DatePicker: ({
+      children,
+      onChange,
+    }: {
+      children: React.ReactNode;
+      onChange?: (dates: Date[]) => void;
+    }) => {
+      const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        if (onChange && value) {
+          const parts = value.split('/');
+          if (parts.length === 3) {
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const year = parseInt(parts[2], 10);
+            const date = new Date(year, month, day);
+            onChange([date]);
+          }
+        }
+      };
+      return (
+        <div data-testid="date-picker" onChange={handleChange}>
+          {children}
+        </div>
+      );
+    },
+    DatePickerInput: ({
+      id,
+      placeholder,
+      labelText,
+      disabled,
+      ...props
+    }: {
+      id: string;
+      placeholder?: string;
+      labelText: string;
+      disabled: boolean;
+    }) => (
+      <input
+        type="text"
+        id={id}
+        placeholder={placeholder ?? 'DD/MM/YYYY'}
+        aria-label={labelText}
+        disabled={disabled}
+        data-testid={id}
+        {...props}
+      />
+    ),
+  };
+});
 
 // Test data factories
 const createMockMedication = (overrides = {}): Medication => ({
@@ -506,7 +560,9 @@ describe('SelectedMedicationItem', () => {
 
         // Act
         render(<SelectedMedicationItem {...props} />);
-        const dateInput = screen.getByPlaceholderText('d/m/Y');
+        const dateInput = screen.getByTestId(
+          'medication-start-date-input-entry-1',
+        );
 
         // Click on the date input to open the calendar
         await user.click(dateInput);
@@ -542,7 +598,9 @@ describe('SelectedMedicationItem', () => {
 
         // Act
         render(<SelectedMedicationItem {...props} />);
-        const dateInput = screen.getByPlaceholderText('d/m/Y');
+        const dateInput = screen.getByTestId(
+          'medication-start-date-input-entry-1',
+        );
 
         // Assert
         expect(dateInput).toBeDisabled();
@@ -1164,7 +1222,9 @@ describe('SelectedMedicationItem', () => {
         expect(
           screen.getByRole('combobox', { name: /Duration Unit/i }),
         ).toBeDisabled();
-        expect(screen.getByPlaceholderText('d/m/Y')).toBeDisabled();
+        expect(
+          screen.getByTestId('medication-start-date-input-entry-1'),
+        ).toBeDisabled();
       });
 
       test('clears frequency when PRN is selected', () => {
@@ -1578,7 +1638,9 @@ describe('SelectedMedicationItem', () => {
 
       // Act
       render(<SelectedMedicationItem {...props} />);
-      const dateInput = screen.getByPlaceholderText('d/m/Y');
+      const dateInput = screen.getByTestId(
+        'medication-start-date-input-entry-1',
+      );
 
       // Try to enter a past date
       await user.click(dateInput);
@@ -1608,7 +1670,9 @@ describe('SelectedMedicationItem', () => {
 
       // Act
       render(<SelectedMedicationItem {...props} />);
-      const dateInput = screen.getByPlaceholderText('d/m/Y');
+      const dateInput = screen.getByTestId(
+        'medication-start-date-input-entry-1',
+      );
 
       await user.click(dateInput);
       await user.clear(dateInput);

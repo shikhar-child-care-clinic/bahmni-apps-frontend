@@ -8,7 +8,6 @@ import {
 } from '@bahmni/design-system';
 import {
   useTranslation,
-  getDatePickerFormat,
   formatDateTime,
   type Provider,
 } from '@bahmni/services';
@@ -328,15 +327,10 @@ const EncounterDetails: React.FC<{
       </Column>
 
       <Column sm={4} md={8} lg={5} className={styles.column}>
-        <DatePicker
-          datePickerType="single"
-          dateFormat={getDatePickerFormat()}
-          data-testid="encounter-date-picker"
-        >
+        <DatePicker datePickerType="single" data-testid="encounter-date-picker">
           <DatePickerInput
             id="encounter-date-picker-input"
             data-testid="encounter-date-picker-input"
-            placeholder={formattedDate.formattedResult}
             title={t('ENCOUNTER_DATE')}
             labelText={t('ENCOUNTER_DATE')}
             defaultValue={formattedDate.formattedResult}

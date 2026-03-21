@@ -10,8 +10,6 @@ import {
   DURATION_UNIT_TO_DAYS,
   calculateEndDate,
   doDateRangesOverlap,
-  convertDateFnsToFlatpickr,
-  getDatePickerFormat,
   getBrowserLocaleDateFormat,
 } from '../date';
 
@@ -795,53 +793,6 @@ describe('calculateEndDate', () => {
     expect(() => calculateEndDate('invalid-date', 7, 'd')).toThrow(
       'Invalid date',
     );
-  });
-});
-
-describe('convertDateFnsToFlatpickr', () => {
-  it('should convert common date-fns formats to flatpickr format', () => {
-    expect(convertDateFnsToFlatpickr('dd/MM/yyyy')).toBe('d/m/Y');
-    expect(convertDateFnsToFlatpickr('MM/dd/yyyy')).toBe('m/d/Y');
-    expect(convertDateFnsToFlatpickr('yyyy-MM-dd')).toBe('Y-m-d');
-    expect(convertDateFnsToFlatpickr('MMMM dd, yyyy')).toBe('F d, Y');
-  });
-
-  it('should return unknown format as-is', () => {
-    const result = convertDateFnsToFlatpickr('UNKNOWN_FORMAT');
-    expect(result).toBe('UNKNOWN_FORMAT');
-  });
-});
-
-describe('getDatePickerFormat', () => {
-  const originalLocalStorage = globalThis.localStorage;
-
-  beforeEach(() => {
-    Object.defineProperty(globalThis, 'localStorage', {
-      value: {
-        getItem: jest.fn(),
-        setItem: jest.fn(),
-      },
-      writable: true,
-    });
-  });
-
-  afterEach(() => {
-    Object.defineProperty(globalThis, 'localStorage', {
-      value: originalLocalStorage,
-      writable: true,
-    });
-  });
-
-  it('should return converted format from localStorage', () => {
-    (globalThis.localStorage.getItem as jest.Mock).mockReturnValue(
-      'MM/dd/yyyy',
-    );
-    expect(getDatePickerFormat()).toBe('m/d/Y');
-  });
-
-  it('should return default format when localStorage is null', () => {
-    (globalThis.localStorage.getItem as jest.Mock).mockReturnValue(null);
-    expect(getDatePickerFormat()).toBe('d/m/Y');
   });
 });
 

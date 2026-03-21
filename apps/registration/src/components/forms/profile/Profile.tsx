@@ -11,8 +11,6 @@ import {
   MAX_PATIENT_AGE_YEARS,
   MAX_NAME_LENGTH,
   PatientIdentifier,
-  getDatePickerFormat,
-  formatDateTime,
 } from '@bahmni/services';
 import { useState, useImperativeHandle, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
@@ -661,7 +659,6 @@ export const Profile = ({
           >
             <div data-testid="date-of-birth-field">
               <DatePicker
-                dateFormat={getDatePickerFormat()}
                 datePickerType="single"
                 data-testid="date-of-birth-picker"
                 minDate={(() => {
@@ -671,17 +668,12 @@ export const Profile = ({
                   return date;
                 })()}
                 maxDate={new Date()}
-                value={
-                  formData.dateOfBirth
-                    ? formatDateTime(formData.dateOfBirth, t).formattedResult
-                    : ''
-                }
+                value={formData.dateOfBirth ? formData.dateOfBirth : ''}
                 onChange={handleDateOfBirthChange}
               >
                 <DatePickerInput
                   id="date-of-birth"
                   data-testid="date-of-birth-input"
-                  placeholder={t('CREATE_PATIENT_DATE_OF_BIRTH_PLACEHOLDER')}
                   labelText={getRequiredLabel(
                     'CREATE_PATIENT_DATE_OF_BIRTH',
                     patientInfoConfig?.isDateOfBirthMandatory ?? true,

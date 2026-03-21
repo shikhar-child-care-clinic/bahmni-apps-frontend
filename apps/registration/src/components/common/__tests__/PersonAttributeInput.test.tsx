@@ -295,28 +295,6 @@ describe('PersonAttributeInput', () => {
       expect(input).toBeInTheDocument();
     });
 
-    it('should use custom placeholder when provided', () => {
-      render(
-        <PersonAttributeInput
-          {...defaultProps}
-          format="org.openmrs.Date"
-          placeholder="dd/mm/yyyy"
-        />,
-      );
-
-      const input = screen.getByPlaceholderText('dd/mm/yyyy');
-      expect(input).toBeInTheDocument();
-    });
-
-    it('should use default placeholder when not provided', () => {
-      render(
-        <PersonAttributeInput {...defaultProps} format="org.openmrs.Date" />,
-      );
-
-      const input = screen.getByPlaceholderText('mm/dd/yyyy');
-      expect(input).toBeInTheDocument();
-    });
-
     it('should display error when provided', () => {
       render(
         <PersonAttributeInput

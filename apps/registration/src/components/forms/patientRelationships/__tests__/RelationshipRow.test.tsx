@@ -9,7 +9,6 @@ jest.mock('@bahmni/services', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
   }),
-  getDatePickerFormat: jest.fn(() => 'd/m/Y'),
 }));
 
 describe('RelationshipRow', () => {
@@ -110,7 +109,7 @@ describe('RelationshipRow', () => {
 
     render(<div>{row.tillDate}</div>);
 
-    const datePicker = screen.getByPlaceholderText('REGISTRATION_SELECT_DATE');
+    const datePicker = screen.getByTestId('new-relationship-till-date-input');
     expect(datePicker).toBeInTheDocument();
     expect(datePicker).toHaveAttribute('id', 'till-date-rel-1');
   });

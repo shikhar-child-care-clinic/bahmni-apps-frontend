@@ -47,6 +47,62 @@ jest.mock('../styles/SelectedVaccinationItem.module.scss', () => ({
   footerRow: 'footerRow',
 }));
 
+jest.mock('@bahmni/design-system', () => {
+  const actual = jest.requireActual('@bahmni/design-system');
+
+  return {
+    ...actual,
+    DatePicker: ({
+      children,
+      onChange,
+    }: {
+      children: React.ReactNode;
+      onChange?: (dates: Date[]) => void;
+    }) => {
+      const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        if (onChange && value) {
+          const parts = value.split('/');
+          if (parts.length === 3) {
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const year = parseInt(parts[2], 10);
+            const date = new Date(year, month, day);
+            onChange([date]);
+          }
+        }
+      };
+      return (
+        <div data-testid="date-picker" onChange={handleChange}>
+          {children}
+        </div>
+      );
+    },
+    DatePickerInput: ({
+      id,
+      placeholder,
+      labelText,
+      disabled,
+      ...props
+    }: {
+      id: string;
+      placeholder?: string;
+      labelText: string;
+      disabled: boolean;
+    }) => (
+      <input
+        type="text"
+        id={id}
+        placeholder={placeholder ?? 'DD/MM/YYYY'}
+        aria-label={labelText}
+        disabled={disabled}
+        data-testid={id}
+        {...props}
+      />
+    ),
+  };
+});
+
 const createMockMedication = (overrides = {}): Medication => ({
   id: 'test-vac-1',
   resourceType: 'Medication',
@@ -474,7 +530,9 @@ describe('SelectedVaccinationItem', () => {
         const props = createDefaultProps({ updateStartDate });
         const user = userEvent.setup();
         render(<SelectedVaccinationItem {...props} />);
-        const dateInput = screen.getByPlaceholderText('d/m/Y');
+        const dateInput = screen.getByTestId(
+          'vaccination-start-date-input-entry-1',
+        );
         await user.click(dateInput);
         await user.clear(dateInput);
         await user.type(dateInput, '15/02/2025');
@@ -497,7 +555,9 @@ describe('SelectedVaccinationItem', () => {
           }),
         });
         render(<SelectedVaccinationItem {...props} />);
-        const dateInput = screen.getByPlaceholderText('d/m/Y');
+        const dateInput = screen.getByTestId(
+          'vaccination-start-date-input-entry-1',
+        );
         expect(dateInput).toBeDisabled();
       });
     });
@@ -808,7 +868,9 @@ describe('SelectedVaccinationItem', () => {
         expect(
           screen.getByRole('combobox', { name: /Duration Unit/i }),
         ).toBeDisabled();
-        expect(screen.getByPlaceholderText('d/m/Y')).toBeDisabled();
+        expect(
+          screen.getByTestId('vaccination-start-date-input-entry-1'),
+        ).toBeDisabled();
       });
       test('does not update frequency if immediate frequency is not found in config', () => {
         const updateFrequency = jest.fn();
@@ -980,7 +1042,9 @@ describe('SelectedVaccinationItem', () => {
       const props = createDefaultProps({ updateStartDate });
       const user = userEvent.setup();
       render(<SelectedVaccinationItem {...props} />);
-      const dateInput = screen.getByPlaceholderText('d/m/Y');
+      const dateInput = screen.getByTestId(
+        'vaccination-start-date-input-entry-1',
+      );
       await user.click(dateInput);
       await user.clear(dateInput);
       await user.type(dateInput, '1/1/2020');
@@ -1000,7 +1064,9 @@ describe('SelectedVaccinationItem', () => {
       const year = tomorrow.getFullYear();
       const tomorrowString = `${day}/${month}/${year}`;
       render(<SelectedVaccinationItem {...props} />);
-      const dateInput = screen.getByPlaceholderText('d/m/Y');
+      const dateInput = screen.getByTestId(
+        'vaccination-start-date-input-entry-1',
+      );
       await user.click(dateInput);
       await user.clear(dateInput);
       await user.type(dateInput, tomorrowString);

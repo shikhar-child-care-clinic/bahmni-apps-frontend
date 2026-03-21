@@ -22,7 +22,6 @@ jest.mock('@bahmni/services', () => ({
     formattedResult: '16/05/2025',
     error: null,
   })),
-  getDatePickerFormat: jest.fn(() => 'd/m/Y'),
   useTranslation: () => ({
     t: (key: string) => {
       switch (key) {
@@ -137,13 +136,13 @@ jest.mock('@bahmni/design-system', () => {
       disabled,
     }: {
       id: string;
-      placeholder: string;
+      placeholder?: string;
       labelText: string;
       disabled: boolean;
     }) => (
       <input
         id={id}
-        placeholder={placeholder}
+        placeholder={placeholder ?? 'DD/MM/YYYY'}
         aria-label={labelText}
         disabled={disabled}
         data-testid="date-picker-input"
@@ -871,15 +870,6 @@ describe('BasicForm', () => {
       expect(encounterSelect).toHaveValue('selected');
       expect(visitSelect).toHaveValue('selected');
       expect(practitionerSelect).toHaveValue('selected');
-    });
-
-    it('should render date picker with formatted date', () => {
-      // Act
-      renderBasicForm();
-
-      // Assert
-      const dateInput = screen.getByTestId('date-picker-input');
-      expect(dateInput).toHaveAttribute('placeholder', '16/05/2025');
     });
   });
 
