@@ -180,6 +180,8 @@ export function formatObservationsAsLabTestResults(
       // Quantitative result with optional unit (e.g., "5.8 mmol/L")
       value = obs.valueQuantity.value.toString();
       unit = obs.valueQuantity.unit ?? '';
+    } else if (obs.valueDateTime) {
+      value = formatDateTime(obs.valueDateTime, t).formattedResult;
     } else if (obs.valueBoolean !== undefined) {
       value = obs.valueBoolean ? 'Positive' : 'Negative';
     } else if (obs.valueInteger !== undefined) {
