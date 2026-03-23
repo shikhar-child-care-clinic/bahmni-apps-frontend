@@ -18,10 +18,21 @@ jest.mock('@bahmni/widgets');
 
 // Mock the utils
 jest.mock('@bahmni/services', () => ({
-  formatDateTime: jest.fn(() => ({
-    formattedResult: '16/05/2025',
-    error: null,
-  })),
+  formatDateTime: jest.fn((timestamp: number) => {
+    const date = new Date(timestamp);
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const year = date.getUTCFullYear();
+    const hours = date.getUTCHours();
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+
+    return {
+      formattedResult: `${month}/${day}/${year} ${displayHours}:${minutes} ${ampm}`,
+      isValid: true,
+    };
+  }),
   useTranslation: () => ({
     t: (key: string) => {
       switch (key) {

@@ -16,7 +16,21 @@ jest.mock('@bahmni/services', () => ({
   getVitalFlowSheetData: jest.fn(),
   getFormattedError: jest.fn(),
   useTranslation: jest.fn(),
-  formatDate: jest.fn(() => ({ formattedResult: '01 Jan, 2024' })),
+  formatDateTime: jest.fn((timestamp: number) => {
+    const date = new Date(timestamp);
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const year = date.getUTCFullYear();
+    const hours = date.getUTCHours();
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+
+    return {
+      formattedResult: `${month}/${day}/${year} ${displayHours}:${minutes} ${ampm}`,
+      isValid: true,
+    };
+  }),
 }));
 
 jest.mock('../../hooks/usePatientUUID');
