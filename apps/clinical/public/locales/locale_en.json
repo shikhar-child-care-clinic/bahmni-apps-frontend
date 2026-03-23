@@ -56,10 +56,6 @@
   "CLINICAL_DATA_RECORDED_BY": "Recorded By",
   "DAYS_one": " day",
   "DAYS_other": " days",
-  "MONTHS_one": " month",
-  "MONTHS_other": " months",
-  "YEARS_one": " year",
-  "YEARS_other": " years",
   "COMPLETED_STATUS": "Completed",
   "CONDITIONS_ADD_AS_CONDITION": "Add as Condition",
   "CONDITIONS_AND_DIAGNOSES_FORM_TITLE": "Conditions and Diagnoses",
@@ -248,6 +244,8 @@
   "MEDICATION_TOTAL_QUANTITY": "Total quantity",
   "MEDICATION_ADD_NOTE": "Add Note",
   "MEDICATION_ADD_NOTE_PLACEHOLDER": "Add notes for the Medication",
+  "MONTHS_one": " month",
+  "MONTHS_other": " months",
   "NETWORK_ERROR": "A network error occurred",
   "NO_ACTIVE_MEDICATIONS": "No Active Medications",
   "NO_ALLERGIES": "No Allergies recorded",
@@ -356,5 +354,7 @@
   "LOADING_VACCINATIONS": "Loading Vaccinations...",
   "ERROR_SEARCHING_VACCINATIONS": "Error searching Vaccinations",
   "NO_MATCHING_VACCINATIONS_FOUND": "No matching Vaccinations found",
-  "ERROR_FETCHING_VACCINATION_CONFIG": "Error fetching Vaccination configuration"
+  "ERROR_FETCHING_VACCINATION_CONFIG": "Error fetching Vaccination configuration",
+  "YEARS_one": " year",
+  "YEARS_other": " years"
 }
