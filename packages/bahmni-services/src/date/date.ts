@@ -267,7 +267,7 @@ export function formatDateTime(
   }
 
   if (includeTime) {
-    finalFormat = `${finalFormat} h:mm a`;
+    finalFormat = `${finalFormat} h:mma`;
   }
 
   return formatDateGeneric(date, finalFormat, translationFn);

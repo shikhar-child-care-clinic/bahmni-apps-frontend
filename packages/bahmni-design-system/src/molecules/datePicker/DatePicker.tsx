@@ -47,6 +47,7 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({
 }) => {
   const formats = useMemo(() => getDateFormats(), []);
 
+  //TODO translations will be taken care later for placeholder
   const finalPlaceholder = placeholder ?? formats.dateFnsFormat;
 
   return (

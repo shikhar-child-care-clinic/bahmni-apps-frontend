@@ -334,7 +334,7 @@ describe('formatDateTime - with time (includeTime=true)', () => {
   it('should format valid date-time correctly', () => {
     const date = new Date(2024, 2, 28, 12, 30);
     const result = formatDateTime(date, mockT, true);
-    expect(result.formattedResult).toBe('28/03/2024 12:30 PM');
+    expect(result.formattedResult).toBe('28/03/2024 12:30PM');
     expect(result.error).toBeUndefined();
   });
 
@@ -343,7 +343,7 @@ describe('formatDateTime - with time (includeTime=true)', () => {
     const result = formatDateTime(dateString, mockT, true);
     // Note: This will be converted to local time, so the hour may differ
     expect(result.formattedResult).toMatch(
-      /^\d{2}\/\d{2}\/\d{4} \d{1,2}:\d{2} (AM|PM)$/,
+      /^\d{2}\/\d{2}\/\d{4} \d{1,2}:\d{2}(AM|PM)$/,
     );
     expect(result.error).toBeUndefined();
   });
@@ -351,7 +351,7 @@ describe('formatDateTime - with time (includeTime=true)', () => {
   it('should format timestamps correctly', () => {
     const timestamp = new Date(2024, 2, 28, 12, 30).getTime();
     const result = formatDateTime(timestamp, mockT, true);
-    expect(result.formattedResult).toBe('28/03/2024 12:30 PM');
+    expect(result.formattedResult).toBe('28/03/2024 12:30PM');
     expect(result.error).toBeUndefined();
   });
 
