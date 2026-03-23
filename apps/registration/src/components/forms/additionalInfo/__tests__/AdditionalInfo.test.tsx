@@ -154,9 +154,7 @@ describe('AdditionalInfo', () => {
     it('renders fields from configuration', () => {
       render(<AdditionalInfo />);
 
-      expect(mockT).toHaveBeenCalledWith(
-        'CREATE_PATIENT_EMAIL',
-      );
+      expect(mockT).toHaveBeenCalledWith('CREATE_PATIENT_EMAIL');
     });
 
     it('renders multiple fields when configured', () => {

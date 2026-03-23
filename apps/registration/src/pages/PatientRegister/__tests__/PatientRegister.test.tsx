@@ -142,6 +142,24 @@ jest.mock(
   }),
 );
 
+jest.mock(
+  '../../../components/forms/patientRelationships/PatientRelationships',
+  () => ({
+    PatientRelationships: ({ ref }: { ref?: React.Ref<unknown> }) => {
+      if (ref && typeof ref === 'object' && 'current' in ref) {
+        ref.current = {
+          validate: jest.fn(() => true),
+          getData: jest.fn(() => []),
+          removeDeletedRelationships: jest.fn(),
+        };
+      }
+      return (
+        <div data-testid="patient-relationships">Patient Relationships</div>
+      );
+    },
+  }),
+);
+
 jest.mock('../visitTypeSelector', () => ({
   VisitTypeSelector: ({
     onVisitSave,
@@ -274,7 +292,44 @@ describe('PatientRegister', () => {
       '../../../providers/registrationConfig',
     );
     useRegistrationConfig.mockReturnValue({
-      registrationConfig: null, // Will use default sections
+      registrationConfig: {
+        registrationForm: {
+          sections: [
+            {
+              name: 'Basic Details',
+              controls: [
+                {
+                  type: 'profile',
+                  titleTranslationKey: 'REGISTRATION_SECTION_BASIC_INFO',
+                },
+                {
+                  type: 'address',
+                  titleTranslationKey: 'REGISTRATION_SECTION_ADDRESS_DETAILS',
+                },
+                {
+                  type: 'contactInfo',
+                  titleTranslationKey: 'REGISTRATION_SECTION_CONTACT_DETAILS',
+                },
+              ],
+            },
+            {
+              name: 'Additional Information',
+              translationKey: 'REGISTRATION_SECTION_ADDITIONAL_INFO',
+              controls: [{ type: 'additionalInfo' }],
+            },
+            {
+              name: 'Identifiers',
+              translationKey: 'REGISTRATION_SECTION_IDENTIFIERS',
+              controls: [{ type: 'additionalIdentifiers' }],
+            },
+            {
+              name: 'Relationships',
+              translationKey: 'REGISTRATION_SECTION_RELATIONSHIPS',
+              controls: [{ type: 'relationships' }],
+            },
+          ],
+        },
+      },
     });
 
     // Mock useRelationshipValidation
@@ -909,7 +964,7 @@ describe('PatientRegister', () => {
       ).toBeInTheDocument();
     });
 
-    it('should render default sections when config is absent', () => {
+    it('should render no form sections when config is absent', () => {
       const { useRegistrationConfig } = jest.requireMock(
         '../../../providers/registrationConfig',
       );
@@ -919,13 +974,13 @@ describe('PatientRegister', () => {
 
       renderComponent();
 
-      // Default sections should include all components
-      expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
-      expect(screen.getByTestId('patient-address')).toBeInTheDocument();
-      expect(screen.getByTestId('patient-contact')).toBeInTheDocument();
+      // No sections are rendered when config is absent
+      expect(screen.queryByTestId('patient-profile')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('patient-address')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('patient-contact')).not.toBeInTheDocument();
       expect(
-        screen.getAllByTestId('patient-additional')[0],
-      ).toBeInTheDocument();
+        screen.queryByTestId('patient-additional'),
+      ).not.toBeInTheDocument();
     });
 
     it('should render custom section order from config', () => {
