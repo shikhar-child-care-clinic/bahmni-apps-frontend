@@ -210,13 +210,18 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
 
                 if (url === '#' || hasFailed) {
                   return (
-                    <p
+                    <div
                       key={`${selectedDoc.id}-${attachment.url}`}
                       className={styles.attachmentError}
                       data-testid={`attachment-error-${index}`}
                     >
-                      {t('DOCUMENTS_ERROR_LOADING_ATTACHMENT')}
-                    </p>
+                      {normalizedAttachments.length > 1 && (
+                        <p className={styles.attachmentCounter}>
+                          {index + 1}/{normalizedAttachments.length}
+                        </p>
+                      )}
+                      <p>{t('DOCUMENTS_ERROR_LOADING_ATTACHMENT')}</p>
+                    </div>
                   );
                 }
                 return (
