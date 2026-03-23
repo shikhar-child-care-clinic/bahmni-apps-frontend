@@ -412,10 +412,12 @@ export const getTodayDate = (): Date => {
 };
 
 /**
- * Calculate and format age for display.
- * For infants under 3 months, displays age in total days only.
- * For all others, displays age in years, months, and days format.
- * Format: "25 Years 6 Months 15 Days" or "28 Days" for infants
+ * Calculate and format age for display with age-appropriate formatting.
+ *
+ * Display rules:
+ * - ≤ 90 days: Shows days only (e.g., "45 Days")
+ * - 91 days to < 1 year: Shows months + days only (e.g., "3 Months 15 Days")
+ * - ≥ 1 year: Shows years + months + days (e.g., "2 Years 3 Months 15 Days")
  *
  * @param birthDate - Birth date in milliseconds (timestamp) or ISO date string (yyyy-mm-dd)
  * @param t - Optional translation function for Y/M/D labels
@@ -447,8 +449,9 @@ export function getFormattedAge(
     days: ' days',
   };
 
-  if (years === 0 && months < 3) {
-    const totalDays = differenceInDays(today, birthDateObj);
+  const totalDays = differenceInDays(today, birthDateObj);
+
+  if (totalDays <= 90) {
     const dayUnit = t
       ? t(translationKeys.days, { count: totalDays })
       : fallbackUnits.days;
