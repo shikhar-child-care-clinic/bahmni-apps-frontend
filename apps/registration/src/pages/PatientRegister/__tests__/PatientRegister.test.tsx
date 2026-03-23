@@ -1029,7 +1029,9 @@ describe('PatientRegister', () => {
       renderComponent();
 
       // PatientRelationships component should not render when no relationship types
-      expect(screen.queryByTestId('patient-relationships')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('patient-relationships'),
+      ).not.toBeInTheDocument();
     });
   });
 });

@@ -106,7 +106,7 @@ export const AdditionalInfo = ({ initialData, ref }: AdditionalInfoProps) => {
   return (
     <div
       className={styles.additionalInfoSection}
-      data-testid="additional-info-section"
+      data-testid="patient-additional"
     >
       <div
         className={styles.fieldsContainer}

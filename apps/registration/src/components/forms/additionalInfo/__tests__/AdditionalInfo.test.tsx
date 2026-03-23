@@ -151,11 +151,11 @@ describe('AdditionalInfo', () => {
       expect(emailInput.value).toBe(initialData.email);
     });
 
-    it('renders section title from translation', () => {
+    it('renders fields from configuration', () => {
       render(<AdditionalInfo />);
 
       expect(mockT).toHaveBeenCalledWith(
-        'CREATE_PATIENT_SECTION_ADDITIONAL_INFO',
+        'CREATE_PATIENT_EMAIL',
       );
     });
 

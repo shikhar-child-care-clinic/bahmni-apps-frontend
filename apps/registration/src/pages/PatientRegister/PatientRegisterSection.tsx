@@ -131,8 +131,13 @@ const PatientRegisterSection: React.FC<PatientRegisterSectionProps> = ({
     return (
       <div key={control.type}>
         {control.titleTranslationKey && (
-          <div className={styles.controlTitle} data-testid={`control-title-${control.type}`}>
-            <span className={styles.formSectionTitle}>{t(control.titleTranslationKey)}</span>
+          <div
+            className={styles.controlTitle}
+            data-testid={`control-title-${control.type}`}
+          >
+            <span className={styles.formSectionTitle}>
+              {t(control.titleTranslationKey)}
+            </span>
           </div>
         )}
         {component}
@@ -144,11 +149,17 @@ const PatientRegisterSection: React.FC<PatientRegisterSectionProps> = ({
     .map((control) => renderControl(control))
     .filter(Boolean);
 
+  if (renderedControls.length === 0) {
+    return null;
+  }
+
   return (
     <div className={styles.formContainer}>
-      {section.translationKey && renderedControls.length > 0 && (
+      {section.translationKey && (
         <Tile className={styles.headerTile} data-testid="section-header-tile">
-          <span className={styles.sectionTitle}>{t(section.translationKey)}</span>
+          <span className={styles.sectionTitle}>
+            {t(section.translationKey)}
+          </span>
         </Tile>
       )}
       {renderedControls}

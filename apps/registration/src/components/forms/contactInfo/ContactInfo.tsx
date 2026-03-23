@@ -113,7 +113,7 @@ export const ContactInfo = ({ initialData, ref }: ContactInfoProps) => {
   }
 
   return (
-    <div className={styles.formSection} data-testid="contact-info-section">
+    <div className={styles.formSection} data-testid="patient-contact">
       <div className={styles.row} data-testid="contact-info-fields-row">
         {fieldsToShow.map((field) => {
           const fieldName = field.name;

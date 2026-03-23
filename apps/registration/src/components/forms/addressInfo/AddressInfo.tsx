@@ -406,7 +406,7 @@ export const AddressInfo = ({ initialData, ref }: AddressInfoProps) => {
   }
 
   return (
-    <div className={styles.formSection} data-testid="address-info-section">
+    <div className={styles.formSection} data-testid="patient-address">
       <div className={styles.row} data-testid="address-info-fields-row">
         {displayLevels.map((level) => {
           const fieldName = level.addressField;

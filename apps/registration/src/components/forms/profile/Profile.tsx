@@ -44,7 +44,6 @@ export interface ProfileRef {
 interface ProfileProps {
   initialData?: BasicInfoData;
   initialDobEstimated?: boolean;
-  patientIdentifier?: string | null;
   initialPhoto?: string | null | undefined;
   ref?: React.Ref<ProfileRef>;
 }
@@ -52,7 +51,6 @@ interface ProfileProps {
 export const Profile = ({
   initialData,
   initialDobEstimated = false,
-  patientIdentifier,
   initialPhoto,
   ref,
 }: ProfileProps) => {
@@ -438,7 +436,7 @@ export const Profile = ({
   }));
 
   return (
-    <div className={styles.formSection} data-testid="profile-section">
+    <div className={styles.formSection} data-testid="patient-profile">
       <div className={styles.row} data-testid="profile-main-row">
         <PatientPhotoUpload
           onPhotoConfirm={setPatientImage}

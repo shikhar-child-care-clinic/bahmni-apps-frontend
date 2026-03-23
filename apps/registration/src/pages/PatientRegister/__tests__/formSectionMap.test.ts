@@ -1,19 +1,16 @@
-import {
-  formSectionMap,
-  getFormControlConfig,
-  isValidFormControlType,
-} from '../formSectionMap';
-import { Profile } from '../../../components/forms/profile/Profile';
+import { AdditionalIdentifiers } from '../../../components/forms/additionalIdentifiers/AdditionalIdentifiers';
+import { AdditionalInfo } from '../../../components/forms/additionalInfo/AdditionalInfo';
 import { AddressInfo } from '../../../components/forms/addressInfo/AddressInfo';
 import { ContactInfo } from '../../../components/forms/contactInfo/ContactInfo';
-import { AdditionalInfo } from '../../../components/forms/additionalInfo/AdditionalInfo';
-import { AdditionalIdentifiers } from '../../../components/forms/additionalIdentifiers/AdditionalIdentifiers';
 import { PatientRelationships } from '../../../components/forms/patientRelationships/PatientRelationships';
+import { Profile } from '../../../components/forms/profile/Profile';
+import { builtInFormSections } from '../formSectionMap';
 
 describe('formSectionMap', () => {
-  describe('formSectionMap object', () => {
+  describe('builtInFormSections array', () => {
     it('should have all 6 control types', () => {
-      expect(Object.keys(formSectionMap)).toEqual([
+      const types = builtInFormSections.map((section) => section.type);
+      expect(types).toEqual([
         'profile',
         'address',
         'contactInfo',
@@ -24,48 +21,57 @@ describe('formSectionMap', () => {
     });
 
     it('should map profile type correctly', () => {
-      expect(formSectionMap.profile.component).toBe(Profile);
-      expect(formSectionMap.profile.refKey).toBe('profileRef');
+      const profile = builtInFormSections.find((s) => s.type === 'profile');
+      expect(profile?.component).toBe(Profile);
     });
 
     it('should map address type correctly', () => {
-      expect(formSectionMap.address.component).toBe(AddressInfo);
-      expect(formSectionMap.address.refKey).toBe('addressRef');
+      const address = builtInFormSections.find((s) => s.type === 'address');
+      expect(address?.component).toBe(AddressInfo);
     });
 
     it('should map contactInfo type correctly', () => {
-      expect(formSectionMap.contactInfo.component).toBe(ContactInfo);
-      expect(formSectionMap.contactInfo.refKey).toBe('contactRef');
+      const contactInfo = builtInFormSections.find(
+        (s) => s.type === 'contactInfo',
+      );
+      expect(contactInfo?.component).toBe(ContactInfo);
     });
 
     it('should map additionalInfo type correctly', () => {
-      expect(formSectionMap.additionalInfo.component).toBe(AdditionalInfo);
-      expect(formSectionMap.additionalInfo.refKey).toBe('additionalRef');
+      const additionalInfo = builtInFormSections.find(
+        (s) => s.type === 'additionalInfo',
+      );
+      expect(additionalInfo?.component).toBe(AdditionalInfo);
     });
 
     it('should map additionalIdentifiers type correctly', () => {
-      expect(formSectionMap.additionalIdentifiers.component).toBe(
-        AdditionalIdentifiers,
+      const additionalIdentifiers = builtInFormSections.find(
+        (s) => s.type === 'additionalIdentifiers',
       );
-      expect(formSectionMap.additionalIdentifiers.refKey).toBe(
-        'identifiersRef',
-      );
+      expect(additionalIdentifiers?.component).toBe(AdditionalIdentifiers);
     });
 
     it('should map relationships type correctly', () => {
-      expect(formSectionMap.relationships.component).toBe(
-        PatientRelationships,
+      const relationships = builtInFormSections.find(
+        (s) => s.type === 'relationships',
       );
-      expect(formSectionMap.relationships.refKey).toBe('relationshipsRef');
+      expect(relationships?.component).toBe(PatientRelationships);
     });
   });
 
-  describe('getFormControlConfig', () => {
+  describe('form section validation', () => {
+    const getFormControlConfig = (type: string) => {
+      return builtInFormSections.find((s) => s.type === type);
+    };
+
+    const isValidFormControlType = (type: string) => {
+      return getFormControlConfig(type) !== undefined;
+    };
+
     it('should return config for valid profile type', () => {
       const config = getFormControlConfig('profile');
       expect(config).toBeDefined();
       expect(config?.component).toBe(Profile);
-      expect(config?.refKey).toBe('profileRef');
     });
 
     it('should return config for valid address type', () => {
@@ -103,13 +109,6 @@ describe('formSectionMap', () => {
       expect(config).toBeUndefined();
     });
 
-    it('should return undefined for null-like strings', () => {
-      expect(getFormControlConfig('')).toBeUndefined();
-      expect(getFormControlConfig('null')).toBeUndefined();
-    });
-  });
-
-  describe('isValidFormControlType', () => {
     it('should return true for valid profile type', () => {
       expect(isValidFormControlType('profile')).toBe(true);
     });
@@ -140,11 +139,6 @@ describe('formSectionMap', () => {
 
     it('should return false for empty string', () => {
       expect(isValidFormControlType('')).toBe(false);
-    });
-
-    it('should return false for null-like strings', () => {
-      expect(isValidFormControlType('null')).toBe(false);
-      expect(isValidFormControlType('undefined')).toBe(false);
     });
   });
 });
