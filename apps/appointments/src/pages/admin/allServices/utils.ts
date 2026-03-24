@@ -27,6 +27,18 @@ export function createServiceHeaders(
   ];
 }
 
+export function filterActiveServices(
+  services: AppointmentService[],
+): AppointmentService[] {
+  return services.filter((s) => !s.voided);
+}
+
+export function sortServicesByName(
+  services: AppointmentService[],
+): AppointmentService[] {
+  return [...services].sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export function createAppointmentServiceViewModels(
   services: AppointmentService[],
   attributeNames: string[],
