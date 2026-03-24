@@ -10,7 +10,6 @@ export {
   DURATION_UNIT_TO_DAYS,
   calculateEndDate,
   doDateRangesOverlap,
-  getBrowserLocaleDateFormat,
 } from './date';
 export {
   DEFAULT_DATE_FORMAT,

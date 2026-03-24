@@ -10,7 +10,6 @@ import {
   DURATION_UNIT_TO_DAYS,
   calculateEndDate,
   doDateRangesOverlap,
-  getBrowserLocaleDateFormat,
 } from '../date';
 
 const mockT = (key: string, options?: { count?: number }) => {
@@ -290,86 +289,103 @@ describe('calculateOnsetDate', () => {
   });
 });
 
-describe('formatDateTime - date only (includeTime=false)', () => {
+describe('formatDateTime', () => {
+  const originalLocalStorage = globalThis.localStorage;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: {
+        getItem: jest.fn().mockReturnValue('dd/MM/yyyy'),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        clear: jest.fn(),
+      },
+      writable: true,
+    });
   });
 
-  it('should format valid dates correctly', () => {
-    const date = new Date(2024, 2, 28);
-    const result = formatDateTime(date, mockT);
-    expect(result.formattedResult).toBe('28/03/2024');
-    expect(result.error).toBeUndefined();
+  afterEach(() => {
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: originalLocalStorage,
+      writable: true,
+    });
   });
 
-  it('should format date strings correctly', () => {
-    const result = formatDateTime('2024-03-28', mockT);
-    expect(result.formattedResult).toBe('28/03/2024');
-    expect(result.error).toBeUndefined();
+  describe('date only (includeTime=false)', () => {
+    it('should format valid dates correctly', () => {
+      const date = new Date(2024, 2, 28);
+      const result = formatDateTime(date, mockT);
+      expect(result.formattedResult).toBe('28/03/2024');
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should format date strings correctly', () => {
+      const result = formatDateTime('2024-03-28', mockT);
+      expect(result.formattedResult).toBe('28/03/2024');
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should format timestamps correctly', () => {
+      const timestamp = new Date(2024, 2, 28).getTime();
+      const result = formatDateTime(timestamp, mockT);
+      expect(result.formattedResult).toBe('28/03/2024');
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should return errors for invalid inputs', () => {
+      const invalidResult = formatDateTime('invalid-date', mockT);
+      expect(invalidResult.formattedResult).toBe('');
+      expect(invalidResult.error).toBeDefined();
+
+      const emptyResult = formatDateTime('', mockT);
+      expect(emptyResult.formattedResult).toBe('');
+      expect(emptyResult.error).toBeDefined();
+
+      const nullResult = formatDateTime(null as unknown as Date, mockT);
+      expect(nullResult.formattedResult).toBe('');
+      expect(nullResult.error).toBeDefined();
+    });
   });
 
-  it('should format timestamps correctly', () => {
-    const timestamp = new Date(2024, 2, 28).getTime();
-    const result = formatDateTime(timestamp, mockT);
-    expect(result.formattedResult).toBe('28/03/2024');
-    expect(result.error).toBeUndefined();
-  });
+  describe('with time (includeTime=true)', () => {
+    it('should format valid date-time correctly', () => {
+      const date = new Date(2024, 2, 28, 12, 30);
+      const result = formatDateTime(date, mockT, true);
+      expect(result.formattedResult).toBe('28/03/2024 12:30 PM');
+      expect(result.error).toBeUndefined();
+    });
 
-  it('should return errors for invalid inputs', () => {
-    const invalidResult = formatDateTime('invalid-date', mockT);
-    expect(invalidResult.formattedResult).toBe('');
-    expect(invalidResult.error).toBeDefined();
+    it('should format date strings with time correctly', () => {
+      const dateString = '2024-03-28T12:30:00Z';
+      const result = formatDateTime(dateString, mockT, true);
+      expect(result.formattedResult).toMatch(
+        /^\d{2}\/\d{2}\/\d{4} \d{1,2}:\d{2} (AM|PM)$/,
+      );
+      expect(result.error).toBeUndefined();
+    });
 
-    const emptyResult = formatDateTime('', mockT);
-    expect(emptyResult.formattedResult).toBe('');
-    expect(emptyResult.error).toBeDefined();
+    it('should format timestamps correctly', () => {
+      const timestamp = new Date(2024, 2, 28, 12, 30).getTime();
+      const result = formatDateTime(timestamp, mockT, true);
+      expect(result.formattedResult).toBe('28/03/2024 12:30 PM');
+      expect(result.error).toBeUndefined();
+    });
 
-    const nullResult = formatDateTime(null as unknown as Date, mockT);
-    expect(nullResult.formattedResult).toBe('');
-    expect(nullResult.error).toBeDefined();
-  });
-});
-
-describe('formatDateTime - with time (includeTime=true)', () => {
-  it('should format valid date-time correctly', () => {
-    const date = new Date(2024, 2, 28, 12, 30);
-    const result = formatDateTime(date, mockT, true);
-    expect(result.formattedResult).toBe('28/03/2024 12:30 PM');
-    expect(result.error).toBeUndefined();
-  });
-
-  it('should format date strings with time correctly', () => {
-    const dateString = '2024-03-28T12:30:00Z';
-    const result = formatDateTime(dateString, mockT, true);
-    // Note: This will be converted to local time, so the hour may differ
-    expect(result.formattedResult).toMatch(
-      /^\d{2}\/\d{2}\/\d{4} \d{1,2}:\d{2} (AM|PM)$/,
-    );
-    expect(result.error).toBeUndefined();
-  });
-
-  it('should format timestamps correctly', () => {
-    const timestamp = new Date(2024, 2, 28, 12, 30).getTime();
-    const result = formatDateTime(timestamp, mockT, true);
-    expect(result.formattedResult).toBe('28/03/2024 12:30 PM');
-    expect(result.error).toBeUndefined();
-  });
-
-  it('should return errors for invalid inputs', () => {
-    expect(formatDateTime('invalid-date', mockT, true).error).toBeDefined();
-    expect(formatDateTime('', mockT, true).error).toBeDefined();
-    expect(
-      formatDateTime(null as unknown as Date, mockT, true).error,
-    ).toBeDefined();
-    expect(
-      formatDateTime({} as unknown as Date, mockT, true).error,
-    ).toBeDefined();
+    it('should return errors for invalid inputs', () => {
+      expect(formatDateTime('invalid-date', mockT, true).error).toBeDefined();
+      expect(formatDateTime('', mockT, true).error).toBeDefined();
+      expect(
+        formatDateTime(null as unknown as Date, mockT, true).error,
+      ).toBeDefined();
+      expect(
+        formatDateTime({} as unknown as Date, mockT, true).error,
+      ).toBeDefined();
+    });
   });
 });
 
 describe('formatDateTime locale support', () => {
-  const mockedGetUserPreferredLocale = jest.mocked(getUserPreferredLocale);
-
   const originalLocalStorage = globalThis.localStorage;
 
   beforeEach(() => {
@@ -392,45 +408,30 @@ describe('formatDateTime locale support', () => {
     });
   });
 
-  it('should format with different locales when using month name format', () => {
+  it('should use localStorage format when available', () => {
     (globalThis.localStorage.getItem as jest.Mock).mockReturnValue(
       'MMMM dd, yyyy',
     );
-
-    mockedGetUserPreferredLocale.mockReturnValue('en');
-    expect(formatDateTime('2024-03-28', mockT).formattedResult).toBe(
-      'March 28, 2024',
-    );
-
-    mockedGetUserPreferredLocale.mockReturnValue('es');
-    expect(formatDateTime('2024-03-28', mockT).formattedResult).toBe(
-      'marzo 28, 2024',
-    );
-
-    mockedGetUserPreferredLocale.mockReturnValue('fr');
-    expect(formatDateTime('2024-03-28', mockT).formattedResult).toBe(
-      'mars 28, 2024',
-    );
-  });
-
-  it('should fallback to English for unsupported locales', () => {
-    (globalThis.localStorage.getItem as jest.Mock).mockReturnValue(
-      'MMMM dd, yyyy',
-    );
-    mockedGetUserPreferredLocale.mockReturnValue('unsupported-locale');
 
     const result = formatDateTime('2024-03-28', mockT);
     expect(result.formattedResult).toBe('March 28, 2024');
   });
 
-  it('should use numeric format regardless of locale for default format', () => {
+  it('should use locale-aware P token when localStorage is empty', () => {
     (globalThis.localStorage.getItem as jest.Mock).mockReturnValue(null);
 
-    ['en', 'es', 'fr'].forEach((locale) => {
-      mockedGetUserPreferredLocale.mockReturnValue(locale);
-      const result = formatDateTime('2024-03-28', mockT);
-      expect(result.formattedResult).toBe('28/03/2024');
+    const result = formatDateTime('2024-03-28', mockT);
+    expect(result.formattedResult).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('should fallback to DEFAULT_DATE_FORMAT when localStorage throws error', () => {
+    (globalThis.localStorage.getItem as jest.Mock).mockImplementation(() => {
+      throw new Error('localStorage error');
     });
+
+    const result = formatDateTime('2024-03-28', mockT);
+    expect(result.formattedResult).toBe('28/03/2024');
   });
 });
 
@@ -725,51 +726,5 @@ describe('calculateEndDate', () => {
     expect(() => calculateEndDate('invalid-date', 7, 'd')).toThrow(
       'Invalid date',
     );
-  });
-});
-
-describe('getBrowserLocaleDateFormat', () => {
-  const originalNavigator = globalThis.navigator;
-
-  afterEach(() => {
-    Object.defineProperty(globalThis, 'navigator', {
-      value: originalNavigator,
-      writable: true,
-      configurable: true,
-    });
-  });
-
-  it('should return MM/dd/yyyy for US locale', () => {
-    Object.defineProperty(globalThis.navigator, 'language', {
-      value: 'en-US',
-      writable: true,
-      configurable: true,
-    });
-
-    expect(getBrowserLocaleDateFormat()).toBe('MM/dd/yyyy');
-  });
-
-  it('should return yyyy-MM-dd for Asian locales', () => {
-    const asianLocales = ['ja-JP', 'ko-KR', 'zh-CN', 'vi-VN'];
-
-    asianLocales.forEach((locale) => {
-      Object.defineProperty(globalThis.navigator, 'language', {
-        value: locale,
-        writable: true,
-        configurable: true,
-      });
-
-      expect(getBrowserLocaleDateFormat()).toBe('yyyy-MM-dd');
-    });
-  });
-
-  it('should fallback to dd/MM/yyyy when navigator is unavailable', () => {
-    Object.defineProperty(globalThis, 'navigator', {
-      value: undefined,
-      writable: true,
-      configurable: true,
-    });
-
-    expect(getBrowserLocaleDateFormat()).toBe('dd/MM/yyyy');
   });
 });

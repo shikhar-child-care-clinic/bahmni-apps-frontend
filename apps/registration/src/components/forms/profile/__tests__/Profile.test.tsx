@@ -65,33 +65,6 @@ jest.mock('../../../patientPhotoUpload/PatientPhotoUpload', () => ({
   )),
 }));
 
-jest.mock('@bahmni/design-system', () => {
-  const actual = jest.requireActual('@bahmni/design-system');
-  return {
-    ...actual,
-    DatePicker: jest.fn(({ children, ...props }) => (
-      <div data-testid={props['data-testid']} {...props}>
-        {children}
-      </div>
-    )),
-    DatePickerInput: jest.fn(({ labelText, id, onInput, ...props }) => (
-      <div>
-        <label htmlFor={id}>{labelText}</label>
-        <input
-          id={id}
-          data-testid={props['data-testid']}
-          aria-invalid={props.invalid}
-          onInput={onInput}
-          {...props}
-        />
-        {props.invalid && props.invalidText && (
-          <div className="error">{props.invalidText}</div>
-        )}
-      </div>
-    )),
-  };
-});
-
 const mockUseRegistrationConfig = jest.fn(() => ({
   registrationConfig: {
     patientInformation: {
@@ -150,6 +123,17 @@ describe('Profile', () => {
 
   beforeEach(() => {
     ref = React.createRef<ProfileRef | null>();
+
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: {
+        getItem: jest.fn().mockReturnValue('MM/dd/yyyy h:mm a'),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        clear: jest.fn(),
+      },
+      writable: true,
+      configurable: true,
+    });
   });
 
   describe('Rendering', () => {

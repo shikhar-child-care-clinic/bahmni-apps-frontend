@@ -23,39 +23,6 @@ jest.mock('@bahmni/services', () => ({
   getCurrentUser: jest.fn(),
   getCurrentProvider: jest.fn(),
   usePatientUUID: jest.fn(() => 'test-patient-uuid'),
-  formatDateTime: jest.fn((timestamp: number) => {
-    const date = new Date(timestamp);
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    const year = date.getUTCFullYear();
-    const hours = date.getUTCHours();
-    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-
-    return {
-      formattedResult: `${month}/${day}/${year} ${displayHours}:${minutes} ${ampm}`,
-      isValid: true,
-    };
-  }),
-  useTranslation: () => ({
-    t: (key: string) => {
-      switch (key) {
-        case 'LOCATION':
-          return 'Location';
-        case 'ENCOUNTER_TYPE':
-          return 'Encounter Type';
-        case 'VISIT_TYPE':
-          return 'Visit Type';
-        case 'PARTICIPANT':
-          return 'Participant(s)';
-        case 'ENCOUNTER_DATE':
-          return 'Encounter Date';
-        default:
-          return key;
-      }
-    },
-  }),
 }));
 
 // Mock encounter concepts service
@@ -164,6 +131,17 @@ describe('BasicForm Integration Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: {
+        getItem: jest.fn().mockReturnValue('MM/dd/yyyy h:mm a'),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        clear: jest.fn(),
+      },
+      writable: true,
+      configurable: true,
+    });
 
     (getCookieByName as jest.Mock).mockImplementation((cookieName) => {
       if (cookieName === 'bahmni.user.location') {

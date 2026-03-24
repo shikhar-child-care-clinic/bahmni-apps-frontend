@@ -12,9 +12,6 @@ import {
   subDays,
   format,
 } from 'date-fns';
-import type { Locale } from 'date-fns';
-import { enUS, enGB, es, fr, de } from 'date-fns/locale';
-import { getUserPreferredLocale } from '../i18n/translationService';
 import { Age } from '../patientService/models';
 import {
   DEFAULT_DATE_FORMAT,
@@ -28,80 +25,6 @@ export interface FormatDateResult {
     title: string;
     message: string;
   };
-}
-
-/**
- * Mapping of user locale codes to date-fns locale objects
- */
-const LOCALE_MAP: Record<string, Locale> = {
-  en: enGB,
-  'en-US': enUS,
-  'en-GB': enGB,
-  es: es,
-  'es-ES': es,
-  fr: fr,
-  'fr-FR': fr,
-  de: de,
-  'de-DE': de,
-};
-
-/**
- * Gets the appropriate date-fns locale object based on user's preferred locale.
- * Falls back to English (GB) if the locale is not supported or if an error occurs.
- * @returns The date-fns locale object to use for formatting
- */
-function getDateFnsLocale(): Locale {
-  const userLocale = getUserPreferredLocale();
-  return LOCALE_MAP[userLocale] || LOCALE_MAP['en'];
-}
-
-/**
- * Detects the browser's locale and returns an appropriate date format.
- * Uses navigator.language to determine the user's locale preference.
- * Falls back to DEFAULT_DATE_FORMAT constant in test/Node.js environments.
- *
- * Format mapping:
- * - US locales (en-US) → MM/dd/yyyy
- * - UK/European locales (en-GB, de, fr, es, etc.) → dd/MM/yyyy
- * - Asian locales (ja, ko, zh, etc.) → yyyy-MM-dd
- * - Default fallback → DEFAULT_DATE_FORMAT constant (dd/MM/yyyy)
- *
- * @returns Date format string based on browser locale
- */
-export function getBrowserLocaleDateFormat(): string {
-  try {
-    if (
-      globalThis.window === undefined ||
-      typeof navigator === 'undefined' ||
-      !navigator.language
-    ) {
-      return DEFAULT_DATE_FORMAT;
-    }
-
-    const browserLocale = navigator.language;
-    if (!browserLocale) {
-      return DEFAULT_DATE_FORMAT;
-    }
-
-    const locale = browserLocale.toLowerCase();
-
-    if (locale === 'en-us') {
-      return 'MM/dd/yyyy';
-    }
-
-    if (
-      locale.startsWith('ja') ||
-      locale.startsWith('ko') ||
-      locale.startsWith('zh') ||
-      locale.startsWith('vi')
-    ) {
-      return 'yyyy-MM-dd';
-    }
-
-    return DEFAULT_DATE_FORMAT;
-  } catch {
-    return DEFAULT_DATE_FORMAT;
-  }
 }
 
 /**
@@ -227,8 +150,7 @@ function formatDateGeneric(
     };
   }
 
-  const locale = getDateFnsLocale();
-  return { formattedResult: format(dateToFormat, dateFormat, { locale }) };
+  return { formattedResult: format(dateToFormat, dateFormat) };
 }
 
 /**
@@ -236,7 +158,7 @@ function formatDateGeneric(
  *
  * Fallback priority:
  * 1. localStorage (user-configured format)
- * 2. Browser locale (detected automatically via getBrowserLocaleDateFormat)
+ * 2. In date-fns, the token P represents the localized date. It automatically adjusts based on the user's locale.
  * 3. DATE_FORMAT constant (final fallback)
  *
  * @param date - The date to format (string, Date object, or timestamp in milliseconds)
@@ -262,11 +184,9 @@ export function formatDateTime(
 
   let finalFormat: string;
   try {
-    finalFormat =
-      localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ??
-      getBrowserLocaleDateFormat();
+    finalFormat = localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ?? 'P';
   } catch {
-    finalFormat = getBrowserLocaleDateFormat();
+    finalFormat = DEFAULT_DATE_FORMAT;
   }
 
   if (includeTime) {

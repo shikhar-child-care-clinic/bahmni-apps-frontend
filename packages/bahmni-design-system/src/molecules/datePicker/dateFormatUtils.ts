@@ -46,49 +46,35 @@ const DATE_FORMAT_MAP: Record<string, string> = {
 };
 
 /**
- * Detects the browser's locale and returns an appropriate date format.
- * Uses navigator.language to determine the user's locale preference.
- * Falls back to DEFAULT_DATE_FORMAT in test/Node.js environments.
+ * Detects the browser's locale date format using Intl.DateTimeFormat API.
+ * Uses formatToParts() to analyze the browser's default date formatting pattern
+ * and converts it to a date-fns compatible format string.
  *
- * Format mapping:
- * - US locales (en-US) → MM/dd/yyyy
- * - UK/European locales (en-GB, de, fr, es, etc.) → dd/MM/yyyy
- * - Asian locales (ja, ko, zh, etc.) → yyyy-MM-dd
- * - Default fallback → DEFAULT_DATE_FORMAT (dd/MM/yyyy)
+ * Implementation:
+ * - Uses Intl.DateTimeFormat().formatToParts() to get locale date components
+ * - Maps date parts (day, month, year) to date-fns tokens (dd, MM, yyyy)
+ * - Preserves literal separators (/, -, ., spaces) from the locale
+ * - Falls back to DEFAULT_DATE_FORMAT (dd/MM/yyyy) if parsing fails
  *
- * @returns Date format string based on browser locale
+ * @returns Date format string in date-fns format (e.g., 'dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd')
  */
 export function getBrowserLocaleDateFormat(): string {
   try {
-    if (
-      globalThis.window === undefined ||
-      typeof navigator === 'undefined' ||
-      !navigator.language
-    ) {
-      return DEFAULT_DATE_FORMAT;
-    }
+    const parts = new Intl.DateTimeFormat().formatToParts(new Date());
 
-    const browserLocale = navigator.language;
-    if (!browserLocale) {
-      return DEFAULT_DATE_FORMAT;
-    }
+    const tokenMap: Record<string, string> = {
+      day: 'dd',
+      month: 'MM',
+      year: 'yyyy',
+    };
 
-    const locale = browserLocale.toLowerCase();
-
-    if (locale === 'en-us') {
-      return 'MM/dd/yyyy';
-    }
-
-    if (
-      locale.startsWith('ja') ||
-      locale.startsWith('ko') ||
-      locale.startsWith('zh') ||
-      locale.startsWith('vi')
-    ) {
-      return 'yyyy-MM-dd';
-    }
-
-    return DEFAULT_DATE_FORMAT;
+    return parts
+      .map((part) => {
+        return (
+          tokenMap[part.type] || (part.type === 'literal' ? part.value : '')
+        );
+      })
+      .join('');
   } catch {
     return DEFAULT_DATE_FORMAT;
   }
@@ -125,7 +111,7 @@ export function getDateFormats(): {
       localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ??
       getBrowserLocaleDateFormat();
   } catch {
-    dateFnsFormat = getBrowserLocaleDateFormat();
+    dateFnsFormat = DEFAULT_DATE_FORMAT;
   }
 
   const flatpickrFormat = convertToFlatpickrFormat(dateFnsFormat);

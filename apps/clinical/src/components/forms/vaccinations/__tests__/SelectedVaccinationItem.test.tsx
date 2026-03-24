@@ -45,62 +45,6 @@ jest.mock('../styles/SelectedVaccinationItem.module.scss', () => ({
   footerRow: 'footerRow',
 }));
 
-jest.mock('@bahmni/design-system', () => {
-  const actual = jest.requireActual('@bahmni/design-system');
-
-  return {
-    ...actual,
-    DatePicker: ({
-      children,
-      onChange,
-    }: {
-      children: React.ReactNode;
-      onChange?: (dates: Date[]) => void;
-    }) => {
-      const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        if (onChange && value) {
-          const parts = value.split('/');
-          if (parts.length === 3) {
-            const day = Number.parseInt(parts[0], 10);
-            const month = Number.parseInt(parts[1], 10) - 1;
-            const year = Number.parseInt(parts[2], 10);
-            const date = new Date(year, month, day);
-            onChange([date]);
-          }
-        }
-      };
-      return (
-        <div data-testid="date-picker" onChange={handleChange}>
-          {children}
-        </div>
-      );
-    },
-    DatePickerInput: ({
-      id,
-      placeholder,
-      labelText,
-      disabled,
-      ...props
-    }: {
-      id: string;
-      placeholder?: string;
-      labelText: string;
-      disabled: boolean;
-    }) => (
-      <input
-        type="text"
-        id={id}
-        placeholder={placeholder ?? 'DD/MM/YYYY'}
-        aria-label={labelText}
-        disabled={disabled}
-        data-testid={id}
-        {...props}
-      />
-    ),
-  };
-});
-
 const createMockMedication = (overrides = {}): Medication => ({
   id: 'test-vac-1',
   resourceType: 'Medication',
@@ -193,6 +137,18 @@ const createDefaultProps = (overrides = {}): SelectedVaccinationItemProps => ({
 describe('SelectedVaccinationItem', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: {
+        getItem: jest.fn().mockReturnValue('dd/MM/yyyy'),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        clear: jest.fn(),
+      },
+      writable: true,
+      configurable: true,
+    });
+
     window.HTMLElement.prototype.scrollIntoView = jest.fn();
   });
   afterEach(() => {
