@@ -24,7 +24,6 @@ jest.mock('@bahmni/services', () => ({
       totalCount: 0,
     }),
   ),
-  getDatePickerFormat: jest.fn(() => 'd/m/Y'),
 }));
 
 describe('PatientRelationships', () => {

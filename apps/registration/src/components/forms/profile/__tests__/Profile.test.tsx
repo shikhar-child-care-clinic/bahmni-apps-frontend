@@ -22,7 +22,6 @@ jest.mock('@bahmni/services', () => ({
     capture: jest.fn(),
   })),
   MAX_PATIENT_AGE_YEARS: 120,
-  getDatePickerFormat: jest.fn(() => 'd/m/Y'),
 }));
 
 // Create stable mock data outside to prevent infinite re-renders
@@ -65,6 +64,33 @@ jest.mock('../../../patientPhotoUpload/PatientPhotoUpload', () => ({
     <div data-testid="patient-photo-upload">Photo Upload Mock</div>
   )),
 }));
+
+jest.mock('@bahmni/design-system', () => {
+  const actual = jest.requireActual('@bahmni/design-system');
+  return {
+    ...actual,
+    DatePicker: jest.fn(({ children, ...props }) => (
+      <div data-testid={props['data-testid']} {...props}>
+        {children}
+      </div>
+    )),
+    DatePickerInput: jest.fn(({ labelText, id, onInput, ...props }) => (
+      <div>
+        <label htmlFor={id}>{labelText}</label>
+        <input
+          id={id}
+          data-testid={props['data-testid']}
+          aria-invalid={props.invalid}
+          onInput={onInput}
+          {...props}
+        />
+        {props.invalid && props.invalidText && (
+          <div className="error">{props.invalidText}</div>
+        )}
+      </div>
+    )),
+  };
+});
 
 const mockUseRegistrationConfig = jest.fn(() => ({
   registrationConfig: {
