@@ -398,12 +398,7 @@ describe('MedicationsTable', () => {
     ];
 
     mockGroupByDate.mockReturnValue(medicationsByDate);
-    mockFormatDateTime.mockImplementation((date: any, t: any, format: any) => {
-      if (format === 'FULL_MONTH_DATE_FORMAT') {
-        return { formattedResult: 'January 15, 2024' };
-      }
-      return { formattedResult: '15/01/2024' };
-    });
+    mockFormatDateTime.mockReturnValue({ formattedResult: '15/01/2024' });
 
     mockUseQuery.mockReturnValue({
       data: mockMedications,

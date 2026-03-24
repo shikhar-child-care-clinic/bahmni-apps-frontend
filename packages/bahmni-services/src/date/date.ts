@@ -16,7 +16,10 @@ import type { Locale } from 'date-fns';
 import { enUS, enGB, es, fr, de } from 'date-fns/locale';
 import { getUserPreferredLocale } from '../i18n/translationService';
 import { Age } from '../patientService/models';
-import { DATE_FORMAT, DEFAULT_DATE_FORMAT_STORAGE_KEY } from './constants';
+import {
+  DEFAULT_DATE_FORMAT,
+  DEFAULT_DATE_FORMAT_STORAGE_KEY,
+} from './constants';
 import { DATE_ERROR_MESSAGES } from './errors';
 
 export interface FormatDateResult {
@@ -55,13 +58,13 @@ function getDateFnsLocale(): Locale {
 /**
  * Detects the browser's locale and returns an appropriate date format.
  * Uses navigator.language to determine the user's locale preference.
- * Falls back to DATE_FORMAT constant in test/Node.js environments.
+ * Falls back to DEFAULT_DATE_FORMAT constant in test/Node.js environments.
  *
  * Format mapping:
  * - US locales (en-US) → MM/dd/yyyy
  * - UK/European locales (en-GB, de, fr, es, etc.) → dd/MM/yyyy
  * - Asian locales (ja, ko, zh, etc.) → yyyy-MM-dd
- * - Default fallback → DATE_FORMAT constant (dd/MM/yyyy)
+ * - Default fallback → DEFAULT_DATE_FORMAT constant (dd/MM/yyyy)
  *
  * @returns Date format string based on browser locale
  */
@@ -72,12 +75,12 @@ export function getBrowserLocaleDateFormat(): string {
       typeof navigator === 'undefined' ||
       !navigator.language
     ) {
-      return DATE_FORMAT;
+      return DEFAULT_DATE_FORMAT;
     }
 
     const browserLocale = navigator.language;
     if (!browserLocale) {
-      return DATE_FORMAT;
+      return DEFAULT_DATE_FORMAT;
     }
 
     const locale = browserLocale.toLowerCase();
@@ -95,9 +98,9 @@ export function getBrowserLocaleDateFormat(): string {
       return 'yyyy-MM-dd';
     }
 
-    return DATE_FORMAT;
+    return DEFAULT_DATE_FORMAT;
   } catch {
-    return DATE_FORMAT;
+    return DEFAULT_DATE_FORMAT;
   }
 }
 

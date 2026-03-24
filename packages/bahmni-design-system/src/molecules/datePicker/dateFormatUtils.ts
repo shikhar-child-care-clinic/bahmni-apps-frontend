@@ -1,4 +1,3 @@
-// Constants
 const DEFAULT_DATE_FORMAT_STORAGE_KEY = 'default_dateFormat';
 const DEFAULT_DATE_FORMAT = 'dd/MM/yyyy';
 
@@ -62,7 +61,7 @@ const DATE_FORMAT_MAP: Record<string, string> = {
 export function getBrowserLocaleDateFormat(): string {
   try {
     if (
-      typeof window === 'undefined' ||
+      globalThis.window === undefined ||
       typeof navigator === 'undefined' ||
       !navigator.language
     ) {

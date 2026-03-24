@@ -1,6 +1,5 @@
 import {
   groupByDate,
-  ISO_DATE_FORMAT,
   useTranslation,
   getFormattedError,
   getCategoryUuidFromOrderTypes,
