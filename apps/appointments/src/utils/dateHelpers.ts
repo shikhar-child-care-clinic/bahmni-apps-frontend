@@ -27,7 +27,15 @@ export function isFutureDate(date: Date): boolean {
 
 // duplicate of createAppointmentServiceViewModels from allServices/utils.ts
 export function buildServiceViewModels(
-  services: { uuid: string; name: string; location?: { name: string }; speciality?: { name: string }; durationMins?: number; description?: string; attributes?: { attributeType: string; value: string }[] }[],
+  services: {
+    uuid: string;
+    name: string;
+    location?: { name: string };
+    speciality?: { name: string };
+    durationMins?: number;
+    description?: string;
+    attributes?: { attributeType: string; value: string }[];
+  }[],
   attributeNames: string[],
 ) {
   return services.map((service) => ({
