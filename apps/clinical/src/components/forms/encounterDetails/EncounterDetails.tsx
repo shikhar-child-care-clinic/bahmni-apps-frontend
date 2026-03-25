@@ -89,7 +89,7 @@ const EncounterDetails: React.FC<{
 
   const formattedDate = useMemo(
     () => formatDateTime(consultationDate, t),
-    [consultationDate, t],
+    [consultationDate],
   );
 
   const allLoadingStates = useMemo(
