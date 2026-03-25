@@ -10,9 +10,6 @@ import {
 // Mock the services
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
-  useTranslation: () => ({
-    t: (key: string) => key,
-  }),
   getInputTypeForFormat: jest.fn(),
   MAX_PHONE_NUMBER_LENGTH: 10,
 }));

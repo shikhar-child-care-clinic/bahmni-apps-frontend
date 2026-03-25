@@ -7,9 +7,6 @@ import { usePatientDetails } from '../usePatientDetails';
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   getPatientProfile: jest.fn(),
-  useTranslation: () => ({
-    t: (key: string) => key,
-  }),
   formatDateTime: jest.fn(() => ({
     formattedResult: '01/01/2024 12:00 PM',
     isValid: true,
@@ -132,7 +129,7 @@ describe('usePatientDetails', () => {
     await waitFor(() => {
       expect(mockAddNotification).toHaveBeenCalledWith({
         type: 'error',
-        title: 'ERROR_LOADING_PATIENT_DETAILS',
+        title: 'Error loading patient details',
         message: 'Failed to fetch patient',
       });
     });
