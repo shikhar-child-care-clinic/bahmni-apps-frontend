@@ -257,7 +257,7 @@ describe('ExpandableDataTable', () => {
 
     const empty = screen.getByTestId('expandable-data-table-empty');
     expect(empty).toBeInTheDocument();
-    expect(empty.textContent).toBe('No data available.');
+    expect(empty.textContent).toBe('No data available');
   });
 
   it('renders empty state with custom emptyStateMessage', () => {

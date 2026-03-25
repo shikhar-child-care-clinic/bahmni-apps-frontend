@@ -587,7 +587,7 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
               dir="auto"
               for="start-date-entry-1"
             >
-              Start date
+              Start Date
             </label>
             <div
               class="cds--date-picker-input__wrapper"
@@ -637,7 +637,7 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with default pr
       <span
         data-testid="vaccination-total-quantity-entry-1"
       >
-        Total quantity
+        Total Quantity
          : 
         0
          
@@ -1398,7 +1398,7 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
               dir="auto"
               for="start-date-entry-1"
             >
-              Start date
+              Start Date
             </label>
             <div
               class="cds--date-picker-input__wrapper"
@@ -1448,7 +1448,7 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with errors 1`]
       <span
         data-testid="vaccination-total-quantity-entry-1"
       >
-        Total quantity
+        Total Quantity
          : 
         0
          
@@ -2045,7 +2045,7 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
               dir="auto"
               for="start-date-entry-1"
             >
-              Start date
+              Start Date
             </label>
             <div
               class="cds--date-picker-input__wrapper"
@@ -2088,7 +2088,7 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
       <span
         data-testid="vaccination-total-quantity-entry-1"
       >
-        Total quantity
+        Total Quantity
          : 
         0
          
@@ -2131,7 +2131,7 @@ exports[`SelectedVaccinationItem Snapshot Tests matches snapshot with note visib
             data-testid="vaccination-note-entry-1"
             id="vaccination-note-entry-1"
             maxlength="1024"
-            placeholder="Add notes for the vaccination"
+            placeholder="Add notes for the Vaccination"
             rows="4"
             style="width: 100%;"
             type="default"

@@ -213,6 +213,15 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     encounterParticipants.length > 0
   );
 
+  const hasConsultationData =
+    selectedDiagnoses.length > 0 ||
+    selectedConditions.length > 0 ||
+    selectedAllergies.length > 0 ||
+    selectedMedications.length > 0 ||
+    selectedVaccinations.length > 0 ||
+    selectedServiceRequests.size > 0 ||
+    selectedForms.length > 0;
+
   // TODO: Extract Business Logic
   // 1. Create a consultationService to handle submission logic
   // 2. Extract validation logic into a custom hook
@@ -473,7 +482,10 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         primaryButtonText={t('CONSULTATION_PAD_DONE_BUTTON')}
         onPrimaryButtonClick={handleOnPrimaryButtonClick}
         isPrimaryButtonDisabled={
-          !isEncounterDetailsFormReady || !canSubmitConsultation || isSubmitting
+          !isEncounterDetailsFormReady ||
+          !canSubmitConsultation ||
+          isSubmitting ||
+          !hasConsultationData
         }
         hidden={!!viewingForm}
         secondaryButtonText={t('CONSULTATION_PAD_CANCEL_BUTTON')}

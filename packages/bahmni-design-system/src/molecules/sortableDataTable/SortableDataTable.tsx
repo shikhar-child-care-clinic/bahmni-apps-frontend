@@ -13,7 +13,7 @@ import classnames from 'classnames';
 import React from 'react';
 import styles from './styles/SortableDataTable.module.scss';
 
-interface SortableDataTableProps<T> {
+export interface SortableDataTableProps<T> {
   headers: DataTableHeader[];
   rows: T[];
   sortable?: { key: string; sortable: boolean }[];
@@ -33,7 +33,7 @@ export const SortableDataTable = <T extends { id: string }>({
   sortable = headers.map((header) => ({ key: header.key, sortable: true })),
   loading = false,
   errorStateMessage = null,
-  emptyStateMessage = 'No data available.',
+  emptyStateMessage = 'No data available',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   renderCell = (row, cellId) => (row as any)[cellId],
   className = 'sortable-data-table',
