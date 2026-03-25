@@ -13,7 +13,7 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({
 }) => {
   useEffect(() => {
     getDefaultDateFormat().then((fmt) => {
-      localStorage.setItem(DEFAULT_DATE_FORMAT_STORAGE_KEY, fmt);
+      fmt && localStorage.setItem(DEFAULT_DATE_FORMAT_STORAGE_KEY, fmt);
     });
   }, []);
 
