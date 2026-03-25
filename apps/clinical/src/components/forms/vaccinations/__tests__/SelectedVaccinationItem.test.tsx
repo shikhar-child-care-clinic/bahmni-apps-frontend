@@ -137,23 +137,13 @@ const createDefaultProps = (overrides = {}): SelectedVaccinationItemProps => ({
 describe('SelectedVaccinationItem', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-
-    Object.defineProperty(globalThis, 'localStorage', {
-      value: {
-        getItem: jest.fn().mockReturnValue('dd/MM/yyyy'),
-        setItem: jest.fn(),
-        removeItem: jest.fn(),
-        clear: jest.fn(),
-      },
-      writable: true,
-      configurable: true,
-    });
-
-    window.HTMLElement.prototype.scrollIntoView = jest.fn();
+    localStorage.setItem('default_dateFormat', 'dd/MM/yyyy');
+    globalThis.HTMLElement.prototype.scrollIntoView = jest.fn();
   });
   afterEach(() => {
     jest.restoreAllMocks();
     jest.spyOn(console, 'error').mockImplementation(() => {});
+    localStorage.clear();
   });
   describe('Component Rendering', () => {
     test('renders vaccination display name correctly', () => {
