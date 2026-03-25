@@ -72,10 +72,13 @@ export const useUpdatePatient = () => {
       }
     },
     onError: (error) => {
+      const message = (
+        error instanceof Error ? error.message : String(error)
+      ).replace(/\s\[.*\]$/, '');
       addNotification({
         type: 'error',
         title: t('ERROR_UPDATING_PATIENT'),
-        message: error instanceof Error ? error.message : String(error),
+        message,
         timeout: 5000,
       });
     },
