@@ -179,17 +179,21 @@ export function formatDateTime(
   date: string | Date | number,
   t?: (key: string, options?: { count?: number }) => string,
   includeTime: boolean = false,
+  dateFormat?: string,
 ): FormatDateResult {
   const translationFn = t ?? ((key: string) => key);
 
   let finalFormat: string;
   try {
-    finalFormat = localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ?? 'P';
+    finalFormat =
+      dateFormat ??
+      localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ??
+      'P';
   } catch {
     finalFormat = DEFAULT_DATE_FORMAT;
   }
 
-  if (includeTime) {
+  if (includeTime && !dateFormat) {
     finalFormat = `${finalFormat} h:mm a`;
   }
 

@@ -435,6 +435,23 @@ describe('formatDateTime locale support', () => {
     const result = formatDateTime('2024-03-28', mockT);
     expect(result.formattedResult).toBe('28/03/2024');
   });
+
+  it('should use custom dateFormat parameter when provided', () => {
+    (globalThis.localStorage.getItem as jest.Mock).mockReturnValue(
+      'dd/MM/yyyy',
+    );
+
+    const result = formatDateTime('2024-03-28', mockT, false, 'yyyy-MM-dd');
+    expect(result.formattedResult).toBe('2024-03-28');
+    expect(result.error).toBeUndefined();
+  });
+
+  it('should NOT append time format when dateFormat is provided even if includeTime is true', () => {
+    const date = new Date(2024, 2, 28, 14, 30);
+    const result = formatDateTime(date, mockT, true, 'yyyy-MM-dd');
+    expect(result.formattedResult).toBe('2024-03-28');
+    expect(result.error).toBeUndefined();
+  });
 });
 
 describe('formatDateDistance', () => {
