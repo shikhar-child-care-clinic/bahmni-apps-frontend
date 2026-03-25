@@ -668,7 +668,9 @@ export const Profile = ({
                   return date;
                 })()}
                 maxDate={new Date()}
-                value={formData.dateOfBirth ? formData.dateOfBirth : ''}
+                value={
+                  formData.dateOfBirth ? new Date(formData.dateOfBirth) : ''
+                }
                 onChange={handleDateOfBirthChange}
               >
                 <DatePickerInput

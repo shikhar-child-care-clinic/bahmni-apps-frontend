@@ -1,4 +1,9 @@
-import { MAX_PATIENT_AGE_YEARS } from '@bahmni/services';
+import {
+  MAX_PATIENT_AGE_YEARS,
+  DEFAULT_DATE_FORMAT_STORAGE_KEY,
+  getBrowserLocaleDateFormat,
+} from '@bahmni/services';
+import { parse, isValid as isValidDate } from 'date-fns';
 import {
   AgeUtils,
   formatToDisplay,
@@ -111,7 +116,10 @@ export const createDateAgeHandlers = <
       return;
     }
 
-    // Format as DD/MM/YYYY while typing
+    const dateFormat =
+      localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ??
+      getBrowserLocaleDateFormat();
+
     let formatted = '';
     if (input.length <= 2) {
       formatted = input;
@@ -123,27 +131,10 @@ export const createDateAgeHandlers = <
 
     inputElement.value = formatted;
 
-    // If complete date (8 digits), parse and validate
     if (input.length === 8) {
-      const day = parseInt(input.slice(0, 2), 10);
-      const month = parseInt(input.slice(2, 4), 10);
-      const year = parseInt(input.slice(4, 8), 10);
+      const parsedDate = parse(formatted, dateFormat, new Date());
 
-      // Check for invalid day or month ranges
-      if (day < 1 || day > 31 || month < 1 || month > 12) {
-        setDateErrors({ dateOfBirth: t('DATE_ERROR_INVALID_FORMAT') });
-        clearAgeData();
-        return;
-      }
-
-      const parsedDate = new Date(year, month - 1, day);
-
-      // Check if date is valid (e.g., not 31st Feb)
-      if (
-        parsedDate.getDate() !== day ||
-        parsedDate.getMonth() !== month - 1 ||
-        parsedDate.getFullYear() !== year
-      ) {
+      if (!isValidDate(parsedDate)) {
         setDateErrors({ dateOfBirth: t('DATE_ERROR_INVALID_FORMAT') });
         clearAgeData();
         return;

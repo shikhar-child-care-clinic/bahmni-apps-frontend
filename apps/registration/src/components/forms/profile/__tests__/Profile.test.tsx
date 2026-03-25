@@ -126,7 +126,12 @@ describe('Profile', () => {
 
     Object.defineProperty(globalThis, 'localStorage', {
       value: {
-        getItem: jest.fn().mockReturnValue('MM/dd/yyyy h:mm a'),
+        getItem: jest.fn((key: string) => {
+          if (key === 'default_dateFormat') {
+            return 'dd/MM/yyyy';
+          }
+          return null;
+        }),
         setItem: jest.fn(),
         removeItem: jest.fn(),
         clear: jest.fn(),

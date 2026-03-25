@@ -2,6 +2,7 @@ export {
   type FormatDateResult,
   calculateAge,
   formatDateTime,
+  getBrowserLocaleDateFormat,
   formatDateDistance,
   calculateOnsetDate,
   sortByDate,

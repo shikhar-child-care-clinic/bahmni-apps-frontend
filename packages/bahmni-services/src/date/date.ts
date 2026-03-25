@@ -197,6 +197,41 @@ export function formatDateTime(
 }
 
 /**
+ * Detects the browser's locale date format using Intl.DateTimeFormat API.
+ * Uses formatToParts() to analyze the browser's default date formatting pattern
+ * and converts it to a date-fns compatible format string.
+ *
+ * Implementation:
+ * - Uses Intl.DateTimeFormat().formatToParts() to get locale date components
+ * - Maps date parts (day, month, year) to date-fns tokens (dd, MM, yyyy)
+ * - Preserves literal separators (/, -, ., spaces) from the locale
+ * - Falls back to DEFAULT_DATE_FORMAT (dd/MM/yyyy) if parsing fails
+ *
+ * @returns Date format string in date-fns format (e.g., 'dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd')
+ */
+export function getBrowserLocaleDateFormat(): string {
+  try {
+    const parts = new Intl.DateTimeFormat().formatToParts(new Date());
+
+    const tokenMap: Record<string, string> = {
+      day: 'dd',
+      month: 'MM',
+      year: 'yyyy',
+    };
+
+    return parts
+      .map((part) => {
+        return (
+          tokenMap[part.type] || (part.type === 'literal' ? part.value : '')
+        );
+      })
+      .join('');
+  } catch {
+    return DEFAULT_DATE_FORMAT;
+  }
+}
+
+/**
  * Calculates onset date by subtracting duration from given date
  * @param givenDate - The given date as baseline
  * @param durationValue - The duration value to subtract
