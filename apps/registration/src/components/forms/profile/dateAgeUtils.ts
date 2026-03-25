@@ -1,9 +1,6 @@
-import {
-  MAX_PATIENT_AGE_YEARS,
-  DEFAULT_DATE_FORMAT_STORAGE_KEY,
-  getBrowserLocaleDateFormat,
-} from '@bahmni/services';
+import { MAX_PATIENT_AGE_YEARS } from '@bahmni/services';
 import { parse, isValid as isValidDate } from 'date-fns';
+import { getDateFormat } from '../../../../../../packages/bahmni-services/src/date';
 import {
   AgeUtils,
   formatToDisplay,
@@ -116,9 +113,7 @@ export const createDateAgeHandlers = <
       return;
     }
 
-    const dateFormat =
-      localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ??
-      getBrowserLocaleDateFormat();
+    const dateFormat = getDateFormat();
 
     let formatted = '';
     if (input.length <= 2) {

@@ -236,6 +236,25 @@ export function getBrowserLocaleDateFormat(): string {
 }
 
 /**
+ * Retrieves the date format with intelligent fallback.
+ *
+ * Fallback priority:
+ * 1. localStorage (user-configured format from DEFAULT_DATE_FORMAT_STORAGE_KEY)
+ * 2. Browser locale (detected automatically via getBrowserLocaleDateFormat)
+ *
+ * @returns Date format string in date-fns format
+ *
+ * @example
+ * const format = getDateFormat(); // "dd/MM/yyyy" or "MM/dd/yyyy" etc.
+ */
+export function getDateFormat(): string {
+  return (
+    localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ??
+    getBrowserLocaleDateFormat()
+  );
+}
+
+/**
  * Calculates onset date by subtracting duration from given date
  * @param givenDate - The given date as baseline
  * @param durationValue - The duration value to subtract
