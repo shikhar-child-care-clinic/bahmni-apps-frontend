@@ -6,10 +6,8 @@ import {
 
 describe('dateFormatUtils', () => {
   describe('getBrowserLocaleDateFormat', () => {
-    const originalDateTimeFormat = global.Intl.DateTimeFormat;
-
     afterEach(() => {
-      global.Intl.DateTimeFormat = originalDateTimeFormat;
+      jest.restoreAllMocks();
     });
 
     it.each([
@@ -47,17 +45,17 @@ describe('dateFormatUtils', () => {
         'yyyy-MM-dd',
       ],
     ])('returns %s', (_, parts, expected) => {
-      global.Intl.DateTimeFormat = jest.fn().mockImplementation(() => ({
-        formatToParts: () => parts,
-      })) as any;
+      jest
+        .spyOn(Intl, 'DateTimeFormat')
+        .mockImplementation(() => ({ formatToParts: () => parts }) as any);
 
       expect(getBrowserLocaleDateFormat()).toBe(expected);
     });
 
     it('returns default format when error occurs', () => {
-      global.Intl.DateTimeFormat = jest.fn().mockImplementation(() => {
+      jest.spyOn(Intl, 'DateTimeFormat').mockImplementation(() => {
         throw new Error('DateTimeFormat error');
-      }) as any;
+      });
 
       expect(getBrowserLocaleDateFormat()).toBe(DEFAULT_DATE_FORMAT);
     });
