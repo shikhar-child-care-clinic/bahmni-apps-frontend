@@ -14,6 +14,7 @@ import {
 } from 'date-fns';
 import { Age } from '../patientService/models';
 import {
+  DEFAULT_BROWSER_DATE_FORMAT,
   DEFAULT_DATE_FORMAT,
   DEFAULT_DATE_FORMAT_STORAGE_KEY,
 } from './constants';
@@ -188,7 +189,7 @@ export function formatDateTime(
     finalFormat =
       dateFormat ??
       localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ??
-      'P';
+      DEFAULT_BROWSER_DATE_FORMAT;
   } catch {
     finalFormat = DEFAULT_DATE_FORMAT;
   }
@@ -198,60 +199,6 @@ export function formatDateTime(
   }
 
   return formatDateGeneric(date, finalFormat, translationFn);
-}
-
-/**
- * Detects the browser's locale date format using Intl.DateTimeFormat API.
- * Uses formatToParts() to analyze the browser's default date formatting pattern
- * and converts it to a date-fns compatible format string.
- *
- * Implementation:
- * - Uses Intl.DateTimeFormat().formatToParts() to get locale date components
- * - Maps date parts (day, month, year) to date-fns tokens (dd, MM, yyyy)
- * - Preserves literal separators (/, -, ., spaces) from the locale
- * - Falls back to DEFAULT_DATE_FORMAT (dd/MM/yyyy) if parsing fails
- *
- * @returns Date format string in date-fns format (e.g., 'dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd')
- */
-export function getBrowserLocaleDateFormat(): string {
-  try {
-    const parts = new Intl.DateTimeFormat().formatToParts(new Date());
-
-    const tokenMap: Record<string, string> = {
-      day: 'dd',
-      month: 'MM',
-      year: 'yyyy',
-    };
-
-    return parts
-      .map((part) => {
-        return (
-          tokenMap[part.type] || (part.type === 'literal' ? part.value : '')
-        );
-      })
-      .join('');
-  } catch {
-    return DEFAULT_DATE_FORMAT;
-  }
-}
-
-/**
- * Retrieves the date format with intelligent fallback.
- *
- * Fallback priority:
- * 1. localStorage (user-configured format from DEFAULT_DATE_FORMAT_STORAGE_KEY)
- * 2. Browser locale (detected automatically via getBrowserLocaleDateFormat)
- *
- * @returns Date format string in date-fns format
- *
- * @example
- * const format = getDateFormat(); // "dd/MM/yyyy" or "MM/dd/yyyy" etc.
- */
-export function getDateFormat(): string {
-  return (
-    localStorage.getItem(DEFAULT_DATE_FORMAT_STORAGE_KEY) ??
-    getBrowserLocaleDateFormat()
-  );
 }
 
 /**

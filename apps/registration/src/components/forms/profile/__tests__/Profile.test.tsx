@@ -45,7 +45,6 @@ jest.mock('../../../../utils/identifierGenderUtils', () => ({
 
 jest.mock('../dateAgeUtils', () => ({
   createDateAgeHandlers: jest.fn(() => ({
-    handleDateInputChange: jest.fn(),
     handleDateOfBirthChange: jest.fn(),
     handleAgeChange: jest.fn(),
   })),
@@ -884,17 +883,6 @@ describe('Profile', () => {
   });
 
   describe('Age Validation - 120 Years Maximum', () => {
-    it('should set DatePicker minDate to exactly 120 years ago (not 119)', () => {
-      render(<Profile ref={ref} />);
-
-      // Verify the minDate calculation is correct
-      const today = new Date();
-      const expectedMinYear = today.getFullYear() - 120;
-
-      // The fix ensures minDate = today - 120 years (not today - 120 + 1)
-      expect(expectedMinYear).toBe(today.getFullYear() - 120);
-    });
-
     it('should accept a patient born exactly 120 years ago', () => {
       const today = new Date();
       const exactDate = new Date(

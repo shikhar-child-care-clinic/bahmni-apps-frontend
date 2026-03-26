@@ -2,8 +2,6 @@ export {
   type FormatDateResult,
   calculateAge,
   formatDateTime,
-  getBrowserLocaleDateFormat,
-  getDateFormat,
   formatDateDistance,
   calculateOnsetDate,
   sortByDate,

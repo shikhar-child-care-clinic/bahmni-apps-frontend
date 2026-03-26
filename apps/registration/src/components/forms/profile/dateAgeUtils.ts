@@ -1,5 +1,4 @@
-import { MAX_PATIENT_AGE_YEARS, getDateFormat } from '@bahmni/services';
-import { parse, isValid as isValidDate } from 'date-fns';
+import { MAX_PATIENT_AGE_YEARS, calculateAge } from '@bahmni/services';
 import {
   AgeUtils,
   formatToDisplay,
@@ -20,7 +19,6 @@ interface DateAgeHandlers {
   clearAllErrors: () => void;
   clearAgeData: () => void;
   updateFormWithAge: (date: Date) => void;
-  handleDateInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleDateOfBirthChange: (selectedDates: Date[]) => void;
   handleAgeChange: (
     field: 'ageYears' | 'ageMonths' | 'ageDays',
@@ -87,80 +85,17 @@ export const createDateAgeHandlers = <
 
   const updateFormWithAge = (date: Date) => {
     const isoDate = formatToISO(date);
-    const calculatedAge = AgeUtils.diffInYearsMonthsDays(date, new Date());
+    const calculatedAge = calculateAge(isoDate);
 
     setFormData((prev) => ({
       ...prev,
       dateOfBirth: isoDate,
-      ageYears: String(calculatedAge.years ?? 0),
-      ageMonths: String(calculatedAge.months ?? 0),
-      ageDays: String(calculatedAge.days ?? 0),
+      ageYears: String(calculatedAge?.years ?? 0),
+      ageMonths: String(calculatedAge?.months ?? 0),
+      ageDays: String(calculatedAge?.days ?? 0),
     }));
     setDobEstimated(false);
     clearAllErrors();
-  };
-
-  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value.replace(/\D/g, '');
-    const inputElement = e.target;
-
-    if (input.length === 0) {
-      inputElement.value = '';
-      clearAgeData();
-      setDateErrors({ dateOfBirth: '' });
-      setValidationErrors((prev) => ({ ...prev, dateOfBirth: '' }));
-      return;
-    }
-
-    const dateFormat = getDateFormat();
-
-    let formatted = '';
-    if (input.length <= 2) {
-      formatted = input;
-    } else if (input.length <= 4) {
-      formatted = `${input.slice(0, 2)}/${input.slice(2)}`;
-    } else {
-      formatted = `${input.slice(0, 2)}/${input.slice(2, 4)}/${input.slice(4, 8)}`;
-    }
-
-    inputElement.value = formatted;
-
-    if (input.length === 8) {
-      const parsedDate = parse(formatted, dateFormat, new Date());
-
-      if (!isValidDate(parsedDate)) {
-        setDateErrors({ dateOfBirth: t('DATE_ERROR_INVALID_FORMAT') });
-        clearAgeData();
-        return;
-      }
-
-      // Check if date is in future
-      if (parsedDate > new Date()) {
-        setDateErrors({
-          dateOfBirth: t('DATE_ERROR_FUTURE_DATE'),
-        });
-        clearAgeData();
-        return;
-      }
-
-      // Calculate age to validate it's within acceptable range
-      const calculatedAge = AgeUtils.diffInYearsMonthsDays(
-        parsedDate,
-        new Date(),
-      );
-
-      // Check if calculated age exceeds 120 years
-      if (calculatedAge.years && calculatedAge.years > MAX_PATIENT_AGE_YEARS) {
-        setDateErrors({
-          dateOfBirth: t('CREATE_PATIENT_VALIDATION_AGE_YEARS_MAX'),
-        });
-        clearAgeData();
-        return;
-      }
-
-      // If no errors, update form data
-      updateFormWithAge(parsedDate);
-    }
   };
 
   const handleDateOfBirthChange = (selectedDates: Date[] = []) => {
@@ -168,6 +103,15 @@ export const createDateAgeHandlers = <
     const selectedDate = selectedDates[0];
     if (!selectedDate) return;
 
+    const calculatedAge = calculateAge(formatToISO(selectedDate));
+
+    if (calculatedAge?.years && calculatedAge.years > MAX_PATIENT_AGE_YEARS) {
+      setDateErrors({
+        dateOfBirth: t('CREATE_PATIENT_VALIDATION_AGE_YEARS_MAX'),
+      });
+      clearAgeData();
+      return;
+    }
     updateFormWithAge(selectedDate);
   };
 
@@ -289,7 +233,6 @@ export const createDateAgeHandlers = <
     clearAllErrors,
     clearAgeData,
     updateFormWithAge,
-    handleDateInputChange,
     handleDateOfBirthChange,
     handleAgeChange,
   };

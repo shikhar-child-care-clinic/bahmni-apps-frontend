@@ -252,15 +252,14 @@ export const Profile = ({
     }
   };
 
-  const { handleDateInputChange, handleDateOfBirthChange, handleAgeChange } =
-    createDateAgeHandlers({
-      setDateErrors,
-      setValidationErrors,
-      setAgeErrors,
-      setFormData,
-      setDobEstimated,
-      t,
-    });
+  const { handleDateOfBirthChange, handleAgeChange } = createDateAgeHandlers({
+    setDateErrors,
+    setValidationErrors,
+    setAgeErrors,
+    setFormData,
+    setDobEstimated,
+    t,
+  });
 
   // Handler to prevent invalid characters in age number inputs
   const handleAgeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -661,12 +660,6 @@ export const Profile = ({
               <DatePicker
                 datePickerType="single"
                 data-testid="date-of-birth-picker"
-                minDate={(() => {
-                  const date = new Date();
-                  date.setFullYear(date.getFullYear() - MAX_PATIENT_AGE_YEARS);
-                  date.setHours(0, 0, 0, 0);
-                  return date;
-                })()}
                 maxDate={new Date()}
                 value={
                   formData.dateOfBirth ? new Date(formData.dateOfBirth) : ''
@@ -686,7 +679,6 @@ export const Profile = ({
                   invalidText={
                     dateErrors.dateOfBirth || validationErrors.dateOfBirth
                   }
-                  onInput={handleDateInputChange}
                 />
               </DatePicker>
             </div>
