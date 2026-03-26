@@ -120,22 +120,6 @@ describe('Profile', () => {
 
   beforeEach(() => {
     ref = React.createRef<ProfileRef | null>();
-
-    Object.defineProperty(globalThis, 'localStorage', {
-      value: {
-        getItem: jest.fn((key: string) => {
-          if (key === 'default_dateFormat') {
-            return 'dd/MM/yyyy';
-          }
-          return null;
-        }),
-        setItem: jest.fn(),
-        removeItem: jest.fn(),
-        clear: jest.fn(),
-      },
-      writable: true,
-      configurable: true,
-    });
   });
 
   describe('Rendering', () => {

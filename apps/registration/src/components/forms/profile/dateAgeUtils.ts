@@ -1,6 +1,5 @@
-import { MAX_PATIENT_AGE_YEARS } from '@bahmni/services';
+import { MAX_PATIENT_AGE_YEARS, getDateFormat } from '@bahmni/services';
 import { parse, isValid as isValidDate } from 'date-fns';
-import { getDateFormat } from '../../../../../../packages/bahmni-services/src/date';
 import {
   AgeUtils,
   formatToDisplay,
