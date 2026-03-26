@@ -89,6 +89,8 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
   }, [isError, error, addNotification, t]);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const validateAttachments = async () => {
       if (!isModalOpen || !selectedDoc) return;
 
@@ -97,17 +99,30 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
 
       for (let i = 0; i < attachments.length; i++) {
         const url = buildDocumentUrl(attachments[i].url);
-        const isValid = await validateDocumentUrl(url);
-        if (!isValid) {
-          failed.add(i);
+        try {
+          const response = await fetch(url, {
+            method: 'HEAD',
+            signal: controller.signal,
+          });
+          if (!response.ok) {
+            failed.add(i);
+          }
+        } catch (error) {
+          if (error instanceof Error && error.name !== 'AbortError') {
+            failed.add(i);
+          }
         }
       }
 
-      setFailedAttachments(failed);
+      if (!controller.signal.aborted) {
+        setFailedAttachments(failed);
+      }
     };
 
     validateAttachments();
-  }, [isModalOpen, selectedDoc, validateDocumentUrl, getNormalizedAttachments]);
+
+    return () => controller.abort();
+  }, [isModalOpen, selectedDoc, getNormalizedAttachments]);
 
   const fields = useMemo(
     () => (config?.fields as string[]) ?? DEFAULT_DOCUMENT_FIELDS,
@@ -126,6 +141,11 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
   );
 
   const pageSize = config?.pageSize as number | undefined;
+
+  const normalizedAttachments = useMemo(
+    () => (selectedDoc ? getNormalizedAttachments(selectedDoc) : []),
+    [selectedDoc, getNormalizedAttachments],
+  );
 
   const renderCell = useCallback(
     (doc: DocumentViewModel, cellId: string) => {
@@ -195,65 +215,61 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
           testId="document-view-modal"
         >
           <div className={styles.documentViewerContainer}>
-            {(() => {
-              const normalizedAttachments =
-                getNormalizedAttachments(selectedDoc);
-              return normalizedAttachments.map((attachment, index) => {
-                const url = buildDocumentUrl(attachment.url);
-                const isPdf = attachment.contentType
-                  ?.toLowerCase()
-                  .includes('pdf');
-                const isImg = attachment.contentType
-                  ?.toLowerCase()
-                  .includes('image');
-                const hasFailed = failedAttachments.has(index);
+            {normalizedAttachments.map((attachment, index) => {
+              const url = buildDocumentUrl(attachment.url);
+              const isPdf = attachment.contentType
+                ?.toLowerCase()
+                .includes('pdf');
+              const isImg = attachment.contentType
+                ?.toLowerCase()
+                .includes('image');
+              const hasFailed = failedAttachments.has(index);
 
-                if (url === '#' || hasFailed) {
-                  return (
-                    <div
-                      key={`${selectedDoc.id}-${attachment.url}`}
-                      className={styles.attachmentError}
-                      data-testid={`attachment-error-${index}`}
-                    >
-                      {normalizedAttachments.length > 1 && (
-                        <p className={styles.attachmentCounter}>
-                          {index + 1}/{normalizedAttachments.length}
-                        </p>
-                      )}
-                      <p>{t('DOCUMENTS_ERROR_LOADING_ATTACHMENT')}</p>
-                    </div>
-                  );
-                }
+              if (url === '#' || hasFailed) {
                 return (
                   <div
                     key={`${selectedDoc.id}-${attachment.url}`}
-                    className={styles.attachmentItem}
-                    data-testid={`attachment-item-${index}`}
+                    className={styles.attachmentError}
+                    data-testid={`attachment-error-${index}`}
                   >
                     {normalizedAttachments.length > 1 && (
                       <p className={styles.attachmentCounter}>
                         {index + 1}/{normalizedAttachments.length}
                       </p>
                     )}
-                    {isImg ? (
-                      <img
-                        src={url}
-                        alt={selectedDoc.documentIdentifier}
-                        className={styles.documentImage}
-                        onError={() => handleAttachmentLoadError(index)}
-                      />
-                    ) : (
-                      <iframe
-                        src={isPdf ? `${url}#toolbar=0` : url}
-                        className={styles.documentIframe}
-                        title={selectedDoc.documentIdentifier}
-                        onError={() => handleAttachmentLoadError(index)}
-                      />
-                    )}
+                    <p>{t('DOCUMENTS_ERROR_LOADING_ATTACHMENT')}</p>
                   </div>
                 );
-              });
-            })()}
+              }
+              return (
+                <div
+                  key={`${selectedDoc.id}-${attachment.url}`}
+                  className={styles.attachmentItem}
+                  data-testid={`attachment-item-${index}`}
+                >
+                  {normalizedAttachments.length > 1 && (
+                    <p className={styles.attachmentCounter}>
+                      {index + 1}/{normalizedAttachments.length}
+                    </p>
+                  )}
+                  {isImg ? (
+                    <img
+                      src={url}
+                      alt={selectedDoc.documentIdentifier}
+                      className={styles.documentImage}
+                      onError={() => handleAttachmentLoadError(index)}
+                    />
+                  ) : (
+                    <iframe
+                      src={isPdf ? `${url}#toolbar=0` : url}
+                      className={styles.documentIframe}
+                      title={selectedDoc.documentIdentifier}
+                      onError={() => handleAttachmentLoadError(index)}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
         </Modal>
       )}
