@@ -22,6 +22,16 @@ const DEFAULT_DOCUMENT_FIELDS = [
   'action',
 ];
 
+const getNormalizedAttachments = (doc: DocumentViewModel) => {
+  if (doc.attachments.length > 0) {
+    return doc.attachments;
+  }
+  if (doc.documentUrl) {
+    return [{ url: doc.documentUrl, contentType: doc.contentType }];
+  }
+  return [];
+};
+
 const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<DocumentViewModel | null>(
@@ -48,29 +58,6 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
   const handleAttachmentLoadError = useCallback((index: number) => {
     setFailedAttachments((prev) => new Set(prev).add(index));
   }, []);
-
-  const getNormalizedAttachments = useCallback((doc: DocumentViewModel) => {
-    if (doc.attachments.length > 0) {
-      return doc.attachments;
-    }
-    if (doc.documentUrl) {
-      return [{ url: doc.documentUrl, contentType: doc.contentType }];
-    }
-    return [];
-  }, []);
-
-  const validateDocumentUrl = useCallback(
-    async (url: string): Promise<boolean> => {
-      if (!url || url === '#') return false;
-      try {
-        const response = await fetch(url, { method: 'HEAD' });
-        return response.ok;
-      } catch {
-        return false;
-      }
-    },
-    [],
-  );
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['documents', patientUUID!, encounterUuids],
@@ -122,7 +109,7 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
     validateAttachments();
 
     return () => controller.abort();
-  }, [isModalOpen, selectedDoc, getNormalizedAttachments]);
+  }, [isModalOpen, selectedDoc]);
 
   const fields = useMemo(
     () => (config?.fields as string[]) ?? DEFAULT_DOCUMENT_FIELDS,
@@ -144,7 +131,7 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
 
   const normalizedAttachments = useMemo(
     () => (selectedDoc ? getNormalizedAttachments(selectedDoc) : []),
-    [selectedDoc, getNormalizedAttachments],
+    [selectedDoc],
   );
 
   const renderCell = useCallback(
