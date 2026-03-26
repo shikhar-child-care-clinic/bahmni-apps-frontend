@@ -213,7 +213,7 @@ export const mockRadiologyInvestigationBundle: Bundle = {
   link: [
     {
       relation: 'self',
-      url: `http://localhost/openmrs/ws/fhir2/R4/ServiceRequest?_count=100&_sort=-_lastUpdated&category=d3561dc0-5e07-11ef-8f7c-0242ac120002&numberOfVisits=5&patient=${mockPatientUUID}`,
+      url: `http://localhost/openmrs/ws/fhir2/R4/ServiceRequest?_count=200&_sort=-_lastUpdated&category=d3561dc0-5e07-11ef-8f7c-0242ac120002&numberOfVisits=5&patient=${mockPatientUUID}`,
     },
   ],
   entry: mockRadiologyInvestigations.map((resource) => ({

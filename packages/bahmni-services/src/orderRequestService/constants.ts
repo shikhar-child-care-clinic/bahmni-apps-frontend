@@ -7,7 +7,8 @@ export const SERVICE_REQUESTS_URL = (
   numberOfVisits?: number,
   revinclude?: string,
 ) => {
-  const baseUrl = OPENMRS_FHIR_R4 + '/ServiceRequest?_sort=-_lastUpdated';
+  const baseUrl =
+    OPENMRS_FHIR_R4 + '/ServiceRequest?_count=200&_sort=-_lastUpdated';
   let url = `${baseUrl}&category=${category}&patient=${patientUuid}`;
 
   if (revinclude) {
