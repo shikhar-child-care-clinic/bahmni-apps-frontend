@@ -515,9 +515,7 @@ describe('DocumentsTable', () => {
         status: 404,
       } as Response);
 
-      (useQuery as jest.Mock).mockReturnValue(
-        mockQueryData([mockPdfDocument]),
-      );
+      (useQuery as jest.Mock).mockReturnValue(mockQueryData([mockPdfDocument]));
       renderComponent({ config: defaultConfig });
 
       await user.click(screen.getByText('DOCUMENTS_VIEW_ATTACHMENTS'));
@@ -595,9 +593,7 @@ describe('DocumentsTable', () => {
       renderComponent({ config: defaultConfig });
 
       // First open/close
-      await user.click(
-        screen.getAllByText('DOCUMENTS_VIEW_ATTACHMENTS')[0],
-      );
+      await user.click(screen.getAllByText('DOCUMENTS_VIEW_ATTACHMENTS')[0]);
       expect(screen.getByRole('dialog')).toBeInTheDocument();
 
       await user.keyboard('{Escape}');
@@ -606,9 +602,7 @@ describe('DocumentsTable', () => {
       });
 
       // Second open/close - should work without state corruption
-      await user.click(
-        screen.getAllByText('DOCUMENTS_VIEW_ATTACHMENTS')[0],
-      );
+      await user.click(screen.getAllByText('DOCUMENTS_VIEW_ATTACHMENTS')[0]);
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument();
       });
@@ -649,16 +643,13 @@ describe('DocumentsTable', () => {
     });
   });
 
-
   describe('AbortController and Fetch Error Handling', () => {
     it('handles network errors in validation effect', async () => {
       const user = userEvent.setup();
       const fetchSpy = jest.spyOn(globalThis as any, 'fetch');
       fetchSpy.mockRejectedValueOnce(new Error('Network error'));
 
-      (useQuery as jest.Mock).mockReturnValue(
-        mockQueryData([mockPdfDocument]),
-      );
+      (useQuery as jest.Mock).mockReturnValue(mockQueryData([mockPdfDocument]));
       renderComponent({ config: defaultConfig });
 
       await user.click(screen.getByText('DOCUMENTS_VIEW_ATTACHMENTS'));
@@ -709,9 +700,7 @@ describe('DocumentsTable', () => {
 
       fetchSpy.mockResolvedValue({ ok: true, status: 200 } as Response);
 
-      (useQuery as jest.Mock).mockReturnValue(
-        mockQueryData([mockPdfDocument]),
-      );
+      (useQuery as jest.Mock).mockReturnValue(mockQueryData([mockPdfDocument]));
       renderComponent({ config: defaultConfig });
 
       // Open modal - should trigger validation effect
@@ -728,6 +717,98 @@ describe('DocumentsTable', () => {
     });
   });
 
+  describe('Error Notification', () => {
+    it('shows error notification when document fetch fails', () => {
+      const errorMessage = 'Failed to fetch documents';
+      (useQuery as jest.Mock).mockReturnValue({
+        data: null,
+        error: new Error(errorMessage),
+        isError: true,
+        isLoading: false,
+        refetch: jest.fn(),
+      });
+
+      renderComponent({ config: defaultConfig });
+
+      expect(mockAddNotification).toHaveBeenCalledWith({
+        type: 'error',
+        title: 'ERROR_DEFAULT_TITLE',
+        message: errorMessage,
+      });
+    });
+
+    it('handles error with undefined message gracefully', () => {
+      (useQuery as jest.Mock).mockReturnValue({
+        data: null,
+        error: new Error(),
+        isError: true,
+        isLoading: false,
+        refetch: jest.fn(),
+      });
+
+      renderComponent({ config: defaultConfig });
+
+      expect(mockAddNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'error',
+          title: 'ERROR_DEFAULT_TITLE',
+        }),
+      );
+    });
+  });
+
+  describe('RenderCell Coverage', () => {
+    it('renders all column types in renderCell', () => {
+      (useQuery as jest.Mock).mockReturnValue(mockQueryData([mockPdfDocument]));
+      renderComponent({ config: defaultConfig });
+
+      // Verify all columns are rendered
+      expect(screen.getByText('Test Document')).toBeInTheDocument();
+      expect(screen.getByText('Prescription')).toBeInTheDocument();
+      expect(screen.getByText('2024-01-15 10:30 AM')).toBeInTheDocument();
+      expect(screen.getByText('Dr. Smith')).toBeInTheDocument();
+      expect(
+        screen.getByText('DOCUMENTS_VIEW_ATTACHMENTS'),
+      ).toBeInTheDocument();
+    });
+
+    it('renders all cell types correctly', () => {
+      (useQuery as jest.Mock).mockReturnValue(mockQueryData([mockPdfDocument]));
+      renderComponent({ config: defaultConfig });
+
+      // Verify document identifier renders as span
+      const identifierSpan = screen.getByText('Test Document');
+      expect(identifierSpan.tagName).toBe('SPAN');
+
+      // Verify all other columns render
+      expect(screen.getByText('Prescription')).toBeInTheDocument();
+      expect(screen.getByText('Dr. Smith')).toBeInTheDocument();
+    });
+  });
+
+  describe('Config and Fields', () => {
+    it('uses default fields when config fields not provided', () => {
+      (useQuery as jest.Mock).mockReturnValue(mockQueryData([mockPdfDocument]));
+      renderComponent({ config: {} });
+
+      // Should still render with default fields
+      expect(screen.getByText('Test Document')).toBeInTheDocument();
+      expect(screen.getByRole('table')).toBeInTheDocument();
+    });
+
+    it('renders with custom field configuration', () => {
+      const customConfig = {
+        fields: ['documentIdentifier', 'action'],
+      };
+      (useQuery as jest.Mock).mockReturnValue(mockQueryData([mockPdfDocument]));
+      renderComponent({ config: customConfig });
+
+      expect(screen.getByText('Test Document')).toBeInTheDocument();
+      expect(
+        screen.getByText('DOCUMENTS_VIEW_ATTACHMENTS'),
+      ).toBeInTheDocument();
+    });
+  });
 
   describe('Accessibility', () => {
     it('passes accessibility tests with data', async () => {
