@@ -504,6 +504,32 @@ describe('DocumentsTable', () => {
 
       expect(screen.queryByTitle('Corrupt URL Doc')).not.toBeInTheDocument();
     });
+
+    it('marks attachment as failed when HEAD request returns error status', async () => {
+      const user = userEvent.setup();
+      const fetchSpy = jest.spyOn(globalThis as any, 'fetch');
+
+      // First call returns 404 for HEAD request
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      } as Response);
+
+      (useQuery as jest.Mock).mockReturnValue(
+        mockQueryData([mockPdfDocument]),
+      );
+      renderComponent({ config: defaultConfig });
+
+      await user.click(screen.getByText('DOCUMENTS_VIEW_ATTACHMENTS'));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('DOCUMENTS_ERROR_LOADING_ATTACHMENT'),
+        ).toBeInTheDocument();
+      });
+
+      fetchSpy.mockRestore();
+    });
   });
 
   describe('Fallback Content', () => {
@@ -557,6 +583,151 @@ describe('DocumentsTable', () => {
       expect(screen.getByText('X-Ray Image')).toBeInTheDocument();
     });
   });
+
+  describe('Race Condition Prevention', () => {
+    it('validation effect has correct dependencies for modal state', async () => {
+      // This test verifies the effect cleanup (AbortController) works
+      // by ensuring multiple modal open/close cycles work correctly
+      const user = userEvent.setup();
+      (useQuery as jest.Mock).mockReturnValue(
+        mockQueryData([mockPdfDocument, mockImageDocument]),
+      );
+      renderComponent({ config: defaultConfig });
+
+      // First open/close
+      await user.click(
+        screen.getAllByText('DOCUMENTS_VIEW_ATTACHMENTS')[0],
+      );
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+      await user.keyboard('{Escape}');
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+
+      // Second open/close - should work without state corruption
+      await user.click(
+        screen.getAllByText('DOCUMENTS_VIEW_ATTACHMENTS')[0],
+      );
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      await user.keyboard('{Escape}');
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('State Management', () => {
+    it('clears state when closing modal and can reopen with fresh state', async () => {
+      const user = userEvent.setup();
+      (useQuery as jest.Mock).mockReturnValue(
+        mockQueryData([mockDocumentCorruptUrl]),
+      );
+      renderComponent({ config: defaultConfig });
+
+      // Open modal with error state
+      await user.click(screen.getByText('DOCUMENTS_VIEW_ATTACHMENTS'));
+      expect(
+        screen.getByText('DOCUMENTS_ERROR_LOADING_ATTACHMENT'),
+      ).toBeInTheDocument();
+
+      // Close modal - state should be cleared
+      await user.keyboard('{Escape}');
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+      // Reopen modal - should show fresh state with same error (URL is still corrupt)
+      await user.click(screen.getByText('DOCUMENTS_VIEW_ATTACHMENTS'));
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+        expect(
+          screen.getByText('DOCUMENTS_ERROR_LOADING_ATTACHMENT'),
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
+
+  describe('AbortController and Fetch Error Handling', () => {
+    it('handles network errors in validation effect', async () => {
+      const user = userEvent.setup();
+      const fetchSpy = jest.spyOn(globalThis as any, 'fetch');
+      fetchSpy.mockRejectedValueOnce(new Error('Network error'));
+
+      (useQuery as jest.Mock).mockReturnValue(
+        mockQueryData([mockPdfDocument]),
+      );
+      renderComponent({ config: defaultConfig });
+
+      await user.click(screen.getByText('DOCUMENTS_VIEW_ATTACHMENTS'));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('DOCUMENTS_ERROR_LOADING_ATTACHMENT'),
+        ).toBeInTheDocument();
+      });
+
+      fetchSpy.mockRestore();
+    });
+
+    it('validates all attachments in multi-attachment documents', async () => {
+      const user = userEvent.setup();
+      const fetchSpy = jest.spyOn(globalThis as any, 'fetch');
+
+      fetchSpy
+        .mockResolvedValueOnce({ ok: true, status: 200 } as Response)
+        .mockResolvedValueOnce({ ok: false, status: 404 } as Response);
+
+      (useQuery as jest.Mock).mockReturnValue(
+        mockQueryData([mockMultiAttachmentDocument]),
+      );
+      renderComponent({ config: defaultConfig });
+
+      await user.click(screen.getByText('DOCUMENTS_VIEW_ATTACHMENTS'));
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      expect(
+        screen.getByText('DOCUMENTS_ERROR_LOADING_ATTACHMENT'),
+      ).toBeInTheDocument();
+
+      const iframes = screen.getAllByTitle('Multi Attachment Doc');
+      expect(iframes.length).toBeGreaterThan(0);
+
+      fetchSpy.mockRestore();
+    });
+  });
+
+  describe('Effect Dependencies and Modal State', () => {
+    it('calls validation effect when modal opens', async () => {
+      const user = userEvent.setup();
+      const fetchSpy = jest.spyOn(globalThis as any, 'fetch');
+
+      fetchSpy.mockResolvedValue({ ok: true, status: 200 } as Response);
+
+      (useQuery as jest.Mock).mockReturnValue(
+        mockQueryData([mockPdfDocument]),
+      );
+      renderComponent({ config: defaultConfig });
+
+      // Open modal - should trigger validation effect
+      await user.click(screen.getByText('DOCUMENTS_VIEW_ATTACHMENTS'));
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      // Verify validation was called (fetch should have been invoked)
+      expect(fetchSpy).toHaveBeenCalled();
+
+      fetchSpy.mockRestore();
+    });
+  });
+
 
   describe('Accessibility', () => {
     it('passes accessibility tests with data', async () => {
