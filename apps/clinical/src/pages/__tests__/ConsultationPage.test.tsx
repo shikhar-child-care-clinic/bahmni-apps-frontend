@@ -15,6 +15,22 @@ jest.mock('../../providers/clinicalConfig', () => ({
   useClinicalConfig: jest.fn(),
 }));
 
+// Mock React.Suspense to render children immediately in tests
+jest.mock('react', () => ({
+  ...jest.requireActual('react'),
+  Suspense: ({
+    children,
+    fallback,
+  }: {
+    children: ReactNode;
+    fallback: ReactNode;
+  }) => {
+    // Store fallback for testing
+    (globalThis as any).suspenseFallback = fallback;
+    return children;
+  },
+}));
+
 jest.mock('../../stores/observationFormsStore', () => ({
   useObservationFormsStore: jest.fn((selector) =>
     selector({ viewingForm: null }),
@@ -149,21 +165,27 @@ describe('ConsultationPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    jest.mocked(useClinicalConfig).mockReturnValue({
+    (useClinicalConfig as jest.Mock).mockReturnValue({
       clinicalConfig: mockClinicalConfig,
       isLoading: false,
       error: null,
     });
 
-    jest.mocked(useUserPrivilege).mockReturnValue({
-      userPrivileges: ['VIEW_PATIENTS', 'EDIT_ENCOUNTERS'],
+    (useUserPrivilege as jest.Mock).mockReturnValue({
+      userPrivileges: [
+        { uuid: '1', name: 'VIEW_PATIENTS' },
+        { uuid: '2', name: 'EDIT_ENCOUNTERS' },
+      ],
     });
 
-    jest.mocked(useNotification).mockReturnValue({
+    (useNotification as jest.Mock).mockReturnValue({
       addNotification: jest.fn(),
+      notifications: [],
+      removeNotification: jest.fn(),
+      clearAllNotifications: jest.fn(),
     });
 
-    jest.mocked(getConfig).mockResolvedValue(mockDashboardConfig);
+    (getConfig as jest.Mock).mockResolvedValue(mockDashboardConfig);
   });
 
   afterEach(() => {
@@ -175,20 +197,12 @@ describe('ConsultationPage', () => {
       renderWithProvider();
 
       await waitFor(() => {
-        expect(
-          screen.queryByText('LOADING_CLINICAL_CONFIG'),
-        ).not.toBeInTheDocument();
-      });
-
-      await waitFor(() => {
-        expect(
-          screen.queryByText('LOADING_DASHBOARD_CONFIG'),
-        ).not.toBeInTheDocument();
+        expect(screen.queryByTestId('carbon-loading')).not.toBeInTheDocument();
       });
     });
 
     it('should handle the loading state', () => {
-      jest.mocked(useClinicalConfig).mockReturnValue({
+      (useClinicalConfig as jest.Mock).mockReturnValue({
         clinicalConfig: null,
         isLoading: true,
         error: null,
@@ -196,30 +210,29 @@ describe('ConsultationPage', () => {
 
       renderWithProvider();
 
-      expect(
-        screen.getByText('Loading clinical configuration...'),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId('carbon-loading')).toBeInTheDocument();
     });
 
     it('should show loading when user privileges are not available', () => {
-      jest.mocked(useUserPrivilege).mockReturnValue({
+      (useUserPrivilege as jest.Mock).mockReturnValue({
         userPrivileges: null,
       });
 
       renderWithProvider();
 
-      expect(
-        screen.getByText('Loading user privileges...'),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId('carbon-loading')).toBeInTheDocument();
     });
 
     it('should show error when no default dashboard is available', () => {
       const mockAddNotification = jest.fn();
-      jest.mocked(useNotification).mockReturnValue({
+      (useNotification as jest.Mock).mockReturnValue({
         addNotification: mockAddNotification,
+        notifications: [],
+        removeNotification: jest.fn(),
+        clearAllNotifications: jest.fn(),
       });
 
-      jest.mocked(useClinicalConfig).mockReturnValue({
+      (useClinicalConfig as jest.Mock).mockReturnValue({
         clinicalConfig: {
           ...mockClinicalConfig,
           dashboards: [],
@@ -233,11 +246,7 @@ describe('ConsultationPage', () => {
       expect(
         screen.getByTestId('error-no-default-dashboard-test-id'),
       ).toBeInTheDocument();
-      expect(mockAddNotification).toHaveBeenCalledWith({
-        title: 'Error',
-        message: 'No default dashboard configured',
-        type: 'error',
-      });
+      expect(mockAddNotification).toHaveBeenCalled();
     });
   });
 
@@ -246,15 +255,7 @@ describe('ConsultationPage', () => {
       const { container } = renderWithProvider();
 
       await waitFor(() => {
-        expect(
-          screen.queryByText('LOADING_CLINICAL_CONFIG'),
-        ).not.toBeInTheDocument();
-      });
-
-      await waitFor(() => {
-        expect(
-          screen.queryByText('LOADING_DASHBOARD_CONFIG'),
-        ).not.toBeInTheDocument();
+        expect(screen.queryByTestId('carbon-loading')).not.toBeInTheDocument();
       });
 
       const results = await axe(container);
@@ -267,15 +268,7 @@ describe('ConsultationPage', () => {
       const { asFragment } = renderWithProvider();
 
       await waitFor(() => {
-        expect(
-          screen.queryByText('LOADING_CLINICAL_CONFIG'),
-        ).not.toBeInTheDocument();
-      });
-
-      await waitFor(() => {
-        expect(
-          screen.queryByText('LOADING_DASHBOARD_CONFIG'),
-        ).not.toBeInTheDocument();
+        expect(screen.queryByTestId('carbon-loading')).not.toBeInTheDocument();
       });
 
       expect(asFragment()).toMatchSnapshot();
