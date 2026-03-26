@@ -557,31 +557,6 @@ describe('DocumentsTable', () => {
     });
   });
 
-  describe('Pagination', () => {
-    it('passes pageSize config to SortableDataTable when configured', () => {
-      (useQuery as jest.Mock).mockReturnValue(
-        mockQueryData([mockPdfDocument, mockImageDocument]),
-      );
-      renderComponent({ config: { ...defaultConfig, pageSize: 1 } });
-
-      // With pageSize=1 and 2 documents, the table container is present
-      // (there may be multiple elements with this testid: outer wrapper + SortableDataTable)
-      const tableElements = screen.getAllByTestId('documents-table');
-      expect(tableElements.length).toBeGreaterThanOrEqual(1);
-    });
-
-    it('renders all documents when pageSize is not configured', () => {
-      (useQuery as jest.Mock).mockReturnValue(
-        mockQueryData([mockPdfDocument, mockImageDocument]),
-      );
-      renderComponent({ config: defaultConfig });
-
-      // Both documents visible without pagination limits
-      expect(screen.getByText('Test Document')).toBeInTheDocument();
-      expect(screen.getByText('X-Ray Image')).toBeInTheDocument();
-    });
-  });
-
   describe('Race Condition Prevention', () => {
     it('validation effect has correct dependencies for modal state', async () => {
       // This test verifies the effect cleanup (AbortController) works

@@ -127,8 +127,6 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
     [fields],
   );
 
-  const pageSize = config?.pageSize as number | undefined;
-
   const normalizedAttachments = useMemo(
     () => (selectedDoc ? getNormalizedAttachments(selectedDoc) : []),
     [selectedDoc],
@@ -186,7 +184,6 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
           renderCell={renderCell}
           className={styles.documentsTableBody}
           dataTestId="documents-table"
-          pageSize={pageSize}
         />
       </div>
 
