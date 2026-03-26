@@ -32,7 +32,7 @@ jest.mock('@bahmni/design-system', () => ({
 
 // Mock the services
 jest.mock('@bahmni/services', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  ...jest.requireActual('@bahmni/services'),
   formatDateTime: jest.fn(() => ({ formattedResult: '15/06/2024' })),
   getValueType: (value: string) => {
     if (!value) return 'string';
