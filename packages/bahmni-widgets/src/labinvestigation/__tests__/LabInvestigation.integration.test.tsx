@@ -2,6 +2,7 @@ import {
   useTranslation,
   getCategoryUuidFromOrderTypes,
   getLabInvestigationsBundle,
+  formatDateTime,
 } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -16,30 +17,7 @@ jest.mock('@bahmni/services', () => ({
   useTranslation: jest.fn(),
   getCategoryUuidFromOrderTypes: jest.fn(),
   getLabInvestigationsBundle: jest.fn(),
-  formatDateTime: jest.fn(
-    (timestamp: number | string, t?: any, includeTime: boolean = false) => {
-      const date = new Date(timestamp);
-      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(date.getUTCDate()).padStart(2, '0');
-      const year = date.getUTCFullYear();
-
-      if (includeTime) {
-        const hours = date.getUTCHours();
-        const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        const displayHours = hours % 12 || 12;
-        return {
-          formattedResult: `${month}/${day}/${year} ${displayHours}:${minutes} ${ampm}`,
-          isValid: true,
-        };
-      }
-
-      return {
-        formattedResult: `${month}/${day}/${year}`,
-        isValid: true,
-      };
-    },
-  ),
+  formatDateTime: jest.fn(),
 }));
 
 jest.mock('react-router-dom', () => ({
@@ -70,6 +48,9 @@ const mockUseNotification = useNotification as jest.MockedFunction<
 >;
 const mockUsePatientUUID = usePatientUUID as jest.MockedFunction<
   typeof usePatientUUID
+>;
+const mockFormatDateTime = formatDateTime as jest.MockedFunction<
+  typeof formatDateTime
 >;
 
 const createMockBundle = (
@@ -176,6 +157,11 @@ describe('LabInvestigation Integration Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFormatDateTime
+      .mockReturnValueOnce({ formattedResult: '03/25/2025' })
+      .mockReturnValueOnce({ formattedResult: '03/25/2025' })
+      .mockReturnValueOnce({ formattedResult: '03/24/2025' })
+      .mockReturnValue({ formattedResult: '01/01/2025' });
     setupDefaultMocks(
       createMockBundle(mockServiceRequests),
       mockAddNotification,

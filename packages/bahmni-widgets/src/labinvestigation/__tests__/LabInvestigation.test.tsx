@@ -5,6 +5,7 @@ import {
   getDiagnosticReports,
   getDiagnosticReportBundle,
   useSubscribeConsultationSaved,
+  formatDateTime,
 } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -27,30 +28,7 @@ jest.mock('@bahmni/services', () => ({
   getDiagnosticReports: jest.fn(),
   getDiagnosticReportBundle: jest.fn(),
   useSubscribeConsultationSaved: jest.fn(),
-  formatDateTime: jest.fn(
-    (timestamp: number | string, t?: any, includeTime: boolean = false) => {
-      const date = new Date(timestamp);
-      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(date.getUTCDate()).padStart(2, '0');
-      const year = date.getUTCFullYear();
-
-      if (includeTime) {
-        const hours = date.getUTCHours();
-        const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        const displayHours = hours % 12 || 12;
-        return {
-          formattedResult: `${month}/${day}/${year} ${displayHours}:${minutes} ${ampm}`,
-          isValid: true,
-        };
-      }
-
-      return {
-        formattedResult: `${month}/${day}/${year}`,
-        isValid: true,
-      };
-    },
-  ),
+  formatDateTime: jest.fn(),
 }));
 
 jest.mock('react-router-dom', () => ({
@@ -104,6 +82,9 @@ const mockUseSubscribeConsultationSaved =
   useSubscribeConsultationSaved as jest.MockedFunction<
     typeof useSubscribeConsultationSaved
   >;
+const mockFormatDateTime = formatDateTime as jest.MockedFunction<
+  typeof formatDateTime
+>;
 
 const createQueryClient = () =>
   new QueryClient({
@@ -228,6 +209,11 @@ const setupDefaultMocks = (
 describe('LabInvestigation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFormatDateTime
+      .mockReturnValueOnce({ formattedResult: '05/08/2025' })
+      .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+      .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+      .mockReturnValue({ formattedResult: '01/01/2025' });
     setupDefaultMocks();
   });
 

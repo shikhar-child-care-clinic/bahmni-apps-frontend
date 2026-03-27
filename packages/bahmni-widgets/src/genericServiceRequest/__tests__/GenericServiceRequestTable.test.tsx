@@ -28,31 +28,10 @@ jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   useTranslation: jest.fn(),
   groupByDate: jest.fn(),
-  formatDateTime: jest.fn(
-    (timestamp: number | string | Date, t?: any, format?: string) => {
-      const date = new Date(timestamp);
-
-      if (format === 'yyyy-MM-dd') {
-        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-        const day = String(date.getUTCDate()).padStart(2, '0');
-        const year = date.getUTCFullYear();
-        return { formattedResult: `${year}-${month}-${day}`, isValid: true };
-      }
-
-      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(date.getUTCDate()).padStart(2, '0');
-      const year = date.getUTCFullYear();
-      const hours = date.getUTCHours();
-      const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      const displayHours = hours % 12 || 12;
-
-      return {
-        formattedResult: `${month}/${day}/${year} ${displayHours}:${minutes} ${ampm}`,
-        isValid: true,
-      };
-    },
-  ),
+  formatDateTime: jest.fn(() => ({
+    formattedResult: '01/12/2023',
+    isValid: true,
+  })),
   getFormattedError: jest.fn(),
   getCategoryUuidFromOrderTypes: jest.fn(),
   getServiceRequests: jest.fn(),

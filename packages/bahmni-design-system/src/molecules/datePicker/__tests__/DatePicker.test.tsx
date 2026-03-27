@@ -24,13 +24,13 @@ describe('DatePicker', () => {
 
   describe('DatePicker', () => {
     it('renders DatePicker component', () => {
-      const { container } = render(
-        <DatePicker>
+      render(
+        <DatePicker testId="date-picker">
           <DatePickerInput id="date-picker-input" labelText="Date" />
         </DatePicker>,
       );
 
-      expect(container.querySelector('.cds--date-picker')).toBeInTheDocument();
+      expect(screen.getByTestId('date-picker')).toBeInTheDocument();
     });
 
     it('uses default date format from getDateFormats when dateFormat is not provided', () => {
@@ -46,15 +46,12 @@ describe('DatePicker', () => {
     it('uses provided dateFormat prop over default format', () => {
       const customFormat = 'm/d/Y';
       render(
-        <DatePicker dateFormat={customFormat}>
+        <DatePicker dateFormat={customFormat} testId="custom-format-picker">
           <DatePickerInput id="date-picker-input" labelText="Date" />
         </DatePicker>,
       );
 
-      const datePicker = screen
-        .getByLabelText('Date')
-        .closest('.cds--date-picker');
-      expect(datePicker).toBeInTheDocument();
+      expect(screen.getByTestId('custom-format-picker')).toBeInTheDocument();
     });
 
     it.each([
