@@ -1,7 +1,6 @@
 import { FormattedPatientData, formatDateTime } from '@bahmni/services';
 import { render, screen } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { useTranslation } from 'react-i18next';
 import PatientDetails from '../PatientDetails';
 import { usePatient } from '../usePatient';
 
@@ -9,7 +8,6 @@ expect.extend(toHaveNoViolations);
 
 jest.mock('../usePatient');
 jest.mock('../../hooks/usePatientUUID');
-jest.mock('react-i18next');
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   formatDateTime: jest.fn(),
@@ -40,23 +38,9 @@ jest.mock('@bahmni/design-system', () => ({
 }));
 
 const mockedUsePatient = usePatient as jest.MockedFunction<typeof usePatient>;
-const mockedUseTranslation = useTranslation as jest.MockedFunction<
-  typeof useTranslation
->;
 const mockedFormatDateTime = formatDateTime as jest.MockedFunction<
   typeof formatDateTime
 >;
-
-const mockT = jest
-  .fn()
-  .mockImplementation((key: string, options?: { count?: number }) => {
-    const translations: Record<string, string> = {
-      YEARS: options?.count === 1 ? ' year' : ' years',
-      MONTHS: options?.count === 1 ? ' month' : ' months',
-      DAYS: options?.count === 1 ? ' day' : ' days',
-    };
-    return translations[key] || key;
-  }) as any;
 
 const createMockPatient = (
   overrides?: Partial<FormattedPatientData>,
@@ -74,14 +58,8 @@ const createMockPatient = (
 describe('PatientDetails Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Mock Date to return a fixed date for consistent age calculations
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2025-03-16'));
-    mockedUseTranslation.mockReturnValue({
-      t: mockT,
-      i18n: {} as any,
-      ready: true,
-    } as any);
     mockedFormatDateTime.mockImplementation((date: string | number | Date) => ({
       formattedResult: String(date),
       error: undefined,
@@ -126,8 +104,9 @@ describe('PatientDetails Component', () => {
       expect(screen.getByTestId('patient-name')).toHaveTextContent('John Doe');
       expect(screen.getByText('MRN123456 | OP789')).toBeInTheDocument();
       expect(screen.getByText('male')).toBeInTheDocument();
-      expect(screen.getByText(/36 years 2 months/)).toBeInTheDocument();
-      expect(screen.getByText(/1989-01-01/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/36YEARS 2MONTHS 15DAYS | 1989-01-01/),
+      ).toBeInTheDocument();
     });
 
     it('renders patient with minimal data', () => {
@@ -181,8 +160,9 @@ describe('PatientDetails Component', () => {
       });
 
       render(<PatientDetails />);
-      expect(screen.getByText(/1990-01-01/)).toBeInTheDocument();
-      expect(screen.getByText(/years/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/35YEARS 2MONTHS 15DAYS | 1990-01-01/),
+      ).toBeInTheDocument();
     });
 
     it('shows only birth date when birthDate is null', () => {
@@ -195,7 +175,7 @@ describe('PatientDetails Component', () => {
       });
 
       render(<PatientDetails />);
-      expect(screen.queryByText(/years/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/YEARS/)).not.toBeInTheDocument();
     });
 
     it('hides age section when birth date is null', () => {
@@ -209,7 +189,7 @@ describe('PatientDetails Component', () => {
 
       render(<PatientDetails />);
       expect(
-        screen.queryByText(/years|days|months|\d{4}-\d{2}-\d{2}/),
+        screen.queryByText(/YEARS|DAYS|MONTHS|\d{4}-\d{2}-\d{2}/),
       ).not.toBeInTheDocument();
     });
   });

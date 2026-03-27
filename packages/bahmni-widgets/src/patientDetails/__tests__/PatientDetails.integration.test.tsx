@@ -7,19 +7,6 @@ jest.mock('../usePatient', () => ({
   usePatient: jest.fn(),
 }));
 
-jest.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: jest.fn((key: string, options?: { count?: number }) => {
-      const translations: Record<string, string> = {
-        YEARS: options?.count === 1 ? ' year' : ' years',
-        MONTHS: options?.count === 1 ? ' month' : ' months',
-        DAYS: options?.count === 1 ? ' day' : ' days',
-      };
-      return translations[key] || key;
-    }),
-  }),
-}));
-
 jest.mock('@bahmni/design-system', () => ({
   Icon: ({
     id,
@@ -53,7 +40,6 @@ const mockedUsePatient = usePatient as jest.MockedFunction<
 describe('PatientDetails Integration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Mock Date to return a fixed date for consistent age calculations
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2025-03-16'));
   });
@@ -85,7 +71,7 @@ describe('PatientDetails Integration', () => {
     expect(screen.getByTestId('patient-name')).toHaveTextContent('John Doe');
     expect(screen.getByText('MRN123456')).toBeInTheDocument();
     expect(screen.getByText('male')).toBeInTheDocument();
-    expect(screen.getByText(/35 years 2 months/)).toBeInTheDocument();
+    expect(screen.getByText(/35YEARS 2MONTHS 15DAYS/)).toBeInTheDocument();
   });
 
   it('integrates usePatient hook with error state', () => {
@@ -134,6 +120,6 @@ describe('PatientDetails Integration', () => {
 
     render(<PatientDetails />);
 
-    expect(screen.getByText(/1 year 1 month/)).toBeInTheDocument();
+    expect(screen.getByText(/1YEARS 1MONTHS 1DAYS/)).toBeInTheDocument();
   });
 });
