@@ -438,6 +438,28 @@ describe('useUpdatePatient', () => {
       });
     });
 
+    it('should display error message as-is when there is no bracketed duplicate', async () => {
+      const mandatoryFieldsError = 'Please fill the mandatory fields';
+      mockUpdatePatient.mockRejectedValue(mandatoryFieldsError);
+
+      const { result } = renderHook(() => useUpdatePatient(), {
+        wrapper: createWrapper(),
+      });
+
+      result.current.mutate(mockFormData);
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true);
+      });
+
+      expect(mockAddNotification).toHaveBeenCalledWith({
+        type: 'error',
+        title: 'Error updating patient',
+        timeout: 5000,
+        message: 'Please fill the mandatory fields',
+      });
+    });
+
     it('should handle validation errors from API', async () => {
       const validationError = {
         message: 'Validation failed',
