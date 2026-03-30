@@ -248,6 +248,7 @@ export {
   getCurrentUserPrivileges,
   hasPrivilege,
   type UserPrivilege,
+  type SessionResponse,
 } from './privilegeService';
 export {
   fetchObservationForms,
