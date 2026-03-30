@@ -329,7 +329,23 @@
       "properties": {
         "sections": {
           "type": "array",
-          "description": "Array of form sections to display",
+          "description": "Array of form sections to display. Must contain a 'profile' control in one section.",
+          "contains": {
+            "type": "object",
+            "properties": {
+              "controls": {
+                "type": "array",
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "type": { "const": "profile" }
+                  },
+                  "required": ["type"]
+                }
+              }
+            },
+            "required": ["controls"]
+          },
           "items": {
             "type": "object",
             "required": ["name", "controls"],
@@ -345,7 +361,8 @@
               },
               "controls": {
                 "type": "array",
-                "description": "Array of form controls in this section",
+                "description": "Array of form controls in this section. Control types must be unique across all sections.",
+                "uniqueItems": true,
                 "items": {
                   "type": "object",
                   "required": ["type"],
@@ -353,7 +370,14 @@
                   "properties": {
                     "type": {
                       "type": "string",
-                      "enum": ["profile", "address", "contactInfo", "additionalInfo", "additionalIdentifiers", "relationships"],
+                      "enum": [
+                        "profile",
+                        "address",
+                        "contactInfo",
+                        "additionalInfo",
+                        "additionalIdentifiers",
+                        "relationships"
+                      ],
                       "description": "Type of form control to render"
                     },
                     "titleTranslationKey": {
