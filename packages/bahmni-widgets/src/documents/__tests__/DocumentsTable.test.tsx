@@ -740,7 +740,7 @@ describe('DocumentsTable', () => {
       // Verify all columns are rendered
       expect(screen.getByText('Test Document')).toBeInTheDocument();
       expect(screen.getByText('Prescription')).toBeInTheDocument();
-      expect(screen.getByText('2024-01-15 10:30 AM')).toBeInTheDocument();
+      expect(screen.getByText('15/01/2024 4:00 PM')).toBeInTheDocument();
       expect(screen.getByText('Dr. Smith')).toBeInTheDocument();
       expect(
         screen.getByText('DOCUMENTS_VIEW_ATTACHMENTS'),
