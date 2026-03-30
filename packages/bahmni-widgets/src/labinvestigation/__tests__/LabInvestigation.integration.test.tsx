@@ -2,7 +2,7 @@ import {
   useTranslation,
   getCategoryUuidFromOrderTypes,
   getLabInvestigationsBundle,
-  formatDateTime,
+  DEFAULT_DATE_FORMAT_STORAGE_KEY,
 } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -17,7 +17,6 @@ jest.mock('@bahmni/services', () => ({
   useTranslation: jest.fn(),
   getCategoryUuidFromOrderTypes: jest.fn(),
   getLabInvestigationsBundle: jest.fn(),
-  formatDateTime: jest.fn(),
 }));
 
 jest.mock('react-router-dom', () => ({
@@ -48,9 +47,6 @@ const mockUseNotification = useNotification as jest.MockedFunction<
 >;
 const mockUsePatientUUID = usePatientUUID as jest.MockedFunction<
   typeof usePatientUUID
->;
-const mockFormatDateTime = formatDateTime as jest.MockedFunction<
-  typeof formatDateTime
 >;
 
 const createMockBundle = (
@@ -157,15 +153,11 @@ describe('LabInvestigation Integration Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockFormatDateTime
-      .mockReturnValueOnce({ formattedResult: '03/25/2025' })
-      .mockReturnValueOnce({ formattedResult: '03/25/2025' })
-      .mockReturnValueOnce({ formattedResult: '03/24/2025' })
-      .mockReturnValue({ formattedResult: '01/01/2025' });
     setupDefaultMocks(
       createMockBundle(mockServiceRequests),
       mockAddNotification,
     );
+    localStorage.setItem(DEFAULT_DATE_FORMAT_STORAGE_KEY, 'dd/MM/yyyy');
   });
 
   afterEach(() => {
@@ -176,8 +168,8 @@ describe('LabInvestigation Integration Tests', () => {
     renderLabInvestigations();
 
     await waitFor(() => {
-      expect(screen.getByText(/03\/25\/2025/i)).toBeInTheDocument();
-      expect(screen.getByText(/03\/24\/2025/i)).toBeInTheDocument();
+      expect(screen.getByText(/25\/03\/2025/i)).toBeInTheDocument();
+      expect(screen.getByText(/24\/03\/2025/i)).toBeInTheDocument();
     });
 
     expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
@@ -226,14 +218,14 @@ describe('LabInvestigation Integration Tests', () => {
     renderLabInvestigations();
 
     await waitFor(() => {
-      expect(screen.getByText(/03\/25\/2025/i)).toBeInTheDocument();
+      expect(screen.getByText(/25\/03\/2025/i)).toBeInTheDocument();
     });
 
     const firstAccordionButton = screen.getByRole('button', {
-      name: /03\/25\/2025/i,
+      name: /25\/03\/2025/i,
     });
     const secondAccordionButton = screen.getByRole('button', {
-      name: /03\/24\/2025/i,
+      name: /24\/03\/2025/i,
     });
 
     // First accordion should be open by default
@@ -245,7 +237,7 @@ describe('LabInvestigation Integration Tests', () => {
     renderLabInvestigations();
 
     await waitFor(() => {
-      expect(screen.getByText(/03\/25\/2025/i)).toBeInTheDocument();
+      expect(screen.getByText(/25\/03\/2025/i)).toBeInTheDocument();
     });
 
     // Check for STAT priority (urgent) test
@@ -261,7 +253,7 @@ describe('LabInvestigation Integration Tests', () => {
     renderLabInvestigations();
 
     await waitFor(() => {
-      expect(screen.getByText(/03\/25\/2025/i)).toBeInTheDocument();
+      expect(screen.getByText(/25\/03\/2025/i)).toBeInTheDocument();
     });
 
     // The component should render urgent tests before routine tests within each date group
@@ -275,7 +267,7 @@ describe('LabInvestigation Integration Tests', () => {
     renderLabInvestigations();
 
     await waitFor(() => {
-      expect(screen.getByText(/03\/25\/2025/i)).toBeInTheDocument();
+      expect(screen.getByText(/25\/03\/2025/i)).toBeInTheDocument();
     });
 
     // Only tests in the open accordion should show pending results
@@ -297,7 +289,7 @@ describe('LabInvestigation Integration Tests', () => {
     renderLabInvestigations();
 
     await waitFor(() => {
-      expect(screen.getByText(/03\/25\/2025/i)).toBeInTheDocument();
+      expect(screen.getByText(/25\/03\/2025/i)).toBeInTheDocument();
     });
 
     mockGetLabTestBundle.mockResolvedValue(createMockBundle([]));

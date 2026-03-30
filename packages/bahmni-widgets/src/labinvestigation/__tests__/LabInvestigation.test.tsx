@@ -209,11 +209,6 @@ const setupDefaultMocks = (
 describe('LabInvestigation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockFormatDateTime
-      .mockReturnValueOnce({ formattedResult: '05/08/2025' })
-      .mockReturnValueOnce({ formattedResult: '04/09/2025' })
-      .mockReturnValueOnce({ formattedResult: '04/09/2025' })
-      .mockReturnValue({ formattedResult: '01/01/2025' });
     setupDefaultMocks();
   });
 
@@ -228,6 +223,11 @@ describe('LabInvestigation', () => {
   });
 
   it('renders lab tests grouped by date', async () => {
+    mockFormatDateTime
+      .mockReturnValueOnce({ formattedResult: '05/08/2025' })
+      .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+      .mockReturnValueOnce({ formattedResult: '04/09/2025' });
+
     render(renderLabInvestigations());
     await waitForDate();
 
@@ -259,6 +259,11 @@ describe('LabInvestigation', () => {
   });
 
   it('renders urgent tests before non-urgent tests within each date group', async () => {
+    mockFormatDateTime
+      .mockReturnValueOnce({ formattedResult: '05/08/2025' })
+      .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+      .mockReturnValueOnce({ formattedResult: '04/09/2025' });
+
     render(renderLabInvestigations());
     await waitFor(() => {
       expect(screen.getAllByTestId('test-name')).toHaveLength(3);
@@ -280,6 +285,11 @@ describe('LabInvestigation', () => {
   });
 
   it('opens first accordion item by default', async () => {
+    mockFormatDateTime
+      .mockReturnValueOnce({ formattedResult: '05/08/2025' })
+      .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+      .mockReturnValueOnce({ formattedResult: '04/09/2025' });
+
     render(renderLabInvestigations());
     await waitForDate();
 
@@ -309,6 +319,11 @@ describe('LabInvestigation', () => {
     });
 
     it('should fetch lab investigations when emptyEncounterFilter is false (episodeOfCareUuids is empty)', async () => {
+      mockFormatDateTime
+        .mockReturnValueOnce({ formattedResult: '05/08/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' });
+
       render(
         renderLabInvestigations(
           { orderType: 'Lab Order' },
@@ -321,6 +336,11 @@ describe('LabInvestigation', () => {
     });
 
     it('should fetch lab investigations when emptyEncounterFilter is false (both have values)', async () => {
+      mockFormatDateTime
+        .mockReturnValueOnce({ formattedResult: '05/08/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' });
+
       render(
         renderLabInvestigations(
           { orderType: 'Lab Order' },
@@ -333,6 +353,11 @@ describe('LabInvestigation', () => {
     });
 
     it('should fetch lab investigations when emptyEncounterFilter is false (no episode provided)', async () => {
+      mockFormatDateTime
+        .mockReturnValueOnce({ formattedResult: '05/08/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' });
+
       render(renderLabInvestigations({ orderType: 'Lab Order' }));
       await waitForDate();
       expect(mockGetLabInvestigationsBundle).toHaveBeenCalled();
@@ -341,6 +366,11 @@ describe('LabInvestigation', () => {
 
   describe('Accordion interactions', () => {
     it('should allow multiple accordions to be open at the same time', async () => {
+      mockFormatDateTime
+        .mockReturnValueOnce({ formattedResult: '05/08/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' });
+
       const user = userEvent.setup();
       render(renderLabInvestigations());
       await waitForDate();
@@ -361,6 +391,11 @@ describe('LabInvestigation', () => {
     });
 
     it('should close accordion when clicking on open accordion', async () => {
+      mockFormatDateTime
+        .mockReturnValueOnce({ formattedResult: '05/08/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' });
+
       const user = userEvent.setup();
       render(renderLabInvestigations());
       await waitForDate();
@@ -404,6 +439,11 @@ describe('LabInvestigation', () => {
 
   describe('Diagnostic reports fetching', () => {
     it('should fetch diagnostic reports when accordion is opened', async () => {
+      mockFormatDateTime
+        .mockReturnValueOnce({ formattedResult: '05/08/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' });
+
       mockGetDiagnosticReports.mockResolvedValue(createMockDiagnosticReports());
       render(renderLabInvestigations());
       await waitForDate();
@@ -414,6 +454,11 @@ describe('LabInvestigation', () => {
     });
 
     it('should pass reportId to child component for processed reports', async () => {
+      mockFormatDateTime
+        .mockReturnValueOnce({ formattedResult: '05/08/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' });
+
       mockGetDiagnosticReports.mockResolvedValue(createMockDiagnosticReports());
       render(renderLabInvestigations());
       await waitForDate();
@@ -433,6 +478,11 @@ describe('LabInvestigation', () => {
     });
 
     it('refetches data when consultation saved event is triggered with matching category', async () => {
+      mockFormatDateTime
+        .mockReturnValueOnce({ formattedResult: '05/08/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' });
+
       let eventCallback: (payload: any) => void = () => {};
       mockUseSubscribeConsultationSaved.mockImplementation((callback) => {
         eventCallback = callback;
@@ -457,6 +507,11 @@ describe('LabInvestigation', () => {
     });
 
     it('does not refetch when event is for different patient', async () => {
+      mockFormatDateTime
+        .mockReturnValueOnce({ formattedResult: '05/08/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' });
+
       let eventCallback: (payload: any) => void = () => {};
       mockUseSubscribeConsultationSaved.mockImplementation((callback) => {
         eventCallback = callback;
@@ -480,6 +535,11 @@ describe('LabInvestigation', () => {
     });
 
     it('does not refetch when different category was updated', async () => {
+      mockFormatDateTime
+        .mockReturnValueOnce({ formattedResult: '05/08/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' });
+
       let eventCallback: (payload: any) => void = () => {};
       mockUseSubscribeConsultationSaved.mockImplementation((callback) => {
         eventCallback = callback;
@@ -503,6 +563,11 @@ describe('LabInvestigation', () => {
     });
 
     it('does not refetch when serviceRequests is empty', async () => {
+      mockFormatDateTime
+        .mockReturnValueOnce({ formattedResult: '05/08/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' })
+        .mockReturnValueOnce({ formattedResult: '04/09/2025' });
+
       let eventCallback: (payload: any) => void = () => {};
       mockUseSubscribeConsultationSaved.mockImplementation((callback) => {
         eventCallback = callback;
