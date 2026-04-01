@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import '@testing-library/jest-dom';
 import { TextEncoder, TextDecoder } from 'util';
 // Import and initialize i18n for tests

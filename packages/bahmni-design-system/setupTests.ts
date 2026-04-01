@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import { initFontAwesome } from './src/fontawesome';
 import { suppressResizeObserverErrors } from './src/utils/suppressResizeObserverErrors';
 
