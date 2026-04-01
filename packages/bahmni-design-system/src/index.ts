@@ -82,7 +82,7 @@ export {
   DatePickerInput,
   type DatePickerProps,
   type DatePickerInputProps,
-} from './atoms/datePicker';
+} from './molecules/datePicker';
 export { TimePicker, type TimePickerProps } from './atoms/timePicker';
 export {
   TimePickerSelect,
