@@ -10,20 +10,6 @@ export type ComboBoxProps<T> = CarbonComboBoxProps<T> & {
   clearSelectedOnChange?: boolean;
 };
 
-// Suppress Carbon autoAlign ResizeObserver loop errors — registered once at module
-// scope using capture phase so it runs before React's dev overlay handler.
-if (typeof window !== 'undefined') {
-  window.addEventListener(
-    'error',
-    (e: ErrorEvent) => {
-      if (e.message.startsWith('ResizeObserver loop')) {
-        e.stopImmediatePropagation();
-      }
-    },
-    true,
-  );
-}
-
 export const ComboBox = <T,>({
   testId,
   'data-testid': dataTestId,
@@ -40,6 +26,7 @@ export const ComboBox = <T,>({
 
   useEffect(() => {
     if (clearSelectedOnChange && externalSelectedItem) {
+      setDisplayItem(null);
       clearTimeout(clearTimerRef.current);
       clearTimerRef.current = setTimeout(() => setComboboxKey((k) => k + 1), 0);
       return () => clearTimeout(clearTimerRef.current);
@@ -51,7 +38,7 @@ export const ComboBox = <T,>({
   useEffect(() => () => clearTimeout(clearTimerRef.current), []);
 
   const handleChange = (
-    event: Parameters<CarbonComboBoxProps<T>['onChange']>[0],
+    event: Parameters<NonNullable<CarbonComboBoxProps<T>['onChange']>>[0],
   ) => {
     onChange?.(event);
     if (clearSelectedOnChange && event.selectedItem) {

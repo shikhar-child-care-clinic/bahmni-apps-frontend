@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ComboBox } from '..';
 
@@ -93,6 +93,28 @@ describe('ComboBox', () => {
       act(() => jest.runAllTimers());
 
       expect(screen.getByRole('combobox')).toHaveValue('');
+    });
+  });
+
+  describe('clearSelectedOnChange=true with user interaction', () => {
+    it('should clear input after user clicks an item', async () => {
+      const user = userEvent.setup();
+      render(
+        <ComboBox
+          {...defaultProps}
+          clearSelectedOnChange
+          selectedItem={null}
+        />,
+      );
+
+      await user.click(screen.getByRole('combobox'));
+      await user.click(
+        await screen.findByRole('option', { name: 'Hypertension' }),
+      );
+
+      await waitFor(() => {
+        expect(screen.getByRole('combobox')).toHaveValue('');
+      });
     });
   });
 

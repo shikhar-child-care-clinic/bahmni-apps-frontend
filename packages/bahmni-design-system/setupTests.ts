@@ -1,6 +1,8 @@
 import { initFontAwesome } from './src/fontawesome';
+import { suppressResizeObserverErrors } from './src/utils/suppressResizeObserverErrors';
 
 initFontAwesome();
+suppressResizeObserverErrors();
 
 global.ResizeObserver = class ResizeObserver {
   constructor(_callback: ResizeObserverCallback) {

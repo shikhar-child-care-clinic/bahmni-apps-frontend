@@ -1,4 +1,9 @@
-import { Content, Loading, initFontAwesome } from '@bahmni/design-system';
+import {
+  Content,
+  Loading,
+  initFontAwesome,
+  suppressResizeObserverErrors,
+} from '@bahmni/design-system';
 import { initAppI18n } from '@bahmni/services';
 import {
   NotificationProvider,
@@ -13,6 +18,8 @@ import { queryClientConfig } from './config/tanstackQuery';
 import { BAHMNI_APPOINTMENTS_NAMESPACE } from './constants/app';
 import { AppointmentsConfigProvider } from './providers/appointmentsConfig';
 import { routes, renderRoutes } from './routes';
+
+suppressResizeObserverErrors();
 
 const queryClient = new QueryClient(queryClientConfig);
 

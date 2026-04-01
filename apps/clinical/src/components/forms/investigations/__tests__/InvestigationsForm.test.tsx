@@ -1093,9 +1093,7 @@ describe('InvestigationsForm', () => {
         ).toBeInTheDocument();
       });
 
-      // The combobox resets automatically after selection; trigger an input event
-      // to clear the parent's search state and hide the duplicate notification.
-      await user.type(screen.getByRole('combobox'), ' {backspace}');
+      await user.click(screen.getByRole('button', { name: /close/i }));
 
       await waitFor(() => {
         expect(
