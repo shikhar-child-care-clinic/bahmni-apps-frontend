@@ -1,4 +1,3 @@
-/* istanbul ignore file */
 import {
   Content,
   Loading,
@@ -20,7 +19,6 @@ import { BAHMNI_APPOINTMENTS_NAMESPACE } from './constants/app';
 import { AppointmentsConfigProvider } from './providers/appointmentsConfig';
 import { routes, renderRoutes } from './routes';
 
-/* istanbul ignore next */
 suppressResizeObserverErrors();
 
 const queryClient = new QueryClient(queryClientConfig);

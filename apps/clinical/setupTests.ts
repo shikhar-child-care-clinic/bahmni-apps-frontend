@@ -1,4 +1,3 @@
-/* istanbul ignore file */
 import '@testing-library/jest-dom';
 import { TextEncoder, TextDecoder } from 'util';
 import {
@@ -10,7 +9,6 @@ import './setupTests.i18n';
 
 // Initialize FontAwesome icons for tests
 initFontAwesome();
-/* istanbul ignore next */
 suppressResizeObserverErrors();
 
 // @ts-expect-error - Ignoring type issues with Node.js util TextEncoder
