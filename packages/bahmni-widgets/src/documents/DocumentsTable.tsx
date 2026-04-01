@@ -204,9 +204,11 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
               const isPdf = attachment.contentType
                 ?.toLowerCase()
                 .includes('pdf');
-              const isImg = attachment.contentType
-                ?.toLowerCase()
-                .includes('image');
+              const isImg =
+                attachment.contentType?.toLowerCase().includes('image') ||
+                /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(
+                  attachment.url ?? '',
+                );
               const hasFailed = failedAttachments.has(index);
 
               if (url === '#' || hasFailed) {
