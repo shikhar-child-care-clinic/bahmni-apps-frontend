@@ -2,7 +2,7 @@ import { OPENMRS_FHIR_R4 } from '../constants/app';
 
 // Higher count than other FHIR resources (100) because patients
 // can accumulate a large volume of orders across visits.
-const SERVICE_REQUEST_COUNT = 200;
+export const SERVICE_REQUEST_COUNT = 200;
 
 export const SERVICE_REQUESTS_URL = (
   category: string,
