@@ -12,4 +12,5 @@ global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
 initFontAwesome();
+/* istanbul ignore next */
 suppressResizeObserverErrors();

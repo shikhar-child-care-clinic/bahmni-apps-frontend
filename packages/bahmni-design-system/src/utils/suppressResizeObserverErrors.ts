@@ -2,6 +2,7 @@
 // Registered in capture phase so it runs before React's dev overlay handler.
 // Intentionally covers all Carbon autoAlign components (ComboBox, Dropdown, MultiSelect, etc.).
 export const suppressResizeObserverErrors = () => {
+  /* istanbul ignore next */
   if (typeof window !== 'undefined') {
     window.addEventListener(
       'error',

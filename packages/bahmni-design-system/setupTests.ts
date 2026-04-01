@@ -2,6 +2,7 @@ import { initFontAwesome } from './src/fontawesome';
 import { suppressResizeObserverErrors } from './src/utils/suppressResizeObserverErrors';
 
 initFontAwesome();
+/* istanbul ignore next */
 suppressResizeObserverErrors();
 
 global.ResizeObserver = class ResizeObserver {

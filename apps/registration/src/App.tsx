@@ -21,6 +21,7 @@ import PatientSearchPage from './pages/patientSearchPage';
 import { PersonAttributesProvider } from './providers/PersonAttributesProvider';
 import { RegistrationConfigProvider } from './providers/registrationConfig';
 
+/* istanbul ignore next */
 suppressResizeObserverErrors();
 
 const queryClient = new QueryClient(queryClientConfig);

@@ -20,6 +20,7 @@ import { CLINICAL_NAMESPACE } from './constants/app';
 import ConsultationPage from './pages/ConsultationPage';
 import { ClinicalConfigProvider } from './providers/clinicalConfig';
 
+/* istanbul ignore next */
 suppressResizeObserverErrors();
 
 const queryClient = new QueryClient(queryClientConfig);
