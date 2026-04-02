@@ -23,6 +23,7 @@ import { useSearchParams } from 'react-router-dom';
 import ConsultationPad from '../components/consultationPad/ConsultationPad';
 import DashboardContainer from '../components/dashboardContainer/DashboardContainer';
 import PatientHeader from '../components/patientHeader/PatientHeader';
+import PatientSearch from '../components/patientSearch/PatientSearch';
 import { BAHMNI_CLINICAL_PATH } from '../constants/app';
 import { ClinicalAppProvider } from '../providers/ClinicalAppProvider';
 import { useClinicalConfig } from '../providers/clinicalConfig';
@@ -52,29 +53,6 @@ const addSectionIds = (config: DashboardConfig): DashboardConfig => {
   };
 };
 
-const globalActions = [
-  {
-    id: 'search',
-    label: 'Search',
-    renderIcon: <Icon id="search-icon" name="fa-search" size={ICON_SIZE.LG} />,
-    onClick: () => {},
-  },
-  {
-    id: 'notifications',
-    label: 'Notifications',
-    renderIcon: (
-      <Icon id="notifications-icon" name="fa-bell" size={ICON_SIZE.LG} />
-    ),
-    onClick: () => {},
-  },
-  {
-    id: 'user',
-    label: 'User',
-    renderIcon: <Icon id="user-icon" name="fa-user" size={ICON_SIZE.LG} />,
-    onClick: () => {},
-  },
-];
-
 /**
  * ConsultationPage
  *
@@ -91,7 +69,33 @@ const ConsultationPage: React.FC = () => {
   const { userPrivileges } = useUserPrivilege();
   const { addNotification } = useNotification();
   const [isActionAreaVisible, setIsActionAreaVisible] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchParams] = useSearchParams();
+
+  const globalActions = [
+    {
+      id: 'search',
+      label: 'Search',
+      renderIcon: (
+        <Icon id="search-icon" name="fa-search" size={ICON_SIZE.LG} />
+      ),
+      onClick: () => setIsSearchOpen(true),
+    },
+    {
+      id: 'notifications',
+      label: 'Notifications',
+      renderIcon: (
+        <Icon id="notifications-icon" name="fa-bell" size={ICON_SIZE.LG} />
+      ),
+      onClick: () => {},
+    },
+    {
+      id: 'user',
+      label: 'User',
+      renderIcon: <Icon id="user-icon" name="fa-user" size={ICON_SIZE.LG} />,
+      onClick: () => {},
+    },
+  ];
   const viewingForm = useObservationFormsStore((state) => state.viewingForm);
 
   const breadcrumbItems = [
@@ -230,6 +234,10 @@ const ConsultationPage: React.FC = () => {
 
   return (
     <ClinicalAppProvider episodeUuids={episodeUuids}>
+      <PatientSearch
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
       <ActionAreaLayout
         headerWSideNav={
           <Header
