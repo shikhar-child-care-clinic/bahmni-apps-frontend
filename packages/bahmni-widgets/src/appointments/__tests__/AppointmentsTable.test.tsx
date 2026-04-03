@@ -134,8 +134,21 @@ describe('AppointmentsTable', () => {
     });
   });
 
-  describe('renderCell - Date and Time Formatting', () => {
+  describe('renderCell', () => {
     let renderCellFunction: (row: any, key: string) => React.ReactNode;
+
+    const mockRow = {
+      uuid: 'test-uuid',
+      id: 'test-id',
+      appointmentDate: '2025-02-15T10:30:00Z',
+      appointmentStartTime: '2025-02-15T10:30:00Z',
+      appointmentEndTime: '2025-02-15T11:00:00Z',
+      appointmentNumber: 'APT-123',
+      service: 'Consultation',
+      reason: 'Follow-up',
+      status: 'booked',
+      provider: 'Dr. Smith',
+    };
 
     beforeEach(() => {
       render(<AppointmentsTable config={{}} episodeOfCareUuids={[]} />);
@@ -145,94 +158,22 @@ describe('AppointmentsTable', () => {
       }
     });
 
-    it('should format appointmentSlot', () => {
-      const row = {
-        uuid: 'test-uuid',
-        id: 'test-id',
-        appointmentDate: '2025-02-15T10:30:00Z',
-        appointmentStartTime: '2025-02-15T10:30:00Z',
-        appointmentEndTime: '2025-02-15T11:00:00Z',
-        appointmentNumber: 'APT-123',
-        service: 'Consultation',
-        reason: 'Follow-up',
-        status: 'booked',
-        provider: 'Dr. Smith',
-      };
-
-      const result = renderCellFunction(row, 'appointmentSlot');
-
-      expect(result).toBe('10:30 AM - 10:30 AM');
+    it.each([
+      ['appointmentSlot', '10:30 AM - 10:30 AM'],
+      ['appointmentDate', '10:30 AM'],
+      ['appointmentNumber', 'APT-123'],
+    ])('should return "%s" as "%s"', (field, expected) => {
+      const result = renderCellFunction(mockRow, field);
+      expect(result).toBe(expected);
     });
 
-    it('should format appointmentDate', () => {
-      const row = {
-        uuid: 'test-uuid',
-        id: 'test-id',
-        appointmentDate: '2025-02-15T10:30:00Z',
-        appointmentStartTime: '2025-02-15T10:30:00Z',
-        appointmentNumber: 'APT-123',
-        service: 'Consultation',
-        reason: 'Follow-up',
-        status: 'booked',
-        provider: 'Dr. Smith',
-      };
-
-      const result = renderCellFunction(row, 'appointmentDate');
-
-      expect(result).toBe('10:30 AM');
-    });
-
-    it('should return appointmentNumber when provided', () => {
-      const row = {
-        uuid: 'test-uuid',
-        id: 'test-id',
-        appointmentDate: '2025-02-15T10:30:00Z',
-        appointmentStartTime: '2025-02-15T10:30:00Z',
-        appointmentNumber: 'APT-123',
-        service: 'Consultation',
-        reason: 'Follow-up',
-        status: 'booked',
-        provider: 'Dr. Smith',
-      };
-
-      const result = renderCellFunction(row, 'appointmentNumber');
-
-      expect(result).toBe('APT-123');
-    });
-
-    it('should return service name when provided', () => {
-      const row = {
-        uuid: 'test-uuid',
-        id: 'test-id',
-        appointmentDate: '2025-02-15T10:30:00Z',
-        appointmentStartTime: '2025-02-15T10:30:00Z',
-        appointmentNumber: 'APT-123',
-        service: 'Consultation',
-        reason: 'Follow-up',
-        status: 'booked',
-        provider: 'Dr. Smith',
-      };
-
-      const result: any = renderCellFunction(row, 'service');
-
+    it('should return service as React element with correct value', () => {
+      const result: any = renderCellFunction(mockRow, 'service');
       expect(result.props.children).toBe('Consultation');
     });
 
     it('should return null for unknown field', () => {
-      const row = {
-        uuid: 'test-uuid',
-        id: 'test-id',
-        appointmentDate: '2025-02-15T10:30:00Z',
-        appointmentStartTime: '2025-02-15T10:30:00Z',
-        appointmentNumber: 'APT-123',
-        service: 'Consultation',
-        reason: 'Follow-up',
-        status: 'booked',
-        provider: 'Dr. Smith',
-      };
-
-      const result = renderCellFunction(row, 'unknownField');
-
+      const result = renderCellFunction(mockRow, 'unknownField');
       expect(result).toBeNull();
     });
   });
