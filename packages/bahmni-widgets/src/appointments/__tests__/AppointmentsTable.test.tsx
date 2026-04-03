@@ -14,6 +14,7 @@ jest.mock('@bahmni/services', () => ({
   useTranslation: jest.fn(() => ({
     t: (key: string) => key,
   })),
+  formatDateTime: jest.fn(() => ({ formattedResult: '10:30 AM' })),
 }));
 jest.mock('../components/UpcomingAppointments');
 jest.mock('../components/PastAppointments');
@@ -130,6 +131,109 @@ describe('AppointmentsTable', () => {
       );
 
       expect(screen.getByTestId('appointments-table')).toBeInTheDocument();
+    });
+  });
+
+  describe('renderCell - Date and Time Formatting', () => {
+    let renderCellFunction: (row: any, key: string) => React.ReactNode;
+
+    beforeEach(() => {
+      render(<AppointmentsTable config={{}} episodeOfCareUuids={[]} />);
+      const upcomingCalls = mockUpcomingAppointments.mock.calls;
+      if (upcomingCalls.length > 0) {
+        renderCellFunction = upcomingCalls[0][0].renderCell;
+      }
+    });
+
+    it('should format appointmentSlot', () => {
+      const row = {
+        uuid: 'test-uuid',
+        id: 'test-id',
+        appointmentDate: '2025-02-15T10:30:00Z',
+        appointmentStartTime: '2025-02-15T10:30:00Z',
+        appointmentEndTime: '2025-02-15T11:00:00Z',
+        appointmentNumber: 'APT-123',
+        service: 'Consultation',
+        reason: 'Follow-up',
+        status: 'booked',
+        provider: 'Dr. Smith',
+      };
+
+      const result = renderCellFunction(row, 'appointmentSlot');
+
+      expect(result).toBe('10:30 AM - 10:30 AM');
+    });
+
+    it('should format appointmentDate', () => {
+      const row = {
+        uuid: 'test-uuid',
+        id: 'test-id',
+        appointmentDate: '2025-02-15T10:30:00Z',
+        appointmentStartTime: '2025-02-15T10:30:00Z',
+        appointmentNumber: 'APT-123',
+        service: 'Consultation',
+        reason: 'Follow-up',
+        status: 'booked',
+        provider: 'Dr. Smith',
+      };
+
+      const result = renderCellFunction(row, 'appointmentDate');
+
+      expect(result).toBe('10:30 AM');
+    });
+
+    it('should return appointmentNumber when provided', () => {
+      const row = {
+        uuid: 'test-uuid',
+        id: 'test-id',
+        appointmentDate: '2025-02-15T10:30:00Z',
+        appointmentStartTime: '2025-02-15T10:30:00Z',
+        appointmentNumber: 'APT-123',
+        service: 'Consultation',
+        reason: 'Follow-up',
+        status: 'booked',
+        provider: 'Dr. Smith',
+      };
+
+      const result = renderCellFunction(row, 'appointmentNumber');
+
+      expect(result).toBe('APT-123');
+    });
+
+    it('should return service name when provided', () => {
+      const row = {
+        uuid: 'test-uuid',
+        id: 'test-id',
+        appointmentDate: '2025-02-15T10:30:00Z',
+        appointmentStartTime: '2025-02-15T10:30:00Z',
+        appointmentNumber: 'APT-123',
+        service: 'Consultation',
+        reason: 'Follow-up',
+        status: 'booked',
+        provider: 'Dr. Smith',
+      };
+
+      const result: any = renderCellFunction(row, 'service');
+
+      expect(result.props.children).toBe('Consultation');
+    });
+
+    it('should return null for unknown field', () => {
+      const row = {
+        uuid: 'test-uuid',
+        id: 'test-id',
+        appointmentDate: '2025-02-15T10:30:00Z',
+        appointmentStartTime: '2025-02-15T10:30:00Z',
+        appointmentNumber: 'APT-123',
+        service: 'Consultation',
+        reason: 'Follow-up',
+        status: 'booked',
+        provider: 'Dr. Smith',
+      };
+
+      const result = renderCellFunction(row, 'unknownField');
+
+      expect(result).toBeNull();
     });
   });
 
