@@ -38,6 +38,7 @@ export const useServiceRequestStore = create<ServiceRequestState>(
       display: string,
     ) => {
       const newServiceRequest: ServiceRequestInputEntry = {
+        uid: crypto.randomUUID(),
         id: conceptUUID,
         selectedPriority: 'routine',
         display: display,
@@ -61,7 +62,7 @@ export const useServiceRequestStore = create<ServiceRequestState>(
       const currentServiceRequests =
         get().selectedServiceRequests.get(category);
       const updatedList = currentServiceRequests?.filter(
-        (entry) => entry.id !== serviceRequestId,
+        (entry) => entry.uid !== serviceRequestId,
       );
 
       set((state) => {
@@ -85,7 +86,7 @@ export const useServiceRequestStore = create<ServiceRequestState>(
       if (!currentServiceRequests) return;
 
       const updatedList = currentServiceRequests.map((serviceRequest) => {
-        if (serviceRequest.id !== serviceRequestId) {
+        if (serviceRequest.uid !== serviceRequestId) {
           return serviceRequest;
         }
         return {
@@ -108,7 +109,7 @@ export const useServiceRequestStore = create<ServiceRequestState>(
       if (!currentServiceRequests) return;
 
       const updatedList = currentServiceRequests.map((serviceRequest) => {
-        if (serviceRequest.id !== serviceRequestId) {
+        if (serviceRequest.uid !== serviceRequestId) {
           return serviceRequest;
         }
         return {

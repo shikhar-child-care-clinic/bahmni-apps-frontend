@@ -14,6 +14,7 @@ jest.mock('../styles/SelectedInvestigationItem.module.scss', () => ({
 }));
 
 const mockInvestigation: ServiceRequestInputEntry = {
+  uid: 'uid-test-investigation-1',
   id: 'test-investigation-1',
   display: 'Complete Blood Count (CBC)',
   selectedPriority: 'routine',
