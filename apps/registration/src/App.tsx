@@ -1,9 +1,4 @@
-import {
-  Content,
-  initFontAwesome,
-  Loading,
-  suppressResizeObserverErrors,
-} from '@bahmni/design-system';
+import { Content, initFontAwesome, Loading } from '@bahmni/design-system';
 import { initAppI18n, initializeAuditListener } from '@bahmni/services';
 import {
   NotificationProvider,
@@ -20,8 +15,6 @@ import PatientRegister from './pages/PatientRegister/PatientRegister';
 import PatientSearchPage from './pages/patientSearchPage';
 import { PersonAttributesProvider } from './providers/PersonAttributesProvider';
 import { RegistrationConfigProvider } from './providers/registrationConfig';
-
-suppressResizeObserverErrors();
 
 const queryClient = new QueryClient(queryClientConfig);
 

@@ -366,9 +366,7 @@ describe('ConditionsAndDiagnoses', () => {
       await user.click(screen.getByText('Hypertension'));
 
       await waitFor(() => {
-        expect(
-          screen.getByPlaceholderText('Search to add new Diagnosis'),
-        ).toHaveValue('');
+        expect(searchInput).toHaveValue('');
       });
     });
 
@@ -380,23 +378,23 @@ describe('ConditionsAndDiagnoses', () => {
         'Search to add new Diagnosis',
       );
 
+      // First selection
       await user.type(searchInput, 'hyper');
       await user.click(screen.getByText('Hypertension'));
 
+      // Verify combobox is reset (selectedItem is null, allowing new searches)
       await waitFor(() => {
-        expect(
-          screen.getByPlaceholderText('Search to add new Diagnosis'),
-        ).toHaveValue('');
+        expect(searchInput).toHaveValue('');
       });
 
-      await user.type(
-        screen.getByPlaceholderText('Search to add new Diagnosis'),
-        'diab',
-      );
+      // Verify we can immediately search for another item (proves selectedItem was reset to null)
+      await user.type(searchInput, 'diab');
       await waitFor(() => {
         expect(screen.getByText('Diabetes')).toBeInTheDocument();
       });
 
+      // Verify the new search works correctly - this proves selectedItem is null
+      // because the ComboBox wouldn't accept new input if selectedItem was still set
       await user.click(screen.getByText('Diabetes'));
       await waitFor(() => {
         expect(addDiagnosisMock).toHaveBeenCalledTimes(2);

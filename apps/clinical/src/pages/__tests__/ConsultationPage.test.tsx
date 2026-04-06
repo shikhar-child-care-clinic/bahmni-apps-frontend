@@ -296,7 +296,7 @@ describe('ConsultationPage', () => {
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();
-    }, 10000);
+    });
   });
 
   describe('Snapshot', () => {

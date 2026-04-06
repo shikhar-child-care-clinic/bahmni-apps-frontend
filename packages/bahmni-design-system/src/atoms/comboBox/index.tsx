@@ -2,7 +2,7 @@ import {
   ComboBox as CarbonComboBox,
   ComboBoxProps as CarbonComboBoxProps,
 } from '@carbon/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export type ComboBoxProps<T> = CarbonComboBoxProps<T> & {
   testId?: string;
@@ -21,35 +21,25 @@ export const ComboBox = <T,>({
   const [displayItem, setDisplayItem] = useState<T | null>(
     (externalSelectedItem as T) ?? null,
   );
-  const [comboboxKey, setComboboxKey] = useState(0);
-  const clearTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
+    setDisplayItem((externalSelectedItem as T) ?? null);
+
     if (clearSelectedOnChange && externalSelectedItem) {
-      setDisplayItem(null);
-      clearTimeout(clearTimerRef.current);
-      clearTimerRef.current = setTimeout(() => setComboboxKey((k) => k + 1), 0);
-      return () => clearTimeout(clearTimerRef.current);
-    } else {
-      setDisplayItem((externalSelectedItem as T) ?? null);
+      queueMicrotask(() => {
+        setDisplayItem(null);
+      });
     }
   }, [externalSelectedItem, clearSelectedOnChange]);
-
-  useEffect(() => () => clearTimeout(clearTimerRef.current), []);
 
   const handleChange = (
     event: Parameters<NonNullable<CarbonComboBoxProps<T>['onChange']>>[0],
   ) => {
     onChange?.(event);
-    if (clearSelectedOnChange && event.selectedItem) {
-      clearTimeout(clearTimerRef.current);
-      clearTimerRef.current = setTimeout(() => setComboboxKey((k) => k + 1), 0);
-    }
   };
 
   return (
     <CarbonComboBox<T>
-      key={comboboxKey}
       {...carbonProps}
       onChange={handleChange}
       selectedItem={displayItem}

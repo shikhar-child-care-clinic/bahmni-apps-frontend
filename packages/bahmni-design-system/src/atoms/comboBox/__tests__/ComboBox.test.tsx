@@ -1,5 +1,6 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React, { useState } from 'react';
 import { ComboBox } from '..';
 
 type Item = { label: string; value: string };
@@ -36,10 +37,7 @@ describe('ComboBox', () => {
   });
 
   describe('clearSelectedOnChange=true', () => {
-    beforeEach(() => jest.useFakeTimers());
-    afterEach(() => jest.useRealTimers());
-
-    it('should clear the input after an item is selected', () => {
+    it('should clear the input after an item is selected', async () => {
       const { rerender } = render(
         <ComboBox
           {...defaultProps}
@@ -56,12 +54,12 @@ describe('ComboBox', () => {
         />,
       );
 
-      act(() => jest.runAllTimers());
-
-      expect(screen.getByRole('combobox')).toHaveValue('');
+      await waitFor(() => {
+        expect(screen.getByRole('combobox')).toHaveValue('');
+      });
     });
 
-    it('should clear input on each subsequent selection', () => {
+    it('should clear input on each subsequent selection', async () => {
       const { rerender } = render(
         <ComboBox
           {...defaultProps}
@@ -78,9 +76,9 @@ describe('ComboBox', () => {
         />,
       );
 
-      act(() => jest.runAllTimers());
-
-      expect(screen.getByRole('combobox')).toHaveValue('');
+      await waitFor(() => {
+        expect(screen.getByRole('combobox')).toHaveValue('');
+      });
 
       rerender(
         <ComboBox
@@ -90,22 +88,30 @@ describe('ComboBox', () => {
         />,
       );
 
-      act(() => jest.runAllTimers());
-
-      expect(screen.getByRole('combobox')).toHaveValue('');
+      await waitFor(() => {
+        expect(screen.getByRole('combobox')).toHaveValue('');
+      });
     });
   });
 
   describe('clearSelectedOnChange=true with user interaction', () => {
     it('should clear input after user clicks an item', async () => {
       const user = userEvent.setup();
-      render(
-        <ComboBox
-          {...defaultProps}
-          clearSelectedOnChange
-          selectedItem={null}
-        />,
-      );
+
+      // Simulate real parent behaviour: update selectedItem in response to onChange
+      const Wrapper = () => {
+        const [selected, setSelected] = useState<Item | null>(null);
+        return (
+          <ComboBox
+            {...defaultProps}
+            clearSelectedOnChange
+            selectedItem={selected}
+            onChange={(e) => setSelected(e.selectedItem ?? null)}
+          />
+        );
+      };
+
+      render(<Wrapper />);
 
       await user.click(screen.getByRole('combobox'));
       await user.click(
@@ -134,35 +140,6 @@ describe('ComboBox', () => {
       expect(onChange).toHaveBeenCalledWith(
         expect.objectContaining({ selectedItem: items[0] }),
       );
-    });
-  });
-
-  describe('ResizeObserver error suppression', () => {
-    it('should suppress ResizeObserver loop errors', () => {
-      const errorEvent = new ErrorEvent('error', {
-        message:
-          'ResizeObserver loop completed with undelivered notifications.',
-        bubbles: false,
-        cancelable: true,
-      });
-      const stopSpy = jest.spyOn(errorEvent, 'stopImmediatePropagation');
-
-      window.dispatchEvent(errorEvent);
-
-      expect(stopSpy).toHaveBeenCalled();
-    });
-
-    it('should not suppress unrelated errors', () => {
-      const errorEvent = new ErrorEvent('error', {
-        message: 'Some other unrelated error',
-        bubbles: false,
-        cancelable: true,
-      });
-      const stopSpy = jest.spyOn(errorEvent, 'stopImmediatePropagation');
-
-      window.dispatchEvent(errorEvent);
-
-      expect(stopSpy).not.toHaveBeenCalled();
     });
   });
 });

@@ -365,14 +365,17 @@ describe('InvestigationsForm', () => {
         await user.type(combobox, 'complete');
       });
 
+      // Wait for the dropdown item to appear
       await waitFor(() => {
         expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
       });
 
+      // Click on the dropdown item
       await waitFor(async () => {
         await user.click(screen.getByText('Complete Blood Count'));
       });
 
+      // Verify the store was called correctly
       await waitFor(() => {
         expect(mockStore.addServiceRequest).toHaveBeenCalledWith(
           'Lab Order',
@@ -397,7 +400,7 @@ describe('InvestigationsForm', () => {
       });
       await user.click(screen.getByText('Complete Blood Count'));
       await waitFor(() => {
-        expect(screen.getByRole('combobox')).toHaveValue('');
+        expect(combobox).toHaveValue('');
       });
     });
 
@@ -411,21 +414,26 @@ describe('InvestigationsForm', () => {
       render(<InvestigationsForm />, { wrapper: createWrapper() });
       const combobox = screen.getByRole('combobox');
 
+      // First selection
       await user.type(combobox, 'complete');
       await waitFor(() => {
         expect(screen.getByText('Complete Blood Count')).toBeInTheDocument();
       });
       await user.click(screen.getByText('Complete Blood Count'));
 
+      // Verify combobox is reset (selectedItem is null, allowing new searches)
       await waitFor(() => {
-        expect(screen.getByRole('combobox')).toHaveValue('');
+        expect(combobox).toHaveValue('');
       });
 
-      await user.type(screen.getByRole('combobox'), 'glucose');
+      // Verify we can immediately search for another item (proves selectedItem was reset to null)
+      await user.type(combobox, 'glucose');
       await waitFor(() => {
         expect(screen.getByText('Blood Glucose Test')).toBeInTheDocument();
       });
 
+      // Verify the new search works correctly - this proves selectedItem is null
+      // because the ComboBox wouldn't accept new input if selectedItem was still set
       await user.click(screen.getByText('Blood Glucose Test'));
       expect(mockStore.addServiceRequest).toHaveBeenCalledWith(
         'Lab Order',
@@ -1108,7 +1116,7 @@ describe('InvestigationsForm', () => {
         ).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /close/i }));
+      await user.clear(combobox);
 
       await waitFor(() => {
         expect(
@@ -1236,6 +1244,7 @@ describe('InvestigationsForm', () => {
         ).toBeInTheDocument();
       });
 
+      // Dismiss the notification
       const closeButton = screen.getByRole('button', { name: /close/i });
       await user.click(closeButton);
       await waitFor(() => {
@@ -1244,14 +1253,16 @@ describe('InvestigationsForm', () => {
         ).not.toBeInTheDocument();
       });
 
-      await user.clear(screen.getByRole('combobox'));
+      // Clear the combobox — resets the dismissal ref
+      await user.clear(combobox);
       await waitFor(() => {
         expect(
           screen.queryByText('Investigation is already ordered'),
         ).not.toBeInTheDocument();
       });
 
-      await user.type(screen.getByRole('combobox'), 'glucose');
+      // Select a different duplicate (Blood Glucose) — notification should reappear
+      await user.type(combobox, 'glucose');
       await waitFor(() => {
         expect(screen.getByText('Blood Glucose Test')).toBeInTheDocument();
       });

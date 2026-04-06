@@ -378,13 +378,8 @@ describe('VaccinationForm', () => {
         await new Promise((resolve) => setTimeout(resolve, 150));
       });
 
-      await user.clear(
-        screen.getByRole('combobox', { name: /search to add vaccination/i }),
-      );
-      await user.type(
-        screen.getByRole('combobox', { name: /search to add vaccination/i }),
-        'hepatitis',
-      );
+      await user.clear(searchBox);
+      await user.type(searchBox, 'hepatitis');
       await waitFor(() => {
         expect(screen.getByText('Hepatitis B Vaccine')).toBeInTheDocument();
       });

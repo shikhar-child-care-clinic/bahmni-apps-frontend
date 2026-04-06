@@ -1,9 +1,4 @@
-import {
-  Content,
-  initFontAwesome,
-  Loading,
-  suppressResizeObserverErrors,
-} from '@bahmni/design-system';
+import { Content, initFontAwesome, Loading } from '@bahmni/design-system';
 import { initAppI18n, initializeAuditListener } from '@bahmni/services';
 import {
   NotificationProvider,
@@ -19,8 +14,6 @@ import { queryClientConfig } from './config/tanstackQuery';
 import { CLINICAL_NAMESPACE } from './constants/app';
 import ConsultationPage from './pages/ConsultationPage';
 import { ClinicalConfigProvider } from './providers/clinicalConfig';
-
-suppressResizeObserverErrors();
 
 const queryClient = new QueryClient(queryClientConfig);
 
