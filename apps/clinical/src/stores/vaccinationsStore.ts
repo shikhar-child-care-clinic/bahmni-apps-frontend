@@ -1,3 +1,4 @@
+import { generateUUID } from '@bahmni/services';
 import { Medication } from 'fhir/r4';
 import { create } from 'zustand';
 import { Concept } from '../models/encounterConcepts';
@@ -37,10 +38,10 @@ export const useVaccinationStore = create<VaccinationState>((set, get) => ({
   addVaccination: (vaccination: Medication, displayName: string) => {
     const doseForm = extractDoseForm(vaccination, displayName);
 
-    // Use a unique ID combining vaccination ID and timestamp to ensure each entry is distinct
+    // Use a unique ID combining vaccination ID and UUID to ensure each entry is distinct
     // This allows adding the same vaccination multiple times without state conflicts
     const newVaccination: MedicationInputEntry = {
-      id: `${vaccination.id!}-${Date.now()}-${Math.random()}`,
+      id: `${vaccination.id!}-${generateUUID()}`,
       display: displayName,
       medication: vaccination,
       dosage: 0,

@@ -36,10 +36,6 @@ jest.mock('../../../../services/medicationService', () => ({
   getMedicationsFromBundle: jest.fn(
     (bundle) => bundle?.entry?.map((e: any) => e.resource) ?? [],
   ),
-  getActiveMedicationsFromBundle: jest.fn(() => ({
-    activeMedications: [],
-    medicationMap: {},
-  })),
 }));
 jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),
@@ -50,7 +46,6 @@ jest.mock('../styles/VaccinationForm.module.scss', () => ({
   vaccinationFormTitle: 'vaccinationFormTitle',
   vaccinationBox: 'vaccinationBox',
   selectedVaccinationItem: 'selectedVaccinationItem',
-  duplicateNotification: 'duplicateNotification',
 }));
 
 const mockUseHasPrivilege = useHasPrivilege as jest.MockedFunction<

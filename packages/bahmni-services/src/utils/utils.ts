@@ -37,6 +37,24 @@ export const refreshQueries = async (
 export const generateId = () => Math.random().toString(36).substring(2, 9);
 
 /**
+ * Generates a UUID v4
+ * Uses globalThis.crypto.randomUUID() when available (browser, modern Node.js)
+ * Falls back to a simple UUID v4 implementation for compatibility with test environments
+ * @returns {string} A UUID v4 string
+ */
+export const generateUUID = (): string => {
+  if (typeof globalThis !== 'undefined' && globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+  // Fallback for environments without crypto.randomUUID
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
+/**
  * Converts a string to capital case (e.g., 'foo bar' -> 'Foo Bar')
  * @param input - The string to convert
  * @param delimiters - Optional string of delimiter characters (default: " -", space and hyphen)

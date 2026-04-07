@@ -84,6 +84,7 @@ export { getFormattedError } from './errorHandling';
 export {
   capitalize,
   generateId,
+  generateUUID,
   getCookieByName,
   isStringEmpty,
   getPriorityByOrder,

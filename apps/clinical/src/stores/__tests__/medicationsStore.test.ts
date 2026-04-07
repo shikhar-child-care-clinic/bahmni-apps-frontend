@@ -73,8 +73,8 @@ describe('useMedicationStore', () => {
         dispenseQuantity: 0,
         dispenseUnit: null,
       });
-      // ID should start with the medication ID (format: medId-timestamp-random)
-      expect(addedMedication.id).toMatch(/^med-123-\d+-/);
+      // ID should start with the medication ID (format: medId-uuid)
+      expect(addedMedication.id).toMatch(/^med-123-[0-9a-f]{8}-[0-9a-f]{4}-/);
       expect(addedMedication.startDate).toBeInstanceOf(Date);
     });
 
@@ -88,8 +88,12 @@ describe('useMedicationStore', () => {
       });
 
       expect(result.current.selectedMedications).toHaveLength(2);
-      expect(result.current.selectedMedications[0].id).toMatch(/^med-456-\d+-/);
-      expect(result.current.selectedMedications[1].id).toMatch(/^med-123-\d+-/);
+      expect(result.current.selectedMedications[0].id).toMatch(
+        /^med-456-[0-9a-f]{8}-[0-9a-f]{4}-/,
+      );
+      expect(result.current.selectedMedications[1].id).toMatch(
+        /^med-123-[0-9a-f]{8}-[0-9a-f]{4}-/,
+      );
     });
   });
 
@@ -122,7 +126,9 @@ describe('useMedicationStore', () => {
       });
 
       expect(result.current.selectedMedications).toHaveLength(1);
-      expect(result.current.selectedMedications[0].id).toMatch(/^med-456-\d+-/);
+      expect(result.current.selectedMedications[0].id).toMatch(
+        /^med-456-[0-9a-f]{8}-[0-9a-f]{4}-/,
+      );
     });
 
     it('should handle removing non-existent medication gracefully', () => {
@@ -895,7 +901,9 @@ describe('useMedicationStore', () => {
 
       const state = result.current.getState();
       expect(state.selectedMedications).toHaveLength(1);
-      expect(state.selectedMedications[0].id).toMatch(/^med-123-\d+-/);
+      expect(state.selectedMedications[0].id).toMatch(
+        /^med-123-[0-9a-f]{8}-[0-9a-f]{4}-/,
+      );
       expect(typeof state.addMedication).toBe('function');
       expect(typeof state.removeMedication).toBe('function');
     });

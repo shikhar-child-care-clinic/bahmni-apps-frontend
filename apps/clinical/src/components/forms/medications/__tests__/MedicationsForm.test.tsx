@@ -36,10 +36,6 @@ jest.mock('../../../../services/medicationService', () => ({
     (medication) =>
       medication?.code?.text ?? medication?.code?.display ?? 'Test Medication',
   ),
-  getActiveMedicationsFromBundle: jest.fn(() => ({
-    activeMedications: [],
-    medicationMap: {},
-  })),
 }));
 
 // Mock @bahmni/widgets hooks
@@ -66,7 +62,6 @@ jest.mock('../styles/MedicationsForm.module.scss', () => ({
   medicationsFormTile: 'medicationsFormTile',
   medicationsFormTitle: 'medicationsFormTitle',
   medicationsBox: 'medicationsBox',
-  duplicateNotification: 'duplicateNotification',
 }));
 
 const mockUseNotification = useNotification as jest.MockedFunction<
