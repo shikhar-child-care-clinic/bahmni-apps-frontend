@@ -67,16 +67,11 @@ export const generateUUID = (): string => {
       })
       .join('');
   }
-  // Last resort fallback (should rarely be used)
-  // WARNING: This fallback uses Math.random() which is NOT cryptographically secure.
-  // This branch should only execute in very limited environments without crypto API support.
-  // For production use, ensure crypto.getRandomValues() is available.
-  // noinspection JSUnreachableCode
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+  // Crypto API is required for secure UUID generation
+  throw new Error(
+    'Crypto API (crypto.randomUUID or crypto.getRandomValues) is not available. ' +
+      'UUID generation requires cryptographically secure random number generation.',
+  );
 };
 
 /**

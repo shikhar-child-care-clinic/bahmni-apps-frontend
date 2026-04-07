@@ -95,6 +95,265 @@ describe('useMedicationStore', () => {
         /^med-123-[0-9a-f]{8}-[0-9a-f]{4}-/,
       );
     });
+
+    describe('Duplicate medications (same medication with different parameters)', () => {
+      it('should allow adding the same medication multiple times with unique IDs', () => {
+        const { result } = renderHook(() => useMedicationStore());
+
+        act(() => {
+          result.current.addMedication(mockMedication, 'Amoxicillin');
+          result.current.addMedication(mockMedication, 'Amoxicillin');
+          result.current.addMedication(mockMedication, 'Amoxicillin');
+        });
+
+        expect(result.current.selectedMedications).toHaveLength(3);
+        // All should be the same medication but with different IDs
+        expect(result.current.selectedMedications[0].medication.id).toBe(
+          'med-123',
+        );
+        expect(result.current.selectedMedications[1].medication.id).toBe(
+          'med-123',
+        );
+        expect(result.current.selectedMedications[2].medication.id).toBe(
+          'med-123',
+        );
+
+        // But each should have a unique ID due to UUID
+        const ids = result.current.selectedMedications.map((m) => m.id);
+        expect(new Set(ids).size).toBe(3);
+      });
+
+      it('should generate unique IDs using UUID even for identical medications', () => {
+        const { result } = renderHook(() => useMedicationStore());
+
+        act(() => {
+          result.current.addMedication(mockMedication, 'Aspirin');
+          result.current.addMedication(mockMedication, 'Aspirin');
+        });
+
+        const [med1, med2] = result.current.selectedMedications;
+        // IDs should have different UUID parts
+        expect(med1.id).not.toBe(med2.id);
+        expect(med1.id.startsWith('med-123-')).toBe(true);
+        expect(med2.id.startsWith('med-123-')).toBe(true);
+      });
+
+      it('should allow different start dates for duplicate medications', () => {
+        const { result } = renderHook(() => useMedicationStore());
+        const date1 = new Date('2026-01-01');
+        const date2 = new Date('2026-02-01');
+
+        act(() => {
+          result.current.addMedication(mockMedication, 'Ibuprofen');
+          result.current.addMedication(mockMedication, 'Ibuprofen');
+        });
+
+        const [med1Id, med2Id] = result.current.selectedMedications.map(
+          (m) => m.id,
+        );
+
+        act(() => {
+          result.current.updateStartDate(med1Id, date1);
+          result.current.updateStartDate(med2Id, date2);
+        });
+
+        expect(
+          result.current.selectedMedications.find((m) => m.id === med1Id)
+            ?.startDate,
+        ).toEqual(date1);
+        expect(
+          result.current.selectedMedications.find((m) => m.id === med2Id)
+            ?.startDate,
+        ).toEqual(date2);
+      });
+
+      it('should allow independent dosage updates for duplicate medications', () => {
+        const { result } = renderHook(() => useMedicationStore());
+
+        act(() => {
+          result.current.addMedication(mockMedication, 'Paracetamol');
+          result.current.addMedication(mockMedication, 'Paracetamol');
+        });
+
+        const [med1Id, med2Id] = result.current.selectedMedications.map(
+          (m) => m.id,
+        );
+
+        act(() => {
+          result.current.updateDosage(med1Id, 500);
+          result.current.updateDosage(med2Id, 1000);
+        });
+
+        expect(
+          result.current.selectedMedications.find((m) => m.id === med1Id)
+            ?.dosage,
+        ).toBe(500);
+        expect(
+          result.current.selectedMedications.find((m) => m.id === med2Id)
+            ?.dosage,
+        ).toBe(1000);
+      });
+
+      it('should allow independent frequency updates for duplicate medications', () => {
+        const { result } = renderHook(() => useMedicationStore());
+        const freq1: Frequency = {
+          name: 'Once daily',
+          uuid: 'freq-1',
+          frequencyPerDay: 1,
+        };
+        const freq2: Frequency = {
+          name: 'Twice daily',
+          uuid: 'freq-2',
+          frequencyPerDay: 2,
+        };
+
+        act(() => {
+          result.current.addMedication(mockMedication, 'Vitamin D');
+          result.current.addMedication(mockMedication, 'Vitamin D');
+        });
+
+        const [med1Id, med2Id] = result.current.selectedMedications.map(
+          (m) => m.id,
+        );
+
+        act(() => {
+          result.current.updateFrequency(med1Id, freq1);
+          result.current.updateFrequency(med2Id, freq2);
+        });
+
+        expect(
+          result.current.selectedMedications.find((m) => m.id === med1Id)
+            ?.frequency,
+        ).toEqual(freq1);
+        expect(
+          result.current.selectedMedications.find((m) => m.id === med2Id)
+            ?.frequency,
+        ).toEqual(freq2);
+      });
+
+      it('should remove only the specified duplicate medication, not all duplicates', () => {
+        const { result } = renderHook(() => useMedicationStore());
+
+        act(() => {
+          result.current.addMedication(mockMedication, 'Metformin');
+          result.current.addMedication(mockMedication, 'Metformin');
+          result.current.addMedication(mockMedication, 'Metformin');
+        });
+
+        expect(result.current.selectedMedications).toHaveLength(3);
+        const medToRemove = result.current.selectedMedications[1].id;
+
+        act(() => {
+          result.current.removeMedication(medToRemove);
+        });
+
+        expect(result.current.selectedMedications).toHaveLength(2);
+        expect(
+          result.current.selectedMedications.find((m) => m.id === medToRemove),
+        ).toBeUndefined();
+        // Other two should still exist
+        expect(
+          result.current.selectedMedications.filter((m) =>
+            m.id.startsWith('med-123-'),
+          ),
+        ).toHaveLength(2);
+      });
+
+      it('should update only the specific instance when multiple duplicates exist', () => {
+        const { result } = renderHook(() => useMedicationStore());
+
+        act(() => {
+          result.current.addMedication(mockMedication, 'Lisinopril');
+          result.current.addMedication(mockMedication, 'Lisinopril');
+        });
+
+        const [med1Id, med2Id] = result.current.selectedMedications.map(
+          (m) => m.id,
+        );
+
+        act(() => {
+          result.current.updateRoute(med1Id, mockConcept);
+        });
+
+        const med1Route = result.current.selectedMedications.find(
+          (m) => m.id === med1Id,
+        )?.route;
+        const med2Route = result.current.selectedMedications.find(
+          (m) => m.id === med2Id,
+        )?.route;
+
+        expect(med1Route).toEqual(mockConcept);
+        expect(med2Route).toBeNull();
+      });
+
+      it('should validate each duplicate medication independently', () => {
+        const { result } = renderHook(() => useMedicationStore());
+
+        act(() => {
+          result.current.addMedication(mockMedication, 'Atorvastatin');
+          result.current.addMedication(mockMedication, 'Atorvastatin');
+        });
+
+        const [med1Id, med2Id] = result.current.selectedMedications.map(
+          (m) => m.id,
+        );
+
+        act(() => {
+          // Set up first medication completely (with all required fields including duration)
+          result.current.updateDosage(med1Id, 10);
+          result.current.updateDosageUnit(med1Id, mockConcept);
+          result.current.updateFrequency(med1Id, mockFrequency);
+          result.current.updateRoute(med1Id, mockConcept);
+          result.current.updateDuration(med1Id, 30);
+          result.current.updateDurationUnit(med1Id, mockDurationUnit);
+
+          // Second medication left incomplete
+          result.current.validateAllMedications();
+        });
+
+        const med1Errors = result.current.selectedMedications.find(
+          (m) => m.id === med1Id,
+        )?.errors;
+        const med2Errors = result.current.selectedMedications.find(
+          (m) => m.id === med2Id,
+        )?.errors;
+
+        // med1 should be valid with no errors
+        expect(Object.keys(med1Errors ?? {})).toHaveLength(0);
+
+        // med2 should have errors for required fields
+        expect(med2Errors?.dosage).toBeDefined();
+        expect(med2Errors?.dosageUnit).toBeDefined();
+        expect(med2Errors?.frequency).toBeDefined();
+        expect(med2Errors?.route).toBeDefined();
+        expect(med2Errors?.duration).toBeDefined();
+        expect(med2Errors?.durationUnit).toBeDefined();
+      });
+
+      it('should handle multiple duplicates with different configurations in state', () => {
+        const { result } = renderHook(() => useMedicationStore());
+        const medA = { ...mockMedication, id: 'med-A' };
+        const medB = { ...mockMedication, id: 'med-B' };
+
+        act(() => {
+          result.current.addMedication(medA, 'Med A');
+          result.current.addMedication(medA, 'Med A');
+          result.current.addMedication(medB, 'Med B');
+          result.current.addMedication(medB, 'Med B');
+        });
+
+        expect(result.current.selectedMedications).toHaveLength(4);
+        const medACount = result.current.selectedMedications.filter((m) =>
+          m.id.startsWith('med-A-'),
+        ).length;
+        const medBCount = result.current.selectedMedications.filter((m) =>
+          m.id.startsWith('med-B-'),
+        ).length;
+
+        expect(medACount).toBe(2);
+        expect(medBCount).toBe(2);
+      });
+    });
   });
 
   describe('removeMedication', () => {
