@@ -31,11 +31,12 @@ jest.mock('@bahmni/services', () => ({
   useTranslation: jest.fn(),
   getObservationsBundleByEncounterUuid: jest.fn(),
   useSubscribeConsultationSaved: jest.fn(),
-  formatDate: jest.fn((date) => ({
-    formattedResult: new Date(date).toLocaleDateString('en-US'),
-  })),
   getUserPreferredLocale: jest.fn(() => 'en'),
   getFormattedError: jest.fn((error) => ({ message: error.message })),
+  formatDateTime: jest.fn(() => ({
+    formattedResult: '01/01/2024 12:00 PM',
+    isValid: true,
+  })),
 }));
 
 jest.mock('../../hooks/usePatientUUID', () => ({

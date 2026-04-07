@@ -1,5 +1,9 @@
 import { OPENMRS_FHIR_R4 } from '../constants/app';
 
+// Higher count than other FHIR resources (100) because patients
+// can accumulate a large volume of orders across visits.
+export const SERVICE_REQUEST_COUNT = 200;
+
 export const SERVICE_REQUESTS_URL = (
   category: string,
   patientUuid: string,
@@ -7,10 +11,9 @@ export const SERVICE_REQUESTS_URL = (
   numberOfVisits?: number,
   revinclude?: string,
 ) => {
-  // _count=100: Practical upper limit to avoid unbounded queries.
-  // Patients with >100 service requests of the same category will be silently truncated.
   const baseUrl =
-    OPENMRS_FHIR_R4 + '/ServiceRequest?_count=100&_sort=-_lastUpdated';
+    OPENMRS_FHIR_R4 +
+    `/ServiceRequest?_count=${SERVICE_REQUEST_COUNT}&_sort=-_lastUpdated`;
   let url = `${baseUrl}&category=${category}&patient=${patientUuid}`;
 
   if (revinclude) {
