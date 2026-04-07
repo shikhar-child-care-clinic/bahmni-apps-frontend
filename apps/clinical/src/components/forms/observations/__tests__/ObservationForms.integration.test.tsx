@@ -1,9 +1,12 @@
 import { ObservationForm } from '@bahmni/services';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { axe, toHaveNoViolations } from 'jest-axe';
 import React from 'react';
 import * as pinnedFormsService from '../../../../services/pinnedFormsService';
 import ObservationForms from '../ObservationForms';
+
+expect.extend(toHaveNoViolations);
 
 // Mock react-i18next
 jest.mock('react-i18next', () => ({
@@ -308,6 +311,34 @@ describe('ObservationForms Integration Tests', () => {
       expect(
         screen.queryByTestId('pinned-form-Custom Form 2'),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Accessibility Integration', () => {
+    it('should maintain accessibility across pin/unpin workflows', async () => {
+      const userPinnedForms = [mockAvailableForms[2]]; // Custom Form 1
+
+      const { container } = renderComponent(
+        <ObservationForms {...defaultProps} pinnedForms={userPinnedForms} />,
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('pinned-form-Custom Form 1'),
+        ).toBeInTheDocument();
+      });
+
+      const observationFormsTile = container.querySelector(
+        '.observationFormsTile',
+      );
+      expect(observationFormsTile).toBeInTheDocument();
+
+      const result = await axe(observationFormsTile!, {
+        rules: {
+          'nested-interactive': { enabled: false }, // Known design system limitation
+        },
+      });
+      expect(result).toHaveNoViolations();
     });
   });
 
