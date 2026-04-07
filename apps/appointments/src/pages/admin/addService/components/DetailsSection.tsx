@@ -13,7 +13,7 @@ import {
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import React, { useMemo } from 'react';
-import { useAddServiceStore } from '../stores/addServiceStore';
+import { useAddServiceStore } from '../stores';
 import styles from '../styles/index.module.scss';
 
 const DetailsSection: React.FC = () => {

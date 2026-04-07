@@ -14,7 +14,7 @@ import {
 } from '../../../constants/app';
 import AvailabilitySection from './components/AvailabilitySection';
 import ServiceDetailsSection from './components/DetailsSection';
-import { useAddServiceStore } from './stores/addServiceStore';
+import { useAddServiceStore } from './stores';
 import styles from './styles/index.module.scss';
 
 const toSqlTime = (time: string) => `${time}:00`;

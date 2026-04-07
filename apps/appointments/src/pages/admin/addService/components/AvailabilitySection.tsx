@@ -9,7 +9,7 @@ import {
 import { useTranslation } from '@bahmni/services';
 import React, { useCallback, useMemo } from 'react';
 import { DAYS_OF_WEEK } from '../constants';
-import { AvailabilityRow, useAddServiceStore } from '../stores/addServiceStore';
+import { AvailabilityRow, useAddServiceStore } from '../stores';
 import styles from '../styles/index.module.scss';
 
 const AvailabilitySection: React.FC = () => {
@@ -47,19 +47,31 @@ const AvailabilitySection: React.FC = () => {
     (row: AvailabilityRow, cellId: string) => {
       if (cellId === 'startTime') {
         return (
-          <TimePickerInput
-            id={`start-time-${row.id}`}
-            testId={`start-time-${row.id}-test-id`}
-            hideLabel
-            invalid={!!row.errors.startTime}
-            invalidText={row.errors.startTime ? t(row.errors.startTime) : ''}
-            value={row.startTime}
-            meridiem={row.startMeridiem}
-            onChange={(time, meridiem) => {
-              updateAvailabilityRow(row.id, 'startTime', time);
-              updateAvailabilityRow(row.id, 'startMeridiem', meridiem);
-            }}
-          />
+          <div>
+            <TimePickerInput
+              id={`start-time-${row.id}`}
+              testId={`start-time-${row.id}-test-id`}
+              hideLabel
+              invalid={!!row.errors.startTime}
+              invalidText={row.errors.startTime ? t(row.errors.startTime) : ''}
+              value={row.startTime}
+              meridiem={row.startMeridiem}
+              onChange={(time, meridiem) => {
+                updateAvailabilityRow(row.id, 'startTime', time);
+                updateAvailabilityRow(row.id, 'startMeridiem', meridiem);
+              }}
+            />
+            {row.errors.overlap && (
+              <div
+                id={`overlap-${row.id}-error`}
+                data-testid={`overlap-${row.id}-error-test-id`}
+                aria-label={`overlap-${row.id}-error-aria-label`}
+                className={styles.errorText}
+              >
+                {t(row.errors.overlap)}
+              </div>
+            )}
+          </div>
         );
       }
 

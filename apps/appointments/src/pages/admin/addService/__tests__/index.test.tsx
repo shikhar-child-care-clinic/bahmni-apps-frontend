@@ -8,7 +8,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MANAGE_APPOINTMENT_SERVICES_PRIVILEGE } from '../../../../constants/app';
 import AddServicePage from '../index';
-import { useAddServiceStore } from '../stores/addServiceStore';
+import { useAddServiceStore } from '../stores';
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -34,7 +34,7 @@ jest.mock('@tanstack/react-query', () => ({
   useQuery: jest.fn(),
 }));
 
-jest.mock('../stores/addServiceStore', () => ({
+jest.mock('../stores', () => ({
   useAddServiceStore: Object.assign(jest.fn(), { getState: jest.fn() }),
 }));
 

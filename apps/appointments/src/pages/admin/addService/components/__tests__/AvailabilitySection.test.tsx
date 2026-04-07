@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DAYS_OF_WEEK } from '../../constants';
-import { useAddServiceStore } from '../../stores/addServiceStore';
+import { useAddServiceStore } from '../../stores';
 import AvailabilitySection from '../AvailabilitySection';
 
-jest.mock('../../stores/addServiceStore', () => ({
+jest.mock('../../stores', () => ({
   useAddServiceStore: jest.fn(),
 }));
 
@@ -202,6 +202,13 @@ describe('ServiceAvailabilitySection', () => {
       },
       expectedText: 'At least one day must be selected',
     },
+    {
+      scenario: 'overlap error is set',
+      rowOverride: {
+        errors: { overlap: 'ADMIN_ADD_SERVICE_VALIDATION_OVERLAP' },
+      },
+      expectedText: 'This availability overlaps with another row',
+    },
   ])(
     'should display validation error text when $scenario',
     ({ rowOverride, expectedText }) => {
@@ -215,4 +222,12 @@ describe('ServiceAvailabilitySection', () => {
       expect(screen.getByText(expectedText)).toBeInTheDocument();
     },
   );
+
+  it('should not render overlap error when overlap error is not set', () => {
+    render(<AvailabilitySection />);
+
+    expect(
+      screen.queryByTestId(`overlap-${ROW_ID}-error-test-id`),
+    ).not.toBeInTheDocument();
+  });
 });

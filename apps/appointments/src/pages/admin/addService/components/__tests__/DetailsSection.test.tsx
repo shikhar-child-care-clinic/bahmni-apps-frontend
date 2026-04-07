@@ -5,7 +5,7 @@ import {
 } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useAddServiceStore } from '../../stores/addServiceStore';
+import { useAddServiceStore } from '../../stores';
 import DetailsSection from '../DetailsSection';
 
 jest.mock('@tanstack/react-query', () => ({
@@ -13,7 +13,7 @@ jest.mock('@tanstack/react-query', () => ({
   useQuery: jest.fn(),
 }));
 
-jest.mock('../../stores/addServiceStore', () => ({
+jest.mock('../../stores', () => ({
   useAddServiceStore: jest.fn(),
 }));
 
