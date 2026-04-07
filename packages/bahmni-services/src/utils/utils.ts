@@ -39,14 +39,39 @@ export const generateId = () => Math.random().toString(36).substring(2, 9);
 /**
  * Generates a UUID v4
  * Uses globalThis.crypto.randomUUID() when available (browser, modern Node.js)
- * Falls back to a simple UUID v4 implementation for compatibility with test environments
+ * Falls back to crypto.getRandomValues() for cryptographically secure randomness
  * @returns {string} A UUID v4 string
  */
 export const generateUUID = (): string => {
   if (typeof globalThis !== 'undefined' && globalThis.crypto?.randomUUID) {
     return globalThis.crypto.randomUUID();
   }
-  // Fallback for environments without crypto.randomUUID
+  // Fallback using crypto.getRandomValues for cryptographically secure random generation
+  const crypto =
+    globalThis.crypto || (globalThis as Record<string, unknown>).msCrypto;
+  if (crypto && typeof crypto.getRandomValues === 'function') {
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+
+    // Set version to 4 (random)
+    array[6] = (array[6] & 0x0f) | 0x40;
+    // Set variant to RFC 4122
+    array[8] = (array[8] & 0x3f) | 0x80;
+
+    return Array.from(array)
+      .map((byte, index) => {
+        if (index === 4 || index === 6 || index === 8 || index === 10) {
+          return '-' + byte.toString(16).padStart(2, '0');
+        }
+        return byte.toString(16).padStart(2, '0');
+      })
+      .join('');
+  }
+  // Last resort fallback (should rarely be used)
+  // WARNING: This fallback uses Math.random() which is NOT cryptographically secure.
+  // This branch should only execute in very limited environments without crypto API support.
+  // For production use, ensure crypto.getRandomValues() is available.
+  // noinspection JSUnreachableCode
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
