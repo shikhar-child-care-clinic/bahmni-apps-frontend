@@ -37,8 +37,10 @@ export const useVaccinationStore = create<VaccinationState>((set, get) => ({
   addVaccination: (vaccination: Medication, displayName: string) => {
     const doseForm = extractDoseForm(vaccination, displayName);
 
+    // Use a unique ID combining vaccination ID and timestamp to ensure each entry is distinct
+    // This allows adding the same vaccination multiple times without state conflicts
     const newVaccination: MedicationInputEntry = {
-      id: vaccination.id!,
+      id: `${vaccination.id!}-${Date.now()}-${Math.random()}`,
       display: displayName,
       medication: vaccination,
       dosage: 0,

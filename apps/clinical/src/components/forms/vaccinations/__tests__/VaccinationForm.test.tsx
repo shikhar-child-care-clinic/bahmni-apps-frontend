@@ -419,7 +419,7 @@ describe('VaccinationForm', () => {
       render(<VaccinationForm />, { wrapper: createWrapper() });
       expect(screen.queryByText(/added vaccinations/i)).not.toBeInTheDocument();
     });
-    test('marks already selected vaccinations as disabled', async () => {
+    test('all vaccinations in search results are selectable (not disabled)', async () => {
       const user = userEvent.setup();
       mockUseQuery.mockImplementation(mockTwoVaccinesQuery);
       const secondVaccination: Medication = {
@@ -448,10 +448,16 @@ describe('VaccinationForm', () => {
       const searchBox = renderVaccinationForm();
       await user.type(searchBox, 'vaccine');
       await waitFor(() => {
-        expect(screen.getByText('Hepatitis B Vaccine')).toBeInTheDocument();
         expect(
-          screen.getByText('COVID-19 Vaccine (Already added)'),
-        ).toBeInTheDocument();
+          screen.getAllByText('Hepatitis B Vaccine').length,
+        ).toBeGreaterThan(0);
+        expect(screen.getAllByText('COVID-19 Vaccine').length).toBeGreaterThan(
+          0,
+        );
+      });
+      const options = screen.getAllByRole('option');
+      options.forEach((option) => {
+        expect(option).not.toHaveAttribute('disabled');
       });
     });
   });
