@@ -45,13 +45,6 @@ jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),
   useQuery: jest.fn(),
 }));
-jest.mock('../styles/VaccinationForm.module.scss', () => ({
-  vaccinationFormTile: 'vaccinationFormTile',
-  vaccinationFormTitle: 'vaccinationFormTitle',
-  vaccinationBox: 'vaccinationBox',
-  selectedVaccinationItem: 'selectedVaccinationItem',
-  duplicateNotification: 'duplicateNotification',
-}));
 
 const mockUseHasPrivilege = useHasPrivilege as jest.MockedFunction<
   typeof useHasPrivilege
