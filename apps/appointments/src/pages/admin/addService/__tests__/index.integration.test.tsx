@@ -1,6 +1,7 @@
 import {
   AppointmentService,
   createAppointmentService,
+  getAllAppointmentServices,
   getAppointmentLocations,
   getAppointmentSpecialities,
 } from '@bahmni/services';
@@ -25,6 +26,7 @@ jest.mock('react-router-dom', () => ({
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   createAppointmentService: jest.fn(),
+  getAllAppointmentServices: jest.fn(),
   getAppointmentLocations: jest.fn(),
   getAppointmentSpecialities: jest.fn(),
 }));
@@ -52,13 +54,15 @@ const fillAvailabilityTimes = (startTime: string, endTime: string) => {
 };
 
 describe('AddServicePage Integration', () => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, staleTime: 0 } },
-  });
+  let queryClient: QueryClient;
 
   beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, staleTime: 0 } },
+    });
     jest.clearAllMocks();
     useAddServiceStore.getState().reset();
+    jest.mocked(getAllAppointmentServices).mockResolvedValue([]);
     jest.mocked(getAppointmentLocations).mockResolvedValue({ results: [] });
     jest.mocked(getAppointmentSpecialities).mockResolvedValue([]);
     mockUseUserPrivilege.mockReturnValue({

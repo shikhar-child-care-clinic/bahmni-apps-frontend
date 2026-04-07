@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { DAYS_OF_WEEK } from '../../constants';
 import { useAddServiceStore } from '../../stores';
 import AvailabilitySection from '../AvailabilitySection';
+import { defaultRow } from './__mocks__/AvailabilitySectionMocks';
 
 jest.mock('../../stores', () => ({
   useAddServiceStore: jest.fn(),
@@ -14,16 +15,6 @@ const mockUpdateAvailabilityRow = jest.fn();
 const mockToggleDayOfWeek = jest.fn();
 const mockAddAvailabilityRow = jest.fn();
 const mockRemoveAvailabilityRow = jest.fn();
-
-const defaultRow = {
-  id: ROW_ID,
-  startTime: '',
-  endTime: '',
-  isEndTimeUserSet: false,
-  maxLoad: null,
-  daysOfWeek: [...DAYS_OF_WEEK],
-  errors: {},
-};
 
 const defaultStoreState = {
   availabilityRows: [defaultRow],

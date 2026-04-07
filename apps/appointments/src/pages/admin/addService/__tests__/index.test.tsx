@@ -9,6 +9,7 @@ import userEvent from '@testing-library/user-event';
 import { MANAGE_APPOINTMENT_SERVICES_PRIVILEGE } from '../../../../constants/app';
 import AddServicePage from '../index';
 import { useAddServiceStore } from '../stores';
+import { defaultRow } from './__mocks__/AddServicePageMocks';
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -41,18 +42,6 @@ jest.mock('../stores', () => ({
 const mockNavigate = jest.fn();
 const mockAddNotification = jest.fn();
 const mockValidate = jest.fn();
-
-const defaultRow = {
-  id: 'row-1',
-  daysOfWeek: ['MONDAY'],
-  startTime: '09:00',
-  startMeridiem: 'AM' as const,
-  endTime: '10:00',
-  endMeridiem: 'AM' as const,
-  isEndTimeUserSet: false,
-  maxLoad: null,
-  errors: {},
-};
 
 const defaultStoreState = {
   name: 'Test Service',

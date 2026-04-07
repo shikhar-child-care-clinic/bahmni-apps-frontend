@@ -6,6 +6,7 @@ import {
   TextInput,
 } from '@bahmni/design-system';
 import {
+  getAllAppointmentServices,
   getAppointmentLocations,
   getAppointmentSpecialities,
   resolveComboBoxItems,
@@ -27,11 +28,17 @@ const DetailsSection: React.FC = () => {
     specialityUuid,
     locationUuid,
     setName,
+    setNameError,
     setDescription,
     setDurationMins,
     setSpecialityUuid,
     setLocationUuid,
   } = useAddServiceStore();
+
+  const { data: existingServices = [] } = useQuery({
+    queryKey: ['appointmentServices'],
+    queryFn: getAllAppointmentServices,
+  });
 
   const {
     data: locationsData,
@@ -110,9 +117,17 @@ const DetailsSection: React.FC = () => {
           required
           invalid={!!nameError}
           invalidText={nameError ? t(nameError) : ''}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setName(e.target.value)
-          }
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const value = e.target.value;
+            setName(value);
+            const isDuplicate = existingServices.some(
+              (s) => s.name.toLowerCase() === value.trim().toLowerCase(),
+            );
+            if (isDuplicate)
+              setNameError(
+                'ADMIN_ADD_SERVICE_VALIDATION_SERVICE_NAME_DUPLICATE',
+              );
+          }}
         />
         <TextInput
           id="add-appointment-details-service-description"

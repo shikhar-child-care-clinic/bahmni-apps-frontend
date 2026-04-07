@@ -34,6 +34,7 @@
   "ADMIN_ADD_SERVICE_VALIDATION_END_TIME_AFTER_START": "La hora de fin debe ser posterior a la hora de inicio",
   "ADMIN_ADD_SERVICE_VALIDATION_END_TIME_REQUIRED": "La hora de fin es obligatoria",
   "ADMIN_ADD_SERVICE_VALIDATION_OVERLAP": "Esta disponibilidad se superpone con otra fila",
+  "ADMIN_ADD_SERVICE_VALIDATION_SERVICE_NAME_DUPLICATE": "Ya existe un servicio con este nombre",
   "ADMIN_ADD_SERVICE_VALIDATION_SERVICE_NAME_REQUIRED": "El nombre del servicio es obligatorio",
   "ADMIN_ADD_SERVICE_VALIDATION_START_TIME_REQUIRED": "La hora de inicio es obligatoria",
   "ADMIN_ALL_SERVICES_ADD_BUTTON": "Añadir servicio",

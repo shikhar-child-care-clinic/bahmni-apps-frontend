@@ -70,6 +70,16 @@ describe('useAddServiceStore', () => {
 
       expect(getStore().nameError).toBeNull();
     });
+
+    it('setNameError should set nameError in state', () => {
+      getStore().setNameError(
+        'ADMIN_ADD_SERVICE_VALIDATION_SERVICE_NAME_DUPLICATE',
+      );
+
+      expect(getStore().nameError).toBe(
+        'ADMIN_ADD_SERVICE_VALIDATION_SERVICE_NAME_DUPLICATE',
+      );
+    });
   });
 
   describe('addAvailabilityRow', () => {
@@ -113,6 +123,22 @@ describe('useAddServiceStore', () => {
       expect(isValid).toBe(false);
       expect(getStore().nameError).toBe(
         'ADMIN_ADD_SERVICE_VALIDATION_SERVICE_NAME_REQUIRED',
+      );
+    });
+
+    it('should return false and preserve existing nameError when name is non-empty', () => {
+      getStore().setName('Existing Service');
+      getStore().setNameError(
+        'ADMIN_ADD_SERVICE_VALIDATION_SERVICE_NAME_DUPLICATE',
+      );
+      getStore().updateAvailabilityRow(INITIAL_ROW_ID, 'startTime', '9:00');
+      getStore().updateAvailabilityRow(INITIAL_ROW_ID, 'endTime', '10:00');
+
+      const isValid = getStore().validate();
+
+      expect(isValid).toBe(false);
+      expect(getStore().nameError).toBe(
+        'ADMIN_ADD_SERVICE_VALIDATION_SERVICE_NAME_DUPLICATE',
       );
     });
 

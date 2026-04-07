@@ -18,6 +18,7 @@ interface AddServiceState {
   availabilityRows: AvailabilityRow[];
 
   setName: (name: string) => void;
+  setNameError: (error: string | null) => void;
   setDescription: (description: string) => void;
   setDurationMins: (durationMins: number | null) => void;
   setSpecialityUuid: (uuid: string | null) => void;
@@ -44,6 +45,7 @@ export const useAddServiceStore = create<AddServiceState>((set, get) => ({
   availabilityRows: [createRow(true)],
 
   setName: (name) => set({ name, nameError: null }),
+  setNameError: (error) => set({ nameError: error }),
   setDescription: (description) => set({ description }),
   setDurationMins: (durationMins) => set({ durationMins }),
   setSpecialityUuid: (specialityUuid) => set({ specialityUuid }),
@@ -72,9 +74,9 @@ export const useAddServiceStore = create<AddServiceState>((set, get) => ({
     const state = get();
     let isValid = true;
 
-    const nameError = state.name.trim()
-      ? null
-      : 'ADMIN_ADD_SERVICE_VALIDATION_SERVICE_NAME_REQUIRED';
+    const nameError = !state.name.trim()
+      ? 'ADMIN_ADD_SERVICE_VALIDATION_SERVICE_NAME_REQUIRED'
+      : state.nameError;
 
     if (nameError) isValid = false;
 

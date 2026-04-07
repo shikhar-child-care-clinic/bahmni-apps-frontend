@@ -7,6 +7,11 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useAddServiceStore } from '../../stores';
 import DetailsSection from '../DetailsSection';
+import {
+  mockExistingServices,
+  mockLocations,
+  mockSpecialities,
+} from './__mocks__/DetailsSectionMocks';
 
 jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),
@@ -18,20 +23,11 @@ jest.mock('../../stores', () => ({
 }));
 
 const mockSetName = jest.fn();
+const mockSetNameError = jest.fn();
 const mockSetDescription = jest.fn();
 const mockSetDurationMins = jest.fn();
 const mockSetSpecialityUuid = jest.fn();
 const mockSetLocationUuid = jest.fn();
-
-const mockSpecialities = [
-  { uuid: 'spec-uuid-1', name: 'General Medicine' },
-  { uuid: 'spec-uuid-2', name: 'ENT' },
-];
-
-const mockLocations = [
-  { uuid: 'loc-uuid-1', display: 'OPD Ward' },
-  { uuid: 'loc-uuid-2', display: 'ENT Ward' },
-];
 
 const defaultStoreState = {
   name: '',
@@ -41,6 +37,7 @@ const defaultStoreState = {
   specialityUuid: null,
   locationUuid: null,
   setName: mockSetName,
+  setNameError: mockSetNameError,
   setDescription: mockSetDescription,
   setDurationMins: mockSetDurationMins,
   setSpecialityUuid: mockSetSpecialityUuid,
@@ -62,6 +59,8 @@ describe('DetailsSection', () => {
     jest.clearAllMocks();
     jest.mocked(useAddServiceStore).mockReturnValue(defaultStoreState);
     (useQuery as jest.Mock).mockImplementation(({ queryKey }) => {
+      if (queryKey[0] === 'appointmentServices')
+        return { data: mockExistingServices, isLoading: false, isError: false };
       if (queryKey[0] === 'appointmentLocations')
         return {
           data: { results: mockLocations },
@@ -264,5 +263,35 @@ describe('DetailsSection', () => {
     render(wrapper);
 
     expect(screen.getByText('Service name is required')).toBeInTheDocument();
+  });
+
+  it.each([
+    { input: 'Cardiology', description: 'exact match' },
+    { input: 'cardiology', description: 'lowercase' },
+    { input: 'CARDIOLOGY', description: 'uppercase' },
+    { input: ' Cardiology ', description: 'with surrounding whitespace' },
+  ])(
+    'should call setNameError with duplicate key when name is a duplicate ($description)',
+    ({ input }) => {
+      render(wrapper);
+      fireEvent.change(
+        screen.getByTestId('add-appointment-details-service-name-test-id'),
+        { target: { value: input } },
+      );
+
+      expect(mockSetNameError).toHaveBeenCalledWith(
+        'ADMIN_ADD_SERVICE_VALIDATION_SERVICE_NAME_DUPLICATE',
+      );
+    },
+  );
+
+  it('should not call setNameError when name is not a duplicate', () => {
+    render(wrapper);
+    fireEvent.change(
+      screen.getByTestId('add-appointment-details-service-name-test-id'),
+      { target: { value: 'Neurology' } },
+    );
+
+    expect(mockSetNameError).not.toHaveBeenCalled();
   });
 });
