@@ -148,20 +148,18 @@ const AvailabilitySection: React.FC = () => {
         );
       }
 
-      if (cellId === 'actions') {
-        return (
-          <IconButton
-            id={`remove-availability-service-row-${row.id}-btn`}
-            testId={`remove-availability-service-row-${row.id}-btn-test-id`}
-            aria-label={`remove-availability-service-row-${row.id}-btn-aria-label`}
-            kind="ghost"
-            label={t('ADMIN_ALL_SERVICES_REMOVE_ROW_ICON_LABEL')}
-            onClick={() => removeAvailabilityRow(row.id)}
-          >
-            <Close />
-          </IconButton>
-        );
-      }
+      return (
+        <IconButton
+          id={`remove-availability-service-row-${row.id}-btn`}
+          testId={`remove-availability-service-row-${row.id}-btn-test-id`}
+          aria-label={`remove-availability-service-row-${row.id}-btn-aria-label`}
+          kind="ghost"
+          label={t('ADMIN_ALL_SERVICES_REMOVE_ROW_ICON_LABEL')}
+          onClick={() => removeAvailabilityRow(row.id)}
+        >
+          <Close />
+        </IconButton>
+      );
     },
     [],
   );
