@@ -76,6 +76,7 @@ export {
   getUpcomingAppointments,
   getPastAppointments,
   getAllAppointmentServices,
+  deleteAppointmentService,
   APPOINTMENT_STATUSES,
   APPOINTMENT_IDENTIFIER_SYSTEM,
   type AppointmentService,
@@ -84,6 +85,7 @@ export { getFormattedError } from './errorHandling';
 export {
   capitalize,
   generateId,
+  generateUUID,
   getCookieByName,
   isStringEmpty,
   getPriorityByOrder,
