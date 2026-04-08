@@ -267,3 +267,41 @@
   color: #da1e28;
   margin-left: $spacing-01;
 }
+
+.collapsibleHeaderButton {
+  width: 100%;
+  height: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.chevron {
+  flex-shrink: 0;
+  transition: transform 150ms ease;
+
+  &.chevronExpanded {
+    transform: rotate(180deg);
+  }
+}
+
+.sectionContent {
+  padding-bottom: $spacing-05;
+}
+
+.profileSectionContainer {
+  padding-bottom: $spacing-05;
+}
+
+.sectionContentCollapsed {
+  display: none;
+}

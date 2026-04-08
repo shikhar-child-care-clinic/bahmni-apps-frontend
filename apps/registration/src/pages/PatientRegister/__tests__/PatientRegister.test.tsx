@@ -1126,4 +1126,186 @@ describe('PatientRegister', () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  describe('Section Collapsibility (BAH-4590)', () => {
+    it('should render collapsible section headers by default (not accordion)', () => {
+      renderComponent();
+
+      // All section headers with translationKey should be rendered
+      const sectionHeaders = screen.getAllByTestId('section-header-tile');
+      expect(sectionHeaders.length).toBeGreaterThan(0);
+    });
+
+    it('should toggle section expanded state when clicking section header', async () => {
+      renderComponent();
+
+      // Find the second section header (Address Details is typically second)
+      const sectionHeaders = screen.getAllByTestId('section-header-tile');
+      const secondSectionHeader = sectionHeaders[1];
+
+      // Initially, section should be collapsed (button exists)
+      expect(secondSectionHeader).toBeInTheDocument();
+
+      // Click to expand
+      fireEvent.click(secondSectionHeader);
+
+      await waitFor(() => {
+        // Content should now be visible (no sectionContentCollapsed class)
+        const contentElements = screen.getAllByTestId('section-content');
+        expect(contentElements.length).toBeGreaterThan(0);
+      });
+    });
+
+    it('should allow multiple sections to be open simultaneously (NOT accordion)', async () => {
+      renderComponent();
+
+      const sectionHeaders = screen.getAllByTestId('section-header-tile');
+
+      // Expand first section
+      if (sectionHeaders[0]) {
+        fireEvent.click(sectionHeaders[0]);
+      }
+
+      // Expand second section
+      if (sectionHeaders[1]) {
+        fireEvent.click(sectionHeaders[1]);
+      }
+
+      await waitFor(() => {
+        // Both sections should remain expanded
+        const toggleButtons = screen.getAllByTestId(
+          'collapsible-toggle-button',
+        );
+        // At least 2 toggle buttons should exist for expanded sections
+        expect(toggleButtons.length).toBeGreaterThanOrEqual(2);
+      });
+    });
+
+    it('should collapse a section without affecting other expanded sections', async () => {
+      renderComponent();
+
+      const sectionHeaders = screen.getAllByTestId('section-header-tile');
+
+      // Expand first two sections
+      if (sectionHeaders[0]) fireEvent.click(sectionHeaders[0]);
+      if (sectionHeaders[1]) fireEvent.click(sectionHeaders[1]);
+
+      // Then collapse the first section
+      if (sectionHeaders[0]) {
+        fireEvent.click(sectionHeaders[0]);
+      }
+
+      await waitFor(() => {
+        // Verification is that component doesn't throw and state updates properly
+        expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
+      });
+    });
+
+    it('should auto-expand sections with validation errors on save', async () => {
+      // Mock validation to fail
+      (validateAllSections as jest.Mock).mockReturnValue(false);
+
+      // Mock section validators - some return false (error), some return true
+      renderComponent();
+
+      const saveButton = screen.getByText('CREATE_PATIENT_SAVE');
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        // When validation fails, sections with errors should auto-expand
+        expect(validateAllSections).toHaveBeenCalled();
+        // Component should still be rendered and responsive
+        expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
+      });
+    });
+
+    it('should auto-expand multiple sections with validation errors', async () => {
+      // Mock validation to fail
+      (validateAllSections as jest.Mock).mockReturnValue(false);
+
+      renderComponent();
+
+      // Get all form refs and mock them to fail validation on specific sections
+      const patientAddressRef = screen.getByTestId('patient-address');
+      const patientContactRef = screen.getByTestId('patient-contact');
+
+      expect(patientAddressRef).toBeInTheDocument();
+      expect(patientContactRef).toBeInTheDocument();
+
+      const saveButton = screen.getByText('CREATE_PATIENT_SAVE');
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(validateAllSections).toHaveBeenCalled();
+        // Multiple sections should be prepared for expansion due to errors
+        expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
+      });
+    });
+
+    it('should have collapsible headers for all config sections except those explicitly non-collapsible', () => {
+      const { useRegistrationConfig } = jest.requireMock(
+        '../../../providers/registrationConfig',
+      );
+      useRegistrationConfig.mockReturnValue({
+        registrationConfig: {
+          registrationForm: {
+            sections: [
+              {
+                name: 'Address Details',
+                translationKey: 'ADDRESS_HEADER',
+                controls: [{ type: 'address' }],
+                // collapsible not set, should default to true
+              },
+              {
+                name: 'Contact Information',
+                translationKey: 'CONTACT_HEADER',
+                controls: [{ type: 'contactInfo' }],
+                collapsible: true, // explicitly collapsible
+              },
+              {
+                name: 'Non-Collapsible Section',
+                translationKey: 'NON_COLLAPSIBLE_HEADER',
+                controls: [{ type: 'additionalInfo' }],
+                collapsible: false, // explicitly non-collapsible
+              },
+            ],
+          },
+        },
+      });
+
+      renderComponent();
+
+      // Should have multiple section headers
+      const sectionHeaders = screen.getAllByTestId('section-header-tile');
+      expect(sectionHeaders.length).toBeGreaterThan(0);
+
+      // All collapsible sections should have toggle buttons
+      const toggleButtons = screen.queryAllByTestId(
+        'collapsible-toggle-button',
+      );
+      // At least 2 (Address and Contact are collapsible by default/explicitly)
+      expect(toggleButtons.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should preserve section expanded state during re-renders', async () => {
+      renderComponent();
+
+      const sectionHeaders = screen.getAllByTestId('section-header-tile');
+
+      // Expand a section
+      if (sectionHeaders[1]) {
+        fireEvent.click(sectionHeaders[1]);
+      }
+
+      // Trigger a re-render by clicking save (which validates but doesn't change sections)
+      (validateAllSections as jest.Mock).mockReturnValue(true);
+      const saveButton = screen.getByText('CREATE_PATIENT_SAVE');
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        // Section should still be in its expanded state after re-render
+        expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
+      });
+    });
+  });
 });

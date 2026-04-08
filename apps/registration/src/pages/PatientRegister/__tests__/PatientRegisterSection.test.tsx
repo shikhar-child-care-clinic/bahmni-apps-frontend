@@ -1,5 +1,5 @@
 import { useTranslation } from '@bahmni/services';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { RegistrationFormSection } from '../../../providers/registrationConfig/models';
 import { FormControlRefs, FormControlData, FormControlGuards } from '../models';
@@ -32,6 +32,23 @@ jest.mock('../formSectionMap', () => ({
   ],
 }));
 
+// Mock @carbon/icons-react
+jest.mock('@carbon/icons-react', () => ({
+  ChevronDown: ({
+    className,
+    'aria-hidden': ariaHidden,
+  }: {
+    className?: string;
+    'aria-hidden'?: string;
+  }) => (
+    <svg
+      data-testid="chevron-icon"
+      className={className}
+      aria-hidden={ariaHidden}
+    />
+  ),
+}));
+
 const mockTranslate = jest.fn((key: string) => key);
 
 const mockRefs: FormControlRefs = {
@@ -39,7 +56,7 @@ const mockRefs: FormControlRefs = {
   addressRef: React.createRef(),
   contactRef: React.createRef(),
   additionalRef: React.createRef(),
-  identifiersRef: React.createRef(),
+  additionalIdentifiersRef: React.createRef(),
   relationshipsRef: React.createRef(),
 };
 
@@ -58,6 +75,15 @@ const mockGuards: FormControlGuards = {
   relationshipTypes: [],
 };
 
+const defaultProps = {
+  refs: mockRefs,
+  data: mockData,
+  guards: mockGuards,
+  isCollapsible: false,
+  isExpanded: true,
+  onToggle: jest.fn(),
+};
+
 describe('PatientRegisterSection', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -73,12 +99,7 @@ describe('PatientRegisterSection', () => {
       };
 
       const { container } = render(
-        <PatientRegisterSection
-          section={section}
-          refs={mockRefs}
-          data={mockData}
-          guards={mockGuards}
-        />,
+        <PatientRegisterSection {...defaultProps} section={section} />,
       );
 
       expect(container.firstChild).toBeNull();
@@ -91,14 +112,7 @@ describe('PatientRegisterSection', () => {
         controls: [{ type: 'profile' }],
       };
 
-      render(
-        <PatientRegisterSection
-          section={section}
-          refs={mockRefs}
-          data={mockData}
-          guards={mockGuards}
-        />,
-      );
+      render(<PatientRegisterSection {...defaultProps} section={section} />);
 
       const headerTile = screen.getByTestId('section-header-tile');
       expect(headerTile).toBeInTheDocument();
@@ -112,12 +126,7 @@ describe('PatientRegisterSection', () => {
       };
 
       const { queryByTestId } = render(
-        <PatientRegisterSection
-          section={section}
-          refs={mockRefs}
-          data={mockData}
-          guards={mockGuards}
-        />,
+        <PatientRegisterSection {...defaultProps} section={section} />,
       );
 
       expect(queryByTestId('section-header-tile')).not.toBeInTheDocument();
@@ -129,14 +138,7 @@ describe('PatientRegisterSection', () => {
         controls: [{ type: 'profile', titleTranslationKey: 'CONTROL_TITLE' }],
       };
 
-      render(
-        <PatientRegisterSection
-          section={section}
-          refs={mockRefs}
-          data={mockData}
-          guards={mockGuards}
-        />,
-      );
+      render(<PatientRegisterSection {...defaultProps} section={section} />);
 
       const controlTitle = screen.getByTestId('control-title-profile');
       expect(controlTitle).toBeInTheDocument();
@@ -150,12 +152,7 @@ describe('PatientRegisterSection', () => {
       };
 
       const { queryByTestId } = render(
-        <PatientRegisterSection
-          section={section}
-          refs={mockRefs}
-          data={mockData}
-          guards={mockGuards}
-        />,
+        <PatientRegisterSection {...defaultProps} section={section} />,
       );
 
       expect(queryByTestId('control-title-profile')).not.toBeInTheDocument();
@@ -173,14 +170,7 @@ describe('PatientRegisterSection', () => {
         ],
       };
 
-      render(
-        <PatientRegisterSection
-          section={section}
-          refs={mockRefs}
-          data={mockData}
-          guards={mockGuards}
-        />,
-      );
+      render(<PatientRegisterSection {...defaultProps} section={section} />);
 
       expect(screen.getByTestId('profile-component')).toBeInTheDocument();
       expect(screen.getByTestId('address-component')).toBeInTheDocument();
@@ -201,14 +191,7 @@ describe('PatientRegisterSection', () => {
         ],
       };
 
-      render(
-        <PatientRegisterSection
-          section={section}
-          refs={mockRefs}
-          data={mockData}
-          guards={mockGuards}
-        />,
-      );
+      render(<PatientRegisterSection {...defaultProps} section={section} />);
 
       // Should render valid controls
       expect(screen.getByTestId('profile-component')).toBeInTheDocument();
@@ -227,14 +210,7 @@ describe('PatientRegisterSection', () => {
         controls: [{ type: 'profile' }],
       };
 
-      render(
-        <PatientRegisterSection
-          section={section}
-          refs={mockRefs}
-          data={mockData}
-          guards={mockGuards}
-        />,
-      );
+      render(<PatientRegisterSection {...defaultProps} section={section} />);
 
       expect(mockTranslate).toHaveBeenCalledWith('SECTION_TITLE');
     });
@@ -245,16 +221,320 @@ describe('PatientRegisterSection', () => {
         controls: [{ type: 'profile', titleTranslationKey: 'CONTROL_TITLE' }],
       };
 
+      render(<PatientRegisterSection {...defaultProps} section={section} />);
+
+      expect(mockTranslate).toHaveBeenCalledWith('CONTROL_TITLE');
+    });
+  });
+
+  describe('collapsible behavior', () => {
+    it('should render collapsible header button when isCollapsible=true', () => {
+      const section: RegistrationFormSection = {
+        name: 'collapsible-section',
+        translationKey: 'SECTION_TITLE',
+        controls: [{ type: 'profile' }],
+      };
+
       render(
         <PatientRegisterSection
+          {...defaultProps}
           section={section}
-          refs={mockRefs}
-          data={mockData}
-          guards={mockGuards}
+          isCollapsible
+          isExpanded
         />,
       );
 
-      expect(mockTranslate).toHaveBeenCalledWith('CONTROL_TITLE');
+      expect(
+        screen.getByTestId('collapsible-toggle-button'),
+      ).toBeInTheDocument();
+      // The Tile wrapper should still be present
+      expect(screen.getByTestId('section-header-tile')).toBeInTheDocument();
+    });
+
+    it('should NOT render collapsible header button when isCollapsible=false', () => {
+      const section: RegistrationFormSection = {
+        name: 'non-collapsible-section',
+        translationKey: 'SECTION_TITLE',
+        controls: [{ type: 'profile' }],
+      };
+
+      render(
+        <PatientRegisterSection
+          {...defaultProps}
+          section={section}
+          isCollapsible={false}
+          isExpanded
+        />,
+      );
+
+      const header = screen.getByTestId('section-header-tile');
+      expect(header.tagName.toLowerCase()).not.toBe('button');
+    });
+
+    it('should render content when isCollapsible=false (always expanded)', () => {
+      const section: RegistrationFormSection = {
+        name: 'non-collapsible-section',
+        translationKey: 'SECTION_TITLE',
+        controls: [{ type: 'profile' }],
+      };
+
+      render(
+        <PatientRegisterSection
+          {...defaultProps}
+          section={section}
+          isCollapsible={false}
+          isExpanded
+        />,
+      );
+
+      expect(screen.getByTestId('profile-component')).toBeInTheDocument();
+      const content = screen.getByTestId('section-content');
+      expect(content).not.toHaveClass('sectionContentCollapsed');
+    });
+
+    it('should render content when isCollapsible=true and isExpanded=true', () => {
+      const section: RegistrationFormSection = {
+        name: 'collapsible-section',
+        translationKey: 'SECTION_TITLE',
+        controls: [{ type: 'profile' }],
+      };
+
+      render(
+        <PatientRegisterSection
+          {...defaultProps}
+          section={section}
+          isCollapsible
+          isExpanded
+        />,
+      );
+
+      const content = screen.getByTestId('section-content');
+      expect(content).not.toHaveClass('sectionContentCollapsed');
+      expect(screen.getByTestId('profile-component')).toBeInTheDocument();
+    });
+
+    it('should NOT render content when isCollapsible=true and isExpanded=false', () => {
+      const section: RegistrationFormSection = {
+        name: 'collapsible-section',
+        translationKey: 'SECTION_TITLE',
+        controls: [{ type: 'profile' }],
+      };
+
+      render(
+        <PatientRegisterSection
+          {...defaultProps}
+          section={section}
+          isCollapsible
+          isExpanded={false}
+        />,
+      );
+
+      const content = screen.getByTestId('section-content');
+      expect(content).toHaveClass('sectionContentCollapsed');
+    });
+
+    it('should call onToggle when clicking section header (collapsible)', () => {
+      const onToggle = jest.fn();
+      const section: RegistrationFormSection = {
+        name: 'collapsible-section',
+        translationKey: 'SECTION_TITLE',
+        controls: [{ type: 'profile' }],
+      };
+
+      render(
+        <PatientRegisterSection
+          {...defaultProps}
+          section={section}
+          isCollapsible
+          isExpanded
+          onToggle={onToggle}
+        />,
+      );
+
+      fireEvent.click(screen.getByTestId('collapsible-toggle-button'));
+      expect(onToggle).toHaveBeenCalledTimes(1);
+    });
+
+    it('should NOT call onToggle when clicking non-collapsible section header', () => {
+      const onToggle = jest.fn();
+      const section: RegistrationFormSection = {
+        name: 'non-collapsible-section',
+        translationKey: 'SECTION_TITLE',
+        controls: [{ type: 'profile' }],
+      };
+
+      render(
+        <PatientRegisterSection
+          {...defaultProps}
+          section={section}
+          isCollapsible={false}
+          isExpanded
+          onToggle={onToggle}
+        />,
+      );
+
+      const header = screen.getByTestId('section-header-tile');
+      fireEvent.click(header);
+      expect(onToggle).not.toHaveBeenCalled();
+    });
+
+    it('should have aria-expanded=true when isExpanded=true', () => {
+      const section: RegistrationFormSection = {
+        name: 'collapsible-section',
+        translationKey: 'SECTION_TITLE',
+        controls: [{ type: 'profile' }],
+      };
+
+      render(
+        <PatientRegisterSection
+          {...defaultProps}
+          section={section}
+          isCollapsible
+          isExpanded
+        />,
+      );
+
+      expect(screen.getByTestId('collapsible-toggle-button')).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+    });
+
+    it('should have aria-expanded=false when isExpanded=false', () => {
+      const section: RegistrationFormSection = {
+        name: 'collapsible-section',
+        translationKey: 'SECTION_TITLE',
+        controls: [{ type: 'profile' }],
+      };
+
+      render(
+        <PatientRegisterSection
+          {...defaultProps}
+          section={section}
+          isCollapsible
+          isExpanded={false}
+        />,
+      );
+
+      expect(screen.getByTestId('collapsible-toggle-button')).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+    });
+
+    it('should render chevron icon when section is collapsible', () => {
+      const section: RegistrationFormSection = {
+        name: 'collapsible-section',
+        translationKey: 'SECTION_TITLE',
+        controls: [{ type: 'profile' }],
+      };
+
+      render(
+        <PatientRegisterSection
+          {...defaultProps}
+          section={section}
+          isCollapsible
+          isExpanded={false}
+        />,
+      );
+
+      expect(screen.getByTestId('chevron-icon')).toBeInTheDocument();
+    });
+  });
+
+  describe('keyboard navigation', () => {
+    it('should call onToggle when pressing Enter on collapsible header', () => {
+      const onToggle = jest.fn();
+      const section: RegistrationFormSection = {
+        name: 'collapsible-section',
+        translationKey: 'SECTION_TITLE',
+        controls: [{ type: 'profile' }],
+      };
+
+      render(
+        <PatientRegisterSection
+          {...defaultProps}
+          section={section}
+          isCollapsible
+          isExpanded
+          onToggle={onToggle}
+        />,
+      );
+
+      fireEvent.keyDown(screen.getByTestId('collapsible-toggle-button'), {
+        key: 'Enter',
+      });
+      expect(onToggle).toHaveBeenCalledTimes(1);
+    });
+
+    it('should call onToggle when pressing Space on collapsible header', () => {
+      const onToggle = jest.fn();
+      const section: RegistrationFormSection = {
+        name: 'collapsible-section',
+        translationKey: 'SECTION_TITLE',
+        controls: [{ type: 'profile' }],
+      };
+
+      render(
+        <PatientRegisterSection
+          {...defaultProps}
+          section={section}
+          isCollapsible
+          isExpanded
+          onToggle={onToggle}
+        />,
+      );
+
+      fireEvent.keyDown(screen.getByTestId('collapsible-toggle-button'), {
+        key: ' ',
+      });
+      expect(onToggle).toHaveBeenCalledTimes(1);
+    });
+
+    it('should NOT call onToggle when pressing Enter on non-collapsible header', () => {
+      const onToggle = jest.fn();
+      const section: RegistrationFormSection = {
+        name: 'non-collapsible-section',
+        translationKey: 'SECTION_TITLE',
+        controls: [{ type: 'profile' }],
+      };
+
+      render(
+        <PatientRegisterSection
+          {...defaultProps}
+          section={section}
+          isCollapsible={false}
+          isExpanded
+          onToggle={onToggle}
+        />,
+      );
+
+      const header = screen.getByTestId('section-header-tile');
+      fireEvent.keyDown(header, { key: 'Enter' });
+      expect(onToggle).not.toHaveBeenCalled();
+    });
+
+    it('should NOT call onToggle when pressing other keys on collapsible header', () => {
+      const onToggle = jest.fn();
+      const section: RegistrationFormSection = {
+        name: 'collapsible-section',
+        translationKey: 'SECTION_TITLE',
+        controls: [{ type: 'profile' }],
+      };
+
+      render(
+        <PatientRegisterSection
+          {...defaultProps}
+          section={section}
+          isCollapsible
+          isExpanded
+          onToggle={onToggle}
+        />,
+      );
+
+      const header = screen.getByTestId('section-header-tile');
+      fireEvent.keyDown(header, { key: 'Tab' });
+      expect(onToggle).not.toHaveBeenCalled();
     });
   });
 });
