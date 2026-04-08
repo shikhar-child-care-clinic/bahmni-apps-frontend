@@ -74,9 +74,9 @@ export const useAddServiceStore = create<AddServiceState>((set, get) => ({
     const state = get();
     let isValid = true;
 
-    const nameError = !state.name.trim()
-      ? 'ADMIN_ADD_SERVICE_VALIDATION_SERVICE_NAME_REQUIRED'
-      : state.nameError;
+    const nameError = state.name.trim()
+      ? state.nameError
+      : 'ADMIN_ADD_SERVICE_VALIDATION_SERVICE_NAME_REQUIRED';
 
     if (nameError) isValid = false;
 

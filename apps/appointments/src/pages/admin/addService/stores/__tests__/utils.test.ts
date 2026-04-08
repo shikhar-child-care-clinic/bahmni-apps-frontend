@@ -1,5 +1,6 @@
 import { generateId } from '@bahmni/services';
 import { DAYS_OF_WEEK } from '../../constants';
+import { DayOfWeek } from '../models';
 import {
   createRow,
   findOverlappingRowIds,
@@ -105,36 +106,39 @@ describe('updateRowField', () => {
     it.each([
       {
         scenario: 'durationMins is null',
+        rowOverrides: {},
         startTime: '09:00',
         durationMins: null,
+        expectedEndTime: '',
       },
       {
         scenario: 'startTime is not a complete time',
+        rowOverrides: {},
         startTime: '9',
         durationMins: 30,
+        expectedEndTime: '',
+      },
+      {
+        scenario: 'endTime is user-set',
+        rowOverrides: { isEndTimeUserSet: true, endTime: '10:00' },
+        startTime: '09:00',
+        durationMins: 30,
+        expectedEndTime: '10:00',
       },
     ])(
       'should not auto-compute endTime when $scenario',
-      ({ startTime, durationMins }) => {
+      ({ rowOverrides, startTime, durationMins, expectedEndTime }) => {
         expect(
           updateRowField(
-            makeRow(),
+            makeRow(rowOverrides),
             'row-1',
             'startTime',
             startTime,
             durationMins,
           ).endTime,
-        ).toBe('');
+        ).toBe(expectedEndTime);
       },
     );
-
-    it('should not auto-compute endTime when endTime is user-set', () => {
-      const row = makeRow({ isEndTimeUserSet: true, endTime: '10:00' });
-
-      expect(
-        updateRowField(row, 'row-1', 'startTime', '09:00', 30).endTime,
-      ).toBe('10:00');
-    });
   });
 
   describe('endTime', () => {
@@ -191,32 +195,47 @@ describe('toggleRowDay', () => {
     expect(toggleRowDay(row, 'row-2', 'MONDAY')).toBe(row);
   });
 
-  it('should add a day when not selected and remove it when already selected', () => {
-    const empty = makeRow({ daysOfWeek: [] });
-    expect(toggleRowDay(empty, 'row-1', 'MONDAY').daysOfWeek).toContain(
-      'MONDAY',
-    );
+  it.each([
+    {
+      scenario: 'adding a day when none are selected',
+      initialDays: [] as DayOfWeek[],
+      day: 'MONDAY' as DayOfWeek,
+      expectedDays: ['MONDAY'] as DayOfWeek[],
+      expectedDaysOfWeekError: undefined,
+    },
+    {
+      scenario: 'removing a day when more remain',
+      initialDays: ['MONDAY', 'TUESDAY'] as DayOfWeek[],
+      day: 'MONDAY' as DayOfWeek,
+      expectedDays: ['TUESDAY'] as DayOfWeek[],
+      expectedDaysOfWeekError: undefined,
+    },
+    {
+      scenario: 'removing the last selected day',
+      initialDays: ['MONDAY'] as DayOfWeek[],
+      day: 'MONDAY' as DayOfWeek,
+      expectedDays: [] as DayOfWeek[],
+      expectedDaysOfWeekError:
+        'ADMIN_ADD_SERVICE_VALIDATION_DAYS_OF_WEEK_REQUIRED',
+    },
+  ])(
+    'should toggle day and update errors when $scenario',
+    ({ initialDays, day, expectedDays, expectedDaysOfWeekError }) => {
+      const row = makeRow({
+        daysOfWeek: initialDays,
+        errors: {
+          daysOfWeek: 'ADMIN_ADD_SERVICE_VALIDATION_DAYS_OF_WEEK_REQUIRED',
+          overlap: 'ADMIN_ADD_SERVICE_VALIDATION_OVERLAP',
+        },
+      });
 
-    const withMonday = makeRow({ daysOfWeek: ['MONDAY', 'TUESDAY'] });
-    const removed = toggleRowDay(withMonday, 'row-1', 'MONDAY');
-    expect(removed.daysOfWeek).not.toContain('MONDAY');
-    expect(removed.daysOfWeek).toContain('TUESDAY');
-  });
+      const result = toggleRowDay(row, 'row-1', day);
 
-  it('should clear daysOfWeek and overlap errors on toggle', () => {
-    const row = makeRow({
-      daysOfWeek: ['MONDAY', 'TUESDAY'],
-      errors: {
-        daysOfWeek: 'ADMIN_ADD_SERVICE_VALIDATION_DAYS_OF_WEEK_REQUIRED',
-        overlap: 'ADMIN_ADD_SERVICE_VALIDATION_OVERLAP',
-      },
-    });
-
-    const result = toggleRowDay(row, 'row-1', 'MONDAY');
-
-    expect(result.errors.daysOfWeek).toBeUndefined();
-    expect(result.errors.overlap).toBeUndefined();
-  });
+      expect(result.daysOfWeek).toEqual(expectedDays);
+      expect(result.errors.daysOfWeek).toBe(expectedDaysOfWeekError);
+      expect(result.errors.overlap).toBeUndefined();
+    },
+  );
 });
 
 describe('validateRow', () => {
