@@ -4,12 +4,15 @@ import { createImmunizationResource } from '../immunizationResourceCreator';
 
 const FHIR_EXT_ADMINISTERED_PRODUCT =
   'http://fhir.bahmni.org/ext/immunization/administeredProduct';
-const FHIR_EXT_BASED_ON =
-  'http://fhir.bahmni.org/ext/immunization/basedOn';
+const FHIR_EXT_BASED_ON = 'http://fhir.bahmni.org/ext/immunization/basedOn';
 
 const mockSubjectReference: Reference = { reference: 'Patient/patient-uuid' };
-const mockEncounterReference: Reference = { reference: 'Encounter/encounter-uuid' };
-const mockPractitionerReference: Reference = { reference: 'Practitioner/practitioner-uuid' };
+const mockEncounterReference: Reference = {
+  reference: 'Encounter/encounter-uuid',
+};
+const mockPractitionerReference: Reference = {
+  reference: 'Practitioner/practitioner-uuid',
+};
 
 const baseEntry = (): ImmunizationInputEntry => ({
   id: 'entry-id',
@@ -51,7 +54,9 @@ describe('createImmunizationResource', () => {
       );
       expect(result.resourceType).toBe('Immunization');
       expect(result.status).toBe('completed');
-      expect(result.vaccineCode).toEqual({ coding: [{ code: 'vaccine-uuid' }] });
+      expect(result.vaccineCode).toEqual({
+        coding: [{ code: 'vaccine-uuid' }],
+      });
       expect(result.patient).toBe(mockSubjectReference);
       expect(result.encounter).toBe(mockEncounterReference);
       expect(result.primarySource).toBe(true);

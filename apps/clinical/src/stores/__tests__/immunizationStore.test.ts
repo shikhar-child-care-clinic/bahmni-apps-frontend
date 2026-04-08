@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { act } from 'react';
-import { useImmunizationStore } from '../immunizationStore';
 import { ImmunizationFormConfig } from '../../providers/clinicalConfig/models';
+import { useImmunizationStore } from '../immunizationStore';
 
 let uuidCounter = 0;
 beforeAll(() => {
@@ -34,7 +34,11 @@ describe('useImmunizationStore', () => {
       const { result } = renderHook(() => useImmunizationStore());
 
       act(() => {
-        result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration');
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        );
       });
 
       expect(result.current.selectedImmunizations).toHaveLength(1);
@@ -51,7 +55,11 @@ describe('useImmunizationStore', () => {
       const { result } = renderHook(() => useImmunizationStore());
 
       act(() => {
-        result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'not-done');
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'not-done',
+        );
       });
 
       expect(result.current.selectedImmunizations[0].status).toBe('not-done');
@@ -66,8 +74,12 @@ describe('useImmunizationStore', () => {
       });
 
       expect(result.current.selectedImmunizations).toHaveLength(2);
-      expect(result.current.selectedImmunizations[0].vaccineConceptUuid).toBe('uuid-2');
-      expect(result.current.selectedImmunizations[1].vaccineConceptUuid).toBe('uuid-1');
+      expect(result.current.selectedImmunizations[0].vaccineConceptUuid).toBe(
+        'uuid-2',
+      );
+      expect(result.current.selectedImmunizations[1].vaccineConceptUuid).toBe(
+        'uuid-1',
+      );
     });
   });
 
@@ -76,7 +88,11 @@ describe('useImmunizationStore', () => {
       const { result } = renderHook(() => useImmunizationStore());
 
       act(() => {
-        result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'history');
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'history',
+        );
       });
 
       const id = result.current.selectedImmunizations[0].id;
@@ -103,14 +119,22 @@ describe('useImmunizationStore', () => {
       });
 
       expect(result.current.selectedImmunizations).toHaveLength(1);
-      expect(result.current.selectedImmunizations[0].vaccineConceptUuid).toBe('uuid-2');
+      expect(result.current.selectedImmunizations[0].vaccineConceptUuid).toBe(
+        'uuid-2',
+      );
     });
   });
 
   describe('update actions', () => {
     it('updateDoseSequence should update doseSequence', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       act(() => result.current.updateDoseSequence(id, 3));
@@ -120,7 +144,13 @@ describe('useImmunizationStore', () => {
 
     it('updateDrug should set drugUuid and drugDisplay, clear drugNonCoded', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       act(() => result.current.updateDrug(id, 'drug-uuid', 'BCG Drug'));
@@ -133,7 +163,13 @@ describe('useImmunizationStore', () => {
 
     it('updateDrugNonCoded should set drugNonCoded and clear drugUuid', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       act(() => {
@@ -149,7 +185,13 @@ describe('useImmunizationStore', () => {
 
     it('updateAdministeredOn should update administeredOn date', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
       const date = new Date('2024-03-10');
 
@@ -160,7 +202,13 @@ describe('useImmunizationStore', () => {
 
     it('updateLocation should set locationUuid and display, clear locationText', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       act(() => result.current.updateLocation(id, 'loc-uuid', 'Main Clinic'));
@@ -173,7 +221,13 @@ describe('useImmunizationStore', () => {
 
     it('updateLocationText should set locationText and clear locationUuid', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       act(() => {
@@ -189,49 +243,91 @@ describe('useImmunizationStore', () => {
 
     it('updateRoute should set routeConceptUuid and routeDisplay', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       act(() => result.current.updateRoute(id, 'route-uuid', 'Intramuscular'));
 
-      expect(result.current.selectedImmunizations[0].routeConceptUuid).toBe('route-uuid');
-      expect(result.current.selectedImmunizations[0].routeDisplay).toBe('Intramuscular');
+      expect(result.current.selectedImmunizations[0].routeConceptUuid).toBe(
+        'route-uuid',
+      );
+      expect(result.current.selectedImmunizations[0].routeDisplay).toBe(
+        'Intramuscular',
+      );
     });
 
     it('updateSite should set siteConceptUuid and siteDisplay', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       act(() => result.current.updateSite(id, 'site-uuid', 'Left arm'));
 
-      expect(result.current.selectedImmunizations[0].siteConceptUuid).toBe('site-uuid');
-      expect(result.current.selectedImmunizations[0].siteDisplay).toBe('Left arm');
+      expect(result.current.selectedImmunizations[0].siteConceptUuid).toBe(
+        'site-uuid',
+      );
+      expect(result.current.selectedImmunizations[0].siteDisplay).toBe(
+        'Left arm',
+      );
     });
 
     it('updateManufacturer should update manufacturer', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       act(() => result.current.updateManufacturer(id, 'Pfizer'));
 
-      expect(result.current.selectedImmunizations[0].manufacturer).toBe('Pfizer');
+      expect(result.current.selectedImmunizations[0].manufacturer).toBe(
+        'Pfizer',
+      );
     });
 
     it('updateBatchNumber should update batchNumber', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       act(() => result.current.updateBatchNumber(id, 'BATCH-001'));
 
-      expect(result.current.selectedImmunizations[0].batchNumber).toBe('BATCH-001');
+      expect(result.current.selectedImmunizations[0].batchNumber).toBe(
+        'BATCH-001',
+      );
     });
 
     it('updateExpirationDate should update expirationDate', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
       const date = new Date('2025-12-31');
 
@@ -242,17 +338,31 @@ describe('useImmunizationStore', () => {
 
     it('updateNotes should update notes', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       act(() => result.current.updateNotes(id, 'No adverse effects'));
 
-      expect(result.current.selectedImmunizations[0].notes).toBe('No adverse effects');
+      expect(result.current.selectedImmunizations[0].notes).toBe(
+        'No adverse effects',
+      );
     });
 
     it('updateStatus should update status', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       act(() => result.current.updateStatus(id, 'not-done'));
@@ -262,44 +372,82 @@ describe('useImmunizationStore', () => {
 
     it('updateStatusReason should set statusReasonConceptUuid and display', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'not-done'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'not-done',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
-      act(() => result.current.updateStatusReason(id, 'reason-uuid', 'Patient refused'));
+      act(() =>
+        result.current.updateStatusReason(id, 'reason-uuid', 'Patient refused'),
+      );
 
-      expect(result.current.selectedImmunizations[0].statusReasonConceptUuid).toBe('reason-uuid');
-      expect(result.current.selectedImmunizations[0].statusReasonDisplay).toBe('Patient refused');
+      expect(
+        result.current.selectedImmunizations[0].statusReasonConceptUuid,
+      ).toBe('reason-uuid');
+      expect(result.current.selectedImmunizations[0].statusReasonDisplay).toBe(
+        'Patient refused',
+      );
     });
 
     it('updateOrderUuid should update orderUuid', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       act(() => result.current.updateOrderUuid(id, 'order-uuid'));
 
-      expect(result.current.selectedImmunizations[0].orderUuid).toBe('order-uuid');
+      expect(result.current.selectedImmunizations[0].orderUuid).toBe(
+        'order-uuid',
+      );
     });
   });
 
   describe('error clearing on update after validation', () => {
     it('should clear the field error when a required field is updated after validation', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       act(() => result.current.validateAll());
 
-      expect(result.current.selectedImmunizations[0].errors.administeredOn).toBeDefined();
+      expect(
+        result.current.selectedImmunizations[0].errors.administeredOn,
+      ).toBeDefined();
 
-      act(() => result.current.updateAdministeredOn(id, new Date('2024-01-01')));
+      act(() =>
+        result.current.updateAdministeredOn(id, new Date('2024-01-01')),
+      );
 
-      expect(result.current.selectedImmunizations[0].errors.administeredOn).toBeUndefined();
+      expect(
+        result.current.selectedImmunizations[0].errors.administeredOn,
+      ).toBeUndefined();
     });
 
     it('should not clear errors on update before validation has occurred', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       act(() => result.current.updateNotes(id, 'some note'));
@@ -311,7 +459,13 @@ describe('useImmunizationStore', () => {
   describe('validateAll', () => {
     it('should return false and set errors when required fields are missing (administration mode)', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'administration'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'administration',
+        ),
+      );
 
       let isValid = true;
       act(() => {
@@ -324,12 +478,20 @@ describe('useImmunizationStore', () => {
       expect(errors.drug).toBe('INPUT_VALUE_REQUIRED');
       expect(errors.batchNumber).toBe('INPUT_VALUE_REQUIRED');
       expect(errors.expirationDate).toBe('INPUT_VALUE_REQUIRED');
-      expect(result.current.selectedImmunizations[0].hasBeenValidated).toBe(true);
+      expect(result.current.selectedImmunizations[0].hasBeenValidated).toBe(
+        true,
+      );
     });
 
     it('should return false and set statusReason error for not-done mode', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'not-done'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'not-done',
+        ),
+      );
 
       let isValid = true;
       act(() => {
@@ -344,7 +506,13 @@ describe('useImmunizationStore', () => {
 
     it('should return false and set administeredOn error for history mode', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'history'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'history',
+        ),
+      );
 
       let isValid = true;
       act(() => {
@@ -352,17 +520,25 @@ describe('useImmunizationStore', () => {
       });
 
       expect(isValid).toBe(false);
-      expect(result.current.selectedImmunizations[0].errors.administeredOn).toBe(
-        'INPUT_VALUE_REQUIRED',
-      );
+      expect(
+        result.current.selectedImmunizations[0].errors.administeredOn,
+      ).toBe('INPUT_VALUE_REQUIRED');
     });
 
     it('should return true when all required fields are filled for history mode', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'history'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'history',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
-      act(() => result.current.updateAdministeredOn(id, new Date('2024-01-01')));
+      act(() =>
+        result.current.updateAdministeredOn(id, new Date('2024-01-01')),
+      );
 
       let isValid = false;
       act(() => {
@@ -375,7 +551,13 @@ describe('useImmunizationStore', () => {
 
     it('should return false when administeredOn is a future date', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'history'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'history',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       const futureDate = new Date();
@@ -388,14 +570,20 @@ describe('useImmunizationStore', () => {
       });
 
       expect(isValid).toBe(false);
-      expect(result.current.selectedImmunizations[0].errors.administeredOn).toBe(
-        'IMMUNIZATION_DATE_FUTURE_ERROR',
-      );
+      expect(
+        result.current.selectedImmunizations[0].errors.administeredOn,
+      ).toBe('IMMUNIZATION_DATE_FUTURE_ERROR');
     });
 
     it('should use custom fieldConfig overrides when immunizationConfig is provided', () => {
       const { result } = renderHook(() => useImmunizationStore());
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'history'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'history',
+        ),
+      );
       const id = result.current.selectedImmunizations[0].id;
 
       const config: ImmunizationFormConfig = {
@@ -411,7 +599,9 @@ describe('useImmunizationStore', () => {
         },
       };
 
-      act(() => result.current.updateAdministeredOn(id, new Date('2024-01-01')));
+      act(() =>
+        result.current.updateAdministeredOn(id, new Date('2024-01-01')),
+      );
 
       let isValid = true;
       act(() => {
@@ -422,7 +612,9 @@ describe('useImmunizationStore', () => {
       expect(result.current.selectedImmunizations[0].errors.batchNumber).toBe(
         'INPUT_VALUE_REQUIRED',
       );
-      expect(result.current.selectedImmunizations[0].errors.administeredOn).toBeUndefined();
+      expect(
+        result.current.selectedImmunizations[0].errors.administeredOn,
+      ).toBeUndefined();
     });
 
     it('should validate all entries and return false if any entry is invalid', () => {
@@ -435,7 +627,9 @@ describe('useImmunizationStore', () => {
       // After two adds: [uuid-2 (index 0), uuid-1 (index 1)] — newest first
       // Fill date only for index 0 (uuid-2); leave index 1 (uuid-1) without a date
       const idOfFirst = result.current.selectedImmunizations[0].id;
-      act(() => result.current.updateAdministeredOn(idOfFirst, new Date('2024-01-01')));
+      act(() =>
+        result.current.updateAdministeredOn(idOfFirst, new Date('2024-01-01')),
+      );
 
       let isValid = true;
       act(() => {
@@ -444,11 +638,13 @@ describe('useImmunizationStore', () => {
 
       expect(isValid).toBe(false);
       // index 0 (uuid-2) has date filled — no administeredOn error
-      expect(result.current.selectedImmunizations[0].errors.administeredOn).toBeUndefined();
+      expect(
+        result.current.selectedImmunizations[0].errors.administeredOn,
+      ).toBeUndefined();
       // index 1 (uuid-1) has no date — should error
-      expect(result.current.selectedImmunizations[1].errors.administeredOn).toBe(
-        'INPUT_VALUE_REQUIRED',
-      );
+      expect(
+        result.current.selectedImmunizations[1].errors.administeredOn,
+      ).toBe('INPUT_VALUE_REQUIRED');
     });
   });
 
@@ -457,7 +653,11 @@ describe('useImmunizationStore', () => {
       const { result } = renderHook(() => useImmunizationStore());
 
       act(() => {
-        result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'history');
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'history',
+        );
         result.current.addImmunization('uuid-2', 'Vaccine 2', 'administration');
       });
 
@@ -471,10 +671,18 @@ describe('useImmunizationStore', () => {
     it('should return the current state', () => {
       const { result } = renderHook(() => useImmunizationStore());
 
-      act(() => result.current.addImmunization(VACCINE_UUID, VACCINE_DISPLAY, 'history'));
+      act(() =>
+        result.current.addImmunization(
+          VACCINE_UUID,
+          VACCINE_DISPLAY,
+          'history',
+        ),
+      );
 
       const state = result.current.getState();
-      expect(state.selectedImmunizations).toEqual(result.current.selectedImmunizations);
+      expect(state.selectedImmunizations).toEqual(
+        result.current.selectedImmunizations,
+      );
     });
   });
 });

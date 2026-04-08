@@ -1,10 +1,10 @@
+import { MODE_FIELD_CONFIG_DEFAULTS } from '../constants/immunization';
 import {
   FieldConfig,
   FieldBehavior,
   FieldConfigKey,
   ImmunizationMode,
 } from '../models/immunization';
-import { MODE_FIELD_CONFIG_DEFAULTS } from '../constants/immunization';
 
 export function resolveFieldConfig(
   mode: ImmunizationMode,

@@ -37,11 +37,7 @@ export interface ImmunizationState {
     uuid: string | null,
     display: string | null,
   ) => void;
-  updateSite: (
-    id: string,
-    uuid: string | null,
-    display: string | null,
-  ) => void;
+  updateSite: (id: string, uuid: string | null, display: string | null) => void;
   updateManufacturer: (id: string, value: string) => void;
   updateBatchNumber: (id: string, value: string) => void;
   updateExpirationDate: (id: string, date: Date | null) => void;
@@ -123,21 +119,25 @@ const updateEntry = (
     return updated;
   });
 
-const FIELD_TO_ENTRY_KEY: Record<FieldConfigKey, keyof ImmunizationInputEntry> = {
-  doseSequence: 'doseSequence',
-  drug: 'drugUuid',
-  administeredOn: 'administeredOn',
-  location: 'locationUuid',
-  route: 'routeConceptUuid',
-  site: 'siteConceptUuid',
-  manufacturer: 'manufacturer',
-  batchNumber: 'batchNumber',
-  expirationDate: 'expirationDate',
-  notes: 'notes',
-  statusReason: 'statusReasonConceptUuid',
-};
+const FIELD_TO_ENTRY_KEY: Record<FieldConfigKey, keyof ImmunizationInputEntry> =
+  {
+    doseSequence: 'doseSequence',
+    drug: 'drugUuid',
+    administeredOn: 'administeredOn',
+    location: 'locationUuid',
+    route: 'routeConceptUuid',
+    site: 'siteConceptUuid',
+    manufacturer: 'manufacturer',
+    batchNumber: 'batchNumber',
+    expirationDate: 'expirationDate',
+    notes: 'notes',
+    statusReason: 'statusReasonConceptUuid',
+  };
 
-function isFieldEmpty(entry: ImmunizationInputEntry, field: FieldConfigKey): boolean {
+function isFieldEmpty(
+  entry: ImmunizationInputEntry,
+  field: FieldConfigKey,
+): boolean {
   if (field === 'drug') {
     return !entry.drugUuid && entry.drugNonCoded.trim() === '';
   }
@@ -159,9 +159,15 @@ function validateEntry(
   const today = new Date();
   today.setHours(23, 59, 59, 999);
 
-  for (const [field, behavior] of Object.entries(fieldConfig) as [FieldConfigKey, string][]) {
+  for (const [field, behavior] of Object.entries(fieldConfig) as [
+    FieldConfigKey,
+    string,
+  ][]) {
     if (behavior === 'required' && isFieldEmpty(entry, field)) {
-      const errorKey = field === 'statusReason' ? 'DROPDOWN_VALUE_REQUIRED' : 'INPUT_VALUE_REQUIRED';
+      const errorKey =
+        field === 'statusReason'
+          ? 'DROPDOWN_VALUE_REQUIRED'
+          : 'INPUT_VALUE_REQUIRED';
       errors[field] = errorKey;
     }
   }
@@ -246,16 +252,16 @@ export const useImmunizationStore = create<ImmunizationState>((set, get) => ({
     }));
   },
 
-  updateLocation: (
-    id: string,
-    uuid: string | null,
-    display: string | null,
-  ) => {
+  updateLocation: (id: string, uuid: string | null, display: string | null) => {
     set((state) => ({
       selectedImmunizations: updateEntry(
         state.selectedImmunizations,
         id,
-        () => ({ locationUuid: uuid, locationDisplay: display, locationText: '' }),
+        () => ({
+          locationUuid: uuid,
+          locationDisplay: display,
+          locationText: '',
+        }),
       ),
     }));
   },
@@ -265,7 +271,11 @@ export const useImmunizationStore = create<ImmunizationState>((set, get) => ({
       selectedImmunizations: updateEntry(
         state.selectedImmunizations,
         id,
-        () => ({ locationText: value, locationUuid: null, locationDisplay: null }),
+        () => ({
+          locationText: value,
+          locationUuid: null,
+          locationDisplay: null,
+        }),
       ),
     }));
   },
@@ -371,9 +381,18 @@ export const useImmunizationStore = create<ImmunizationState>((set, get) => ({
     let isValid = true;
 
     const resolvedConfigs: Record<ImmunizationMode, FieldConfig> = {
-      history: resolveFieldConfig('history', immunizationFormConfig?.history?.fieldConfig),
-      'not-done': resolveFieldConfig('not-done', immunizationFormConfig?.notDone?.fieldConfig),
-      administration: resolveFieldConfig('administration', immunizationFormConfig?.administration?.fieldConfig),
+      history: resolveFieldConfig(
+        'history',
+        immunizationFormConfig?.history?.fieldConfig,
+      ),
+      'not-done': resolveFieldConfig(
+        'not-done',
+        immunizationFormConfig?.notDone?.fieldConfig,
+      ),
+      administration: resolveFieldConfig(
+        'administration',
+        immunizationFormConfig?.administration?.fieldConfig,
+      ),
     };
 
     set((state) => ({

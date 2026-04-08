@@ -23,9 +23,9 @@ export const createImmunizationResource = (
   const immunization: Immunization = {
     resourceType: 'Immunization',
     status: entry.status === 'completed' ? 'completed' : 'not-done',
-    vaccineCode: createCodeableConcept(
-      [createCoding(entry.vaccineConceptUuid)],
-    ),
+    vaccineCode: createCodeableConcept([
+      createCoding(entry.vaccineConceptUuid),
+    ]),
     patient: subjectReference,
     encounter: encounterReference,
     primarySource: entry.mode === 'administration',
@@ -35,13 +35,10 @@ export const createImmunizationResource = (
     immunization.occurrenceDateTime = entry.administeredOn.toISOString();
   }
 
-  if (
-    entry.status === 'not-done' &&
-    entry.statusReasonConceptUuid
-  ) {
-    immunization.statusReason = createCodeableConcept(
-      [createCoding(entry.statusReasonConceptUuid)],
-    );
+  if (entry.status === 'not-done' && entry.statusReasonConceptUuid) {
+    immunization.statusReason = createCodeableConcept([
+      createCoding(entry.statusReasonConceptUuid),
+    ]);
   }
 
   if (entry.locationUuid) {
@@ -65,26 +62,28 @@ export const createImmunizationResource = (
   }
 
   if (entry.expirationDate) {
-    immunization.expirationDate = entry.expirationDate.toISOString().split('T')[0];
+    immunization.expirationDate = entry.expirationDate
+      .toISOString()
+      .split('T')[0];
   }
 
   if (entry.routeConceptUuid) {
-    immunization.route = createCodeableConcept(
-      [createCoding(entry.routeConceptUuid)],
-    );
+    immunization.route = createCodeableConcept([
+      createCoding(entry.routeConceptUuid),
+    ]);
   }
 
   if (entry.siteConceptUuid) {
-    immunization.site = createCodeableConcept(
-      [createCoding(entry.siteConceptUuid)],
-    );
+    immunization.site = createCodeableConcept([
+      createCoding(entry.siteConceptUuid),
+    ]);
   }
 
   const performers: ImmunizationPerformer[] = [
     {
-      function: createCodeableConcept(
-        [createCoding('AP', PERFORMER_FUNCTION_SYSTEM, 'Administering Provider')],
-      ),
+      function: createCodeableConcept([
+        createCoding('AP', PERFORMER_FUNCTION_SYSTEM, 'Administering Provider'),
+      ]),
       actor: practitionerReference,
     },
   ];

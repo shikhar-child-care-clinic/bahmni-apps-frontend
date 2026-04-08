@@ -30,7 +30,10 @@ describe('resolveFieldConfig', () => {
   });
 
   it('should merge overrides on top of defaults', () => {
-    const overrides: FieldConfig = { administeredOn: 'hidden', notes: 'required' };
+    const overrides: FieldConfig = {
+      administeredOn: 'hidden',
+      notes: 'required',
+    };
     const result = resolveFieldConfig('history', overrides);
     expect(result.administeredOn).toBe('hidden');
     expect(result.notes).toBe('required');
@@ -52,7 +55,10 @@ describe('resolveFieldConfig', () => {
 
 describe('getFieldBehavior', () => {
   it('should return the behavior for a field present in the config', () => {
-    const config: FieldConfig = { administeredOn: 'required', notes: 'visible' };
+    const config: FieldConfig = {
+      administeredOn: 'required',
+      notes: 'visible',
+    };
     expect(getFieldBehavior(config, 'administeredOn')).toBe('required');
     expect(getFieldBehavior(config, 'notes')).toBe('visible');
   });
@@ -69,7 +75,9 @@ describe('isFieldVisible', () => {
   });
 
   it('should return true for required behavior', () => {
-    expect(isFieldVisible({ administeredOn: 'required' }, 'administeredOn')).toBe(true);
+    expect(
+      isFieldVisible({ administeredOn: 'required' }, 'administeredOn'),
+    ).toBe(true);
   });
 
   it('should return true for readonly behavior', () => {
@@ -87,7 +95,9 @@ describe('isFieldVisible', () => {
 
 describe('isFieldRequired', () => {
   it('should return true when behavior is required', () => {
-    expect(isFieldRequired({ administeredOn: 'required' }, 'administeredOn')).toBe(true);
+    expect(
+      isFieldRequired({ administeredOn: 'required' }, 'administeredOn'),
+    ).toBe(true);
   });
 
   it('should return false for visible behavior', () => {
@@ -113,7 +123,9 @@ describe('isFieldReadonly', () => {
   });
 
   it('should return false for required behavior', () => {
-    expect(isFieldReadonly({ administeredOn: 'required' }, 'administeredOn')).toBe(false);
+    expect(
+      isFieldReadonly({ administeredOn: 'required' }, 'administeredOn'),
+    ).toBe(false);
   });
 
   it('should return false when the field is absent', () => {
