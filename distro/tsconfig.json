@@ -12,9 +12,6 @@
       "path": "../apps/clinical"
     },
     {
-      "path": "../packages/bahmni-widgets"
-    },
-    {
       "path": "../packages/bahmni-design-system"
     },
     {
