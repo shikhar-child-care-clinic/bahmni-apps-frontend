@@ -8,7 +8,7 @@ exports[`PatientProgramsTable should match snapshot with program data 1`] = `
     id="patient-programs-table"
   >
     <div
-      class="table _sortableDataTableBody_1xyik_1"
+      class="table _sortableDataTableBody_15tm0_1"
       data-testid="patient-programs-table"
     >
       <div
