@@ -25,7 +25,6 @@ export interface ServiceRequestState {
   ) => void;
   reset: () => void;
   getState: () => ServiceRequestState;
-  isSelectedInCategory: (category: string, conceptCode: string) => boolean;
 }
 
 export const useServiceRequestStore = create<ServiceRequestState>(
@@ -133,26 +132,6 @@ export const useServiceRequestStore = create<ServiceRequestState>(
     },
 
     getState: () => get(),
-
-    isSelectedInCategory: (category: string, conceptCode: string): boolean => {
-      // Case-insensitive category lookup
-      const categoryLower = category.toLowerCase();
-      const selectedServiceRequests = get().selectedServiceRequests;
-      let selectedInCategory: ServiceRequestInputEntry[] | undefined;
-
-      for (const [key, value] of selectedServiceRequests) {
-        if (key.toLowerCase() === categoryLower) {
-          selectedInCategory = value;
-          break;
-        }
-      }
-
-      return (
-        selectedInCategory?.some(
-          (si) => si.id.toLowerCase() === conceptCode.toLowerCase(),
-        ) ?? false
-      );
-    },
   }),
 );
 

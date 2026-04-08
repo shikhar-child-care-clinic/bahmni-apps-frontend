@@ -182,7 +182,6 @@ const InvestigationsForm: React.FC = React.memo(() => {
                 className={styles.selectedInvestigationItem}
               >
                 <SelectedInvestigationItem
-                  key={serviceRequest.uid}
                   investigation={serviceRequest}
                   onPriorityChange={(priority) =>
                     updatePriority(category, serviceRequest.uid, priority)
