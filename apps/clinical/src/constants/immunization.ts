@@ -31,8 +31,9 @@ export const ADMINISTRATION_FIELD_CONFIG_DEFAULTS: FieldConfig = {
   notes: 'visible',
 };
 
-export const MODE_FIELD_CONFIG_DEFAULTS: Record<ImmunizationMode, FieldConfig> = {
-  history: HISTORY_FIELD_CONFIG_DEFAULTS,
-  'not-done': NOT_DONE_FIELD_CONFIG_DEFAULTS,
-  administration: ADMINISTRATION_FIELD_CONFIG_DEFAULTS,
-};
+export const MODE_FIELD_CONFIG_DEFAULTS: Record<ImmunizationMode, FieldConfig> =
+  {
+    history: HISTORY_FIELD_CONFIG_DEFAULTS,
+    'not-done': NOT_DONE_FIELD_CONFIG_DEFAULTS,
+    administration: ADMINISTRATION_FIELD_CONFIG_DEFAULTS,
+  };

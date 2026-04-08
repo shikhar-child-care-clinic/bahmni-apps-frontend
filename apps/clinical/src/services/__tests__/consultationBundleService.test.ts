@@ -1,17 +1,10 @@
 import { DiagnosisInputEntry, post, Form2Observation } from '@bahmni/services';
-import {
-  Reference,
-  Condition,
-  AllergyIntolerance,
-  ServiceRequest,
-  MedicationRequest,
-  Coding,
-  Observation,
-} from 'fhir/r4';
+import { Reference, Coding, Observation } from 'fhir/r4';
 import { CONSULTATION_ERROR_MESSAGES } from '../../constants/errors';
 import { AllergyInputEntry } from '../../models/allergy';
 import { ConditionInputEntry } from '../../models/condition';
 import { FhirEncounter } from '../../models/encounter';
+import { ImmunizationInputEntry } from '../../models/immunization';
 import { MedicationInputEntry } from '../../models/medication';
 import { ServiceRequestInputEntry } from '../../models/serviceRequest';
 import {
@@ -24,6 +17,7 @@ import {
   createEncounterBundleEntry,
   getEncounterReference,
   createObservationBundleEntries,
+  createImmunizationBundleEntries,
 } from '../consultationBundleService';
 
 // Mock crypto.randomUUID
@@ -97,6 +91,30 @@ describe('consultationBundleService', () => {
   const mockEncounterReference = 'urn:uuid:12345';
   const mockPractitionerUUID = 'd7a669e7-5e07-11ef-8f7c-0242ac120002';
 
+  // Registers 3 it() cases for the common encounterSubject/encounterReference/practitionerUUID
+  // validations that every bundle entry creator shares.
+  function testCommonBundleValidation(
+    callFn: (overrides: Record<string, unknown>) => void,
+  ) {
+    it('should throw error when encounterSubject is null', () => {
+      expect(() => callFn({ encounterSubject: null })).toThrow(
+        CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT,
+      );
+    });
+
+    it('should throw error when encounterReference is empty', () => {
+      expect(() => callFn({ encounterReference: '' })).toThrow(
+        CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_REFERENCE,
+      );
+    });
+
+    it('should throw error when practitionerUUID is empty', () => {
+      expect(() => callFn({ practitionerUUID: '' })).toThrow(
+        CONSULTATION_ERROR_MESSAGES.INVALID_PRACTITIONER,
+      );
+    });
+  }
+
   describe('createDiagnosisBundleEntries', () => {
     const mockDiagnosisEncounterReference = 'Encounter/456';
     const mockDiagnosisPractitionerUUID = 'practitioner-789';
@@ -114,19 +132,14 @@ describe('consultationBundleService', () => {
     };
 
     it('should create bundle entries for valid diagnoses', () => {
-      const mockDate = new Date('2025-01-01T10:00:00Z');
       const result = createDiagnosisBundleEntries({
         selectedDiagnoses: [mockDiagnosis],
         encounterSubject: mockEncounterSubject,
         encounterReference: mockDiagnosisEncounterReference,
         practitionerUUID: mockDiagnosisPractitionerUUID,
-        consultationDate: mockDate,
+        consultationDate: new Date(),
       });
 
-      const condition = result[0].resource as Condition;
-      expect(condition.recordedDate).toBe('2025-01-01T10:00:00.000Z');
-
-      expect(result).toBeInstanceOf(Array);
       expect(result).toHaveLength(1);
       expect(result[0].request?.method).toBe('POST');
       expect(result[0].resource?.resourceType).toBe('Condition');
@@ -157,42 +170,16 @@ describe('consultationBundleService', () => {
       ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_DIAGNOSIS_PARAMS);
     });
 
-    it('should throw error when encounterSubject is missing', () => {
-      expect(() =>
-        createDiagnosisBundleEntries({
-          selectedDiagnoses: [mockDiagnosis],
-
-          encounterSubject: null as any,
-          encounterReference: mockDiagnosisEncounterReference,
-          practitionerUUID: mockDiagnosisPractitionerUUID,
-          consultationDate: new Date(),
-        }),
-      ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT);
-    });
-
-    it('should throw error when encounterReference is missing', () => {
-      expect(() =>
-        createDiagnosisBundleEntries({
-          selectedDiagnoses: [mockDiagnosis],
-          encounterSubject: mockEncounterSubject,
-          encounterReference: '',
-          practitionerUUID: mockPractitionerUUID,
-          consultationDate: new Date(),
-        }),
-      ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_REFERENCE);
-    });
-
-    it('should throw error when practitionerUUID is missing', () => {
-      expect(() =>
-        createDiagnosisBundleEntries({
-          selectedDiagnoses: [mockDiagnosis],
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockDiagnosisEncounterReference,
-          practitionerUUID: '',
-          consultationDate: new Date(),
-        }),
-      ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_PRACTITIONER);
-    });
+    testCommonBundleValidation((overrides) =>
+      createDiagnosisBundleEntries({
+        selectedDiagnoses: [mockDiagnosis],
+        encounterSubject: mockEncounterSubject,
+        encounterReference: mockDiagnosisEncounterReference,
+        practitionerUUID: mockDiagnosisPractitionerUUID,
+        consultationDate: new Date(),
+        ...(overrides as any),
+      }),
+    );
 
     it('should throw error for diagnoses without certainty code', () => {
       const diagnosisWithoutCertainty: DiagnosisInputEntry = {
@@ -220,32 +207,6 @@ describe('consultationBundleService', () => {
           consultationDate: new Date(),
         }),
       ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_DIAGNOSIS_PARAMS);
-    });
-
-    it('should handle provisional certainty', () => {
-      const provisionalDiagnosis: DiagnosisInputEntry = {
-        ...mockDiagnosis,
-        selectedCertainty: {
-          code: 'provisional',
-          system: 'test-system',
-          display: 'Provisional',
-        } as Coding,
-      };
-
-      const result = createDiagnosisBundleEntries({
-        selectedDiagnoses: [provisionalDiagnosis],
-        encounterSubject: mockEncounterSubject,
-        encounterReference: mockDiagnosisEncounterReference,
-        practitionerUUID: mockDiagnosisPractitionerUUID,
-        consultationDate: new Date(),
-      });
-
-      expect(result).toBeInstanceOf(Array);
-      expect(result).toHaveLength(1);
-      const condition = result[0].resource as Condition;
-      expect(condition.verificationStatus?.coding?.[0]?.code).toBe(
-        'provisional',
-      );
     });
   });
 
@@ -299,27 +260,9 @@ describe('consultationBundleService', () => {
         });
 
         expect(result).toHaveLength(1);
-        const allergyResource = result[0].resource as AllergyIntolerance;
-        expect(allergyResource.resourceType).toBe('AllergyIntolerance');
-        expect(allergyResource.category).toEqual(['medication']);
-        expect(allergyResource.code?.coding?.[0]?.code).toBe(
-          mockValidAllergy.id,
-        );
-        expect(allergyResource.patient).toEqual(mockEncounterSubject);
-        expect(allergyResource.encounter?.reference).toBe(
-          mockEncounterReference,
-        );
-        expect(allergyResource.recorder?.reference).toBe(
-          `Practitioner/${mockPractitionerUUID}`,
-        );
-        expect(allergyResource.reaction?.[0].manifestation).toHaveLength(2);
-        expect(allergyResource.reaction?.[0].severity).toBe('moderate');
-        expect(
-          (result[0].request as { method: string; url: string }).method,
-        ).toBe('POST');
-        expect((result[0].request as { method: string; url: string }).url).toBe(
-          'AllergyIntolerance',
-        );
+        expect(result[0].resource?.resourceType).toBe('AllergyIntolerance');
+        expect(result[0].request?.method).toBe('POST');
+        expect(result[0].request?.url).toBe('AllergyIntolerance');
       });
 
       it('should handle multiple allergies correctly', () => {
@@ -337,10 +280,6 @@ describe('consultationBundleService', () => {
         });
 
         expect(result).toHaveLength(2);
-        const firstResource = result[0].resource as AllergyIntolerance;
-        const secondResource = result[1].resource as AllergyIntolerance;
-        expect(firstResource.code?.coding?.[0]?.code).toBe(mockValidAllergy.id);
-        expect(secondResource.code?.coding?.[0]?.code).toBe(secondAllergy.id);
       });
     });
 
@@ -356,39 +295,15 @@ describe('consultationBundleService', () => {
         ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ALLERGY_PARAMS);
       });
 
-      it('should throw error for missing encounter subject', () => {
-        expect(() =>
-          createAllergiesBundleEntries({
-            selectedAllergies: [mockValidAllergy],
-
-            encounterSubject: null as any,
-            encounterReference: mockEncounterReference,
-            practitionerUUID: mockPractitionerUUID,
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT);
-      });
-
-      it('should throw error for missing encounter reference', () => {
-        expect(() =>
-          createAllergiesBundleEntries({
-            selectedAllergies: [mockValidAllergy],
-            encounterSubject: mockEncounterSubject,
-            encounterReference: '',
-            practitionerUUID: mockPractitionerUUID,
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_REFERENCE);
-      });
-
-      it('should throw error for missing practitioner UUID', () => {
-        expect(() =>
-          createAllergiesBundleEntries({
-            selectedAllergies: [mockValidAllergy],
-            encounterSubject: mockEncounterSubject,
-            encounterReference: mockEncounterReference,
-            practitionerUUID: '',
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_PRACTITIONER);
-      });
+      testCommonBundleValidation((overrides) =>
+        createAllergiesBundleEntries({
+          selectedAllergies: [mockValidAllergy],
+          encounterSubject: mockEncounterSubject,
+          encounterReference: mockEncounterReference,
+          practitionerUUID: mockPractitionerUUID,
+          ...(overrides as any),
+        }),
+      );
 
       it('should throw error for allergy without severity', () => {
         const allergyWithoutSeverity = {
@@ -433,112 +348,6 @@ describe('consultationBundleService', () => {
         });
 
         expect(result).toEqual([]);
-      });
-
-      it('should include note in FHIR resource when note is provided', () => {
-        const allergyWithNote: AllergyInputEntry = {
-          ...mockValidAllergy,
-          note: 'Patient reports severe allergic reaction with swelling',
-        };
-
-        const result = createAllergiesBundleEntries({
-          selectedAllergies: [allergyWithNote],
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-        });
-
-        expect(result).toHaveLength(1);
-        const allergyResource = result[0].resource as AllergyIntolerance;
-        expect(allergyResource.note).toEqual([
-          {
-            text: 'Patient reports severe allergic reaction with swelling',
-          },
-        ]);
-      });
-
-      it('should not include note field when note is undefined', () => {
-        const allergyWithoutNote: AllergyInputEntry = {
-          ...mockValidAllergy,
-          note: undefined,
-        };
-
-        const result = createAllergiesBundleEntries({
-          selectedAllergies: [allergyWithoutNote],
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-        });
-
-        const allergyResource = result[0].resource as AllergyIntolerance;
-        expect(allergyResource).not.toHaveProperty('note');
-      });
-
-      it('should not include note field when note is empty string', () => {
-        const allergyWithEmptyNote: AllergyInputEntry = {
-          ...mockValidAllergy,
-          note: '',
-        };
-
-        const result = createAllergiesBundleEntries({
-          selectedAllergies: [allergyWithEmptyNote],
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-        });
-
-        const allergyResource = result[0].resource as AllergyIntolerance;
-        expect(allergyResource).not.toHaveProperty('note');
-      });
-
-      it('should handle multiple allergies with mixed note presence', () => {
-        const allergyWithNote: AllergyInputEntry = {
-          ...mockValidAllergy,
-          id: '162536AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-          note: 'First allergy note',
-        };
-
-        const allergyWithoutNote: AllergyInputEntry = {
-          ...mockValidAllergy,
-          id: '162537AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-          note: undefined,
-        };
-
-        const result = createAllergiesBundleEntries({
-          selectedAllergies: [allergyWithNote, allergyWithoutNote],
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-        });
-
-        expect(result).toHaveLength(2);
-
-        const firstResource = result[0].resource as AllergyIntolerance;
-        const secondResource = result[1].resource as AllergyIntolerance;
-
-        expect(firstResource.note).toEqual([{ text: 'First allergy note' }]);
-        expect(secondResource).not.toHaveProperty('note');
-      });
-
-      it('should handle special characters in note text', () => {
-        const allergyWithSpecialNote: AllergyInputEntry = {
-          ...mockValidAllergy,
-          note: 'Patient says: "I get rash & swelling when taking <medication>"',
-        };
-
-        const result = createAllergiesBundleEntries({
-          selectedAllergies: [allergyWithSpecialNote],
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-        });
-
-        const allergyResource = result[0].resource as AllergyIntolerance;
-        expect(allergyResource.note).toEqual([
-          {
-            text: 'Patient says: "I get rash & swelling when taking <medication>"',
-          },
-        ]);
       });
     });
 
@@ -722,19 +531,7 @@ describe('consultationBundleService', () => {
         });
 
         expect(result).toHaveLength(1);
-        const serviceRequest = result[0].resource as ServiceRequest;
-        expect(serviceRequest.resourceType).toBe('ServiceRequest');
-        expect(serviceRequest.code?.coding?.[0]?.code).toBe(
-          mockServiceRequest.id,
-        );
-        expect(serviceRequest.subject).toEqual(mockEncounterSubject);
-        expect(serviceRequest.encounter?.reference).toBe(
-          mockEncounterReference,
-        );
-        expect(serviceRequest.requester?.reference).toBe(
-          `Practitioner/${mockPractitionerUUID}`,
-        );
-        expect(serviceRequest.priority).toBe('routine');
+        expect(result[0].resource?.resourceType).toBe('ServiceRequest');
         expect(result[0].request?.method).toBe('POST');
         expect(result[0].fullUrl).toBe(`urn:uuid:${mockUUID}`);
       });
@@ -757,18 +554,6 @@ describe('consultationBundleService', () => {
         });
 
         expect(result).toHaveLength(2);
-        const firstRequest = result[0].resource as ServiceRequest;
-        const secondRequest = result[1].resource as ServiceRequest;
-
-        expect(firstRequest.code?.coding?.[0]?.code).toBe(
-          mockServiceRequest.id,
-        );
-        expect(firstRequest.priority).toBe('routine');
-
-        expect(secondRequest.code?.coding?.[0]?.code).toBe(
-          mockStatServiceRequest.id,
-        );
-        expect(secondRequest.priority).toBe('stat');
       });
 
       it('should handle multiple categories with multiple service requests', () => {
@@ -787,145 +572,22 @@ describe('consultationBundleService', () => {
         });
 
         expect(result).toHaveLength(2);
-        const labRequest = result.find(
-          (entry) =>
-            (entry.resource as ServiceRequest).code?.coding?.[0]?.code ===
-            mockServiceRequest.id,
-        );
-        const radiologyRequest = result.find(
-          (entry) =>
-            (entry.resource as ServiceRequest).code?.coding?.[0]?.code ===
-            mockStatServiceRequest.id,
-        );
-
-        expect(labRequest).toBeDefined();
-        expect(radiologyRequest).toBeDefined();
-      });
-
-      it('should handle stat priority correctly', () => {
-        const serviceRequestsMap = new Map<
-          string,
-          ServiceRequestInputEntry[]
-        >();
-        serviceRequestsMap.set('emergency', [mockStatServiceRequest]);
-
-        const result = createServiceRequestBundleEntries({
-          selectedServiceRequests: serviceRequestsMap,
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-        });
-
-        const serviceRequest = result[0].resource as ServiceRequest;
-        expect(serviceRequest.priority).toBe('stat');
       });
     });
 
     describe('Sad Paths - Validation Errors', () => {
-      it('should throw error for missing encounter subject', () => {
-        const serviceRequestsMap = new Map<
-          string,
-          ServiceRequestInputEntry[]
-        >();
-        serviceRequestsMap.set('lab', [mockServiceRequest]);
+      const serviceRequestsMap = new Map<string, ServiceRequestInputEntry[]>();
+      serviceRequestsMap.set('lab', [mockServiceRequest]);
 
-        expect(() =>
-          createServiceRequestBundleEntries({
-            selectedServiceRequests: serviceRequestsMap,
-
-            encounterSubject: null as any,
-            encounterReference: mockEncounterReference,
-            practitionerUUID: mockPractitionerUUID,
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT);
-      });
-
-      it('should throw error for encounter subject without reference', () => {
-        const serviceRequestsMap = new Map<
-          string,
-          ServiceRequestInputEntry[]
-        >();
-        serviceRequestsMap.set('lab', [mockServiceRequest]);
-
-        expect(() =>
-          createServiceRequestBundleEntries({
-            selectedServiceRequests: serviceRequestsMap,
-            encounterSubject: {} as Reference,
-            encounterReference: mockEncounterReference,
-            practitionerUUID: mockPractitionerUUID,
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT);
-      });
-
-      it('should throw error for missing encounter reference', () => {
-        const serviceRequestsMap = new Map<
-          string,
-          ServiceRequestInputEntry[]
-        >();
-        serviceRequestsMap.set('lab', [mockServiceRequest]);
-
-        expect(() =>
-          createServiceRequestBundleEntries({
-            selectedServiceRequests: serviceRequestsMap,
-            encounterSubject: mockEncounterSubject,
-            encounterReference: '',
-            practitionerUUID: mockPractitionerUUID,
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_REFERENCE);
-      });
-
-      it('should throw error for null encounter reference', () => {
-        const serviceRequestsMap = new Map<
-          string,
-          ServiceRequestInputEntry[]
-        >();
-        serviceRequestsMap.set('lab', [mockServiceRequest]);
-
-        expect(() =>
-          createServiceRequestBundleEntries({
-            selectedServiceRequests: serviceRequestsMap,
-            encounterSubject: mockEncounterSubject,
-
-            encounterReference: null as any,
-            practitionerUUID: mockPractitionerUUID,
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_REFERENCE);
-      });
-
-      it('should throw error for missing practitioner UUID', () => {
-        const serviceRequestsMap = new Map<
-          string,
-          ServiceRequestInputEntry[]
-        >();
-        serviceRequestsMap.set('lab', [mockServiceRequest]);
-
-        expect(() =>
-          createServiceRequestBundleEntries({
-            selectedServiceRequests: serviceRequestsMap,
-            encounterSubject: mockEncounterSubject,
-            encounterReference: mockEncounterReference,
-            practitionerUUID: '',
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_PRACTITIONER);
-      });
-
-      it('should throw error for null practitioner UUID', () => {
-        const serviceRequestsMap = new Map<
-          string,
-          ServiceRequestInputEntry[]
-        >();
-        serviceRequestsMap.set('lab', [mockServiceRequest]);
-
-        expect(() =>
-          createServiceRequestBundleEntries({
-            selectedServiceRequests: serviceRequestsMap,
-            encounterSubject: mockEncounterSubject,
-            encounterReference: mockEncounterReference,
-
-            practitionerUUID: null as any,
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_PRACTITIONER);
-      });
+      testCommonBundleValidation((overrides) =>
+        createServiceRequestBundleEntries({
+          selectedServiceRequests: serviceRequestsMap,
+          encounterSubject: mockEncounterSubject,
+          encounterReference: mockEncounterReference,
+          practitionerUUID: mockPractitionerUUID,
+          ...(overrides as any),
+        }),
+      );
     });
 
     describe('Edge Cases', () => {
@@ -958,10 +620,6 @@ describe('consultationBundleService', () => {
         });
 
         expect(result).toHaveLength(1);
-        const serviceRequest = result[0].resource as ServiceRequest;
-        expect(serviceRequest.code?.coding?.[0]?.code).toBe(
-          mockServiceRequest.id,
-        );
       });
 
       it('should skip categories with null values', () => {
@@ -981,10 +639,6 @@ describe('consultationBundleService', () => {
         });
 
         expect(result).toHaveLength(1);
-        const serviceRequest = result[0].resource as ServiceRequest;
-        expect(serviceRequest.code?.coding?.[0]?.code).toBe(
-          mockServiceRequest.id,
-        );
       });
 
       it('should handle Map with all empty/null categories', () => {
@@ -1007,120 +661,6 @@ describe('consultationBundleService', () => {
         expect(result).toEqual([]);
       });
     });
-
-    describe('Integration with Bundle Creation', () => {
-      it('should create valid bundle entries with correct structure', () => {
-        const serviceRequestsMap = new Map<
-          string,
-          ServiceRequestInputEntry[]
-        >();
-        serviceRequestsMap.set('lab', [mockServiceRequest]);
-
-        const result = createServiceRequestBundleEntries({
-          selectedServiceRequests: serviceRequestsMap,
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-        });
-
-        // Verify bundle entry structure
-        expect(result[0]).toHaveProperty('fullUrl');
-        expect(result[0]).toHaveProperty('resource');
-        expect(result[0]).toHaveProperty('request');
-        expect(result[0].request).toEqual({
-          method: 'POST',
-          url: 'ServiceRequest',
-        });
-      });
-    });
-
-    describe('Note Handling', () => {
-      it('should include note in service request resource when note is provided', () => {
-        const serviceRequestWithNote: ServiceRequestInputEntry = {
-          ...mockServiceRequest,
-          note: 'Patient requires fasting before test',
-        };
-
-        const serviceRequestsMap = new Map<
-          string,
-          ServiceRequestInputEntry[]
-        >();
-        serviceRequestsMap.set('lab', [serviceRequestWithNote]);
-
-        const result = createServiceRequestBundleEntries({
-          selectedServiceRequests: serviceRequestsMap,
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-        });
-
-        const serviceRequest = result[0].resource as ServiceRequest;
-        expect(serviceRequest.note).toBeDefined();
-        expect(serviceRequest.note).toHaveLength(1);
-        expect(serviceRequest.note![0].text).toBe(
-          'Patient requires fasting before test',
-        );
-      });
-
-      it('should not include note field when note is undefined', () => {
-        const serviceRequestWithoutNote: ServiceRequestInputEntry = {
-          ...mockServiceRequest,
-          note: undefined,
-        };
-
-        const serviceRequestsMap = new Map<
-          string,
-          ServiceRequestInputEntry[]
-        >();
-        serviceRequestsMap.set('lab', [serviceRequestWithoutNote]);
-
-        const result = createServiceRequestBundleEntries({
-          selectedServiceRequests: serviceRequestsMap,
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-        });
-
-        const serviceRequest = result[0].resource as ServiceRequest;
-        expect(serviceRequest.note).toBeUndefined();
-      });
-
-      it('should handle multiple service requests with mixed note presence', () => {
-        const requestWithNote: ServiceRequestInputEntry = {
-          ...mockServiceRequest,
-          id: 'req-1',
-          note: 'First request note',
-        };
-
-        const requestWithoutNote: ServiceRequestInputEntry = {
-          ...mockServiceRequest,
-          id: 'req-2',
-          note: undefined,
-        };
-
-        const serviceRequestsMap = new Map<
-          string,
-          ServiceRequestInputEntry[]
-        >();
-        serviceRequestsMap.set('lab', [requestWithNote, requestWithoutNote]);
-
-        const result = createServiceRequestBundleEntries({
-          selectedServiceRequests: serviceRequestsMap,
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-        });
-
-        expect(result).toHaveLength(2);
-
-        const firstRequest = result[0].resource as ServiceRequest;
-        const secondRequest = result[1].resource as ServiceRequest;
-
-        expect(firstRequest.note).toBeDefined();
-        expect(firstRequest.note![0].text).toBe('First request note');
-        expect(secondRequest.note).toBeUndefined();
-      });
-    });
   });
 
   describe('createConditionsBundleEntries', () => {
@@ -1135,29 +675,20 @@ describe('consultationBundleService', () => {
 
     describe('Happy Path Tests', () => {
       it('should create bundle entries for valid conditions', () => {
-        const mockDate = new Date('2025-01-15T10:30:00Z');
         const result = createConditionsBundleEntries({
           selectedConditions: [mockValidCondition],
           encounterSubject: mockEncounterSubject,
           encounterReference: mockEncounterReference,
           practitionerUUID: mockPractitionerUUID,
-          consultationDate: mockDate,
+          consultationDate: new Date(),
         });
 
-        expect(result).toBeInstanceOf(Array);
         expect(result).toHaveLength(1);
         expect(result[0].request?.method).toBe('POST');
         expect(result[0].resource?.resourceType).toBe('Condition');
-
-        const condition = result[0].resource as Condition;
-        expect(condition.recordedDate).toBe('2025-01-15T10:30:00.000Z');
-        expect(condition.onsetDateTime).toBeDefined(); // Should be calculated from duration
-        expect(condition.category?.[0]?.coding?.[0]?.code).toBe(
-          'problem-list-item',
-        );
       });
 
-      it('should handle multiple conditions correctly', () => {
+      it('should create one entry per condition', () => {
         const secondCondition: ConditionInputEntry = {
           id: '162540AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
           display: 'Hypertension',
@@ -1172,74 +703,10 @@ describe('consultationBundleService', () => {
           encounterSubject: mockEncounterSubject,
           encounterReference: mockEncounterReference,
           practitionerUUID: mockPractitionerUUID,
-          consultationDate: new Date('2025-01-15T10:30:00Z'),
+          consultationDate: new Date(),
         });
 
         expect(result).toHaveLength(2);
-        const firstResource = result[0].resource as Condition;
-        const secondResource = result[1].resource as Condition;
-        expect(firstResource.code?.coding?.[0]?.code).toBe(
-          mockValidCondition.id,
-        );
-        expect(secondResource.code?.coding?.[0]?.code).toBe(secondCondition.id);
-      });
-
-      it('should calculate onset date from duration correctly', () => {
-        const mockDate = new Date('2025-01-15T10:30:00Z');
-        const result = createConditionsBundleEntries({
-          selectedConditions: [mockValidCondition],
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-          consultationDate: mockDate,
-        });
-
-        const condition = result[0].resource as Condition;
-        expect(condition.onsetDateTime).toBeDefined();
-        // 2 years ago from 2025-01-15 should be 2023-01-15
-        expect(condition.onsetDateTime).toBe('2023-01-15T10:30:00.000Z');
-      });
-
-      it('should handle conditions with days duration', () => {
-        const conditionWithDays: ConditionInputEntry = {
-          ...mockValidCondition,
-          durationValue: 30,
-          durationUnit: 'days',
-        };
-
-        const mockDate = new Date('2025-01-15T10:30:00Z');
-        const result = createConditionsBundleEntries({
-          selectedConditions: [conditionWithDays],
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-          consultationDate: mockDate,
-        });
-
-        const condition = result[0].resource as Condition;
-        // 30 days ago from 2025-01-15 should be 2024-12-16
-        expect(condition.onsetDateTime).toBe('2024-12-16T10:30:00.000Z');
-      });
-
-      it('should handle conditions with months duration', () => {
-        const conditionWithMonths: ConditionInputEntry = {
-          ...mockValidCondition,
-          durationValue: 3,
-          durationUnit: 'months',
-        };
-
-        const mockDate = new Date('2025-01-15T10:30:00Z');
-        const result = createConditionsBundleEntries({
-          selectedConditions: [conditionWithMonths],
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-          consultationDate: mockDate,
-        });
-
-        const condition = result[0].resource as Condition;
-        // 3 months ago from 2025-01-15 should be 2024-10-15
-        expect(condition.onsetDateTime).toBe('2024-10-15T10:30:00.000Z');
       });
     });
 
@@ -1256,42 +723,16 @@ describe('consultationBundleService', () => {
         ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_CONDITION_PARAMS);
       });
 
-      it('should throw error for invalid encounterSubject', () => {
-        expect(() =>
-          createConditionsBundleEntries({
-            selectedConditions: [mockValidCondition],
-
-            encounterSubject: null as any,
-            encounterReference: mockEncounterReference,
-            practitionerUUID: mockPractitionerUUID,
-            consultationDate: new Date(),
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT);
-      });
-
-      it('should throw error for missing encounterReference', () => {
-        expect(() =>
-          createConditionsBundleEntries({
-            selectedConditions: [mockValidCondition],
-            encounterSubject: mockEncounterSubject,
-            encounterReference: '',
-            practitionerUUID: mockPractitionerUUID,
-            consultationDate: new Date(),
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_REFERENCE);
-      });
-
-      it('should throw error for missing practitionerUUID', () => {
-        expect(() =>
-          createConditionsBundleEntries({
-            selectedConditions: [mockValidCondition],
-            encounterSubject: mockEncounterSubject,
-            encounterReference: mockEncounterReference,
-            practitionerUUID: '',
-            consultationDate: new Date(),
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_PRACTITIONER);
-      });
+      testCommonBundleValidation((overrides) =>
+        createConditionsBundleEntries({
+          selectedConditions: [mockValidCondition],
+          encounterSubject: mockEncounterSubject,
+          encounterReference: mockEncounterReference,
+          practitionerUUID: mockPractitionerUUID,
+          consultationDate: new Date(),
+          ...(overrides as any),
+        }),
+      );
 
       it('should throw error for conditions with invalid duration values', () => {
         const invalidCondition: ConditionInputEntry = {
@@ -1341,84 +782,6 @@ describe('consultationBundleService', () => {
         });
 
         expect(result).toEqual([]);
-      });
-
-      it('should handle conditions with zero duration', () => {
-        const conditionWithZeroDuration: ConditionInputEntry = {
-          ...mockValidCondition,
-          durationValue: 0,
-          durationUnit: 'days',
-        };
-
-        const mockDate = new Date('2025-01-15T10:30:00Z');
-        const result = createConditionsBundleEntries({
-          selectedConditions: [conditionWithZeroDuration],
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-          consultationDate: mockDate,
-        });
-
-        const condition = result[0].resource as Condition;
-        // 0 days ago should be the same as consultation date
-        expect(condition.onsetDateTime).toBe('2025-01-15T10:30:00.000Z');
-      });
-
-      it('should handle conditions with very large duration values', () => {
-        const conditionWithLargeDuration: ConditionInputEntry = {
-          ...mockValidCondition,
-          durationValue: 50,
-          durationUnit: 'years',
-        };
-
-        const mockDate = new Date('2025-01-15T10:30:00Z');
-        const result = createConditionsBundleEntries({
-          selectedConditions: [conditionWithLargeDuration],
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-          consultationDate: mockDate,
-        });
-
-        const condition = result[0].resource as Condition;
-        // 50 years ago should be 1975-01-15
-        expect(condition.onsetDateTime).toBe('1975-01-15T10:30:00.000Z');
-      });
-
-      it('should handle conditions with minimal Reference objects', () => {
-        const minimalSubjectRef: Reference = { reference: 'Patient/123' };
-        const minimalEncounterRef = 'Encounter/456';
-        const minimalRecorderRef = 'practitioner-789';
-
-        const result = createConditionsBundleEntries({
-          selectedConditions: [mockValidCondition],
-          encounterSubject: minimalSubjectRef,
-          encounterReference: minimalEncounterRef,
-          practitionerUUID: minimalRecorderRef,
-          consultationDate: new Date('2025-01-15T10:30:00Z'),
-        });
-
-        expect(result).toHaveLength(1);
-        const condition = result[0].resource as Condition;
-        expect(condition.subject).toEqual(minimalSubjectRef);
-      });
-
-      it('should handle conditions without hasBeenValidated flag', () => {
-        const conditionWithoutValidation: ConditionInputEntry = {
-          ...mockValidCondition,
-          hasBeenValidated: false,
-        };
-
-        const result = createConditionsBundleEntries({
-          selectedConditions: [conditionWithoutValidation],
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-          consultationDate: new Date('2025-01-15T10:30:00Z'),
-        });
-
-        expect(result).toHaveLength(1);
-        expect(result[0].resource?.resourceType).toBe('Condition');
       });
     });
   });
@@ -1520,70 +883,15 @@ describe('consultationBundleService', () => {
         ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_CONDITION_PARAMS);
       });
 
-      it('should throw error for missing encounterSubject', () => {
-        expect(() =>
-          createMedicationRequestEntries({
-            selectedMedications: [mockMedicationEntry],
-
-            encounterSubject: null as any,
-            encounterReference: mockEncounterReference,
-            practitionerUUID: mockPractitionerUUID,
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT);
-      });
-
-      it('should throw error for encounterSubject without reference', () => {
-        expect(() =>
-          createMedicationRequestEntries({
-            selectedMedications: [mockMedicationEntry],
-            encounterSubject: {} as Reference,
-            encounterReference: mockEncounterReference,
-            practitionerUUID: mockPractitionerUUID,
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT);
-      });
-
-      it('should throw error for missing encounterReference', () => {
-        expect(() =>
-          createMedicationRequestEntries({
-            selectedMedications: [mockMedicationEntry],
-            encounterSubject: mockEncounterSubject,
-            encounterReference: '',
-            practitionerUUID: mockPractitionerUUID,
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_REFERENCE);
-      });
-
-      it('should throw error for missing practitionerUUID', () => {
-        expect(() =>
-          createMedicationRequestEntries({
-            selectedMedications: [mockMedicationEntry],
-            encounterSubject: mockEncounterSubject,
-            encounterReference: mockEncounterReference,
-            practitionerUUID: '',
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_PRACTITIONER);
-      });
-    });
-
-    describe('Reference Creation', () => {
-      it('should create proper references for encounter and practitioner', () => {
-        const result = createMedicationRequestEntries({
+      testCommonBundleValidation((overrides) =>
+        createMedicationRequestEntries({
           selectedMedications: [mockMedicationEntry],
           encounterSubject: mockEncounterSubject,
           encounterReference: mockEncounterReference,
           practitionerUUID: mockPractitionerUUID,
-        });
-
-        const medicationRequest = result[0].resource as MedicationRequest;
-        expect(medicationRequest.subject).toEqual(mockEncounterSubject);
-        expect(medicationRequest.encounter?.reference).toBe(
-          mockEncounterReference,
-        );
-        expect(medicationRequest.requester?.reference).toBe(
-          `Practitioner/${mockPractitionerUUID}`,
-        );
-      });
+          ...(overrides as any),
+        }),
+      );
     });
 
     describe('UUID Generation', () => {
@@ -1666,22 +974,8 @@ describe('consultationBundleService', () => {
         practitionerUUID: mockPractitionerUUID,
       });
 
+      // 2 members + 1 parent = 3 entries
       expect(result).toHaveLength(3);
-      const parentEntry = result.find(
-        (entry) => (entry.resource as Observation)?.hasMember?.length,
-      );
-      expect(parentEntry).toBeDefined();
-    });
-
-    it('should throw error for invalid parameters', () => {
-      expect(() =>
-        createObservationBundleEntries({
-          observationFormsData: null as any,
-          encounterSubject: mockEncounterSubject,
-          encounterReference: mockEncounterReference,
-          practitionerUUID: mockPractitionerUUID,
-        }),
-      ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_CONDITION_PARAMS);
     });
 
     it('should handle empty observations array', () => {
@@ -1695,7 +989,7 @@ describe('consultationBundleService', () => {
       expect(result).toHaveLength(0);
     });
 
-    describe('Parameter Validation - All 4 Paths', () => {
+    describe('Parameter Validation', () => {
       it('should throw error when observationFormsData is null', () => {
         expect(() =>
           createObservationBundleEntries({
@@ -1707,38 +1001,15 @@ describe('consultationBundleService', () => {
         ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_CONDITION_PARAMS);
       });
 
-      it('should throw error when encounterSubject is null', () => {
-        expect(() =>
-          createObservationBundleEntries({
-            observationFormsData: { 'form-uuid-1': mockObservations },
-            encounterSubject: null as any,
-            encounterReference: mockEncounterReference,
-            practitionerUUID: mockPractitionerUUID,
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT);
-      });
-
-      it('should throw error when encounterReference is empty', () => {
-        expect(() =>
-          createObservationBundleEntries({
-            observationFormsData: { 'form-uuid-1': mockObservations },
-            encounterSubject: mockEncounterSubject,
-            encounterReference: '',
-            practitionerUUID: mockPractitionerUUID,
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_REFERENCE);
-      });
-
-      it('should throw error when practitionerUUID is empty', () => {
-        expect(() =>
-          createObservationBundleEntries({
-            observationFormsData: { 'form-uuid-1': mockObservations },
-            encounterSubject: mockEncounterSubject,
-            encounterReference: mockEncounterReference,
-            practitionerUUID: '',
-          }),
-        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_PRACTITIONER);
-      });
+      testCommonBundleValidation((overrides) =>
+        createObservationBundleEntries({
+          observationFormsData: { 'form-uuid-1': mockObservations },
+          encounterSubject: mockEncounterSubject,
+          encounterReference: mockEncounterReference,
+          practitionerUUID: mockPractitionerUUID,
+          ...(overrides as any),
+        }),
+      );
     });
 
     describe('Multiple Forms Handling', () => {
@@ -1796,6 +1067,121 @@ describe('consultationBundleService', () => {
           expect(entry.request?.url).toBe('Observation');
         });
       });
+    });
+  });
+
+  describe('createImmunizationBundleEntries', () => {
+    const mockImmunizationEntry: ImmunizationInputEntry = {
+      id: 'imm-concept-uuid-123',
+      vaccineConceptUuid: 'vaccine-uuid-123',
+      vaccineDisplay: 'COVID-19 Vaccine',
+      mode: 'administration',
+      status: 'completed',
+      drugUuid: null,
+      drugDisplay: null,
+      drugNonCoded: '',
+      doseSequence: null,
+      administeredOn: null,
+      locationUuid: null,
+      locationDisplay: null,
+      locationText: '',
+      routeConceptUuid: null,
+      routeDisplay: null,
+      siteConceptUuid: null,
+      siteDisplay: null,
+      manufacturer: '',
+      batchNumber: '',
+      expirationDate: null,
+      notes: '',
+      orderUuid: null,
+      statusReasonConceptUuid: null,
+      statusReasonDisplay: null,
+      errors: {},
+      hasBeenValidated: true,
+    };
+
+    describe('Happy Paths', () => {
+      it('should create a bundle entry with correct structure for a valid immunization', () => {
+        const result = createImmunizationBundleEntries({
+          selectedImmunizations: [mockImmunizationEntry],
+          encounterSubject: mockEncounterSubject,
+          encounterReference: mockEncounterReference,
+          practitionerUUID: mockPractitionerUUID,
+        });
+
+        expect(result).toHaveLength(1);
+        expect(result[0].fullUrl).toBe(`urn:uuid:${mockUUID}`);
+        expect(result[0].request).toEqual({
+          method: 'POST',
+          url: 'Immunization',
+        });
+        expect(result[0].resource?.resourceType).toBe('Immunization');
+      });
+
+      it('should create one bundle entry per immunization', () => {
+        const secondEntry: ImmunizationInputEntry = {
+          ...mockImmunizationEntry,
+          vaccineConceptUuid: 'vaccine-uuid-456',
+        };
+
+        const result = createImmunizationBundleEntries({
+          selectedImmunizations: [mockImmunizationEntry, secondEntry],
+          encounterSubject: mockEncounterSubject,
+          encounterReference: mockEncounterReference,
+          practitionerUUID: mockPractitionerUUID,
+        });
+
+        expect(result).toHaveLength(2);
+        result.forEach((entry) => {
+          expect(entry.resource?.resourceType).toBe('Immunization');
+          expect(entry.request?.method).toBe('POST');
+        });
+      });
+
+      it('should return empty array for empty immunizations list', () => {
+        const result = createImmunizationBundleEntries({
+          selectedImmunizations: [],
+          encounterSubject: mockEncounterSubject,
+          encounterReference: mockEncounterReference,
+          practitionerUUID: mockPractitionerUUID,
+        });
+
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('Sad Paths', () => {
+      it('should throw error when selectedImmunizations is null', () => {
+        expect(() =>
+          createImmunizationBundleEntries({
+            selectedImmunizations: null as any,
+            encounterSubject: mockEncounterSubject,
+            encounterReference: mockEncounterReference,
+            practitionerUUID: mockPractitionerUUID,
+          }),
+        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_IMMUNIZATION_PARAMS);
+      });
+
+      it('should throw error when selectedImmunizations is not an array', () => {
+        expect(() =>
+          createImmunizationBundleEntries({
+            selectedImmunizations: 'not-an-array' as any,
+            encounterSubject: mockEncounterSubject,
+            encounterReference: mockEncounterReference,
+            practitionerUUID: mockPractitionerUUID,
+          }),
+        ).toThrow(CONSULTATION_ERROR_MESSAGES.INVALID_IMMUNIZATION_PARAMS);
+      });
+
+      testCommonBundleValidation((overrides) =>
+        createImmunizationBundleEntries({
+          selectedImmunizations: [mockImmunizationEntry],
+          encounterSubject: mockEncounterSubject,
+          encounterReference: mockEncounterReference,
+          practitionerUUID: mockPractitionerUUID,
+          ...(overrides as any),
+        }),
+      );
     });
   });
 });

@@ -10,6 +10,7 @@ import { CONSULTATION_BUNDLE_URL } from '../constants/app';
 import { CONSULTATION_ERROR_MESSAGES } from '../constants/errors';
 import { AllergyInputEntry } from '../models/allergy';
 import { ConsultationBundle } from '../models/consultationBundle';
+import { ImmunizationInputEntry } from '../models/immunization';
 import { MedicationInputEntry } from '../models/medication';
 import { ServiceRequestInputEntry } from '../models/serviceRequest';
 import { createEncounterAllergyResource } from '../utils/fhir/allergyResourceCreator';
@@ -18,6 +19,7 @@ import {
   createEncounterConditionResource,
 } from '../utils/fhir/conditionResourceCreator';
 import { createBundleEntry } from '../utils/fhir/consultationBundleCreator';
+import { createImmunizationResource } from '../utils/fhir/immunizationResourceCreator';
 import { createMedicationRequestResource } from '../utils/fhir/medicationRequestResourceCreator';
 import { createObservationResources } from '../utils/fhir/observationResourceCreator';
 import {
@@ -64,11 +66,34 @@ interface CreateMedicationRequestBundleEntriesParams {
   statDurationInMilliseconds?: number;
 }
 
+interface CreateImmunizationBundleEntriesParams {
+  selectedImmunizations: ImmunizationInputEntry[];
+  encounterSubject: Reference;
+  encounterReference: string;
+  practitionerUUID: string;
+}
+
 interface CreateObservationBundleEntriesParams {
   observationFormsData: Record<string, Form2Observation[]>;
   encounterSubject: Reference;
   encounterReference: string;
   practitionerUUID: string;
+}
+
+function validateCommonBundleParams(
+  encounterSubject: Reference,
+  encounterReference: string,
+  practitionerUUID: string,
+): void {
+  if (!encounterSubject?.reference) {
+    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT);
+  }
+  if (!encounterReference) {
+    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_REFERENCE);
+  }
+  if (!practitionerUUID) {
+    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_PRACTITIONER);
+  }
 }
 
 /**
@@ -88,17 +113,11 @@ export function createDiagnosisBundleEntries({
     throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_DIAGNOSIS_PARAMS);
   }
 
-  if (!encounterSubject?.reference) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT);
-  }
-
-  if (!encounterReference) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_REFERENCE);
-  }
-
-  if (!practitionerUUID) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_PRACTITIONER);
-  }
+  validateCommonBundleParams(
+    encounterSubject,
+    encounterReference,
+    practitionerUUID,
+  );
 
   const diagnosisEntries: BundleEntry[] = [];
 
@@ -150,17 +169,11 @@ export function createAllergiesBundleEntries({
     throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_ALLERGY_PARAMS);
   }
 
-  if (!encounterSubject?.reference) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT);
-  }
-
-  if (!encounterReference) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_REFERENCE);
-  }
-
-  if (!practitionerUUID) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_PRACTITIONER);
-  }
+  validateCommonBundleParams(
+    encounterSubject,
+    encounterReference,
+    practitionerUUID,
+  );
 
   const allergyEntries: BundleEntry[] = [];
 
@@ -218,17 +231,11 @@ export function createServiceRequestBundleEntries({
   practitionerUUID,
 }: CreateServiceRequestBundleEntriesParams): BundleEntry[] {
   const serviceRequestEntries: BundleEntry[] = [];
-  if (!encounterSubject?.reference) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT);
-  }
-
-  if (!encounterReference) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_REFERENCE);
-  }
-
-  if (!practitionerUUID) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_PRACTITIONER);
-  }
+  validateCommonBundleParams(
+    encounterSubject,
+    encounterReference,
+    practitionerUUID,
+  );
   selectedServiceRequests.forEach((serviceRequests) => {
     if (!serviceRequests || serviceRequests.length === 0) {
       return;
@@ -271,17 +278,11 @@ export function createConditionsBundleEntries({
     throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_CONDITION_PARAMS);
   }
 
-  if (!encounterSubject?.reference) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT);
-  }
-
-  if (!encounterReference) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_REFERENCE);
-  }
-
-  if (!practitionerUUID) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_PRACTITIONER);
-  }
+  validateCommonBundleParams(
+    encounterSubject,
+    encounterReference,
+    practitionerUUID,
+  );
 
   if (selectedConditions.length === 0) {
     return [];
@@ -340,17 +341,11 @@ export function createMedicationRequestEntries({
     throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_CONDITION_PARAMS);
   }
 
-  if (!encounterSubject?.reference) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT);
-  }
-
-  if (!encounterReference) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_REFERENCE);
-  }
-
-  if (!practitionerUUID) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_PRACTITIONER);
-  }
+  validateCommonBundleParams(
+    encounterSubject,
+    encounterReference,
+    practitionerUUID,
+  );
   const medicationRequestEntries: BundleEntry[] = [];
   for (const medication of selectedMedications) {
     const medicationResourceURL = `urn:uuid:${crypto.randomUUID()}`;
@@ -373,6 +368,40 @@ export function createMedicationRequestEntries({
   return medicationRequestEntries;
 }
 
+export function createImmunizationBundleEntries({
+  selectedImmunizations,
+  encounterSubject,
+  encounterReference,
+  practitionerUUID,
+}: CreateImmunizationBundleEntriesParams): BundleEntry[] {
+  if (!selectedImmunizations || !Array.isArray(selectedImmunizations)) {
+    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_IMMUNIZATION_PARAMS);
+  }
+
+  validateCommonBundleParams(
+    encounterSubject,
+    encounterReference,
+    practitionerUUID,
+  );
+
+  const immunizationEntries: BundleEntry[] = [];
+
+  for (const entry of selectedImmunizations) {
+    const resourceURL = `urn:uuid:${crypto.randomUUID()}`;
+    const resource = createImmunizationResource(
+      entry,
+      encounterSubject,
+      createEncounterReferenceFromString(encounterReference),
+      createPractitionerReference(practitionerUUID),
+    );
+
+    const bundleEntry = createBundleEntry(resourceURL, resource, 'POST');
+    immunizationEntries.push(bundleEntry);
+  }
+
+  return immunizationEntries;
+}
+
 /**
  * Creates bundle entries for observations from observation forms as part of consultation bundle
  * @param params - Parameters required for creating observation bundle entries
@@ -389,17 +418,11 @@ export function createObservationBundleEntries({
     throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_CONDITION_PARAMS);
   }
 
-  if (!encounterSubject?.reference) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_SUBJECT);
-  }
-
-  if (!encounterReference) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_ENCOUNTER_REFERENCE);
-  }
-
-  if (!practitionerUUID) {
-    throw new Error(CONSULTATION_ERROR_MESSAGES.INVALID_PRACTITIONER);
-  }
+  validateCommonBundleParams(
+    encounterSubject,
+    encounterReference,
+    practitionerUUID,
+  );
 
   const observationEntries: BundleEntry[] = [];
 
