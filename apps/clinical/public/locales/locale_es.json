@@ -362,5 +362,6 @@
   "YEARS_one": " año",
   "YEARS_other": " años",
   "SEARCH_PATIENT_ID_PLACEHOLDER": "Buscar por ID de paciente",
-  "NO_MATCHING_RECORDS": "No se encontraron registros"
+  "NO_MATCHING_RECORDS": "No se encontraron registros",
+  "SEARCHING": "Buscando..."
 }

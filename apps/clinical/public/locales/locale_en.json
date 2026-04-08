@@ -362,5 +362,6 @@
   "YEARS_one": " year",
   "YEARS_other": " years",
   "SEARCH_PATIENT_ID_PLACEHOLDER": "Search by Patient ID",
-  "NO_MATCHING_RECORDS": "No matching records"
+  "NO_MATCHING_RECORDS": "No matching records",
+  "SEARCHING": "Searching..."
 }

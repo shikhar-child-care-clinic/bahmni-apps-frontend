@@ -1,12 +1,9 @@
-import { Search } from '@bahmni/design-system';
-import {
-  type PatientSearchResult,
-  searchPatientByNameOrId,
-  useTranslation,
-} from '@bahmni/services';
-import { useQuery } from '@tanstack/react-query';
+import { Loading, Search } from '@bahmni/design-system';
+import { useTranslation } from '@bahmni/services';
+import { useNotification } from '@bahmni/widgets';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import usePatientSearch from '../../hooks/usePatientSearch';
 import styles from './PatientSearch.module.scss';
 
 interface PatientSearchProps {
@@ -14,40 +11,40 @@ interface PatientSearchProps {
   onClose: () => void;
 }
 
-/**
- * PatientSearch component
- *
- * Renders an expandable inline search bar for finding patients by ID.
- * Activated by the search icon in the global header actions.
- * On Enter key press, searches via the Lucene patient search API and
- * shows a results dropdown. Clicking a result navigates to that patient's
- * clinical dashboard.
- *
- * @param {boolean} isOpen - Whether the search bar is expanded/visible
- * @param {function} onClose - Callback to close/collapse the search bar
- * @returns {React.ReactElement | null} The PatientSearch component or null when closed
- */
+const LISTBOX_ID = 'patient-search-listbox';
+
 const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { addNotification } = useNotification();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [inputValue, setInputValue] = useState('');
   const [submittedTerm, setSubmittedTerm] = useState('');
+  const [focusedIndex, setFocusedIndex] = useState(-1);
 
-  const { data: searchResults } = useQuery({
-    queryKey: ['patientSearch', submittedTerm],
-    queryFn: () => searchPatientByNameOrId(submittedTerm),
-    enabled: submittedTerm.trim().length > 0,
-  });
+  const { results, isLoading, isError, error } =
+    usePatientSearch(submittedTerm);
+
+  const showDropdown =
+    submittedTerm.trim().length > 0 &&
+    inputValue === submittedTerm &&
+    !isLoading &&
+    !isError;
 
   // Reset state when the search panel is closed
   useEffect(() => {
     if (!isOpen) {
       setInputValue('');
       setSubmittedTerm('');
+      setFocusedIndex(-1);
     }
   }, [isOpen]);
+
+  // Reset focused index when results change
+  useEffect(() => {
+    setFocusedIndex(-1);
+  }, [results]);
 
   // Click-outside handler to close the search panel
   useEffect(() => {
@@ -84,11 +81,44 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
     };
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    if (isError && submittedTerm) {
+      addNotification({
+        title: t('ERROR_DEFAULT_TITLE'),
+        message: error?.message,
+        type: 'error',
+      });
+    }
+  }, [isError, submittedTerm, addNotification, t, error]);
+
   if (!isOpen) return null;
 
+  const handleResultClick = (resultUuid: string) => {
+    navigate(`../${resultUuid}`);
+    onClose();
+  };
+
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && inputValue.trim()) {
-      setSubmittedTerm(inputValue.trim());
+    if (event.key === 'Enter') {
+      if (focusedIndex >= 0 && showDropdown && results[focusedIndex]) {
+        handleResultClick(results[focusedIndex].uuid);
+        return;
+      }
+      if (inputValue.trim()) {
+        setSubmittedTerm(inputValue.trim());
+        setFocusedIndex(-1);
+      }
+      return;
+    }
+
+    if (!showDropdown || results.length === 0) return;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setFocusedIndex((prev) => Math.min(prev + 1, results.length - 1));
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setFocusedIndex((prev) => Math.max(prev - 1, -1));
     }
   };
 
@@ -99,21 +129,13 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
   const handleClear = () => {
     setInputValue('');
     setSubmittedTerm('');
+    setFocusedIndex(-1);
   };
 
-  const handleResultClick = (result: PatientSearchResult) => {
-    navigate(`/clinical/${result.uuid}`);
-    onClose();
-  };
-
-  const showDropdown =
-    submittedTerm.trim().length > 0 && searchResults !== undefined;
-  const results = (
-    (searchResults?.pageOfResults as PatientSearchResult[]) ?? []
-  ).filter(
-    (patient) =>
-      patient.identifier.toLowerCase() === submittedTerm.toLowerCase(),
-  );
+  const activedescendant =
+    focusedIndex >= 0
+      ? `patient-search-result-${results[focusedIndex]?.uuid}`
+      : undefined;
 
   return (
     <div
@@ -133,35 +155,49 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
         autoFocus
         size="md"
         className={styles.searchInput}
+        role="combobox"
+        aria-expanded={showDropdown}
+        aria-controls={LISTBOX_ID}
+        aria-activedescendant={activedescendant}
       />
+      {isLoading && submittedTerm && (
+        <div
+          className={styles.resultsDropdown}
+          data-testid="patient-search-loading"
+        >
+          <Loading description={t('SEARCHING')} role="status" small />
+        </div>
+      )}
       {showDropdown && (
-        <ul
+        <div
+          id={LISTBOX_ID}
           className={styles.resultsDropdown}
           data-testid="patient-search-results"
           role="listbox"
           aria-label={t('SEARCH_PATIENT_ID_PLACEHOLDER')}
         >
           {results.length === 0 ? (
-            <li
+            <div
               className={styles.noResults}
               data-testid="patient-search-no-results"
               role="option"
               aria-selected={false}
             >
               {t('NO_MATCHING_RECORDS')}
-            </li>
+            </div>
           ) : (
-            results.map((result) => (
-              <li
+            results.map((result, index) => (
+              <div
                 key={result.uuid}
+                id={`patient-search-result-${result.uuid}`}
                 className={styles.resultItem}
                 data-testid={`patient-search-result-${result.uuid}`}
                 role="option"
-                aria-selected={false}
-                onClick={() => handleResultClick(result)}
+                aria-selected={index === focusedIndex}
+                onClick={() => handleResultClick(result.uuid)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
-                    handleResultClick(result);
+                    handleResultClick(result.uuid);
                   }
                 }}
                 tabIndex={0}
@@ -180,10 +216,10 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
                 >
                   {result.identifier}
                 </span>
-              </li>
+              </div>
             ))
           )}
-        </ul>
+        </div>
       )}
     </div>
   );

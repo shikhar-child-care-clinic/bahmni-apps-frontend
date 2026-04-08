@@ -1,17 +1,16 @@
-import {
-  type PatientSearchResultBundle,
-  useTranslation,
-} from '@bahmni/services';
-import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from '@bahmni/services';
+import { useNotification } from '@bahmni/widgets';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import React from 'react';
+import usePatientSearch from '../../../hooks/usePatientSearch';
 import PatientSearch from '../PatientSearch';
 import '@testing-library/jest-dom';
 
 expect.extend(toHaveNoViolations);
 
 const mockNavigate = jest.fn();
+const mockAddNotification = jest.fn();
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -21,18 +20,24 @@ jest.mock('react-router-dom', () => ({
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   useTranslation: jest.fn(),
-  searchPatientByNameOrId: jest.fn(),
 }));
 
-jest.mock('@tanstack/react-query', () => ({
-  ...jest.requireActual('@tanstack/react-query'),
-  useQuery: jest.fn(),
+jest.mock('@bahmni/widgets', () => ({
+  ...jest.requireActual('@bahmni/widgets'),
+  useNotification: jest.fn(),
 }));
+
+jest.mock('../../../hooks/usePatientSearch');
 
 const mockedUseTranslation = useTranslation as jest.MockedFunction<
   typeof useTranslation
 >;
-const mockedUseQuery = useQuery as jest.MockedFunction<typeof useQuery>;
+const mockedUsePatientSearch = usePatientSearch as jest.MockedFunction<
+  typeof usePatientSearch
+>;
+const mockedUseNotification = useNotification as jest.MockedFunction<
+  typeof useNotification
+>;
 
 const mockTranslate = jest.fn((key: string) => {
   const translations: Record<string, string> = {
@@ -71,11 +76,15 @@ describe('PatientSearch Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockedUseTranslation.mockReturnValue({ t: mockTranslate } as any);
-    mockedUseQuery.mockReturnValue({
-      data: undefined,
+    mockedUseNotification.mockReturnValue({
+      addNotification: mockAddNotification,
+    } as any);
+    mockedUsePatientSearch.mockReturnValue({
+      results: [],
       isLoading: false,
       isError: false,
-    } as any);
+      error: null,
+    });
   });
 
   // Rendering tests
@@ -121,14 +130,12 @@ describe('PatientSearch Component', () => {
   // Functionality tests
   describe('Functionality', () => {
     test('shows results dropdown after typing and pressing Enter', async () => {
-      mockedUseQuery.mockReturnValue({
-        data: {
-          totalCount: 1,
-          pageOfResults: [mockPatient],
-        } as PatientSearchResultBundle,
+      mockedUsePatientSearch.mockReturnValue({
+        results: [mockPatient],
         isLoading: false,
         isError: false,
-      } as any);
+        error: null,
+      });
 
       render(<PatientSearch {...defaultProps} />);
       const input = screen.getByPlaceholderText('Search by Patient ID');
@@ -146,14 +153,12 @@ describe('PatientSearch Component', () => {
     });
 
     test('shows "No matching records" when search returns 0 results', async () => {
-      mockedUseQuery.mockReturnValue({
-        data: {
-          totalCount: 0,
-          pageOfResults: [],
-        } as PatientSearchResultBundle,
+      mockedUsePatientSearch.mockReturnValue({
+        results: [],
         isLoading: false,
         isError: false,
-      } as any);
+        error: null,
+      });
 
       render(<PatientSearch {...defaultProps} />);
       const input = screen.getByPlaceholderText('Search by Patient ID');
@@ -170,14 +175,12 @@ describe('PatientSearch Component', () => {
     });
 
     test('navigates to patient dashboard on result click', async () => {
-      mockedUseQuery.mockReturnValue({
-        data: {
-          totalCount: 1,
-          pageOfResults: [mockPatient],
-        } as PatientSearchResultBundle,
+      mockedUsePatientSearch.mockReturnValue({
+        results: [mockPatient],
         isLoading: false,
         isError: false,
-      } as any);
+        error: null,
+      });
 
       const onClose = jest.fn();
       render(<PatientSearch isOpen onClose={onClose} />);
@@ -195,21 +198,17 @@ describe('PatientSearch Component', () => {
         screen.getByTestId(`patient-search-result-${mockPatient.uuid}`),
       );
 
-      expect(mockNavigate).toHaveBeenCalledWith(
-        `/clinical/${mockPatient.uuid}`,
-      );
+      expect(mockNavigate).toHaveBeenCalledWith(`../${mockPatient.uuid}`);
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
     test('clears search query when cross button is clicked but keeps search bar open', async () => {
-      mockedUseQuery.mockReturnValue({
-        data: {
-          totalCount: 1,
-          pageOfResults: [mockPatient],
-        } as PatientSearchResultBundle,
+      mockedUsePatientSearch.mockReturnValue({
+        results: [mockPatient],
         isLoading: false,
         isError: false,
-      } as any);
+        error: null,
+      });
 
       const onClose = jest.fn();
       render(<PatientSearch isOpen onClose={onClose} />);
@@ -266,14 +265,12 @@ describe('PatientSearch Component', () => {
     });
 
     test('result items have tabIndex for keyboard navigation', async () => {
-      mockedUseQuery.mockReturnValue({
-        data: {
-          totalCount: 1,
-          pageOfResults: [mockPatient],
-        } as PatientSearchResultBundle,
+      mockedUsePatientSearch.mockReturnValue({
+        results: [mockPatient],
         isLoading: false,
         isError: false,
-      } as any);
+        error: null,
+      });
 
       render(<PatientSearch {...defaultProps} />);
       const input = screen.getByPlaceholderText('Search by Patient ID');
@@ -287,25 +284,14 @@ describe('PatientSearch Component', () => {
         expect(resultItem).toHaveAttribute('tabindex', '0');
       });
     });
-  });
 
-  // Accessibility tests
-  describe('Accessibility', () => {
-    test('has no accessibility violations when open', async () => {
-      const { container } = render(<PatientSearch {...defaultProps} />);
-      const results = await axe(container);
-      expect(results).toHaveNoViolations();
-    });
-
-    test('has no accessibility violations with search results', async () => {
-      mockedUseQuery.mockReturnValue({
-        data: {
-          totalCount: 1,
-          pageOfResults: [mockPatient],
-        } as PatientSearchResultBundle,
+    test('ArrowDown moves focus to the first result', async () => {
+      mockedUsePatientSearch.mockReturnValue({
+        results: [mockPatient],
         isLoading: false,
         isError: false,
-      } as any);
+        error: null,
+      });
 
       render(<PatientSearch {...defaultProps} />);
       const input = screen.getByPlaceholderText('Search by Patient ID');
@@ -318,7 +304,132 @@ describe('PatientSearch Component', () => {
         ).toBeInTheDocument();
       });
 
+      fireEvent.keyDown(input, { key: 'ArrowDown' });
+
+      await waitFor(() => {
+        const resultItem = screen.getByTestId(
+          `patient-search-result-${mockPatient.uuid}`,
+        );
+        expect(resultItem).toHaveAttribute('aria-selected', 'true');
+      });
+    });
+
+    test('ArrowUp from first result clears focus (aria-selected back to false)', async () => {
+      mockedUsePatientSearch.mockReturnValue({
+        results: [mockPatient],
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      render(<PatientSearch {...defaultProps} />);
+      const input = screen.getByPlaceholderText('Search by Patient ID');
+      fireEvent.change(input, { target: { value: 'GAN123456' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('patient-search-results'),
+        ).toBeInTheDocument();
+      });
+
+      fireEvent.keyDown(input, { key: 'ArrowDown' });
+      fireEvent.keyDown(input, { key: 'ArrowUp' });
+
+      await waitFor(() => {
+        const resultItem = screen.getByTestId(
+          `patient-search-result-${mockPatient.uuid}`,
+        );
+        expect(resultItem).toHaveAttribute('aria-selected', 'false');
+      });
+    });
+
+    test('Enter on a focused result navigates to that patient', async () => {
+      mockedUsePatientSearch.mockReturnValue({
+        results: [mockPatient],
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      const onClose = jest.fn();
+      render(<PatientSearch isOpen onClose={onClose} />);
+      const input = screen.getByPlaceholderText('Search by Patient ID');
+      fireEvent.change(input, { target: { value: 'GAN123456' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('patient-search-results'),
+        ).toBeInTheDocument();
+      });
+
+      fireEvent.keyDown(input, { key: 'ArrowDown' });
+      fireEvent.keyDown(input, { key: 'Enter' });
+
+      expect(mockNavigate).toHaveBeenCalledWith(`../${mockPatient.uuid}`);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    test('search input has aria-expanded, aria-controls, and aria-activedescendant', async () => {
+      mockedUsePatientSearch.mockReturnValue({
+        results: [mockPatient],
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      render(<PatientSearch {...defaultProps} />);
+      const input = screen.getByPlaceholderText('Search by Patient ID');
+
+      expect(input).toHaveAttribute('aria-expanded', 'false');
+      expect(input).toHaveAttribute('aria-controls', 'patient-search-listbox');
+
+      fireEvent.change(input, { target: { value: 'GAN123456' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+
+      await waitFor(() => {
+        expect(input).toHaveAttribute('aria-expanded', 'true');
+      });
+
+      fireEvent.keyDown(input, { key: 'ArrowDown' });
+
+      await waitFor(() => {
+        expect(input).toHaveAttribute(
+          'aria-activedescendant',
+          `patient-search-result-${mockPatient.uuid}`,
+        );
+      });
+    });
+  });
+
+  // Accessibility tests
+  describe('Accessibility', () => {
+    test('has no accessibility violations when open', async () => {
       const { container } = render(<PatientSearch {...defaultProps} />);
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    test('has no accessibility violations with search results', async () => {
+      mockedUsePatientSearch.mockReturnValue({
+        results: [mockPatient],
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      const { container } = render(<PatientSearch {...defaultProps} />);
+      const input = screen.getByPlaceholderText('Search by Patient ID');
+      fireEvent.change(input, { target: { value: 'GAN123456' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('patient-search-results'),
+        ).toBeInTheDocument();
+      });
+
       const axeResults = await axe(container);
       expect(axeResults).toHaveNoViolations();
     });

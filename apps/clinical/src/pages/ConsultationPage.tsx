@@ -18,7 +18,13 @@ import {
   useUserPrivilege,
 } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
-import React, { Suspense, useEffect, useMemo, useState } from 'react';
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ConsultationPad from '../components/consultationPad/ConsultationPad';
 import DashboardContainer from '../components/dashboardContainer/DashboardContainer';
@@ -72,30 +78,36 @@ const ConsultationPage: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchParams] = useSearchParams();
 
-  const globalActions = [
-    {
-      id: 'search',
-      label: 'Search',
-      renderIcon: (
-        <Icon id="search-icon" name="fa-search" size={ICON_SIZE.LG} />
-      ),
-      onClick: () => setIsSearchOpen(true),
-    },
-    {
-      id: 'notifications',
-      label: 'Notifications',
-      renderIcon: (
-        <Icon id="notifications-icon" name="fa-bell" size={ICON_SIZE.LG} />
-      ),
-      onClick: () => {},
-    },
-    {
-      id: 'user',
-      label: 'User',
-      renderIcon: <Icon id="user-icon" name="fa-user" size={ICON_SIZE.LG} />,
-      onClick: () => {},
-    },
-  ];
+  const handleSearchOpen = useCallback(() => setIsSearchOpen(true), []);
+  const handleSearchClose = useCallback(() => setIsSearchOpen(false), []);
+
+  const globalActions = useMemo(
+    () => [
+      {
+        id: 'search',
+        label: 'Search',
+        renderIcon: (
+          <Icon id="search-icon" name="fa-search" size={ICON_SIZE.LG} />
+        ),
+        onClick: handleSearchOpen,
+      },
+      {
+        id: 'notifications',
+        label: 'Notifications',
+        renderIcon: (
+          <Icon id="notifications-icon" name="fa-bell" size={ICON_SIZE.LG} />
+        ),
+        onClick: () => {},
+      },
+      {
+        id: 'user',
+        label: 'User',
+        renderIcon: <Icon id="user-icon" name="fa-user" size={ICON_SIZE.LG} />,
+        onClick: () => {},
+      },
+    ],
+    [handleSearchOpen],
+  );
   const viewingForm = useObservationFormsStore((state) => state.viewingForm);
 
   const breadcrumbItems = [
@@ -234,10 +246,7 @@ const ConsultationPage: React.FC = () => {
 
   return (
     <ClinicalAppProvider episodeUuids={episodeUuids}>
-      <PatientSearch
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-      />
+      <PatientSearch isOpen={isSearchOpen} onClose={handleSearchClose} />
       <ActionAreaLayout
         headerWSideNav={
           <Header
