@@ -11,7 +11,6 @@ import {
   getVaccinations,
   searchFHIRConcepts,
 } from '@bahmni/services';
-import { usePatientUUID } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
 import { Coding } from 'fhir/r4';
 import React, { useState, useMemo, useRef } from 'react';
@@ -51,7 +50,6 @@ const ImmunizationForm: React.FC<ImmunizationFormProps> = React.memo(
     addedLabelKey = 'IMMUNIZATION_ADDED',
   }) => {
     const { t } = useTranslation();
-    const patientUUID = usePatientUUID();
     const [searchTerm, setSearchTerm] = useState('');
     const isSelectingRef = useRef(false);
     const [selectedItem] = useState<ImmunizationConceptFilterResult | null>(

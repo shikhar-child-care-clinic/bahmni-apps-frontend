@@ -79,17 +79,13 @@ describe('SelectedImmunizationItem', () => {
     render(<SelectedImmunizationItem {...createDefaultProps()} />);
 
     expect(screen.getByText('BCG Vaccine')).toBeInTheDocument();
-    expect(
-      screen.getByTestId('immunization-name-entry-1'),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('immunization-name-entry-1')).toBeInTheDocument();
   });
 
   test('renders ImmunizationDetailsForm', () => {
     render(<SelectedImmunizationItem {...createDefaultProps()} />);
 
-    expect(
-      screen.getByTestId('mock-details-form-entry-1'),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('mock-details-form-entry-1')).toBeInTheDocument();
   });
 
   test('passes statusReasonItems and updateStatusReason when provided', () => {
@@ -105,9 +101,7 @@ describe('SelectedImmunizationItem', () => {
       />,
     );
 
-    expect(
-      screen.getByTestId('mock-details-form-entry-1'),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('mock-details-form-entry-1')).toBeInTheDocument();
   });
 
   test('renders different vaccine names based on entry', () => {
@@ -116,15 +110,9 @@ describe('SelectedImmunizationItem', () => {
       vaccineDisplay: 'COVID-19 Vaccine',
     });
 
-    render(
-      <SelectedImmunizationItem
-        {...createDefaultProps({ entry })}
-      />,
-    );
+    render(<SelectedImmunizationItem {...createDefaultProps({ entry })} />);
 
     expect(screen.getByText('COVID-19 Vaccine')).toBeInTheDocument();
-    expect(
-      screen.getByTestId('immunization-name-entry-2'),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('immunization-name-entry-2')).toBeInTheDocument();
   });
 });

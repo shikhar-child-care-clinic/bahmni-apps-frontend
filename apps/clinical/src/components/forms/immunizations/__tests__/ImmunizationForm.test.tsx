@@ -21,7 +21,9 @@ jest.mock('../styles/SelectedImmunizationItem.module.scss', () => ({
 }));
 
 jest.mock('../SelectedImmunizationItem', () => {
-  const MockSelectedItem = (props: { entry: { id: string; vaccineDisplay: string } }) => (
+  const MockSelectedItem = (props: {
+    entry: { id: string; vaccineDisplay: string };
+  }) => (
     <div data-testid={`mock-selected-immunization-${props.entry.id}`}>
       {props.entry.vaccineDisplay}
     </div>
@@ -83,10 +85,6 @@ jest.mock('@bahmni/services', () => ({
       ],
     },
   }),
-}));
-
-jest.mock('@bahmni/widgets', () => ({
-  usePatientUUID: () => 'mock-patient-uuid',
 }));
 
 jest.mock('@bahmni/design-system', () => ({
@@ -176,7 +174,9 @@ describe('ImmunizationForm', () => {
         <ImmunizationForm mode="history" titleKey="IMMUNIZATION_HISTORY" />,
       );
 
-      expect(screen.getByText('IMMUNIZATION_CONFIG_MISSING')).toBeInTheDocument();
+      expect(
+        screen.getByText('IMMUNIZATION_CONFIG_MISSING'),
+      ).toBeInTheDocument();
 
       // Restore config
       mockClinicalConfig.clinicalConfig = {
@@ -373,9 +373,7 @@ describe('ImmunizationForm', () => {
       const removeButton = screen.getByRole('button', { name: /remove/i });
       await user.click(removeButton);
 
-      expect(mockStoreState.removeImmunization).toHaveBeenCalledWith(
-        'entry-1',
-      );
+      expect(mockStoreState.removeImmunization).toHaveBeenCalledWith('entry-1');
     });
   });
 

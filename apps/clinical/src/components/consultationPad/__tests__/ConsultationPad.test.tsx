@@ -15,9 +15,9 @@ import * as pinnedFormsService from '../../../services/pinnedFormsService';
 import useAllergyStore from '../../../stores/allergyStore';
 import { useConditionsAndDiagnosesStore } from '../../../stores/conditionsAndDiagnosesStore';
 import { useEncounterDetailsStore } from '../../../stores/encounterDetailsStore';
+import { useImmunizationStore } from '../../../stores/immunizationStore';
 import { useMedicationStore } from '../../../stores/medicationsStore';
 import useServiceRequestStore from '../../../stores/serviceRequestStore';
-import { useImmunizationStore } from '../../../stores/immunizationStore';
 import { useVaccinationStore } from '../../../stores/vaccinationsStore';
 import ConsultationPad from '../ConsultationPad';
 
@@ -171,15 +171,12 @@ jest.mock('../../../components/forms/vaccinations/VaccinationForm', () => ({
   ),
 }));
 
-jest.mock(
-  '../../../components/forms/immunizations/ImmunizationForm',
-  () => ({
-    __esModule: true,
-    default: ({ mode, titleKey }: any) => (
-      <div data-testid={`mock-immunization-form-${mode}`}>{titleKey}</div>
-    ),
-  }),
-);
+jest.mock('../../../components/forms/immunizations/ImmunizationForm', () => ({
+  __esModule: true,
+  default: ({ mode, titleKey }: any) => (
+    <div data-testid={`mock-immunization-form-${mode}`}>{titleKey}</div>
+  ),
+}));
 
 // Mock services
 jest.mock('../../../services/consultationBundleService', () => ({

@@ -516,16 +516,16 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
             titleKey="IMMUNIZATION_HISTORY_TITLE"
             searchPlaceholderKey="IMMUNIZATION_SEARCH_PLACEHOLDER"
             addedLabelKey="IMMUNIZATION_ADDED"
-      />
-      <MenuItemDivider />
-      <ImmunizationForm
-        mode="not-done"
-        titleKey="IMMUNIZATION_NOT_DONE_TITLE"
-        searchPlaceholderKey="IMMUNIZATION_NOT_DONE_SEARCH_PLACEHOLDER"
-        addedLabelKey="IMMUNIZATION_NOT_DONE_ADDED"
-      />
-      <MenuItemDivider />
-      </>
+          />
+          <MenuItemDivider />
+          <ImmunizationForm
+            mode="not-done"
+            titleKey="IMMUNIZATION_NOT_DONE_TITLE"
+            searchPlaceholderKey="IMMUNIZATION_NOT_DONE_SEARCH_PLACEHOLDER"
+            addedLabelKey="IMMUNIZATION_NOT_DONE_ADDED"
+          />
+          <MenuItemDivider />
+        </>
       )}
       <ObservationForms
         onFormSelect={handleFormSelection}

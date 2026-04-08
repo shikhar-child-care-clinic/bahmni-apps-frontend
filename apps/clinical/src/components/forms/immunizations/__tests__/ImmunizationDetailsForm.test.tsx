@@ -165,9 +165,7 @@ describe('ImmunizationDetailsForm', () => {
         <ImmunizationDetailsForm
           {...createDefaultProps({
             fieldConfig: NOT_DONE_FIELD_CONFIG,
-            statusReasonItems: [
-              { uuid: 'reason-1', name: 'Patient Refused' },
-            ],
+            statusReasonItems: [{ uuid: 'reason-1', name: 'Patient Refused' }],
             updateStatusReason,
           })}
         />,
@@ -265,9 +263,7 @@ describe('ImmunizationDetailsForm', () => {
     test('shows note textarea when entry already has notes', () => {
       const entry = createMockEntry({ notes: 'Existing note text' });
 
-      render(
-        <ImmunizationDetailsForm {...createDefaultProps({ entry })} />,
-      );
+      render(<ImmunizationDetailsForm {...createDefaultProps({ entry })} />);
 
       expect(
         screen.getByTestId('immunization-note-entry-1'),
@@ -324,9 +320,7 @@ describe('ImmunizationDetailsForm', () => {
     test('renders manual text input when entry has drugNonCoded', () => {
       const entry = createMockEntry({ drugNonCoded: 'Custom Drug Name' });
 
-      render(
-        <ImmunizationDetailsForm {...createDefaultProps({ entry })} />,
-      );
+      render(<ImmunizationDetailsForm {...createDefaultProps({ entry })} />);
 
       expect(
         screen.getByTestId('immunization-drug-non-coded-entry-1'),
@@ -339,9 +333,7 @@ describe('ImmunizationDetailsForm', () => {
     test('shows "Back to list" link in manual drug mode', () => {
       const entry = createMockEntry({ drugNonCoded: 'Custom Drug' });
 
-      render(
-        <ImmunizationDetailsForm {...createDefaultProps({ entry })} />,
-      );
+      render(<ImmunizationDetailsForm {...createDefaultProps({ entry })} />);
 
       expect(
         screen.getByTestId('immunization-drug-back-to-list-entry-1'),
@@ -382,9 +374,7 @@ describe('ImmunizationDetailsForm', () => {
     test('renders manual text input when entry has locationText', () => {
       const entry = createMockEntry({ locationText: 'Home Visit' });
 
-      render(
-        <ImmunizationDetailsForm {...createDefaultProps({ entry })} />,
-      );
+      render(<ImmunizationDetailsForm {...createDefaultProps({ entry })} />);
 
       expect(
         screen.getByTestId('immunization-location-text-entry-1'),
@@ -425,9 +415,7 @@ describe('ImmunizationDetailsForm', () => {
         },
       });
 
-      render(
-        <ImmunizationDetailsForm {...createDefaultProps({ entry })} />,
-      );
+      render(<ImmunizationDetailsForm {...createDefaultProps({ entry })} />);
 
       // TextInput components propagate invalid as aria-invalid on the input
       const manufacturerInput = screen.getByTestId(
