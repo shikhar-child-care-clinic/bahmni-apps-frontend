@@ -1,6 +1,5 @@
-import { Tile } from '@bahmni/design-system';
+import { Accordion, AccordionItem, Tile } from '@bahmni/design-system';
 import { useTranslation } from '@bahmni/services';
-import { ChevronDown } from '@carbon/icons-react';
 import React from 'react';
 import {
   RegistrationFormControl,
@@ -66,52 +65,43 @@ const PatientRegisterSection: React.FC<PatientRegisterSectionProps> = ({
     return null;
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onToggle();
-    }
-  };
-
-  return (
-    <div className={styles.formContainer}>
-      {section.translationKey &&
-        (isCollapsible ? (
-          <Tile className={styles.headerTile} data-testid="section-header-tile">
-            <button
-              type="button"
-              className={styles.collapsibleHeaderButton}
-              onClick={onToggle}
-              onKeyDown={handleKeyDown}
-              aria-expanded={isExpanded}
-              data-testid="collapsible-toggle-button"
-            >
-              <span className={styles.sectionTitle}>
-                {t(section.translationKey)}
-              </span>
-              <ChevronDown
-                size={16}
-                className={`${styles.chevron}${isExpanded ? ` ${styles.chevronExpanded}` : ''}`}
-                aria-hidden="true"
-              />
-            </button>
-          </Tile>
-        ) : (
+  // For non-collapsible sections, render content without Accordion
+  if (!isCollapsible) {
+    return (
+      <div className={styles.formContainer}>
+        {section.translationKey && (
           <Tile className={styles.headerTile} data-testid="section-header-tile">
             <span className={styles.sectionTitle}>
               {t(section.translationKey)}
             </span>
           </Tile>
-        ))}
-      <div
-        className={
-          isCollapsible && !isExpanded
-            ? styles.sectionContentCollapsed
-            : styles.sectionContent
-        }
-        data-testid="section-content"
-      >
-        {renderedControls}
+        )}
+        <div className={styles.sectionContent} data-testid="section-content">
+          {renderedControls}
+        </div>
+      </div>
+    );
+  }
+
+  // For collapsible sections, use Accordion with externally-controlled state
+  return (
+    <div className={styles.formContainer}>
+      <div className={styles.accordionWrapper}>
+        <Accordion>
+          <AccordionItem
+            title={section.translationKey ? t(section.translationKey) : ''}
+            open={isExpanded}
+            onHeadingClick={onToggle}
+            data-testid="collapsible-accordion-item"
+          >
+            <div
+              className={styles.sectionContent}
+              data-testid="section-content"
+            >
+              {renderedControls}
+            </div>
+          </AccordionItem>
+        </Accordion>
       </div>
     </div>
   );

@@ -76,11 +76,14 @@ jest.mock('../../../components/forms/profile/Profile', () => ({
   },
 }));
 
+const mockAddressValidate = jest.fn(() => true);
+const mockContactValidate = jest.fn(() => true);
+
 jest.mock('../../../components/forms/addressInfo/AddressInfo', () => ({
   AddressInfo: ({ ref }: { ref?: React.Ref<unknown> }) => {
     if (ref && typeof ref === 'object' && 'current' in ref) {
       ref.current = {
-        validate: jest.fn(() => true),
+        validate: mockAddressValidate,
         getData: jest.fn(() => ({
           address1: '123 Main St',
           cityVillage: 'New York',
@@ -95,7 +98,7 @@ jest.mock('../../../components/forms/contactInfo/ContactInfo', () => ({
   ContactInfo: ({ ref }: { ref?: React.Ref<unknown> }) => {
     if (ref && typeof ref === 'object' && 'current' in ref) {
       ref.current = {
-        validate: jest.fn(() => true),
+        validate: mockContactValidate,
         getData: jest.fn(() => ({
           phoneNumber: '1234567890',
         })),
@@ -160,6 +163,35 @@ jest.mock(
     },
   }),
 );
+
+jest.mock('@bahmni/design-system', () => ({
+  ...jest.requireActual('@bahmni/design-system'),
+  Accordion: ({ children }: any) => <div>{children}</div>,
+  AccordionItem: ({
+    title,
+    open,
+    onHeadingClick,
+    children,
+    'data-testid': testId,
+  }: any) => (
+    <div data-testid={testId}>
+      <button
+        onClick={onHeadingClick}
+        aria-expanded={open}
+        data-testid="accordion-button"
+        type="button"
+      >
+        {title}
+      </button>
+      <div>{children}</div>
+    </div>
+  ),
+  Tile: ({ children, className, 'data-testid': testId }: any) => (
+    <div data-testid={testId ?? 'section-header-tile'} className={className}>
+      {children}
+    </div>
+  ),
+}));
 
 jest.mock('../visitTypeSelector', () => ({
   VisitTypeSelector: ({
@@ -355,6 +387,9 @@ describe('PatientRegister', () => {
       ],
       isLoading: false,
     });
+
+    mockAddressValidate.mockReturnValue(true);
+    mockContactValidate.mockReturnValue(true);
 
     (validateAllSections as jest.Mock).mockReturnValue(true);
     (collectFormData as jest.Mock).mockReturnValue({
@@ -1128,117 +1163,126 @@ describe('PatientRegister', () => {
   });
 
   describe('Section Collapsibility (BAH-4590)', () => {
-    it('should render collapsible section headers by default (not accordion)', () => {
+    it('should render collapsible sections using Accordion and non-collapsible section using Tile', () => {
       renderComponent();
 
-      // All section headers with translationKey should be rendered
-      const sectionHeaders = screen.getAllByTestId('section-header-tile');
-      expect(sectionHeaders.length).toBeGreaterThan(0);
+      // Non-collapsible first section (Basic Information) uses Tile
+      expect(screen.getByTestId('section-header-tile')).toBeInTheDocument();
+
+      // Collapsible sections use AccordionItem with accordion-button
+      const accordionButtons = screen.getAllByTestId('accordion-button');
+      expect(accordionButtons.length).toBeGreaterThan(0);
     });
 
-    it('should toggle section expanded state when clicking section header', async () => {
+    it('should start with all collapsible sections collapsed on page load', () => {
       renderComponent();
 
-      // Find the second section header (Address Details is typically second)
-      const sectionHeaders = screen.getAllByTestId('section-header-tile');
-      const secondSectionHeader = sectionHeaders[1];
-
-      // Initially, section should be collapsed (button exists)
-      expect(secondSectionHeader).toBeInTheDocument();
-
-      // Click to expand
-      fireEvent.click(secondSectionHeader);
-
-      await waitFor(() => {
-        // Content should now be visible (no sectionContentCollapsed class)
-        const contentElements = screen.getAllByTestId('section-content');
-        expect(contentElements.length).toBeGreaterThan(0);
+      // All config-driven sections are collapsible by default (none have collapsible: false)
+      // Every accordion button must start in collapsed state
+      const accordionButtons = screen.getAllByTestId('accordion-button');
+      expect(accordionButtons.length).toBeGreaterThan(0);
+      accordionButtons.forEach((button) => {
+        expect(button).toHaveAttribute('aria-expanded', 'false');
       });
     });
 
-    it('should allow multiple sections to be open simultaneously (NOT accordion)', async () => {
+    it('should toggle section expanded state when clicking accordion heading', async () => {
       renderComponent();
 
-      const sectionHeaders = screen.getAllByTestId('section-header-tile');
+      // Collapsible sections start collapsed (aria-expanded=false)
+      const accordionButtons = screen.getAllByTestId('accordion-button');
+      const firstAccordionButton = accordionButtons[0];
 
-      // Expand first section
-      if (sectionHeaders[0]) {
-        fireEvent.click(sectionHeaders[0]);
-      }
+      expect(firstAccordionButton).toHaveAttribute('aria-expanded', 'false');
 
-      // Expand second section
-      if (sectionHeaders[1]) {
-        fireEvent.click(sectionHeaders[1]);
-      }
+      // Click to expand
+      fireEvent.click(firstAccordionButton);
 
       await waitFor(() => {
-        // Both sections should remain expanded
-        const toggleButtons = screen.getAllByTestId(
-          'collapsible-toggle-button',
-        );
-        // At least 2 toggle buttons should exist for expanded sections
-        expect(toggleButtons.length).toBeGreaterThanOrEqual(2);
+        expect(firstAccordionButton).toHaveAttribute('aria-expanded', 'true');
+      });
+    });
+
+    it('should allow multiple sections to be open simultaneously', async () => {
+      renderComponent();
+
+      const accordionButtons = screen.getAllByTestId('accordion-button');
+
+      // Expand first two collapsible sections
+      fireEvent.click(accordionButtons[0]);
+      fireEvent.click(accordionButtons[1]);
+
+      await waitFor(() => {
+        // Both should be expanded (aria-expanded=true)
+        expect(accordionButtons[0]).toHaveAttribute('aria-expanded', 'true');
+        expect(accordionButtons[1]).toHaveAttribute('aria-expanded', 'true');
       });
     });
 
     it('should collapse a section without affecting other expanded sections', async () => {
       renderComponent();
 
-      const sectionHeaders = screen.getAllByTestId('section-header-tile');
+      const accordionButtons = screen.getAllByTestId('accordion-button');
 
       // Expand first two sections
-      if (sectionHeaders[0]) fireEvent.click(sectionHeaders[0]);
-      if (sectionHeaders[1]) fireEvent.click(sectionHeaders[1]);
+      fireEvent.click(accordionButtons[0]);
+      fireEvent.click(accordionButtons[1]);
 
-      // Then collapse the first section
-      if (sectionHeaders[0]) {
-        fireEvent.click(sectionHeaders[0]);
-      }
+      // Collapse the first section
+      fireEvent.click(accordionButtons[0]);
 
       await waitFor(() => {
-        // Verification is that component doesn't throw and state updates properly
-        expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
+        // First section collapsed, second still expanded
+        expect(accordionButtons[0]).toHaveAttribute('aria-expanded', 'false');
+        expect(accordionButtons[1]).toHaveAttribute('aria-expanded', 'true');
       });
     });
 
     it('should auto-expand sections with validation errors on save', async () => {
-      // Mock validation to fail
       (validateAllSections as jest.Mock).mockReturnValue(false);
+      // Address section validator fails — triggers auto-expand for that section
+      mockAddressValidate.mockReturnValue(false);
 
-      // Mock section validators - some return false (error), some return true
       renderComponent();
 
-      const saveButton = screen.getByText('CREATE_PATIENT_SAVE');
-      fireEvent.click(saveButton);
+      const accordionButtons = screen.getAllByTestId('accordion-button');
+      // Address Details is index 0 — starts collapsed
+      expect(accordionButtons[0]).toHaveAttribute('aria-expanded', 'false');
+      // Contact Information is index 1 — starts collapsed
+      expect(accordionButtons[1]).toHaveAttribute('aria-expanded', 'false');
+
+      fireEvent.click(screen.getByText('CREATE_PATIENT_SAVE'));
 
       await waitFor(() => {
-        // When validation fails, sections with errors should auto-expand
         expect(validateAllSections).toHaveBeenCalled();
-        // Component should still be rendered and responsive
-        expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
+        // Address Details should be auto-expanded (it has errors)
+        expect(accordionButtons[0]).toHaveAttribute('aria-expanded', 'true');
+        // Contact Information should remain collapsed (no errors)
+        expect(accordionButtons[1]).toHaveAttribute('aria-expanded', 'false');
       });
     });
 
     it('should auto-expand multiple sections with validation errors', async () => {
-      // Mock validation to fail
       (validateAllSections as jest.Mock).mockReturnValue(false);
+      // Both address and contact validators fail — both sections should expand
+      mockAddressValidate.mockReturnValue(false);
+      mockContactValidate.mockReturnValue(false);
 
       renderComponent();
 
-      // Get all form refs and mock them to fail validation on specific sections
-      const patientAddressRef = screen.getByTestId('patient-address');
-      const patientContactRef = screen.getByTestId('patient-contact');
+      const accordionButtons = screen.getAllByTestId('accordion-button');
+      expect(accordionButtons[0]).toHaveAttribute('aria-expanded', 'false');
+      expect(accordionButtons[1]).toHaveAttribute('aria-expanded', 'false');
 
-      expect(patientAddressRef).toBeInTheDocument();
-      expect(patientContactRef).toBeInTheDocument();
-
-      const saveButton = screen.getByText('CREATE_PATIENT_SAVE');
-      fireEvent.click(saveButton);
+      fireEvent.click(screen.getByText('CREATE_PATIENT_SAVE'));
 
       await waitFor(() => {
         expect(validateAllSections).toHaveBeenCalled();
-        // Multiple sections should be prepared for expansion due to errors
-        expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
+        // Both Address Details and Contact Information should be auto-expanded
+        expect(accordionButtons[0]).toHaveAttribute('aria-expanded', 'true');
+        expect(accordionButtons[1]).toHaveAttribute('aria-expanded', 'true');
+        // Additional Information (index 2) has no errors — stays collapsed
+        expect(accordionButtons[2]).toHaveAttribute('aria-expanded', 'false');
       });
     });
 
@@ -1275,27 +1319,24 @@ describe('PatientRegister', () => {
 
       renderComponent();
 
-      // Should have multiple section headers
-      const sectionHeaders = screen.getAllByTestId('section-header-tile');
-      expect(sectionHeaders.length).toBeGreaterThan(0);
+      // Non-collapsible section (explicitly collapsible: false) uses Tile header
+      expect(
+        screen.getAllByTestId('section-header-tile').length,
+      ).toBeGreaterThanOrEqual(1);
 
-      // All collapsible sections should have toggle buttons
-      const toggleButtons = screen.queryAllByTestId(
-        'collapsible-toggle-button',
-      );
+      // Collapsible sections (collapsible: true / not set) use Accordion buttons
+      const accordionButtons = screen.queryAllByTestId('accordion-button');
       // At least 2 (Address and Contact are collapsible by default/explicitly)
-      expect(toggleButtons.length).toBeGreaterThanOrEqual(2);
+      expect(accordionButtons.length).toBeGreaterThanOrEqual(2);
     });
 
     it('should preserve section expanded state during re-renders', async () => {
       renderComponent();
 
-      const sectionHeaders = screen.getAllByTestId('section-header-tile');
+      const accordionButtons = screen.getAllByTestId('accordion-button');
 
-      // Expand a section
-      if (sectionHeaders[1]) {
-        fireEvent.click(sectionHeaders[1]);
-      }
+      // Expand a collapsible section
+      fireEvent.click(accordionButtons[0]);
 
       // Trigger a re-render by clicking save (which validates but doesn't change sections)
       (validateAllSections as jest.Mock).mockReturnValue(true);
@@ -1303,7 +1344,8 @@ describe('PatientRegister', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        // Section should still be in its expanded state after re-render
+        // Section should still be expanded (aria-expanded=true) after re-render
+        expect(accordionButtons[0]).toHaveAttribute('aria-expanded', 'true');
         expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
       });
     });

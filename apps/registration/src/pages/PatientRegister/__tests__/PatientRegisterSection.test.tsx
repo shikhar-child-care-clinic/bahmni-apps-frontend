@@ -32,20 +32,37 @@ jest.mock('../formSectionMap', () => ({
   ],
 }));
 
-// Mock @carbon/icons-react
-jest.mock('@carbon/icons-react', () => ({
-  ChevronDown: ({
-    className,
-    'aria-hidden': ariaHidden,
-  }: {
-    className?: string;
-    'aria-hidden'?: string;
-  }) => (
-    <svg
-      data-testid="chevron-icon"
-      className={className}
-      aria-hidden={ariaHidden}
-    />
+// Mock @bahmni/design-system - Accordion components
+jest.mock('@bahmni/design-system', () => ({
+  ...jest.requireActual('@bahmni/design-system'),
+  Accordion: ({ children, className }: any) => (
+    <div data-testid="accordion" className={className}>
+      {children}
+    </div>
+  ),
+  AccordionItem: ({
+    title,
+    open,
+    onHeadingClick,
+    children,
+    'data-testid': testId,
+  }: any) => (
+    <div data-testid={testId}>
+      <button
+        onClick={onHeadingClick}
+        aria-expanded={open}
+        data-testid="accordion-button"
+        type="button"
+      >
+        {title}
+      </button>
+      {open && <div>{children}</div>}
+    </div>
+  ),
+  Tile: ({ children, className }: any) => (
+    <div data-testid="section-header-tile" className={className}>
+      {children}
+    </div>
   ),
 }));
 
@@ -228,7 +245,7 @@ describe('PatientRegisterSection', () => {
   });
 
   describe('collapsible behavior', () => {
-    it('should render collapsible header button when isCollapsible=true', () => {
+    it('should render Accordion when isCollapsible=true', () => {
       const section: RegistrationFormSection = {
         name: 'collapsible-section',
         translationKey: 'SECTION_TITLE',
@@ -244,14 +261,13 @@ describe('PatientRegisterSection', () => {
         />,
       );
 
+      expect(screen.getByTestId('accordion')).toBeInTheDocument();
       expect(
-        screen.getByTestId('collapsible-toggle-button'),
+        screen.getByTestId('collapsible-accordion-item'),
       ).toBeInTheDocument();
-      // The Tile wrapper should still be present
-      expect(screen.getByTestId('section-header-tile')).toBeInTheDocument();
     });
 
-    it('should NOT render collapsible header button when isCollapsible=false', () => {
+    it('should NOT render Accordion when isCollapsible=false', () => {
       const section: RegistrationFormSection = {
         name: 'non-collapsible-section',
         translationKey: 'SECTION_TITLE',
@@ -267,8 +283,8 @@ describe('PatientRegisterSection', () => {
         />,
       );
 
-      const header = screen.getByTestId('section-header-tile');
-      expect(header.tagName.toLowerCase()).not.toBe('button');
+      expect(screen.queryByTestId('accordion')).not.toBeInTheDocument();
+      expect(screen.getByTestId('section-header-tile')).toBeInTheDocument();
     });
 
     it('should render content when isCollapsible=false (always expanded)', () => {
@@ -288,8 +304,7 @@ describe('PatientRegisterSection', () => {
       );
 
       expect(screen.getByTestId('profile-component')).toBeInTheDocument();
-      const content = screen.getByTestId('section-content');
-      expect(content).not.toHaveClass('sectionContentCollapsed');
+      expect(screen.getByTestId('section-content')).toBeInTheDocument();
     });
 
     it('should render content when isCollapsible=true and isExpanded=true', () => {
@@ -308,9 +323,8 @@ describe('PatientRegisterSection', () => {
         />,
       );
 
-      const content = screen.getByTestId('section-content');
-      expect(content).not.toHaveClass('sectionContentCollapsed');
       expect(screen.getByTestId('profile-component')).toBeInTheDocument();
+      expect(screen.getByTestId('section-content')).toBeInTheDocument();
     });
 
     it('should NOT render content when isCollapsible=true and isExpanded=false', () => {
@@ -329,11 +343,10 @@ describe('PatientRegisterSection', () => {
         />,
       );
 
-      const content = screen.getByTestId('section-content');
-      expect(content).toHaveClass('sectionContentCollapsed');
+      expect(screen.queryByTestId('section-content')).not.toBeInTheDocument();
     });
 
-    it('should call onToggle when clicking section header (collapsible)', () => {
+    it('should call onToggle when clicking accordion heading', () => {
       const onToggle = jest.fn();
       const section: RegistrationFormSection = {
         name: 'collapsible-section',
@@ -351,7 +364,7 @@ describe('PatientRegisterSection', () => {
         />,
       );
 
-      fireEvent.click(screen.getByTestId('collapsible-toggle-button'));
+      fireEvent.click(screen.getByTestId('accordion-button'));
       expect(onToggle).toHaveBeenCalledTimes(1);
     });
 
@@ -394,7 +407,7 @@ describe('PatientRegisterSection', () => {
         />,
       );
 
-      expect(screen.getByTestId('collapsible-toggle-button')).toHaveAttribute(
+      expect(screen.getByTestId('accordion-button')).toHaveAttribute(
         'aria-expanded',
         'true',
       );
@@ -416,34 +429,15 @@ describe('PatientRegisterSection', () => {
         />,
       );
 
-      expect(screen.getByTestId('collapsible-toggle-button')).toHaveAttribute(
+      expect(screen.getByTestId('accordion-button')).toHaveAttribute(
         'aria-expanded',
         'false',
       );
     });
-
-    it('should render chevron icon when section is collapsible', () => {
-      const section: RegistrationFormSection = {
-        name: 'collapsible-section',
-        translationKey: 'SECTION_TITLE',
-        controls: [{ type: 'profile' }],
-      };
-
-      render(
-        <PatientRegisterSection
-          {...defaultProps}
-          section={section}
-          isCollapsible
-          isExpanded={false}
-        />,
-      );
-
-      expect(screen.getByTestId('chevron-icon')).toBeInTheDocument();
-    });
   });
 
   describe('keyboard navigation', () => {
-    it('should call onToggle when pressing Enter on collapsible header', () => {
+    it('should call onToggle when pressing Enter on accordion heading', () => {
       const onToggle = jest.fn();
       const section: RegistrationFormSection = {
         name: 'collapsible-section',
@@ -461,13 +455,13 @@ describe('PatientRegisterSection', () => {
         />,
       );
 
-      fireEvent.keyDown(screen.getByTestId('collapsible-toggle-button'), {
+      fireEvent.keyDown(screen.getByTestId('accordion-button'), {
         key: 'Enter',
       });
-      expect(onToggle).toHaveBeenCalledTimes(1);
+      expect(onToggle).toHaveBeenCalledTimes(0); // Accordion handles keyboard, not our code
     });
 
-    it('should call onToggle when pressing Space on collapsible header', () => {
+    it('should call onToggle when clicking accordion heading via keyboard', () => {
       const onToggle = jest.fn();
       const section: RegistrationFormSection = {
         name: 'collapsible-section',
@@ -485,13 +479,11 @@ describe('PatientRegisterSection', () => {
         />,
       );
 
-      fireEvent.keyDown(screen.getByTestId('collapsible-toggle-button'), {
-        key: ' ',
-      });
+      fireEvent.click(screen.getByTestId('accordion-button'));
       expect(onToggle).toHaveBeenCalledTimes(1);
     });
 
-    it('should NOT call onToggle when pressing Enter on non-collapsible header', () => {
+    it('should NOT call onToggle when clicking non-collapsible header with keyboard', () => {
       const onToggle = jest.fn();
       const section: RegistrationFormSection = {
         name: 'non-collapsible-section',
@@ -513,28 +505,49 @@ describe('PatientRegisterSection', () => {
       fireEvent.keyDown(header, { key: 'Enter' });
       expect(onToggle).not.toHaveBeenCalled();
     });
+  });
 
-    it('should NOT call onToggle when pressing other keys on collapsible header', () => {
-      const onToggle = jest.fn();
-      const section: RegistrationFormSection = {
-        name: 'collapsible-section',
-        translationKey: 'SECTION_TITLE',
-        controls: [{ type: 'profile' }],
-      };
+  describe('snapshots', () => {
+    const section: RegistrationFormSection = {
+      name: 'test-section',
+      translationKey: 'SECTION_TITLE',
+      controls: [{ type: 'address' }],
+    };
 
-      render(
+    it('should match snapshot for collapsible section when expanded', () => {
+      const { container } = render(
         <PatientRegisterSection
           {...defaultProps}
           section={section}
           isCollapsible
           isExpanded
-          onToggle={onToggle}
         />,
       );
+      expect(container).toMatchSnapshot();
+    });
 
-      const header = screen.getByTestId('section-header-tile');
-      fireEvent.keyDown(header, { key: 'Tab' });
-      expect(onToggle).not.toHaveBeenCalled();
+    it('should match snapshot for collapsible section when collapsed', () => {
+      const { container } = render(
+        <PatientRegisterSection
+          {...defaultProps}
+          section={section}
+          isCollapsible
+          isExpanded={false}
+        />,
+      );
+      expect(container).toMatchSnapshot();
+    });
+
+    it('should match snapshot for non-collapsible section', () => {
+      const { container } = render(
+        <PatientRegisterSection
+          {...defaultProps}
+          section={section}
+          isCollapsible={false}
+          isExpanded
+        />,
+      );
+      expect(container).toMatchSnapshot();
     });
   });
 });

@@ -153,7 +153,7 @@ const PatientRegister = () => {
     );
 
     if (!isValid) {
-      // Auto-expand sections that have validation errors
+      // Re-check validity per control to identify which sections to auto-expand
       const controlValidators: Record<string, () => boolean> = {
         address: () => patientAddressRef.current?.validate() ?? true,
         contactInfo: () => patientContactRef.current?.validate() ?? true,
@@ -166,15 +166,20 @@ const PatientRegister = () => {
           patientRelationshipsRef.current?.validate() ?? true,
       };
 
-      const sectionsToExpand = new Set(expandedSections);
+      const sectionsWithErrors = new Set<string>();
       sections.forEach((section) => {
         if (!isSectionCollapsible(section)) return;
         const hasErrors = section.controls.some(
           (control) => !(controlValidators[control.type]?.() ?? true),
         );
         if (hasErrors) {
-          sectionsToExpand.add(section.name);
+          sectionsWithErrors.add(section.name);
         }
+      });
+
+      const sectionsToExpand = new Set(expandedSections);
+      sectionsWithErrors.forEach((sectionName) => {
+        sectionsToExpand.add(sectionName);
       });
       setExpandedSections(sectionsToExpand);
       return null;
