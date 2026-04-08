@@ -17,6 +17,7 @@ import { useConditionsAndDiagnosesStore } from '../../../stores/conditionsAndDia
 import { useEncounterDetailsStore } from '../../../stores/encounterDetailsStore';
 import { useMedicationStore } from '../../../stores/medicationsStore';
 import useServiceRequestStore from '../../../stores/serviceRequestStore';
+import { useImmunizationStore } from '../../../stores/immunizationStore';
 import { useVaccinationStore } from '../../../stores/vaccinationsStore';
 import ConsultationPad from '../ConsultationPad';
 
@@ -170,6 +171,16 @@ jest.mock('../../../components/forms/vaccinations/VaccinationForm', () => ({
   ),
 }));
 
+jest.mock(
+  '../../../components/forms/immunizations/ImmunizationForm',
+  () => ({
+    __esModule: true,
+    default: ({ mode, titleKey }: any) => (
+      <div data-testid={`mock-immunization-form-${mode}`}>{titleKey}</div>
+    ),
+  }),
+);
+
 // Mock services
 jest.mock('../../../services/consultationBundleService', () => ({
   postConsultationBundle: jest.fn(),
@@ -178,6 +189,7 @@ jest.mock('../../../services/consultationBundleService', () => ({
   createConditionsBundleEntries: jest.fn(() => []),
   createServiceRequestBundleEntries: jest.fn(() => []),
   createMedicationRequestEntries: jest.fn(() => []),
+  createImmunizationBundleEntries: jest.fn(() => []),
   createObservationBundleEntries: jest.fn(() => []),
   createEncounterBundleEntry: jest.fn(() => ({
     fullUrl: 'urn:uuid:mock-encounter-uuid',
@@ -511,6 +523,12 @@ const createMockVaccinationStore = () => ({
   getState: jest.fn(() => ({ selectedVaccinations: [] })),
 });
 
+const createMockImmunizationStore = () => ({
+  selectedImmunizations: [],
+  validateAll: jest.fn(() => true),
+  reset: jest.fn(),
+});
+
 // Initialize stores
 let mockEncounterDetailsStore = createMockEncounterDetailsStore();
 let mockDiagnosesStore = createMockDiagnosesStore();
@@ -518,6 +536,7 @@ let mockAllergyStore = createMockAllergyStore();
 let mockServiceRequestStore = createMockServiceRequestStore();
 let mockMedicationStore = createMockMedicationStore();
 let mockVaccinationStore = createMockVaccinationStore();
+let mockImmunizationStore = createMockImmunizationStore();
 
 jest.mock('../../../stores/encounterDetailsStore', () => ({
   useEncounterDetailsStore: jest.fn(() => mockEncounterDetailsStore),
@@ -548,6 +567,11 @@ jest.mock('../../../stores/vaccinationsStore', () => ({
   __esModule: true,
   useVaccinationStore: jest.fn(() => mockVaccinationStore),
   default: jest.fn(() => mockVaccinationStore),
+}));
+
+jest.mock('../../../stores/immunizationStore', () => ({
+  __esModule: true,
+  useImmunizationStore: jest.fn(() => mockImmunizationStore),
 }));
 
 // Mock crypto.randomUUID
@@ -586,6 +610,7 @@ describe('ConsultationPad', () => {
     mockServiceRequestStore = createMockServiceRequestStore();
     mockMedicationStore = createMockMedicationStore();
     mockVaccinationStore = createMockVaccinationStore();
+    mockImmunizationStore = createMockImmunizationStore();
 
     // Mock useEncounterSession hook
     mockUseEncounterSession.mockReturnValue({
@@ -611,6 +636,9 @@ describe('ConsultationPad', () => {
     );
     (useVaccinationStore as unknown as jest.Mock).mockReturnValue(
       mockVaccinationStore,
+    );
+    (useImmunizationStore as unknown as jest.Mock).mockReturnValue(
+      mockImmunizationStore,
     );
 
     // Reset audit event dispatcher mocks
@@ -702,10 +730,7 @@ describe('ConsultationPad', () => {
 
       const content = screen.getByTestId('action-area-content');
       const children = Array.from(content.children);
-
-      // Expected sequence: BasicForm → Divider → Form → Divider → ... → ObservationForms → Divider
-      // Total: 7 forms + 7 dividers = 14 children
-      expect(children).toHaveLength(14);
+      expect(children).toHaveLength(18);
 
       expect(children[0]).toHaveAttribute(
         'data-testid',
@@ -736,9 +761,19 @@ describe('ConsultationPad', () => {
       expect(children[11].tagName).toBe('HR'); // Divider
       expect(children[12]).toHaveAttribute(
         'data-testid',
-        'mock-observation-forms',
+        'mock-immunization-form-history',
       );
       expect(children[13].tagName).toBe('HR'); // Divider
+      expect(children[14]).toHaveAttribute(
+        'data-testid',
+        'mock-immunization-form-not-done',
+      );
+      expect(children[15].tagName).toBe('HR'); // Divider
+      expect(children[16]).toHaveAttribute(
+        'data-testid',
+        'mock-observation-forms',
+      );
+      expect(children[17].tagName).toBe('HR'); // Divider
     });
 
     describe('Privilege Guard - Dividers', () => {
@@ -750,7 +785,7 @@ describe('ConsultationPad', () => {
         );
         renderWithProvider();
         const dividers = screen.queryAllByRole('separator');
-        expect(dividers).toHaveLength(6);
+        expect(dividers).toHaveLength(8);
       });
 
       it('should hide all conditional dividers when user has no privileges', () => {

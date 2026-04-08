@@ -11,4 +11,5 @@ export const CONSULTATION_PAD_PRIVILEGES = {
   MEDICATIONS: ['Add Orders'],
   OBSERVATIONS: ['Add Observations'],
   VACCINATIONS_ORDERS: ['Add Orders'],
+  IMMUNIZATIONS: ['Add Immunizations'],
 };

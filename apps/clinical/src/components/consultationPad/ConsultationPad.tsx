@@ -25,6 +25,7 @@ import { useEncounterSession } from '../../../src/hooks/useEncounterSession';
 import useAllergyStore from '../../../src/stores/allergyStore';
 import { useConditionsAndDiagnosesStore } from '../../../src/stores/conditionsAndDiagnosesStore';
 import { useEncounterDetailsStore } from '../../../src/stores/encounterDetailsStore';
+import { useImmunizationStore } from '../../../src/stores/immunizationStore';
 import { useMedicationStore } from '../../../src/stores/medicationsStore';
 import { useObservationFormsStore } from '../../../src/stores/observationFormsStore';
 import useServiceRequestStore from '../../../src/stores/serviceRequestStore';
@@ -47,6 +48,7 @@ import {
   createConditionsBundleEntries,
   createServiceRequestBundleEntries,
   createMedicationRequestEntries,
+  createImmunizationBundleEntries,
   createObservationBundleEntries,
   createEncounterBundleEntry,
   getEncounterReference,
@@ -57,6 +59,7 @@ import { createEncounterResource } from '../../utils/fhir/encounterResourceCreat
 import AllergiesForm from '../forms/allergies/AllergiesForm';
 import ConditionsAndDiagnoses from '../forms/conditionsAndDiagnoses/ConditionsAndDiagnoses';
 import BasicForm from '../forms/encounterDetails/EncounterDetails';
+import ImmunizationForm from '../forms/immunizations/ImmunizationForm';
 import InvestigationsForm from '../forms/investigations/InvestigationsForm';
 import MedicationsForm from '../forms/medications/MedicationsForm';
 import ObservationForms from '../forms/observations/ObservationForms';
@@ -157,6 +160,12 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     reset: resetVaccinations,
   } = useVaccinationStore();
 
+  const {
+    selectedImmunizations,
+    validateAll: validateAllImmunizations,
+    reset: resetImmunizations,
+  } = useImmunizationStore();
+
   const { activeEncounter } = useEncounterSession({
     practitioner: practitionerState.practitioner,
   });
@@ -189,6 +198,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       resetServiceRequests();
       resetMedications();
       resetVaccinations();
+      resetImmunizations();
       resetObservationForms();
     };
   }, [
@@ -198,6 +208,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     resetServiceRequests,
     resetMedications,
     resetVaccinations,
+    resetImmunizations,
     resetObservationForms,
   ]);
 
@@ -243,6 +254,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     selectedAllergies.length > 0 ||
     selectedMedications.length > 0 ||
     selectedVaccinations.length > 0 ||
+    selectedImmunizations.length > 0 ||
     selectedServiceRequests.size > 0 ||
     selectedForms.length > 0;
 
@@ -327,6 +339,13 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       statDurationInMilliseconds,
     });
 
+    const immunizationEntries = createImmunizationBundleEntries({
+      selectedImmunizations,
+      encounterSubject: encounterResource.subject!,
+      encounterReference,
+      practitionerUUID: practitionerUUID,
+    });
+
     const observationEntries = createObservationBundleEntries({
       observationFormsData: getObservationFormsData(),
       encounterSubject: encounterResource.subject!,
@@ -342,6 +361,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       ...serviceRequestEntries,
       ...medicationEntries,
       ...vaccinationEntries,
+      ...immunizationEntries,
       ...observationEntries,
     ]);
 
@@ -378,12 +398,16 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       }
 
       const isVaccinationsValid = validateAllVaccinations();
+      const isImmunizationsValid = validateAllImmunizations(
+        clinicalConfig?.consultationPad?.immunizationForm,
+      );
       if (
         !isConditionsAndDiagnosesValid ||
         !isAllergiesValid ||
         !isMedicationsValid ||
         !isObservationFormValid ||
         !isVaccinationsValid ||
+        !isImmunizationsValid ||
         hasOverlapDuplicates
       ) {
         return;
@@ -413,6 +437,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         const hadAllergies = selectedAllergies.length > 0;
         const hadMedications =
           selectedMedications.length > 0 || selectedVaccinations.length > 0;
+        const hadImmunizations = selectedImmunizations.length > 0;
 
         resetDiagnoses();
         resetAllergies();
@@ -420,6 +445,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         resetServiceRequests();
         resetMedications();
         resetVaccinations();
+        resetImmunizations();
         resetObservationForms();
 
         dispatchConsultationSaved({
@@ -428,6 +454,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
             conditions: hadConditions,
             allergies: hadAllergies,
             medications: hadMedications,
+            immunizations: hadImmunizations,
             serviceRequests: selectedServiceRequest,
           },
           updatedConcepts,
@@ -464,7 +491,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
     resetServiceRequests();
     resetMedications();
     resetVaccinations();
-    // Clear observation forms data on cancel
+    resetImmunizations();
     resetObservationForms();
     onClose();
   };
@@ -482,6 +509,24 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       {canAddMedications && <MenuItemDivider />}
       <VaccinationForm />
       {canAddVaccinationOrders && <MenuItemDivider />}
+      {useHasPrivilege(CONSULTATION_PAD_PRIVILEGES.IMMUNIZATIONS) && (
+        <>
+          <ImmunizationForm
+            mode="history"
+            titleKey="IMMUNIZATION_HISTORY_TITLE"
+            searchPlaceholderKey="IMMUNIZATION_SEARCH_PLACEHOLDER"
+            addedLabelKey="IMMUNIZATION_ADDED"
+      />
+      <MenuItemDivider />
+      <ImmunizationForm
+        mode="not-done"
+        titleKey="IMMUNIZATION_NOT_DONE_TITLE"
+        searchPlaceholderKey="IMMUNIZATION_NOT_DONE_SEARCH_PLACEHOLDER"
+        addedLabelKey="IMMUNIZATION_NOT_DONE_ADDED"
+      />
+      <MenuItemDivider />
+      </>
+      )}
       <ObservationForms
         onFormSelect={handleFormSelection}
         selectedForms={selectedForms}
