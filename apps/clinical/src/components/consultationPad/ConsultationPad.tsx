@@ -173,8 +173,8 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
   const canAddMedications = useHasPrivilege(
     CONSULTATION_PAD_PRIVILEGES.MEDICATIONS,
   );
-  const canAddVaccinations = useHasPrivilege(
-    CONSULTATION_PAD_PRIVILEGES.VACCINATIONS,
+  const canAddVaccinationOrders = useHasPrivilege(
+    CONSULTATION_PAD_PRIVILEGES.VACCINATIONS_ORDERS,
   );
   const canAddObservations = useHasPrivilege(
     CONSULTATION_PAD_PRIVILEGES.OBSERVATIONS,
@@ -481,7 +481,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       <MedicationsForm />
       {canAddMedications && <MenuItemDivider />}
       <VaccinationForm />
-      {canAddVaccinations && <MenuItemDivider />}
+      {canAddVaccinationOrders && <MenuItemDivider />}
       <ObservationForms
         onFormSelect={handleFormSelection}
         selectedForms={selectedForms}

@@ -54,8 +54,8 @@ import styles from './styles/VaccinationForm.module.scss';
 const VaccinationForm: React.FC = React.memo(() => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
-  const canAddVaccinations = useHasPrivilege(
-    CONSULTATION_PAD_PRIVILEGES.VACCINATIONS,
+  const canAddVaccinationOrders = useHasPrivilege(
+    CONSULTATION_PAD_PRIVILEGES.VACCINATIONS_ORDERS,
   );
   const [searchVaccinationTerm, setSearchVaccinationTerm] = useState('');
   const [showDuplicateNotification, setShowDuplicateNotification] =
@@ -89,7 +89,7 @@ const VaccinationForm: React.FC = React.memo(() => {
   } = useQuery({
     queryKey: ['vaccinations'],
     queryFn: getVaccinations,
-    enabled: canAddVaccinations,
+    enabled: canAddVaccinationOrders,
   });
 
   const searchResults = useMemo(
@@ -105,7 +105,7 @@ const VaccinationForm: React.FC = React.memo(() => {
   } = useQuery<Bundle>({
     queryKey: ['patientVaccinations', patientUUID],
     enabled:
-      !!patientUUID && patientUUID.trim().length > 0 && canAddVaccinations,
+      !!patientUUID && patientUUID.trim().length > 0 && canAddVaccinationOrders,
     queryFn: () =>
       getPatientMedicationBundle(patientUUID!, [], undefined, true),
     refetchOnMount: 'always',
@@ -260,7 +260,7 @@ const VaccinationForm: React.FC = React.memo(() => {
     t,
   ]);
 
-  if (!canAddVaccinations) return null;
+  if (!canAddVaccinationOrders) return null;
 
   return (
     <Tile
