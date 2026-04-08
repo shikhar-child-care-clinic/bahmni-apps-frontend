@@ -111,10 +111,78 @@
             }
           }
         },
+        "immunizationForm": {
+          "type": "object",
+          "required": [
+            "vaccineConceptSetUuid",
+            "routeConceptSetUuid",
+            "siteConceptSetUuid",
+            "notDoneStatusReasonConceptSetUuid"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "vaccineConceptSetUuid": {
+              "type": "string"
+            },
+            "routeConceptSetUuid": {
+              "type": "string"
+            },
+            "siteConceptSetUuid": {
+              "type": "string"
+            },
+            "notDoneStatusReasonConceptSetUuid": {
+              "type": "string"
+            },
+            "history": {
+              "type": "object",
+              "properties": {
+                "fieldConfig": { "$ref": "#/definitions/immunizationFieldConfig" }
+              },
+              "additionalProperties": false
+            },
+            "notDone": {
+              "type": "object",
+              "properties": {
+                "fieldConfig": { "$ref": "#/definitions/immunizationFieldConfig" }
+              },
+              "additionalProperties": false
+            },
+            "administration": {
+              "type": "object",
+              "properties": {
+                "fieldConfig": { "$ref": "#/definitions/immunizationFieldConfig" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
         "statDurationInHours": {
           "type": "number",
           "description": "Duration in hours for which a STAT order is valid"
         }
+      }
+    }
+  },
+  "definitions": {
+    "fieldBehavior": {
+      "type": "string",
+      "enum": ["visible", "required", "hidden", "readonly"]
+    },
+    "immunizationFieldConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "doseSequence": { "$ref": "#/definitions/fieldBehavior" },
+        "drug": { "$ref": "#/definitions/fieldBehavior" },
+        "administeredOn": { "$ref": "#/definitions/fieldBehavior" },
+        "location": { "$ref": "#/definitions/fieldBehavior" },
+        "route": { "$ref": "#/definitions/fieldBehavior" },
+        "site": { "$ref": "#/definitions/fieldBehavior" },
+        "manufacturer": { "$ref": "#/definitions/fieldBehavior" },
+        "batchNumber": { "$ref": "#/definitions/fieldBehavior" },
+        "expirationDate": { "$ref": "#/definitions/fieldBehavior" },
+        "notes": { "$ref": "#/definitions/fieldBehavior" },
+        "statusReason": { "$ref": "#/definitions/fieldBehavior" }
       }
     }
   }

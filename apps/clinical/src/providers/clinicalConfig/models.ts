@@ -5,8 +5,23 @@ export interface AllergyConceptMap {
   allergyReactionUuid: string;
 }
 
+export interface ImmunizationModeConfig {
+  fieldConfig: import('../../models/immunization').FieldConfig;
+}
+
+export interface ImmunizationFormConfig {
+  vaccineConceptSetUuid: string;
+  routeConceptSetUuid: string;
+  siteConceptSetUuid: string;
+  notDoneStatusReasonConceptSetUuid: string;
+  history?: ImmunizationModeConfig;
+  administration?: ImmunizationModeConfig;
+  notDone?: ImmunizationModeConfig;
+}
+
 export interface ConsultationPad {
   allergyConceptMap: AllergyConceptMap;
+  immunizationForm?: ImmunizationFormConfig;
   statDurationInMilliseconds?: number;
 }
 
