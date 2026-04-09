@@ -276,12 +276,8 @@ const ImmunizationForm: React.FC<ImmunizationFormProps> = React.memo(
             data-testid={`immunization-search-combobox-${mode}`}
             placeholder={t(searchPlaceholderKey)}
             items={filteredSearchResults}
-            itemToString={(item: ImmunizationConceptFilterResult | null) =>
-              item ? item.displayName : ''
-            }
-            onChange={(data: {
-              selectedItem: ImmunizationConceptFilterResult | null;
-            }) => handleOnChange(data.selectedItem)}
+            itemToString={(item) => item?.displayName ?? ''}
+            onChange={({ selectedItem }) => handleOnChange(selectedItem ?? null)}
             onInputChange={(query: string) => handleSearch(query)}
             selectedItem={selectedItem}
             clearSelectedOnChange

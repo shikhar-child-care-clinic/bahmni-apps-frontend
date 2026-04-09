@@ -249,9 +249,7 @@ const ImmunizationDetailsForm: React.FC<ImmunizationDetailsFormProps> =
                   label={t('IMMUNIZATION_STATUS_REASON')}
                   size="sm"
                   items={statusReasonItems}
-                  itemToString={(item: { name: string } | null) =>
-                    item ? item.name : ''
-                  }
+                  itemToString={(item) => item?.name ?? ''}
                   selectedItem={
                     entry.statusReasonConceptUuid
                       ? (statusReasonItems.find(
@@ -259,14 +257,12 @@ const ImmunizationDetailsForm: React.FC<ImmunizationDetailsFormProps> =
                         ) ?? null)
                       : null
                   }
-                  onChange={(e: {
-                    selectedItem: { uuid: string; name: string } | null;
-                  }) => {
-                    if (e.selectedItem && updateStatusReason)
+                  onChange={({ selectedItem }) => {
+                    if (selectedItem && updateStatusReason)
                       updateStatusReason(
                         id,
-                        e.selectedItem.uuid,
-                        e.selectedItem.name,
+                        selectedItem.uuid,
+                        selectedItem.name,
                       );
                   }}
                   autoAlign
@@ -397,8 +393,8 @@ const ImmunizationDetailsForm: React.FC<ImmunizationDetailsFormProps> =
                   step={1}
                   value={doseSequence ?? ''}
                   allowEmpty
-                  onChange={(_: unknown, { value }: { value: string }) => {
-                    const num = parseInt(value, 10);
+                  onChange={(_, { value }) => {
+                    const num = typeof value === 'number' ? value : parseInt(value, 10);
                     updateDoseSequence(id, isNaN(num) || num <= 0 ? null : num);
                   }}
                   disabled={readonly('doseSequence')}
@@ -498,9 +494,7 @@ const ImmunizationDetailsForm: React.FC<ImmunizationDetailsFormProps> =
                   label={t('IMMUNIZATION_SITE')}
                   size="sm"
                   items={siteItems}
-                  itemToString={(item: { name: string } | null) =>
-                    item ? item.name : ''
-                  }
+                  itemToString={(item) => item?.name ?? ''}
                   selectedItem={
                     entry.siteConceptUuid
                       ? (siteItems.find(
@@ -508,11 +502,9 @@ const ImmunizationDetailsForm: React.FC<ImmunizationDetailsFormProps> =
                         ) ?? null)
                       : null
                   }
-                  onChange={(e: {
-                    selectedItem: { uuid: string; name: string } | null;
-                  }) => {
-                    if (e.selectedItem)
-                      updateSite(id, e.selectedItem.uuid, e.selectedItem.name);
+                  onChange={({ selectedItem }) => {
+                    if (selectedItem)
+                      updateSite(id, selectedItem.uuid, selectedItem.name);
                   }}
                   autoAlign
                   disabled={readonly('site')}
@@ -533,9 +525,7 @@ const ImmunizationDetailsForm: React.FC<ImmunizationDetailsFormProps> =
                   label={t('IMMUNIZATION_ROUTE')}
                   size="sm"
                   items={routeItems}
-                  itemToString={(item: { name: string } | null) =>
-                    item ? item.name : ''
-                  }
+                  itemToString={(item) => item?.name ?? ''}
                   selectedItem={
                     entry.routeConceptUuid
                       ? (routeItems.find(
@@ -543,11 +533,9 @@ const ImmunizationDetailsForm: React.FC<ImmunizationDetailsFormProps> =
                         ) ?? null)
                       : null
                   }
-                  onChange={(e: {
-                    selectedItem: { uuid: string; name: string } | null;
-                  }) => {
-                    if (e.selectedItem)
-                      updateRoute(id, e.selectedItem.uuid, e.selectedItem.name);
+                  onChange={({ selectedItem }) => {
+                    if (selectedItem)
+                      updateRoute(id, selectedItem.uuid, selectedItem.name);
                   }}
                   autoAlign
                   disabled={readonly('route')}
