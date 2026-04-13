@@ -150,7 +150,6 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
   const {
     selectedMedications,
     validateAllMedications,
-    hasOverlapDuplicates,
     reset: resetMedications,
   } = useMedicationStore();
 
@@ -388,15 +387,6 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         });
       }
 
-      if (hasOverlapDuplicates && selectedMedications.length > 0) {
-        addNotification({
-          title: t('ERROR_DEFAULT_TITLE'),
-          message: t('ERROR_DUPLICATE_ACTIVE_MEDICATION'),
-          type: 'error',
-          timeout: 5000,
-        });
-      }
-
       const isVaccinationsValid = validateAllVaccinations();
       const isImmunizationsValid = validateAllImmunizations(
         clinicalConfig?.consultationPad?.immunizationForm,
@@ -407,8 +397,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         !isMedicationsValid ||
         !isObservationFormValid ||
         !isVaccinationsValid ||
-        !isImmunizationsValid ||
-        hasOverlapDuplicates
+        !isImmunizationsValid
       ) {
         return;
       }
