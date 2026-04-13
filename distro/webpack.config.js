@@ -53,6 +53,7 @@ module.exports = (env, argv) => {
         baseHref: publicPath,
         assets: [
           './src/assets',
+          { input: isDevelopment ? './public/locales' : './dist/locales', glob: '**/*', output: 'home/locales' },
           { input: isDevelopment ? '../apps/clinical/public/locales' : '../apps/clinical/dist/locales', glob: '**/*', output: 'clinical/locales' },
           { input: isDevelopment ? '../apps/registration/public/locales' : '../apps/registration/dist/locales', glob: '**/*', output: 'registration/locales' },
           { input: isDevelopment ? '../apps/appointments/public/locales' : '../apps/appointments/dist/locales', glob: '**/*', output: 'appointments/locales' },
