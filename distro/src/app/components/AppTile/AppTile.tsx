@@ -37,7 +37,7 @@ export const AppTile: React.FC<AppTileProps> = ({
       data-testid={`app-tile-${id}`}
     >
       <div className={styles.content}>
-        <Icon name={icon} id={id} size={ICON_SIZE.LG} ariaLabel={label} />
+        <Icon name={icon} id={id} size={ICON_SIZE.LG} aria-label={label} />
         <p className={styles.label}>{label}</p>
       </div>
     </Tile>
