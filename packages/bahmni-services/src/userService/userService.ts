@@ -1,12 +1,15 @@
 import i18next from 'i18next';
-import { get } from '../api';
+import { get, del } from '../api';
 import { BAHMNI_USER_COOKIE_NAME } from '../constants/app';
-import { getCookieByName } from '../utils';
+import { getCookieByName, deleteCookie } from '../utils';
 import {
   USER_RESOURCE_URL,
   BAHMNI_USER_LOCATION_COOKIE,
   APP_SETTINGS_URL,
   DEFAULT_DATE_FORMAT_PROPERTY,
+  LOGOUT_URL,
+  LOGOUT_COOKIES,
+  ERROR_MESSAGES,
 } from './constants';
 import {
   UserResponse,
@@ -69,4 +72,21 @@ export const getDefaultDateFormat = async (): Promise<string | null> => {
     (setting) => setting.property === DEFAULT_DATE_FORMAT_PROPERTY,
   );
   return dateFormatSetting?.value ?? null;
+};
+
+/**
+ * Logs out the current user by clearing session and cookies
+ * @throws Error with i18n key if logout fails
+ */
+export const logout = async (): Promise<void> => {
+  try {
+    await del(LOGOUT_URL);
+    LOGOUT_COOKIES.forEach((cookieName) => {
+      deleteCookie(cookieName);
+    });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Logout failed:', error);
+    throw new Error(i18next.t(ERROR_MESSAGES.LOGOUT_FAILED));
+  }
 };
