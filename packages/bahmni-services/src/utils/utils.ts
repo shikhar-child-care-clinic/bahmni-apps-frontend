@@ -69,6 +69,14 @@ export function getCookieByName(name: string): string {
   return '';
 }
 
+/**
+ * Deletes a cookie by name
+ * @param name The name of the cookie to delete
+ */
+export function deleteCookie(name: string): void {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+}
+
 export const isStringEmpty = (input?: string): boolean => {
   return !input || input.trim().length === 0;
 };
