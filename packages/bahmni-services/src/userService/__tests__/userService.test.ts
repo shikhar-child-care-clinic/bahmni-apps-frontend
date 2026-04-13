@@ -311,3 +311,50 @@ describe('logout', () => {
     expect(deleteCookie).not.toHaveBeenCalled();
   });
 });
+
+describe('logout', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (del as jest.Mock).mockReset();
+    (deleteCookie as jest.Mock).mockReset();
+  });
+
+  it('should delete session and clear cookies on successful logout', async () => {
+    (del as jest.Mock).mockResolvedValue({});
+
+    await logout();
+
+    expect(del).toHaveBeenCalledWith(LOGOUT_URL);
+    LOGOUT_COOKIES.forEach((cookieName) => {
+      expect(deleteCookie).toHaveBeenCalledWith(cookieName);
+    });
+  });
+
+  it('should clear all required cookies', async () => {
+    (del as jest.Mock).mockResolvedValue({});
+
+    await logout();
+
+    expect(deleteCookie).toHaveBeenCalledTimes(LOGOUT_COOKIES.length);
+  });
+
+  it('should throw error when API call fails', async () => {
+    const mockError = new Error('Network error');
+    (del as jest.Mock).mockRejectedValue(mockError);
+
+    await expect(logout()).rejects.toThrow('USER_LOGOUT_FAILED');
+  });
+
+  it('should not clear cookies if API call fails', async () => {
+    const mockError = new Error('Network error');
+    (del as jest.Mock).mockRejectedValue(mockError);
+
+    try {
+      await logout();
+    } catch {
+      // Expected to throw
+    }
+
+    expect(deleteCookie).not.toHaveBeenCalled();
+  });
+});
