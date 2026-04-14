@@ -321,12 +321,12 @@ describe('DocumentsTable Integration', () => {
     });
   });
 
-  it('renders documents in the order returned by the service (latest first)', async () => {
-    // API returns sorted by _sort=-date (latest first):
-    // prescriptionDoc: Jan 15, xrayDoc: Jan 10
+  it('sorts documents by uploadedOn descending regardless of service response order', async () => {
+    // Service returns in ascending order (oldest first) — component must sort descending
     mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      prescriptionDoc,
-      xrayDoc,
+      labDoc,          // 2024-01-08 (oldest)
+      xrayDoc,         // 2024-01-10
+      prescriptionDoc, // 2024-01-15 (newest)
     ]);
 
     renderComponent();
@@ -336,9 +336,64 @@ describe('DocumentsTable Integration', () => {
     });
 
     const rows = screen.getAllByRole('row');
-    // rows[0] is the header row; data rows start at index 1
-    expect(rows[1]).toHaveTextContent('Prescription_2024');
-    expect(rows[2]).toHaveTextContent('XRay_Report_2024');
+    // rows[0] = header; component sorts descending so newest appears first
+    expect(rows[1]).toHaveTextContent('Prescription_2024'); // Jan 15 first
+    expect(rows[2]).toHaveTextContent('XRay_Report_2024');  // Jan 10 second
+    expect(rows[3]).toHaveTextContent('Lab_Result_2024');   // Jan 08 last
+  });
+
+  it('places documents with no uploadedOn date at the bottom', async () => {
+    const noDateDoc = {
+      ...prescriptionDoc,
+      id: 'doc-no-date',
+      documentIdentifier: 'No_Date_Doc',
+      uploadedOn: '',
+    };
+    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
+      noDateDoc,
+      xrayDoc,         // 2024-01-10
+      prescriptionDoc, // 2024-01-15
+    ]);
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
+    });
+
+    const rows = screen.getAllByRole('row');
+    expect(rows[1]).toHaveTextContent('Prescription_2024'); // Jan 15 first
+    expect(rows[2]).toHaveTextContent('XRay_Report_2024');  // Jan 10 second
+    expect(rows[3]).toHaveTextContent('No_Date_Doc');        // no date last
+  });
+
+  it('maintains date desc sort order when navigating to page 2', async () => {
+    const user = userEvent.setup();
+    // 4 docs in ascending order — component sorts desc, page 1 shows newest 2
+    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
+      labDoc,          // 2024-01-08 (oldest)
+      xrayDoc,         // 2024-01-10
+      prescriptionDoc, // 2024-01-15 (newest)
+      multiAttachmentDoc, // 2024-01-07
+    ]);
+
+    renderComponent({ config: { ...defaultConfig, pageSize: 2 } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
+    });
+
+    // Page 1: two newest docs
+    expect(screen.getByText('Prescription_2024')).toBeInTheDocument(); // Jan 15
+    expect(screen.getByText('XRay_Report_2024')).toBeInTheDocument();  // Jan 10
+    expect(screen.queryByText('Lab_Result_2024')).not.toBeInTheDocument();
+
+    // Navigate to page 2: next two in desc order
+    await user.click(screen.getByRole('button', { name: /next page/i }));
+
+    expect(screen.getByText('Lab_Result_2024')).toBeInTheDocument();        // Jan 08
+    expect(screen.getByText('MultiPage_Report_2024')).toBeInTheDocument();  // Jan 07
+    expect(screen.queryByText('Prescription_2024')).not.toBeInTheDocument();
   });
 
   it('accepts and passes pageSize configuration to SortableDataTable', async () => {
@@ -436,5 +491,93 @@ describe('DocumentsTable Integration', () => {
     await act(async () => {});
 
     expect(mockedGetFormattedDocumentReferences).not.toHaveBeenCalled();
+  });
+
+  describe('Pagination', () => {
+    beforeEach(() => {
+      (usePatientUUID as jest.Mock).mockReturnValue('test-patient-uuid');
+      mockedGetFormattedDocumentReferences.mockReset();
+    });
+
+    it('renders table with all documents loaded from service regardless of pageSize', async () => {
+      mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
+        prescriptionDoc,
+        xrayDoc,
+        labDoc,
+      ]);
+
+      renderComponent({ config: { ...defaultConfig, pageSize: 10 } });
+
+      await waitFor(() => {
+        expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
+      });
+
+      expect(screen.getByText('XRay_Report_2024')).toBeInTheDocument();
+      expect(screen.getByText('Lab_Result_2024')).toBeInTheDocument();
+    });
+
+    it('hides pagination when documents are fewer than or equal to pageSize', async () => {
+      mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
+        prescriptionDoc,
+        xrayDoc,
+      ]);
+
+      renderComponent({ config: { ...defaultConfig, pageSize: 10 } });
+
+      await waitFor(() => {
+        expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
+      });
+
+      expect(screen.queryByRole('button', { name: /next page/i })).not.toBeInTheDocument();
+    });
+
+    it('fetches all documents from service when pageSize is configured', async () => {
+      mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
+        prescriptionDoc,
+        xrayDoc,
+        labDoc,
+      ]);
+
+      renderComponent({ config: { ...defaultConfig, pageSize: 5 } });
+
+      await waitFor(() => {
+        expect(mockedGetFormattedDocumentReferences).toHaveBeenCalledWith(
+          'test-patient-uuid',
+          undefined,
+        );
+      });
+    });
+
+    it('modal still works when pageSize is configured', async () => {
+      const user = userEvent.setup();
+      mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
+        prescriptionDoc,
+      ]);
+
+      renderComponent({ config: { ...defaultConfig, pageSize: 10 } });
+
+      await waitFor(() => {
+        expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('DOCUMENTS_VIEW_ATTACHMENTS'));
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('renders with default pageSize of 10 when not specified in config', async () => {
+      mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
+        prescriptionDoc,
+        xrayDoc,
+      ]);
+
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
+      });
+
+      expect(screen.getByText('XRay_Report_2024')).toBeInTheDocument();
+    });
   });
 });

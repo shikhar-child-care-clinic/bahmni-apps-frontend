@@ -1,5 +1,6 @@
 import {
   DataTable,
+  Pagination,
   Table,
   TableHead,
   TableRow,
@@ -10,7 +11,7 @@ import {
   DataTableSkeleton,
 } from '@carbon/react';
 import classnames from 'classnames';
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './styles/SortableDataTable.module.scss';
 
 export interface SortableDataTableProps<T> {
@@ -24,6 +25,9 @@ export interface SortableDataTableProps<T> {
   renderCell?: (row: T, cellId: string) => React.ReactNode;
   className?: string;
   dataTestId?: string;
+  pageSize?: number;
+  pageSizes?: number[];
+  onPageChange?: (page: number, pageSize: number) => void;
 }
 
 export const SortableDataTable = <T extends { id: string }>({
@@ -38,7 +42,15 @@ export const SortableDataTable = <T extends { id: string }>({
   renderCell = (row, cellId) => (row as any)[cellId],
   className = 'sortable-data-table',
   dataTestId = 'sortable-data-table',
+  pageSize,
+  pageSizes = [5, 10, 25, 50, 100],
+  onPageChange,
 }: SortableDataTableProps<T>) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [internalPageSize, setInternalPageSize] = useState(
+    pageSize ?? rows?.length ?? 0,
+  );
+
   if (errorStateMessage) {
     return (
       <p
@@ -78,6 +90,12 @@ export const SortableDataTable = <T extends { id: string }>({
 
   const rowMap = new Map(rows.map((row) => [row.id, row]));
 
+  const effectivePageSizes = pageSize !== undefined && !pageSizes.includes(pageSize)
+    ? [pageSize, ...pageSizes].sort((a, b) => a - b)
+    : pageSizes;
+
+  const showPagination = pageSize !== undefined && rows.length > internalPageSize;
+
   return (
     <div
       className={classnames(className, styles.sortableDataTableBody)}
@@ -90,54 +108,76 @@ export const SortableDataTable = <T extends { id: string }>({
           getHeaderProps,
           getRowProps,
           getTableProps,
-        }) => (
-          <Table {...getTableProps()} aria-label={ariaLabel} size="md">
-            <TableHead>
-              <TableRow>
-                {tableHeaders.map((header) => {
-                  const headerProps = getHeaderProps({
-                    header,
-                    isSortable:
-                      sortable.find((s) => s.key === header.key)?.sortable ??
-                      false,
-                  });
+        }) => {
+          const startIndex = (currentPage - 1) * internalPageSize;
+          const paginatedRows = pageSize !== undefined
+            ? tableRows.slice(startIndex, startIndex + internalPageSize)
+            : tableRows;
+
+          return (
+            <Table {...getTableProps()} aria-label={ariaLabel} size="md">
+              <TableHead>
+                <TableRow>
+                  {tableHeaders.map((header) => {
+                    const headerProps = getHeaderProps({
+                      header,
+                      isSortable:
+                        sortable.find((s) => s.key === header.key)?.sortable ??
+                        false,
+                    });
+                    return (
+                      <TableHeader
+                        {...headerProps}
+                        key={header.key}
+                        data-testid={`table-header-${header.key}`}
+                      >
+                        {header.header}
+                      </TableHeader>
+                    );
+                  })}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {paginatedRows.map((row) => {
+                  const originalRow = rowMap.get(row.id);
+                  if (!originalRow) return null;
                   return (
-                    <TableHeader
-                      {...headerProps}
-                      key={header.key}
-                      data-testid={`table-header-${header.key}`}
+                    <TableRow
+                      {...getRowProps({ row })}
+                      key={row.id}
+                      data-testid={`table-row-${row.id}`}
                     >
-                      {header.header}
-                    </TableHeader>
+                      {row.cells.map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          data-testid={`table-cell-${row.id}-${cell.info.header}`}
+                        >
+                          {renderCell(originalRow, cell.info.header)}
+                        </TableCell>
+                      ))}
+                    </TableRow>
                   );
                 })}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {tableRows.map((row) => {
-                const originalRow = rowMap.get(row.id);
-                if (!originalRow) return null;
-                return (
-                  <TableRow
-                    {...getRowProps({ row })}
-                    key={row.id}
-                    data-testid={`table-row-${row.id}`}
-                  >
-                    {row.cells.map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        data-testid={`table-cell-${row.id}-${cell.info.header}`}
-                      >
-                        {renderCell(originalRow, cell.info.header)}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        )}
+              </TableBody>
+            </Table>
+          );
+        }}
       </DataTable>
+      {showPagination && (
+        <div className={styles.sortableDataTablePagination}>
+          <Pagination
+            page={currentPage}
+            pageSize={internalPageSize}
+            pageSizes={effectivePageSizes}
+            totalItems={rows.length}
+            onChange={({ page, pageSize: newPageSize }) => {
+              setCurrentPage(page);
+              setInternalPageSize(newPageSize);
+              onPageChange?.(page, newPageSize);
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };

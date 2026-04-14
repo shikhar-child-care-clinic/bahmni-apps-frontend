@@ -117,6 +117,18 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
     [config?.fields],
   );
 
+  const pageSize = (config?.pageSize as number) ?? 10;
+
+  const sortedData = useMemo(() => {
+    if (!data) return [];
+    return [...data].sort((a, b) => {
+      if (!a.uploadedOn && !b.uploadedOn) return 0;
+      if (!a.uploadedOn) return 1;
+      if (!b.uploadedOn) return -1;
+      return new Date(b.uploadedOn).getTime() - new Date(a.uploadedOn).getTime();
+    });
+  }, [data]);
+
   const headers = useMemo(() => createDocumentHeaders(fields, t), [fields, t]);
 
   const sortable = useMemo(
@@ -177,7 +189,7 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
         <SortableDataTable
           headers={headers}
           ariaLabel={t('DOCUMENTS_TABLE_HEADING')}
-          rows={data ?? []}
+          rows={sortedData}
           loading={isLoading}
           errorStateMessage={isError ? error?.message : null}
           sortable={sortable}
@@ -185,6 +197,7 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
           renderCell={renderCell}
           className={styles.documentsTableBody}
           dataTestId="documents-table"
+          pageSize={pageSize}
         />
       </div>
 
