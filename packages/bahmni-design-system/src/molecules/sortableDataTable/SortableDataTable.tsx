@@ -90,11 +90,13 @@ export const SortableDataTable = <T extends { id: string }>({
 
   const rowMap = new Map(rows.map((row) => [row.id, row]));
 
-  const effectivePageSizes = pageSize !== undefined && !pageSizes.includes(pageSize)
-    ? [pageSize, ...pageSizes].sort((a, b) => a - b)
-    : pageSizes;
+  const effectivePageSizes =
+    pageSize !== undefined && !pageSizes.includes(pageSize)
+      ? [pageSize, ...pageSizes].sort((a, b) => a - b)
+      : pageSizes;
 
-  const showPagination = pageSize !== undefined && rows.length > internalPageSize;
+  const showPagination =
+    pageSize !== undefined && rows.length > internalPageSize;
 
   return (
     <div
@@ -110,9 +112,10 @@ export const SortableDataTable = <T extends { id: string }>({
           getTableProps,
         }) => {
           const startIndex = (currentPage - 1) * internalPageSize;
-          const paginatedRows = pageSize !== undefined
-            ? tableRows.slice(startIndex, startIndex + internalPageSize)
-            : tableRows;
+          const paginatedRows =
+            pageSize !== undefined
+              ? tableRows.slice(startIndex, startIndex + internalPageSize)
+              : tableRows;
 
           return (
             <Table {...getTableProps()} aria-label={ariaLabel} size="md">

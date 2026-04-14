@@ -324,8 +324,8 @@ describe('DocumentsTable Integration', () => {
   it('sorts documents by uploadedOn descending regardless of service response order', async () => {
     // Service returns in ascending order (oldest first) — component must sort descending
     mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      labDoc,          // 2024-01-08 (oldest)
-      xrayDoc,         // 2024-01-10
+      labDoc, // 2024-01-08 (oldest)
+      xrayDoc, // 2024-01-10
       prescriptionDoc, // 2024-01-15 (newest)
     ]);
 
@@ -338,8 +338,8 @@ describe('DocumentsTable Integration', () => {
     const rows = screen.getAllByRole('row');
     // rows[0] = header; component sorts descending so newest appears first
     expect(rows[1]).toHaveTextContent('Prescription_2024'); // Jan 15 first
-    expect(rows[2]).toHaveTextContent('XRay_Report_2024');  // Jan 10 second
-    expect(rows[3]).toHaveTextContent('Lab_Result_2024');   // Jan 08 last
+    expect(rows[2]).toHaveTextContent('XRay_Report_2024'); // Jan 10 second
+    expect(rows[3]).toHaveTextContent('Lab_Result_2024'); // Jan 08 last
   });
 
   it('places documents with no uploadedOn date at the bottom', async () => {
@@ -351,7 +351,7 @@ describe('DocumentsTable Integration', () => {
     };
     mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
       noDateDoc,
-      xrayDoc,         // 2024-01-10
+      xrayDoc, // 2024-01-10
       prescriptionDoc, // 2024-01-15
     ]);
 
@@ -363,16 +363,16 @@ describe('DocumentsTable Integration', () => {
 
     const rows = screen.getAllByRole('row');
     expect(rows[1]).toHaveTextContent('Prescription_2024'); // Jan 15 first
-    expect(rows[2]).toHaveTextContent('XRay_Report_2024');  // Jan 10 second
-    expect(rows[3]).toHaveTextContent('No_Date_Doc');        // no date last
+    expect(rows[2]).toHaveTextContent('XRay_Report_2024'); // Jan 10 second
+    expect(rows[3]).toHaveTextContent('No_Date_Doc'); // no date last
   });
 
   it('maintains date desc sort order when navigating to page 2', async () => {
     const user = userEvent.setup();
     // 4 docs in ascending order — component sorts desc, page 1 shows newest 2
     mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      labDoc,          // 2024-01-08 (oldest)
-      xrayDoc,         // 2024-01-10
+      labDoc, // 2024-01-08 (oldest)
+      xrayDoc, // 2024-01-10
       prescriptionDoc, // 2024-01-15 (newest)
       multiAttachmentDoc, // 2024-01-07
     ]);
@@ -385,14 +385,14 @@ describe('DocumentsTable Integration', () => {
 
     // Page 1: two newest docs
     expect(screen.getByText('Prescription_2024')).toBeInTheDocument(); // Jan 15
-    expect(screen.getByText('XRay_Report_2024')).toBeInTheDocument();  // Jan 10
+    expect(screen.getByText('XRay_Report_2024')).toBeInTheDocument(); // Jan 10
     expect(screen.queryByText('Lab_Result_2024')).not.toBeInTheDocument();
 
     // Navigate to page 2: next two in desc order
     await user.click(screen.getByRole('button', { name: /next page/i }));
 
-    expect(screen.getByText('Lab_Result_2024')).toBeInTheDocument();        // Jan 08
-    expect(screen.getByText('MultiPage_Report_2024')).toBeInTheDocument();  // Jan 07
+    expect(screen.getByText('Lab_Result_2024')).toBeInTheDocument(); // Jan 08
+    expect(screen.getByText('MultiPage_Report_2024')).toBeInTheDocument(); // Jan 07
     expect(screen.queryByText('Prescription_2024')).not.toBeInTheDocument();
   });
 
@@ -528,7 +528,9 @@ describe('DocumentsTable Integration', () => {
         expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
       });
 
-      expect(screen.queryByRole('button', { name: /next page/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /next page/i }),
+      ).not.toBeInTheDocument();
     });
 
     it('fetches all documents from service when pageSize is configured', async () => {

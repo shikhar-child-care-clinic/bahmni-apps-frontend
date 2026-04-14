@@ -125,7 +125,9 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
       if (!a.uploadedOn && !b.uploadedOn) return 0;
       if (!a.uploadedOn) return 1;
       if (!b.uploadedOn) return -1;
-      return new Date(b.uploadedOn).getTime() - new Date(a.uploadedOn).getTime();
+      return (
+        new Date(b.uploadedOn).getTime() - new Date(a.uploadedOn).getTime()
+      );
     });
   }, [data]);
 

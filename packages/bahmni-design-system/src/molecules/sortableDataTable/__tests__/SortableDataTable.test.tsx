@@ -368,7 +368,9 @@ describe('SortableDataTable', () => {
         />,
       );
 
-      expect(screen.getByRole('button', { name: /next page/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /next page/i }),
+      ).toBeInTheDocument();
     });
 
     it('does not render pagination when rows fit on one page', () => {
@@ -382,7 +384,9 @@ describe('SortableDataTable', () => {
         />,
       );
 
-      expect(screen.queryByRole('button', { name: /next page/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /next page/i }),
+      ).not.toBeInTheDocument();
     });
 
     it('does not render pagination when pageSize prop is not provided', () => {
@@ -395,7 +399,9 @@ describe('SortableDataTable', () => {
         />,
       );
 
-      expect(screen.queryByRole('button', { name: /next page/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /next page/i }),
+      ).not.toBeInTheDocument();
     });
 
     it('displays only the first page rows when pageSize is provided', () => {
