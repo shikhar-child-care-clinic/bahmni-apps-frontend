@@ -117,8 +117,11 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
     [config?.fields],
   );
 
-  const pageSize = (config?.pageSize as number) ?? 10;
+  // Number() safely handles non-numeric config values (NaN → falsy → fallback 10)
+  const pageSize = Number(config?.pageSize) || 10;
 
+  // Client-side sort: Bahmni's FHIR translator does not populate DocumentReference.date,
+  // so _sort=-date in the API URL has no effect. Sort is applied here as a fallback.
   const sortedData = useMemo(() => {
     if (!data) return [];
     return [...data].sort((a, b) => {

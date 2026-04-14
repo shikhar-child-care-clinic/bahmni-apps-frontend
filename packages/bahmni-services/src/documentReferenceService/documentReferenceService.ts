@@ -41,7 +41,7 @@ function mapDocumentReferencesToViewModels(
 
 /**
  * Fetches patient documents from the FHIR DocumentReference endpoint
- * Documents are sorted by date (latest first)
+ * The request includes _sort=-date; actual ordering depends on server support.
  * @param patientUuid - The UUID of the patient to fetch documents for
  * @param encounterUuids - Optional array of encounter UUIDs to filter documents
  * @returns Promise resolving to a FHIR Bundle containing DocumentReference resources
@@ -56,7 +56,8 @@ export async function getDocumentReferences(
 
 /**
  * Fetches and formats patient documents from the FHIR DocumentReference endpoint
- * Documents are sorted by date (latest first) and transformed to DocumentViewModel
+ * Returns documents transformed to DocumentViewModel; consumers are responsible
+ * for client-side sorting where server-side _sort=-date is unsupported.
  * @param patientUuid - The UUID of the patient to fetch documents for
  * @param encounterUuids - Optional array of encounter UUIDs to filter documents
  * @returns Promise resolving to an array of formatted DocumentViewModel objects

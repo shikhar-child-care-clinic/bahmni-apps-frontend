@@ -840,6 +840,23 @@ describe('DocumentsTable', () => {
       expect(screen.queryByText('Document 1')).not.toBeInTheDocument();
     });
 
+    it('shows more rows after user increases page size via dropdown', async () => {
+      const user = userEvent.setup();
+      (useQuery as jest.Mock).mockReturnValue(mockQueryData(manyDocs));
+      renderComponent({ config: { ...defaultConfig, pageSize: 5 } });
+
+      // Initially only 5 rows visible
+      expect(screen.getByText('Document 5')).toBeInTheDocument();
+      expect(screen.queryByText('Document 6')).not.toBeInTheDocument();
+
+      // User changes page size to 10
+      const select = screen.getByRole('combobox', { name: /items per page/i });
+      await user.selectOptions(select, '10');
+
+      // All 10 rows now visible
+      expect(screen.getByText('Document 6')).toBeInTheDocument();
+    });
+
     it('modal still works on paginated documents', async () => {
       const user = userEvent.setup();
       (useQuery as jest.Mock).mockReturnValue(mockQueryData(manyDocs));

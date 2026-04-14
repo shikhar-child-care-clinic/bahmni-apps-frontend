@@ -11,7 +11,7 @@ import {
   DataTableSkeleton,
 } from '@carbon/react';
 import classnames from 'classnames';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styles from './styles/SortableDataTable.module.scss';
 
 export interface SortableDataTableProps<T> {
@@ -47,8 +47,22 @@ export const SortableDataTable = <T extends { id: string }>({
   onPageChange,
 }: SortableDataTableProps<T>) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [internalPageSize, setInternalPageSize] = useState(
-    pageSize ?? rows?.length ?? 0,
+  const [internalPageSize, setInternalPageSize] = useState<number>(
+    pageSize ?? 0,
+  );
+
+  // Reset to page 1 when rows change to prevent showing a stale empty page
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [rows?.length]);
+
+  // useMemo must be called before early returns (Rules of Hooks)
+  const effectivePageSizes = useMemo(
+    () =>
+      pageSize !== undefined && !pageSizes.includes(pageSize)
+        ? [pageSize, ...pageSizes].sort((a, b) => a - b)
+        : pageSizes,
+    [pageSize, pageSizes],
   );
 
   if (errorStateMessage) {
@@ -90,13 +104,9 @@ export const SortableDataTable = <T extends { id: string }>({
 
   const rowMap = new Map(rows.map((row) => [row.id, row]));
 
-  const effectivePageSizes =
-    pageSize !== undefined && !pageSizes.includes(pageSize)
-      ? [pageSize, ...pageSizes].sort((a, b) => a - b)
-      : pageSizes;
-
-  const showPagination =
-    pageSize !== undefined && rows.length > internalPageSize;
+  // Use the pageSize prop (not internalPageSize) so pagination visibility
+  // is not affected by user's dropdown selection during the session
+  const showPagination = pageSize !== undefined && rows.length > pageSize;
 
   return (
     <div

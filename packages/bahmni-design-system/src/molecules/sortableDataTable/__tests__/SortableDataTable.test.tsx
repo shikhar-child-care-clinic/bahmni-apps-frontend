@@ -1,5 +1,5 @@
 import { DataTableHeader } from '@carbon/react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { SortableDataTable } from '../SortableDataTable';
@@ -525,32 +525,115 @@ describe('SortableDataTable', () => {
         />,
       );
 
-      // Sort by name descending
+      // Sort ascending by name (first click)
       const nameHeader = screen.getByTestId('table-header-name');
-      await user.click(nameHeader); // asc
-      await user.click(nameHeader); // desc
+      await user.click(nameHeader);
 
-      // Capture page 1 rows
-      const page1Rows = screen
-        .getAllByRole('row')
-        .slice(1)
-        .map((r) => r.getAttribute('data-testid'));
+      // After ascending sort, alphabetical order is:
+      // Medication 1, Medication 10, Medication 11, Medication 12, Medication 2 … (page 1)
+      // Medication 3, Medication 4, Medication 5, Medication 6, Medication 7 … (page 2)
+      expect(screen.getByText('Medication 1')).toBeInTheDocument();
+      // Medication 3 should NOT be on page 1 (it falls on page 2 alphabetically)
+      expect(screen.queryByText('Medication 3')).not.toBeInTheDocument();
 
-      // Go to page 2
       await user.click(screen.getByRole('button', { name: /next page/i }));
 
-      const page2Rows = screen
-        .getAllByRole('row')
-        .slice(1)
-        .map((r) => r.getAttribute('data-testid'));
+      // Page 2 must show the next 5 items in the same sort order
+      expect(screen.getByText('Medication 3')).toBeInTheDocument();
+      // Medication 1 must no longer be visible (it was on page 1)
+      expect(screen.queryByText('Medication 1')).not.toBeInTheDocument();
+    });
 
-      // Page 2 rows must be different from page 1 (sort applied across all pages)
-      expect(page2Rows).not.toEqual(page1Rows);
+    it('displays page range text showing items for current page', () => {
+      render(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={manyRows}
+          ariaLabel="Range Text Table"
+          renderCell={renderCell}
+          pageSize={5}
+        />,
+      );
 
-      // No page 1 rows should appear on page 2
-      page1Rows.forEach((rowId) => {
-        expect(page2Rows).not.toContain(rowId);
+      // Carbon Pagination renders range e.g. "1–5 of 12 items"
+      expect(screen.getByText(/of 12 items/)).toBeInTheDocument();
+    });
+
+    it('displays page counter text', () => {
+      render(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={manyRows}
+          ariaLabel="Counter Text Table"
+          renderCell={renderCell}
+          pageSize={5}
+        />,
+      );
+
+      // 12 rows ÷ 5 per page = 3 pages — Carbon renders "of 3 pages" in multiple elements
+      expect(screen.getAllByText(/of 3 pages/).length).toBeGreaterThan(0);
+    });
+
+    it('resets to page 1 when rows prop changes', async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={manyRows}
+          ariaLabel="Reset Page Table"
+          renderCell={renderCell}
+          pageSize={5}
+        />,
+      );
+
+      // Navigate to page 2
+      await user.click(screen.getByRole('button', { name: /next page/i }));
+      expect(screen.getByText('Medication 6')).toBeInTheDocument();
+
+      // Rows shrink — all fit on one page
+      rerender(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={manyRows.slice(0, 3)}
+          ariaLabel="Reset Page Table"
+          renderCell={renderCell}
+          pageSize={5}
+        />,
+      );
+
+      // useEffect resets currentPage to 1 asynchronously after rows.length changes
+      await waitFor(() => {
+        expect(screen.getByText('Medication 1')).toBeInTheDocument();
       });
+      // Pagination is hidden (3 rows < pageSize 5)
+      expect(
+        screen.queryByRole('button', { name: /next page/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('shows more rows after user increases page size via dropdown', async () => {
+      const user = userEvent.setup();
+      render(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={manyRows}
+          ariaLabel="Page Size Update Table"
+          renderCell={renderCell}
+          pageSize={5}
+          pageSizes={[5, 10, 25]}
+        />,
+      );
+
+      // Initially only first 5 rows visible
+      expect(screen.getByText('Medication 5')).toBeInTheDocument();
+      expect(screen.queryByText('Medication 6')).not.toBeInTheDocument();
+
+      // User changes page size to 10
+      const select = screen.getByRole('combobox', { name: /items per page/i });
+      await user.selectOptions(select, '10');
+
+      // All 10 rows now visible on page 1
+      expect(screen.getByText('Medication 6')).toBeInTheDocument();
     });
   });
 });
