@@ -12,15 +12,15 @@
       // This breaks the synchronous loop that causes "ResizeObserver loop completed
       // with undelivered notifications" from Carbon's floating-ui autoAlign.
       (function () {
-        var OriginalResizeObserver = window.ResizeObserver;
-        window.ResizeObserver = function ResizeObserver(callback) {
+        var OriginalResizeObserver = globalThis.ResizeObserver;
+        globalThis.ResizeObserver = function ResizeObserver(callback) {
           return new OriginalResizeObserver(function (entries, observer) {
             requestAnimationFrame(function () {
               callback(entries, observer);
             });
           });
         };
-        window.ResizeObserver.prototype = OriginalResizeObserver.prototype;
+        globalThis.ResizeObserver.prototype = OriginalResizeObserver.prototype;
       })();
     </script>
     <div id="root"></div>
