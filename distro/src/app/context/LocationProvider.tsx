@@ -4,7 +4,9 @@ import {
   getCurrentUser,
   saveUserLocation,
   setCookie,
+  notificationService,
 } from '@bahmni/services';
+import i18next from 'i18next';
 import React, { useEffect, useMemo, useState } from 'react';
 import { LocationContext, UserLocation } from './LocationContext';
 
@@ -69,6 +71,10 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
             // Log error but don't revert - cookie is source of truth
             // eslint-disable-next-line no-console
             console.warn('Failed to save location to server:', err);
+            notificationService.showWarning(
+              i18next.t('HOME_ERROR_LOCATION_SYNC_FAILED_TITLE'),
+              i18next.t('HOME_ERROR_LOCATION_SYNC_FAILED'),
+            );
           });
         }
       }

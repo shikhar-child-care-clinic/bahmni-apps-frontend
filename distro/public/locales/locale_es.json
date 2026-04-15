@@ -1,8 +1,11 @@
 {
   "HOME_CHANGE_PASSWORD": "Cambiar Contraseña",
   "HOME_ERROR_FETCH_CONFIG": "Error al cargar la configuración de la página de inicio",
+  "HOME_ERROR_LOCATION_SYNC_FAILED": "El cambio de ubicación se guardó localmente pero no se pudo sincronizar con el servidor.",
+  "HOME_ERROR_LOCATION_SYNC_FAILED_TITLE": "Advertencia de sincronización de ubicación",
   "HOME_ERROR_LOGOUT_FAILED": "Error al cerrar sesión. Por favor, inténtelo de nuevo.",
   "HOME_LOGOUT": "Cerrar sesión",
+  "HOME_RETRY": "Reintentar",
   "HOME_MODULE_ADMIN": "Administración",
   "HOME_MODULE_APPOINTMENT_SCHEDULING": "Programación de Citas",
   "HOME_MODULE_ATOMFEED_CONSOLE": "Consola Atomfeed",

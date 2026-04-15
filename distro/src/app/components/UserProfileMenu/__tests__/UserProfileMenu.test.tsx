@@ -1,4 +1,4 @@
-import { logout, useTranslation } from '@bahmni/services';
+import { logout, useTranslation, getFormattedError } from '@bahmni/services';
 import { useActivePractitioner } from '@bahmni/widgets';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { UserProfileMenu } from '../UserProfileMenu';
@@ -10,6 +10,10 @@ jest.mock('@bahmni/widgets', () => ({
 jest.mock('@bahmni/services', () => ({
   useTranslation: jest.fn(),
   logout: jest.fn(),
+  notificationService: {
+    showError: jest.fn(),
+  },
+  getFormattedError: jest.fn(),
 }));
 
 jest.mock('@bahmni/design-system', () => ({
@@ -34,6 +38,9 @@ const mockLogout = logout as jest.MockedFunction<typeof logout>;
 const mockUseTranslation = useTranslation as jest.MockedFunction<
   typeof useTranslation
 >;
+const mockGetFormattedError = getFormattedError as jest.MockedFunction<
+  typeof getFormattedError
+>;
 
 describe('UserProfileMenu', () => {
   const mockUser = {
@@ -56,6 +63,11 @@ describe('UserProfileMenu', () => {
     mockUseTranslation.mockReturnValue({
       t: mockTranslate,
     } as any);
+
+    mockGetFormattedError.mockReturnValue({
+      title: 'Error',
+      message: 'Something went wrong',
+    });
 
     delete (window as any).location;
     window.location = { href: '' } as any;

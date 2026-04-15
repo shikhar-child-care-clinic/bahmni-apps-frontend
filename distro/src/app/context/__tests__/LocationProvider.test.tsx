@@ -15,6 +15,13 @@ jest.mock('@bahmni/services', () => ({
   getCurrentUser: jest.fn(),
   saveUserLocation: jest.fn(),
   setCookie: jest.fn(),
+  notificationService: {
+    showWarning: jest.fn(),
+  },
+}));
+
+jest.mock('i18next', () => ({
+  t: jest.fn((key) => key),
 }));
 
 const mockGetUserLoginLocation = getUserLoginLocation as jest.MockedFunction<

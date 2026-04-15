@@ -1,6 +1,11 @@
-import { Grid, Column } from '@bahmni/design-system';
+import {
+  Grid,
+  Column,
+  InlineNotification,
+  Button,
+} from '@bahmni/design-system';
 import { useTranslation } from '@bahmni/services';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Module, getVisibleModules } from '../../../services/moduleService';
 import { AppTile } from '../AppTile';
 import styles from './styles/HomePageGrid.module.scss';
@@ -11,29 +16,29 @@ export const HomePageGrid: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadModules = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const loadModules = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        const visibleModules = await getVisibleModules(
-          'org.bahmni.home.dashboard',
-        );
+      const visibleModules = await getVisibleModules(
+        'org.bahmni.home.dashboard',
+      );
 
-        setModules(visibleModules);
-      } catch (err) {
-        const message = t('HOME_ERROR_FETCH_CONFIG');
-        setError(message);
-        // eslint-disable-next-line no-console
-        console.error('Error loading modules:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadModules();
+      setModules(visibleModules);
+    } catch (err) {
+      const message = t('HOME_ERROR_FETCH_CONFIG');
+      setError(message);
+      // eslint-disable-next-line no-console
+      console.error('Error loading modules:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [t]);
+
+  useEffect(() => {
+    loadModules();
+  }, [loadModules]);
 
   if (loading) {
     return (
@@ -57,9 +62,17 @@ export const HomePageGrid: React.FC = () => {
 
   if (error) {
     return (
-      <div className={styles.error}>
-        <p>{error}</p>
-        <button onClick={() => window.location.reload()}>Retry</button>
+      <div className={styles.errorContainer} data-testid="home-error">
+        <InlineNotification
+          kind="error"
+          lowContrast
+          subtitle={error}
+          hideCloseButton={false}
+          onClose={() => setError(null)}
+        />
+        <Button onClick={loadModules} data-testid="retry-button">
+          {t('HOME_RETRY')}
+        </Button>
       </div>
     );
   }

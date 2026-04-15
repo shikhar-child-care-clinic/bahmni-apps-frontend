@@ -1,5 +1,10 @@
 import { MenuButton, MenuItem, MenuItemDivider } from '@bahmni/design-system';
-import { useTranslation, logout } from '@bahmni/services';
+import {
+  useTranslation,
+  logout,
+  notificationService,
+  getFormattedError,
+} from '@bahmni/services';
 import { useActivePractitioner } from '@bahmni/widgets';
 import React, { useState } from 'react';
 import styles from './styles/UserProfileMenu.module.scss';
@@ -30,6 +35,8 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
       window.location.href = '/';
     } catch (error) {
       setIsLoggingOut(false);
+      const { title } = getFormattedError(error);
+      notificationService.showError(title, t('HOME_ERROR_LOGOUT_FAILED'));
       // eslint-disable-next-line no-console
       console.error('Logout failed:', error);
     }
