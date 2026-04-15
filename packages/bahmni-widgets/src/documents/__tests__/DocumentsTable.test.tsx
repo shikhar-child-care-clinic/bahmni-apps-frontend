@@ -120,8 +120,6 @@ const mockQueryData = (
     data: {
       documents,
       total: documents.length,
-      nextUrl: undefined,
-      prevUrl: undefined,
     },
     error: null,
     isError: false,

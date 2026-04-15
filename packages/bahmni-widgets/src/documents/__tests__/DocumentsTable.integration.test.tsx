@@ -401,7 +401,7 @@ describe('DocumentsTable Integration', () => {
       expect(screen.getByText('Lab_Result_2024')).toBeInTheDocument();
     });
 
-    // Service called with page=2 (offset computed internally: (2-1)*2=2)
+    // Service called with page=2; service computes _getpagesoffset=(2-1)*2=2
     expect(mockedGetDocumentReferencePage).toHaveBeenLastCalledWith(
       'test-patient-uuid',
       undefined,
@@ -706,12 +706,9 @@ describe('DocumentsTable Integration', () => {
     });
 
     it('shows pagination when server total exceeds pageSize', async () => {
-      mockedGetDocumentReferencePage.mockResolvedValueOnce({
-        documents: [prescriptionDoc, xrayDoc],
-        total: 5,
-        nextUrl: '/openmrs/ws/fhir2/R4/DocumentReference?_page=2',
-        prevUrl: undefined,
-      });
+      mockedGetDocumentReferencePage.mockResolvedValueOnce(
+        wrapPage([prescriptionDoc, xrayDoc], 5),
+      );
 
       renderComponent({ config: { ...defaultConfig, pageSize: 2 } });
 
