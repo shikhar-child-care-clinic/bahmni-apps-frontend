@@ -1,6 +1,7 @@
 export {
   getCurrentUser,
   getUserLoginLocation,
+  getAvailableLocations,
   getDefaultDateFormat,
   logout,
 } from './userService';

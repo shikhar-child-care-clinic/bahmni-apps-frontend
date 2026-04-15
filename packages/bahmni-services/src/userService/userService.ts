@@ -10,12 +10,14 @@ import {
   LOGOUT_URL,
   LOGOUT_COOKIES,
   ERROR_MESSAGES,
+  AVAILABLE_LOCATIONS_URL,
 } from './constants';
 import {
   UserResponse,
   User,
   UserLocation,
   AppSettingsResponse,
+  LocationsResponse,
 } from './models';
 
 export async function getCurrentUser(): Promise<User | null> {
@@ -72,6 +74,22 @@ export const getDefaultDateFormat = async (): Promise<string | null> => {
     (setting) => setting.property === DEFAULT_DATE_FORMAT_PROPERTY,
   );
   return dateFormatSetting?.value ?? null;
+};
+
+/**
+ * Fetches available locations with Login Location tag
+ * @returns Promise<UserLocation[]> - Array of available locations
+ * @throws Error when API call fails
+ */
+export const getAvailableLocations = async (): Promise<UserLocation[]> => {
+  try {
+    const response = await get<LocationsResponse>(AVAILABLE_LOCATIONS_URL);
+    return response.results ?? [];
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to fetch available locations:', error);
+    return [];
+  }
 };
 
 /**
