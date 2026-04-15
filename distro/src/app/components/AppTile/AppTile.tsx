@@ -32,22 +32,30 @@ export const AppTile: React.FC<AppTileProps> = ({
     navigate(url);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   const translatedLabel = t(label);
 
   return (
     <Tile
       className={styles.tile}
+      role="button"
+      tabIndex={0}
+      aria-label={translatedLabel}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       data-testid={`app-tile-${id}`}
     >
       <div className={styles.content}>
-        <Icon
-          name={icon}
-          id={id}
-          size={ICON_SIZE.LG}
-          aria-label={translatedLabel}
-        />
-        <p className={styles.label}>{translatedLabel}</p>
+        <Icon name={icon} id={id} size={ICON_SIZE.LG} aria-hidden="true" />
+        <p className={styles.label} aria-hidden="true">
+          {translatedLabel}
+        </p>
       </div>
     </Tile>
   );

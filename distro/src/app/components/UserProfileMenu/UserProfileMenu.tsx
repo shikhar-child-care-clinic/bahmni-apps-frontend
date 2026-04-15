@@ -21,7 +21,11 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   if (loading) {
-    return <div className={styles.loading}>{t('LOADING')}</div>;
+    return (
+      <div className={styles.loading} role="status">
+        {t('LOADING')}
+      </div>
+    );
   }
 
   if (!user) {

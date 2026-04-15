@@ -6,7 +6,9 @@ export const IndexPage: React.FC = () => {
   return (
     <>
       <HomePageHeader />
-      <HomePageGrid />
+      <main>
+        <HomePageGrid />
+      </main>
     </>
   );
 };

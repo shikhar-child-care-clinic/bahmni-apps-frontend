@@ -42,7 +42,12 @@ export const HomePageGrid: React.FC = () => {
 
   if (loading) {
     return (
-      <div className={styles.container}>
+      <div
+        className={styles.container}
+        role="status"
+        aria-label={t('HOME_LOADING_MODULES')}
+        aria-busy="true"
+      >
         <Grid>
           {[...Array(6)].map(() => (
             <Column
@@ -62,7 +67,11 @@ export const HomePageGrid: React.FC = () => {
 
   if (error) {
     return (
-      <div className={styles.errorContainer} data-testid="home-error">
+      <div
+        className={styles.errorContainer}
+        data-testid="home-error"
+        role="alert"
+      >
         <InlineNotification
           kind="error"
           lowContrast
@@ -78,7 +87,11 @@ export const HomePageGrid: React.FC = () => {
   }
 
   if (modules.length === 0) {
-    return <div className={styles.emptyState}>No modules available</div>;
+    return (
+      <div className={styles.emptyState} role="status">
+        {t('HOME_NO_MODULES')}
+      </div>
+    );
   }
 
   return (

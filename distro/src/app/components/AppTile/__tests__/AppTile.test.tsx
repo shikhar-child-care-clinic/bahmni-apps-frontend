@@ -1,7 +1,10 @@
 import { useTranslation } from '@bahmni/services';
 import { useHasPrivilege } from '@bahmni/widgets';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { axe, toHaveNoViolations } from 'jest-axe';
 import { AppTile } from '../AppTile';
+
+expect.extend(toHaveNoViolations);
 
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
@@ -112,5 +115,35 @@ describe('AppTile', () => {
     render(<AppTile {...defaultProps} />);
 
     expect(mockUseHasPrivilege).toHaveBeenCalledWith(defaultProps.privileges);
+  });
+
+  it('activates on Enter key', () => {
+    mockUseHasPrivilege.mockReturnValue(true);
+
+    render(<AppTile {...defaultProps} />);
+
+    const tile = screen.getByTestId('app-tile-registration');
+    fireEvent.keyDown(tile, { key: 'Enter' });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/registration');
+  });
+
+  it('activates on Space key', () => {
+    mockUseHasPrivilege.mockReturnValue(true);
+
+    render(<AppTile {...defaultProps} />);
+
+    const tile = screen.getByTestId('app-tile-registration');
+    fireEvent.keyDown(tile, { key: ' ' });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/registration');
+  });
+
+  it('has no accessibility violations', async () => {
+    mockUseHasPrivilege.mockReturnValue(true);
+
+    const { container } = render(<AppTile {...defaultProps} />);
+
+    expect(await axe(container)).toHaveNoViolations();
   });
 });
