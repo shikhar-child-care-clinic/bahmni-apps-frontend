@@ -25,6 +25,7 @@ const AppointmentsApp = lazy(() =>
     default: module.AppointmentsApp,
   })),
 );
+
 export function App() {
   return (
     <LocationProvider>
