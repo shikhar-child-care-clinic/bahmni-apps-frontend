@@ -37,7 +37,7 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
 
   return (
     <MenuButton
-      label={user.display}
+      label={`Hi, ${user.display}`}
       className={styles.menuButton}
       data-testid="user-profile-menu"
     >

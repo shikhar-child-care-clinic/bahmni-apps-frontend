@@ -61,11 +61,11 @@ describe('UserProfileMenu', () => {
     window.location = { href: '' } as any;
   });
 
-  it('renders menu button with user display name', () => {
+  it('renders menu button with user greeting and display name', () => {
     render(<UserProfileMenu />);
 
     expect(screen.getByTestId('user-profile-menu')).toHaveTextContent(
-      'Dr. John Doe',
+      'Hi, Dr. John Doe',
     );
   });
 
