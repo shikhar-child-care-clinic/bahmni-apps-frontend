@@ -2,6 +2,9 @@ import {
   useTranslation,
   getUserLoginLocation,
   getAvailableLocations,
+  getCurrentUser,
+  saveUserLocation,
+  setCookie,
 } from '@bahmni/services';
 import { render, screen, waitFor } from '@testing-library/react';
 import { LocationProvider } from '../../../context/LocationProvider';
@@ -11,6 +14,9 @@ jest.mock('@bahmni/services', () => ({
   useTranslation: jest.fn(),
   getUserLoginLocation: jest.fn(),
   getAvailableLocations: jest.fn(),
+  getCurrentUser: jest.fn(),
+  saveUserLocation: jest.fn(),
+  setCookie: jest.fn(),
 }));
 
 jest.mock('@bahmni/design-system', () => ({
@@ -31,6 +37,13 @@ const mockGetUserLoginLocation = getUserLoginLocation as jest.MockedFunction<
 const mockGetAvailableLocations = getAvailableLocations as jest.MockedFunction<
   typeof getAvailableLocations
 >;
+const mockGetCurrentUser = getCurrentUser as jest.MockedFunction<
+  typeof getCurrentUser
+>;
+const mockSaveUserLocation = saveUserLocation as jest.MockedFunction<
+  typeof saveUserLocation
+>;
+const mockSetCookie = setCookie as jest.MockedFunction<typeof setCookie>;
 
 describe('LocationSelector', () => {
   const mockLocation = {
@@ -43,6 +56,12 @@ describe('LocationSelector', () => {
     { name: 'ICU Ward', uuid: 'location-uuid-456' },
   ];
 
+  const mockUser = {
+    uuid: 'user-uuid-789',
+    username: 'testuser',
+    display: 'Test User',
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
@@ -53,6 +72,9 @@ describe('LocationSelector', () => {
 
     mockGetUserLoginLocation.mockReturnValue(mockLocation);
     mockGetAvailableLocations.mockResolvedValue(mockLocations);
+    mockGetCurrentUser.mockResolvedValue(mockUser);
+    mockSaveUserLocation.mockResolvedValue(undefined);
+    mockSetCookie.mockImplementation(() => {});
   });
 
   it('renders location selector dropdown', async () => {

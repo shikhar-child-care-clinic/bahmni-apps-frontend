@@ -3,6 +3,7 @@ export {
   generateId,
   getCookieByName,
   deleteCookie,
+  setCookie,
   isStringEmpty,
   getPriorityByOrder,
   groupByDate,

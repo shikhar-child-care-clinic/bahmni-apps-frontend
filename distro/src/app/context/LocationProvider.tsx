@@ -1,6 +1,14 @@
-import { getUserLoginLocation, getAvailableLocations } from '@bahmni/services';
+import {
+  getUserLoginLocation,
+  getAvailableLocations,
+  getCurrentUser,
+  saveUserLocation,
+  setCookie,
+} from '@bahmni/services';
 import React, { useEffect, useMemo, useState } from 'react';
 import { LocationContext, UserLocation } from './LocationContext';
+
+const BAHMNI_USER_LOCATION_COOKIE = 'bahmni.user.location';
 
 interface LocationProviderProps {
   children: React.ReactNode;
@@ -15,6 +23,7 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userUuid, setUserUuid] = useState<string | null>(null);
 
   useEffect(() => {
     const initializeLocation = async () => {
@@ -24,6 +33,8 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
         setLocationState(currentLocation);
         const locations = await getAvailableLocations();
         setAvailableLocations(locations);
+        const user = await getCurrentUser();
+        setUserUuid(user?.uuid ?? null);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to load location';
@@ -39,17 +50,35 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
     initializeLocation();
   }, []);
 
-  const handleSetLocation = async (newLocation: UserLocation) => {
+  const handleSetLocation = (newLocation: UserLocation | null) => {
+    const previousLocation = location;
     try {
       setError(null);
       setLocationState(newLocation);
+
+      // Only persist if location is not null
+      if (newLocation) {
+        setCookie(
+          BAHMNI_USER_LOCATION_COOKIE,
+          encodeURIComponent(JSON.stringify(newLocation)),
+        );
+
+        // Persist to server asynchronously (fire and forget)
+        if (userUuid) {
+          saveUserLocation(userUuid, newLocation).catch((err) => {
+            // Log error but don't revert - cookie is source of truth
+            // eslint-disable-next-line no-console
+            console.warn('Failed to save location to server:', err);
+          });
+        }
+      }
     } catch (err) {
+      setLocationState(previousLocation);
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to update location';
       setError(errorMessage);
       // eslint-disable-next-line no-console
       console.error('Error updating location:', err);
-      throw err;
     }
   };
 
@@ -61,7 +90,7 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
       loading,
       error,
     }),
-    [location, availableLocations, loading, error],
+    [location, availableLocations, loading, error, userUuid],
   );
 
   return (
