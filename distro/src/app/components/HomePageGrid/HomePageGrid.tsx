@@ -1,10 +1,12 @@
 import { Grid, Column } from '@bahmni/design-system';
+import { useTranslation } from '@bahmni/services';
 import React, { useEffect, useState } from 'react';
 import { Module, getVisibleModules } from '../../../services/moduleService';
 import { AppTile } from '../AppTile';
 import styles from './styles/HomePageGrid.module.scss';
 
 export const HomePageGrid: React.FC = () => {
+  const { t } = useTranslation();
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,8 +23,7 @@ export const HomePageGrid: React.FC = () => {
 
         setModules(visibleModules);
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : 'Failed to load modules';
+        const message = t('HOME_ERROR_FETCH_CONFIG');
         setError(message);
         // eslint-disable-next-line no-console
         console.error('Error loading modules:', err);
@@ -32,7 +33,7 @@ export const HomePageGrid: React.FC = () => {
     };
 
     loadModules();
-  }, []);
+  }, [t]);
 
   if (loading) {
     return (

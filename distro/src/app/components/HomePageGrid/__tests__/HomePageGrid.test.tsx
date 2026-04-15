@@ -1,3 +1,4 @@
+import { useTranslation } from '@bahmni/services';
 import { render, screen, waitFor } from '@testing-library/react';
 import { getVisibleModules } from '../../../../services/moduleService';
 import { HomePageGrid } from '../HomePageGrid';
@@ -15,13 +16,28 @@ jest.mock('../../../../services/moduleService', () => ({
   getVisibleModules: jest.fn(),
 }));
 
+jest.mock('@bahmni/services', () => ({
+  useTranslation: jest.fn(),
+}));
+
 const mockGetVisibleModules = getVisibleModules as jest.MockedFunction<
   typeof getVisibleModules
+>;
+const mockUseTranslation = useTranslation as jest.MockedFunction<
+  typeof useTranslation
 >;
 
 describe('HomePageGrid', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseTranslation.mockReturnValue({
+      t: (key: string) => {
+        const translations: Record<string, string> = {
+          HOME_ERROR_FETCH_CONFIG: 'Failed to load home page configuration',
+        };
+        return translations[key] || key;
+      },
+    } as any);
   });
 
   it('renders loading skeleton on mount', () => {
@@ -62,13 +78,16 @@ describe('HomePageGrid', () => {
   });
 
   it('renders error message on fetch failure', async () => {
-    const errorMessage = 'Failed to load extensions';
-    mockGetVisibleModules.mockRejectedValue(new Error(errorMessage));
+    mockGetVisibleModules.mockRejectedValue(
+      new Error('Failed to load extensions'),
+    );
 
     render(<HomePageGrid />);
 
     await waitFor(() => {
-      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+      expect(
+        screen.getByText('Failed to load home page configuration'),
+      ).toBeInTheDocument();
     });
   });
 

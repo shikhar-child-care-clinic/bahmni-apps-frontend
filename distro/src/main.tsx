@@ -1,3 +1,4 @@
+import { initAppI18n } from '@bahmni/services';
 import React, { StrictMode } from 'react';
 import * as ReactDOMModule from 'react-dom';
 import { createRoot } from 'react-dom/client';
@@ -21,11 +22,14 @@ declare global {
 window.React = React;
 window.ReactDOM = ReactDOMModule;
 
-const root = createRoot(document.getElementById('root') as HTMLElement);
-root.render(
-  <StrictMode>
-    <BrowserRouter basename={PUBLIC_PATH ?? '/'}>
-      <App />
-    </BrowserRouter>
-  </StrictMode>,
-);
+// Initialize i18n before rendering the app
+initAppI18n('home').then(() => {
+  const root = createRoot(document.getElementById('root') as HTMLElement);
+  root.render(
+    <StrictMode>
+      <BrowserRouter basename={PUBLIC_PATH ?? '/'}>
+        <App />
+      </BrowserRouter>
+    </StrictMode>,
+  );
+});

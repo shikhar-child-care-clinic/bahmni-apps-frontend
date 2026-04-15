@@ -1,3 +1,4 @@
+import { useTranslation } from '@bahmni/services';
 import { useHasPrivilege } from '@bahmni/widgets';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { AppTile } from '../AppTile';
@@ -9,6 +10,10 @@ jest.mock('react-router-dom', () => ({
 
 jest.mock('@bahmni/widgets', () => ({
   useHasPrivilege: jest.fn(),
+}));
+
+jest.mock('@bahmni/services', () => ({
+  useTranslation: jest.fn(),
 }));
 
 jest.mock('@bahmni/design-system', () => ({
@@ -28,11 +33,14 @@ jest.mock('@bahmni/design-system', () => ({
 const mockUseHasPrivilege = useHasPrivilege as jest.MockedFunction<
   typeof useHasPrivilege
 >;
+const mockUseTranslation = useTranslation as jest.MockedFunction<
+  typeof useTranslation
+>;
 
 describe('AppTile', () => {
   const defaultProps = {
     id: 'registration',
-    label: 'Registration',
+    label: 'HOME_MODULE_REGISTRATION',
     icon: 'registration',
     url: '/registration',
     privileges: ['Add Patients'],
@@ -41,6 +49,9 @@ describe('AppTile', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockNavigate.mockClear();
+    mockUseTranslation.mockReturnValue({
+      t: (key: string) => key, // Return key as-is for testing
+    } as any);
   });
 
   it('renders tile when user has access', () => {
@@ -49,7 +60,7 @@ describe('AppTile', () => {
     render(<AppTile {...defaultProps} />);
 
     expect(screen.getByTestId('app-tile-registration')).toBeInTheDocument();
-    expect(screen.getByText('Registration')).toBeInTheDocument();
+    expect(screen.getByText('HOME_MODULE_REGISTRATION')).toBeInTheDocument();
   });
 
   it('does not render when user lacks access', () => {

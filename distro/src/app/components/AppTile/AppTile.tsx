@@ -1,4 +1,5 @@
 import { Tile, Icon, ICON_SIZE } from '@bahmni/design-system';
+import { useTranslation } from '@bahmni/services';
 import { useHasPrivilege } from '@bahmni/widgets';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +21,7 @@ export const AppTile: React.FC<AppTileProps> = ({
   privileges,
 }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const hasAccess = useHasPrivilege(privileges);
 
   if (!hasAccess) {
@@ -30,6 +32,8 @@ export const AppTile: React.FC<AppTileProps> = ({
     navigate(url);
   };
 
+  const translatedLabel = t(label);
+
   return (
     <Tile
       className={styles.tile}
@@ -37,8 +41,13 @@ export const AppTile: React.FC<AppTileProps> = ({
       data-testid={`app-tile-${id}`}
     >
       <div className={styles.content}>
-        <Icon name={icon} id={id} size={ICON_SIZE.LG} aria-label={label} />
-        <p className={styles.label}>{label}</p>
+        <Icon
+          name={icon}
+          id={id}
+          size={ICON_SIZE.LG}
+          aria-label={translatedLabel}
+        />
+        <p className={styles.label}>{translatedLabel}</p>
       </div>
     </Tile>
   );
