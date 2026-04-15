@@ -4,6 +4,7 @@ export {
   generateUUID,
   getCookieByName,
   deleteCookie,
+  setCookie,
   isStringEmpty,
   getPriorityByOrder,
   groupByDate,

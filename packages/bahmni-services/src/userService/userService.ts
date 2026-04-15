@@ -1,5 +1,5 @@
 import i18next from 'i18next';
-import { get, del } from '../api';
+import { get, del, post } from '../api';
 import { BAHMNI_USER_COOKIE_NAME } from '../constants/app';
 import { getCookieByName, deleteCookie } from '../utils';
 import {
@@ -11,6 +11,7 @@ import {
   LOGOUT_COOKIES,
   ERROR_MESSAGES,
   AVAILABLE_LOCATIONS_URL,
+  SAVE_USER_LOCATION_URL,
 } from './constants';
 import {
   UserResponse,
@@ -107,4 +108,19 @@ export const logout = async (): Promise<void> => {
     console.error('Logout failed:', error);
     throw new Error(i18next.t(ERROR_MESSAGES.LOGOUT_FAILED));
   }
+};
+
+/**
+ * Saves the user's location preference to the server
+ * @param userUuid - The UUID of the user
+ * @param location - The location object to save
+ * @throws Error when the API call fails
+ */
+export const saveUserLocation = async (
+  userUuid: string,
+  location: UserLocation,
+): Promise<void> => {
+  await post(SAVE_USER_LOCATION_URL(userUuid), {
+    userProperties: { loginLocation: location.uuid },
+  });
 };
