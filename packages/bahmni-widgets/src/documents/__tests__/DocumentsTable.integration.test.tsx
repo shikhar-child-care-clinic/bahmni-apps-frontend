@@ -1,5 +1,5 @@
 import {
-  getFormattedDocumentReferences,
+  getDocumentReferencePage,
   useSubscribeConsultationSaved,
   DEFAULT_DATE_FORMAT_STORAGE_KEY,
 } from '@bahmni/services';
@@ -18,7 +18,7 @@ jest.mock('../../hooks/usePatientUUID', () => ({
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   useTranslation: () => ({ t: (key: string) => key }),
-  getFormattedDocumentReferences: jest.fn(),
+  getDocumentReferencePage: jest.fn(),
   useSubscribeConsultationSaved: jest.fn(),
 }));
 
@@ -30,10 +30,18 @@ globalThis.fetch = jest.fn(() =>
   } as Response),
 );
 
-const mockedGetFormattedDocumentReferences =
-  getFormattedDocumentReferences as jest.MockedFunction<
-    typeof getFormattedDocumentReferences
+const mockedGetDocumentReferencePage =
+  getDocumentReferencePage as jest.MockedFunction<
+    typeof getDocumentReferencePage
   >;
+
+const wrapPage = (documents: any[], nextUrl?: string, prevUrl?: string) => ({
+  documents,
+  total: documents.length,
+  nextUrl,
+  prevUrl,
+});
+
 const mockAddNotification = jest.fn();
 
 const prescriptionDoc = {
@@ -131,9 +139,9 @@ describe('DocumentsTable Integration', () => {
   });
 
   it('displays patient documents with all clinical information after fetch', async () => {
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      prescriptionDoc,
-    ]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc]),
+    );
 
     renderComponent();
 
@@ -149,7 +157,7 @@ describe('DocumentsTable Integration', () => {
   });
 
   it('shows empty state when patient has no recorded documents', async () => {
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(wrapPage([]));
 
     renderComponent();
 
@@ -160,7 +168,7 @@ describe('DocumentsTable Integration', () => {
 
   it('shows error notification when document data cannot be fetched', async () => {
     const errorMessage = 'Failed to fetch documents';
-    mockedGetFormattedDocumentReferences.mockRejectedValueOnce(
+    mockedGetDocumentReferencePage.mockRejectedValueOnce(
       new Error(errorMessage),
     );
 
@@ -178,11 +186,9 @@ describe('DocumentsTable Integration', () => {
   });
 
   it('displays multiple documents with "View attachment/s" links (no icons)', async () => {
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      prescriptionDoc,
-      xrayDoc,
-      labDoc,
-    ]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc, xrayDoc, labDoc]),
+    );
 
     renderComponent();
 
@@ -205,9 +211,9 @@ describe('DocumentsTable Integration', () => {
 
   it('opens modal with PDF iframe when "View attachment/s" is clicked', async () => {
     const user = userEvent.setup();
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      prescriptionDoc,
-    ]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc]),
+    );
 
     renderComponent();
 
@@ -230,7 +236,7 @@ describe('DocumentsTable Integration', () => {
 
   it('opens modal with img element when image document link is clicked', async () => {
     const user = userEvent.setup();
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([xrayDoc]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(wrapPage([xrayDoc]));
 
     renderComponent();
 
@@ -247,9 +253,9 @@ describe('DocumentsTable Integration', () => {
 
   it('shows all attachments in modal for a document with multiple content entries', async () => {
     const user = userEvent.setup();
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      multiAttachmentDoc,
-    ]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([multiAttachmentDoc]),
+    );
 
     renderComponent();
 
@@ -270,9 +276,9 @@ describe('DocumentsTable Integration', () => {
 
   it('closes modal after clicking close button', async () => {
     const user = userEvent.setup();
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      prescriptionDoc,
-    ]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc]),
+    );
 
     renderComponent();
 
@@ -291,31 +297,35 @@ describe('DocumentsTable Integration', () => {
   });
 
   it('passes encounterUuids filter to service when provided', async () => {
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      prescriptionDoc,
-    ]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc]),
+    );
 
     const encounterUuids = ['encounter-uuid-1', 'encounter-uuid-2'];
     renderComponent({ encounterUuids });
 
     await waitFor(() => {
-      expect(mockedGetFormattedDocumentReferences).toHaveBeenCalledWith(
+      expect(mockedGetDocumentReferencePage).toHaveBeenCalledWith(
         'test-patient-uuid',
         encounterUuids,
+        10,
+        undefined,
       );
     });
   });
 
   it('calls service without encounter filter when encounterUuids is not provided', async () => {
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      prescriptionDoc,
-    ]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc]),
+    );
 
     renderComponent();
 
     await waitFor(() => {
-      expect(mockedGetFormattedDocumentReferences).toHaveBeenCalledWith(
+      expect(mockedGetDocumentReferencePage).toHaveBeenCalledWith(
         'test-patient-uuid',
+        undefined,
+        10,
         undefined,
       );
     });
@@ -323,11 +333,13 @@ describe('DocumentsTable Integration', () => {
 
   it('sorts documents by uploadedOn descending regardless of service response order', async () => {
     // Service returns in ascending order (oldest first) — component must sort descending
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      labDoc, // 2024-01-08 (oldest)
-      xrayDoc, // 2024-01-10
-      prescriptionDoc, // 2024-01-15 (newest)
-    ]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([
+        labDoc, // 2024-01-08 (oldest)
+        xrayDoc, // 2024-01-10
+        prescriptionDoc, // 2024-01-15 (newest)
+      ]),
+    );
 
     renderComponent();
 
@@ -349,11 +361,13 @@ describe('DocumentsTable Integration', () => {
       documentIdentifier: 'No_Date_Doc',
       uploadedOn: '',
     };
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      noDateDoc,
-      xrayDoc, // 2024-01-10
-      prescriptionDoc, // 2024-01-15
-    ]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([
+        noDateDoc,
+        xrayDoc, // 2024-01-10
+        prescriptionDoc, // 2024-01-15
+      ]),
+    );
 
     renderComponent();
 
@@ -367,15 +381,26 @@ describe('DocumentsTable Integration', () => {
     expect(rows[3]).toHaveTextContent('No_Date_Doc'); // no date last
   });
 
-  it('maintains date desc sort order when navigating to page 2', async () => {
+  it('navigates to page 2 when server provides nextUrl', async () => {
     const user = userEvent.setup();
-    // 4 docs in ascending order — component sorts desc, page 1 shows newest 2
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      labDoc, // 2024-01-08 (oldest)
-      xrayDoc, // 2024-01-10
-      prescriptionDoc, // 2024-01-15 (newest)
-      multiAttachmentDoc, // 2024-01-07
-    ]);
+    const nextPageUrl =
+      '/openmrs/ws/fhir2/R4/DocumentReference?patient=test-patient-uuid&_sort=-date&_count=2&_page=2';
+
+    // Page 1: newest 2 docs, server provides nextUrl
+    mockedGetDocumentReferencePage.mockResolvedValueOnce({
+      documents: [prescriptionDoc, xrayDoc],
+      total: 4,
+      nextUrl: nextPageUrl,
+      prevUrl: undefined,
+    });
+
+    // Page 2: older 2 docs
+    mockedGetDocumentReferencePage.mockResolvedValueOnce({
+      documents: [labDoc, multiAttachmentDoc],
+      total: 4,
+      nextUrl: undefined,
+      prevUrl: '/openmrs/ws/fhir2/R4/DocumentReference?_page=1',
+    });
 
     renderComponent({ config: { ...defaultConfig, pageSize: 2 } });
 
@@ -383,25 +408,25 @@ describe('DocumentsTable Integration', () => {
       expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
     });
 
-    // Page 1: two newest docs
-    expect(screen.getByText('Prescription_2024')).toBeInTheDocument(); // Jan 15
-    expect(screen.getByText('XRay_Report_2024')).toBeInTheDocument(); // Jan 10
-    expect(screen.queryByText('Lab_Result_2024')).not.toBeInTheDocument();
+    // Page 1: first two docs visible
+    expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
+    expect(screen.getByText('XRay_Report_2024')).toBeInTheDocument();
 
-    // Navigate to page 2: next two in desc order
+    // Navigate to page 2
     await user.click(screen.getByRole('button', { name: /next page/i }));
 
-    expect(screen.getByText('Lab_Result_2024')).toBeInTheDocument(); // Jan 08
-    expect(screen.getByText('MultiPage_Report_2024')).toBeInTheDocument(); // Jan 07
+    await waitFor(() => {
+      expect(screen.getByText('Lab_Result_2024')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('MultiPage_Report_2024')).toBeInTheDocument();
     expect(screen.queryByText('Prescription_2024')).not.toBeInTheDocument();
   });
 
   it('accepts and passes pageSize configuration to SortableDataTable', async () => {
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      prescriptionDoc,
-      xrayDoc,
-      labDoc,
-    ]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc, xrayDoc, labDoc]),
+    );
 
     // Render with pageSize configuration
     renderComponent({ config: { ...defaultConfig, pageSize: 2 } });
@@ -416,32 +441,30 @@ describe('DocumentsTable Integration', () => {
   });
 
   it('documents are fetched correctly when pageSize is configured', async () => {
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      prescriptionDoc,
-      xrayDoc,
-      labDoc,
-    ]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc, xrayDoc, labDoc]),
+    );
 
     // Render with pageSize=2
     renderComponent({ config: { ...defaultConfig, pageSize: 2 } });
 
     await waitFor(() => {
-      expect(mockedGetFormattedDocumentReferences).toHaveBeenCalled();
+      expect(mockedGetDocumentReferencePage).toHaveBeenCalled();
     });
 
-    // All documents should be fetched by the service
-    expect(mockedGetFormattedDocumentReferences).toHaveBeenCalledWith(
+    // Service is called with the configured pageSize
+    expect(mockedGetDocumentReferencePage).toHaveBeenCalledWith(
       'test-patient-uuid',
+      undefined,
+      2,
       undefined,
     );
   });
 
   it('renders documents correctly without pageSize configuration', async () => {
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      prescriptionDoc,
-      xrayDoc,
-      labDoc,
-    ]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc, xrayDoc, labDoc]),
+    );
 
     // Render with default config (no pageSize)
     renderComponent();
@@ -451,7 +474,7 @@ describe('DocumentsTable Integration', () => {
     });
 
     // All 3 documents should be fetchable from service
-    expect(mockedGetFormattedDocumentReferences).toHaveBeenCalled();
+    expect(mockedGetDocumentReferencePage).toHaveBeenCalled();
   });
 
   it('does not refetch documents when consultation saved for a different patient', async () => {
@@ -462,9 +485,9 @@ describe('DocumentsTable Integration', () => {
       },
     );
 
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-      prescriptionDoc,
-    ]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc]),
+    );
 
     renderComponent();
 
@@ -478,33 +501,31 @@ describe('DocumentsTable Integration', () => {
 
     await act(async () => {});
 
-    expect(mockedGetFormattedDocumentReferences).toHaveBeenCalledTimes(1);
+    expect(mockedGetDocumentReferencePage).toHaveBeenCalledTimes(1);
   });
 
   it('does not call the API when patientUUID is null', async () => {
     (usePatientUUID as jest.Mock).mockReturnValue(null);
-    mockedGetFormattedDocumentReferences.mockResolvedValueOnce([]);
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(wrapPage([]));
 
     renderComponent();
 
     // Wait a render cycle to ensure no query fires
     await act(async () => {});
 
-    expect(mockedGetFormattedDocumentReferences).not.toHaveBeenCalled();
+    expect(mockedGetDocumentReferencePage).not.toHaveBeenCalled();
   });
 
   describe('Pagination', () => {
     beforeEach(() => {
       (usePatientUUID as jest.Mock).mockReturnValue('test-patient-uuid');
-      mockedGetFormattedDocumentReferences.mockReset();
+      mockedGetDocumentReferencePage.mockReset();
     });
 
     it('renders table with all documents loaded from service regardless of pageSize', async () => {
-      mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-        prescriptionDoc,
-        xrayDoc,
-        labDoc,
-      ]);
+      mockedGetDocumentReferencePage.mockResolvedValueOnce(
+        wrapPage([prescriptionDoc, xrayDoc, labDoc]),
+      );
 
       renderComponent({ config: { ...defaultConfig, pageSize: 10 } });
 
@@ -516,11 +537,10 @@ describe('DocumentsTable Integration', () => {
       expect(screen.getByText('Lab_Result_2024')).toBeInTheDocument();
     });
 
-    it('hides pagination when documents are fewer than or equal to pageSize', async () => {
-      mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-        prescriptionDoc,
-        xrayDoc,
-      ]);
+    it('hides pagination when server total is fewer than or equal to pageSize', async () => {
+      mockedGetDocumentReferencePage.mockResolvedValueOnce(
+        wrapPage([prescriptionDoc, xrayDoc]),
+      );
 
       renderComponent({ config: { ...defaultConfig, pageSize: 10 } });
 
@@ -533,18 +553,18 @@ describe('DocumentsTable Integration', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('fetches all documents from service when pageSize is configured', async () => {
-      mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-        prescriptionDoc,
-        xrayDoc,
-        labDoc,
-      ]);
+    it('fetches documents from service with configured pageSize', async () => {
+      mockedGetDocumentReferencePage.mockResolvedValueOnce(
+        wrapPage([prescriptionDoc, xrayDoc, labDoc]),
+      );
 
       renderComponent({ config: { ...defaultConfig, pageSize: 5 } });
 
       await waitFor(() => {
-        expect(mockedGetFormattedDocumentReferences).toHaveBeenCalledWith(
+        expect(mockedGetDocumentReferencePage).toHaveBeenCalledWith(
           'test-patient-uuid',
+          undefined,
+          5,
           undefined,
         );
       });
@@ -552,9 +572,9 @@ describe('DocumentsTable Integration', () => {
 
     it('modal still works when pageSize is configured', async () => {
       const user = userEvent.setup();
-      mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-        prescriptionDoc,
-      ]);
+      mockedGetDocumentReferencePage.mockResolvedValueOnce(
+        wrapPage([prescriptionDoc]),
+      );
 
       renderComponent({ config: { ...defaultConfig, pageSize: 10 } });
 
@@ -568,10 +588,9 @@ describe('DocumentsTable Integration', () => {
     });
 
     it('renders with default pageSize of 10 when not specified in config', async () => {
-      mockedGetFormattedDocumentReferences.mockResolvedValueOnce([
-        prescriptionDoc,
-        xrayDoc,
-      ]);
+      mockedGetDocumentReferencePage.mockResolvedValueOnce(
+        wrapPage([prescriptionDoc, xrayDoc]),
+      );
 
       renderComponent();
 
@@ -580,6 +599,25 @@ describe('DocumentsTable Integration', () => {
       });
 
       expect(screen.getByText('XRay_Report_2024')).toBeInTheDocument();
+    });
+
+    it('shows pagination when server total exceeds pageSize', async () => {
+      mockedGetDocumentReferencePage.mockResolvedValueOnce({
+        documents: [prescriptionDoc, xrayDoc],
+        total: 5,
+        nextUrl: '/openmrs/ws/fhir2/R4/DocumentReference?_page=2',
+        prevUrl: undefined,
+      });
+
+      renderComponent({ config: { ...defaultConfig, pageSize: 2 } });
+
+      await waitFor(() => {
+        expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
+      });
+
+      expect(
+        screen.getByRole('button', { name: /next page/i }),
+      ).toBeInTheDocument();
     });
   });
 });

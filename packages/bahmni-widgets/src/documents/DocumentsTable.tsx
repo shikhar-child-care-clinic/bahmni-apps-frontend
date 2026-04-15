@@ -2,11 +2,18 @@ import { SortableDataTable, Modal, Link } from '@bahmni/design-system';
 import {
   useTranslation,
   formatDateTime,
-  getFormattedDocumentReferences,
+  getDocumentReferencePage,
+  DocumentReferencePage,
   DocumentViewModel,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
@@ -45,6 +52,17 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
   const { t } = useTranslation();
   const { addNotification } = useNotification();
 
+  // Number() safely handles non-numeric config values (NaN → falsy → fallback 10)
+  const configPageSize = Number(config?.pageSize) || 10;
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedPageSize, setSelectedPageSize] = useState(configPageSize);
+  const [currentFetchUrl, setCurrentFetchUrl] = useState<string | undefined>(
+    undefined,
+  );
+  const [serverTotal, setServerTotal] = useState<number | undefined>(undefined);
+  const pageUrlsCacheRef = useRef<Map<number, string>>(new Map());
+
   const handleViewAttachments = useCallback((doc: DocumentViewModel) => {
     setSelectedDoc(doc);
     setIsModalOpen(true);
@@ -61,10 +79,41 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
   }, []);
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['documents', patientUUID!, encounterUuids],
+    queryKey: [
+      'documents',
+      patientUUID!,
+      encounterUuids,
+      currentPage,
+      currentFetchUrl ?? null,
+      selectedPageSize,
+    ],
     enabled: !!patientUUID,
-    queryFn: () => getFormattedDocumentReferences(patientUUID!, encounterUuids),
+    queryFn: () =>
+      getDocumentReferencePage(
+        patientUUID!,
+        encounterUuids,
+        selectedPageSize,
+        currentFetchUrl,
+      ),
   });
+
+  // Update server total and cache next page URL when data arrives
+  useEffect(() => {
+    if (data) {
+      setServerTotal(data.total);
+      if (data.nextUrl) {
+        pageUrlsCacheRef.current.set(currentPage + 1, data.nextUrl);
+      }
+    }
+  }, [data, currentPage]);
+
+  // Reset pagination when patient changes
+  useEffect(() => {
+    setCurrentPage(1);
+    setCurrentFetchUrl(undefined);
+    setServerTotal(undefined);
+    pageUrlsCacheRef.current.clear();
+  }, [patientUUID]);
 
   useEffect(() => {
     if (isError) {
@@ -112,19 +161,42 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
     return () => controller.abort();
   }, [isModalOpen, selectedDoc]);
 
+  const handlePageChange = useCallback(
+    (newPage: number, newPageSize: number) => {
+      if (newPageSize !== selectedPageSize) {
+        // Page size changed: reset to page 1, clear URL cache, re-fetch with new _count
+        setSelectedPageSize(newPageSize);
+        setCurrentPage(1);
+        setCurrentFetchUrl(undefined);
+        setServerTotal(undefined);
+        pageUrlsCacheRef.current.clear();
+      } else if (newPage === 1) {
+        setCurrentPage(1);
+        setCurrentFetchUrl(undefined);
+      } else {
+        const url = pageUrlsCacheRef.current.get(newPage);
+        if (url) {
+          setCurrentPage(newPage);
+          setCurrentFetchUrl(url);
+        }
+        // If URL not yet cached (e.g. user jumps pages), ignore the navigation
+      }
+    },
+    [selectedPageSize],
+  );
+
   const fields = useMemo(
     () => (config?.fields as string[]) ?? DEFAULT_DOCUMENT_FIELDS,
     [config?.fields],
   );
 
-  // Number() safely handles non-numeric config values (NaN → falsy → fallback 10)
-  const pageSize = Number(config?.pageSize) || 10;
-
-  // Client-side sort: Bahmni's FHIR translator does not populate DocumentReference.date,
-  // so _sort=-date in the API URL has no effect. Sort is applied here as a fallback.
+  // Client-side sort: applied per-page as a secondary sort. Server-side uses
+  // _sort=-date,-period: sorts by DocumentReference.date first (once backend populates it),
+  // falling back to context.period.start (currently populated by Bahmni) — no frontend
+  // change needed when the backend fix lands.
   const sortedData = useMemo(() => {
-    if (!data) return [];
-    return [...data].sort((a, b) => {
+    const docs = data?.documents ?? [];
+    return [...docs].sort((a, b) => {
       if (!a.uploadedOn && !b.uploadedOn) return 0;
       if (!a.uploadedOn) return 1;
       if (!b.uploadedOn) return -1;
@@ -202,7 +274,10 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
           renderCell={renderCell}
           className={styles.documentsTableBody}
           dataTestId="documents-table"
-          pageSize={pageSize}
+          pageSize={selectedPageSize}
+          totalItems={serverTotal}
+          page={currentPage}
+          onPageChange={handlePageChange}
         />
       </div>
 

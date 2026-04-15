@@ -28,6 +28,8 @@ export interface SortableDataTableProps<T> {
   pageSize?: number;
   pageSizes?: number[];
   onPageChange?: (page: number, pageSize: number) => void;
+  totalItems?: number;
+  page?: number;
 }
 
 export const SortableDataTable = <T extends { id: string }>({
@@ -45,6 +47,8 @@ export const SortableDataTable = <T extends { id: string }>({
   pageSize,
   pageSizes = [5, 10, 25, 50, 100],
   onPageChange,
+  totalItems,
+  page,
 }: SortableDataTableProps<T>) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [internalPageSize, setInternalPageSize] = useState<number>(
@@ -52,9 +56,12 @@ export const SortableDataTable = <T extends { id: string }>({
   );
 
   // Reset to page 1 when rows change to prevent showing a stale empty page
+  // In server-side mode (totalItems defined), page is controlled externally
   useEffect(() => {
-    setCurrentPage(1);
-  }, [rows?.length]);
+    if (totalItems === undefined) {
+      setCurrentPage(1);
+    }
+  }, [rows?.length, totalItems]);
 
   // useMemo must be called before early returns (Rules of Hooks)
   const effectivePageSizes = useMemo(
@@ -104,9 +111,11 @@ export const SortableDataTable = <T extends { id: string }>({
 
   const rowMap = new Map(rows.map((row) => [row.id, row]));
 
-  // Use the pageSize prop (not internalPageSize) so pagination visibility
-  // is not affected by user's dropdown selection during the session
-  const showPagination = pageSize !== undefined && rows.length > pageSize;
+  // In server-side mode (totalItems defined), use server total for pagination visibility
+  // In client-side mode, use rows.length
+  const showPagination =
+    pageSize !== undefined &&
+    (totalItems !== undefined ? totalItems > pageSize : rows.length > pageSize);
 
   return (
     <div
@@ -122,8 +131,9 @@ export const SortableDataTable = <T extends { id: string }>({
           getTableProps,
         }) => {
           const startIndex = (currentPage - 1) * internalPageSize;
+          // In server-side mode, rows are already the correct page — no slicing needed
           const paginatedRows =
-            pageSize !== undefined
+            pageSize !== undefined && totalItems === undefined
               ? tableRows.slice(startIndex, startIndex + internalPageSize)
               : tableRows;
 
@@ -179,14 +189,16 @@ export const SortableDataTable = <T extends { id: string }>({
       {showPagination && (
         <div className={styles.sortableDataTablePagination}>
           <Pagination
-            page={currentPage}
+            page={page ?? currentPage}
             pageSize={internalPageSize}
             pageSizes={effectivePageSizes}
-            totalItems={rows.length}
-            onChange={({ page, pageSize: newPageSize }) => {
-              setCurrentPage(page);
+            totalItems={totalItems ?? rows.length}
+            onChange={({ page: newPage, pageSize: newPageSize }) => {
               setInternalPageSize(newPageSize);
-              onPageChange?.(page, newPageSize);
+              if (totalItems === undefined) {
+                setCurrentPage(newPage);
+              }
+              onPageChange?.(newPage, newPageSize);
             }}
           />
         </div>

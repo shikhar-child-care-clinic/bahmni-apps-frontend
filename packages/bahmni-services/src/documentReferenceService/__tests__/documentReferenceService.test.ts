@@ -3,6 +3,7 @@ import { get } from '../../api';
 import {
   getDocumentReferences,
   getFormattedDocumentReferences,
+  getDocumentReferencePage,
 } from '../documentReferenceService';
 
 jest.mock('../../api');
@@ -10,7 +11,7 @@ jest.mock('../../api');
 const mockedGet = get as jest.MockedFunction<typeof get>;
 
 const PATIENT_UUID = 'test-patient-uuid';
-const BASE_URL = `/openmrs/ws/fhir2/R4/DocumentReference?patient=${PATIENT_UUID}&_sort=-date&_count=100`;
+const BASE_URL = `/openmrs/ws/fhir2/R4/DocumentReference?patient=${PATIENT_UUID}&_sort=-date,-period&_count=10`;
 
 const mockDocumentReference: DocumentReference = {
   resourceType: 'DocumentReference',
@@ -392,6 +393,142 @@ describe('documentReferenceService', () => {
       expect(mockedGet).toHaveBeenCalledWith(
         `${BASE_URL}&encounter=enc-uuid-1,enc-uuid-2`,
       );
+    });
+  });
+
+  describe('getDocumentReferencePage', () => {
+    it('fetches page using constructed URL with default count', async () => {
+      mockedGet.mockResolvedValueOnce(mockBundle);
+
+      await getDocumentReferencePage(PATIENT_UUID);
+
+      expect(mockedGet).toHaveBeenCalledWith(BASE_URL);
+    });
+
+    it('fetches page using constructed URL with custom count', async () => {
+      mockedGet.mockResolvedValueOnce(mockBundle);
+
+      await getDocumentReferencePage(PATIENT_UUID, undefined, 25);
+
+      const expectedUrl = `/openmrs/ws/fhir2/R4/DocumentReference?patient=${PATIENT_UUID}&_sort=-date,-period&_count=25`;
+      expect(mockedGet).toHaveBeenCalledWith(expectedUrl);
+    });
+
+    it('uses pageUrl directly when provided', async () => {
+      const pageUrl = '/openmrs/ws/fhir2/R4/DocumentReference?_page=2';
+      mockedGet.mockResolvedValueOnce(mockBundle);
+
+      await getDocumentReferencePage(
+        PATIENT_UUID,
+        undefined,
+        undefined,
+        pageUrl,
+      );
+
+      expect(mockedGet).toHaveBeenCalledWith(pageUrl);
+    });
+
+    it('returns documents array and total from bundle', async () => {
+      const bundleWithTotal: Bundle<DocumentReference> = {
+        ...mockBundle,
+        total: 42,
+      };
+      mockedGet.mockResolvedValueOnce(bundleWithTotal);
+
+      const result = await getDocumentReferencePage(PATIENT_UUID);
+
+      expect(result.total).toBe(42);
+      expect(result.documents).toHaveLength(1);
+      expect(result.documents[0]).toEqual(
+        expect.objectContaining({
+          id: 'doc-1',
+          documentIdentifier: 'Prescription_2024',
+        }),
+      );
+    });
+
+    it('falls back to entries length when bundle total is absent', async () => {
+      const bundleNoTotal: Bundle<DocumentReference> = {
+        resourceType: 'Bundle',
+        type: 'searchset',
+        entry: [{ resource: mockDocumentReference }],
+      };
+      mockedGet.mockResolvedValueOnce(bundleNoTotal);
+
+      const result = await getDocumentReferencePage(PATIENT_UUID);
+
+      expect(result.total).toBe(1);
+    });
+
+    it('extracts nextUrl from bundle link', async () => {
+      const nextUrl = '/openmrs/ws/fhir2/R4/DocumentReference?_page=2';
+      const bundleWithNext: Bundle<DocumentReference> = {
+        ...mockBundle,
+        total: 20,
+        link: [
+          { relation: 'self', url: BASE_URL },
+          { relation: 'next', url: nextUrl },
+        ],
+      };
+      mockedGet.mockResolvedValueOnce(bundleWithNext);
+
+      const result = await getDocumentReferencePage(PATIENT_UUID);
+
+      expect(result.nextUrl).toBe(nextUrl);
+      expect(result.prevUrl).toBeUndefined();
+    });
+
+    it('extracts prevUrl from bundle link', async () => {
+      const prevUrl = '/openmrs/ws/fhir2/R4/DocumentReference?_page=1';
+      const bundleWithPrev: Bundle<DocumentReference> = {
+        ...mockBundle,
+        total: 20,
+        link: [
+          { relation: 'self', url: BASE_URL },
+          { relation: 'previous', url: prevUrl },
+        ],
+      };
+      mockedGet.mockResolvedValueOnce(bundleWithPrev);
+
+      const result = await getDocumentReferencePage(PATIENT_UUID);
+
+      expect(result.prevUrl).toBe(prevUrl);
+      expect(result.nextUrl).toBeUndefined();
+    });
+
+    it('returns undefined nextUrl and prevUrl when no link in bundle', async () => {
+      mockedGet.mockResolvedValueOnce(mockBundle);
+
+      const result = await getDocumentReferencePage(PATIENT_UUID);
+
+      expect(result.nextUrl).toBeUndefined();
+      expect(result.prevUrl).toBeUndefined();
+    });
+
+    it('appends encounter filter when encounterUuids are provided', async () => {
+      mockedGet.mockResolvedValueOnce(mockBundle);
+      const encounterUuids = ['enc-uuid-1', 'enc-uuid-2'];
+
+      await getDocumentReferencePage(PATIENT_UUID, encounterUuids);
+
+      expect(mockedGet).toHaveBeenCalledWith(
+        `${BASE_URL}&encounter=enc-uuid-1,enc-uuid-2`,
+      );
+    });
+
+    it('returns empty documents array for empty bundle', async () => {
+      const emptyBundle: Bundle<DocumentReference> = {
+        resourceType: 'Bundle',
+        type: 'searchset',
+        total: 0,
+        entry: [],
+      };
+      mockedGet.mockResolvedValueOnce(emptyBundle);
+
+      const result = await getDocumentReferencePage(PATIENT_UUID);
+
+      expect(result.documents).toEqual([]);
+      expect(result.total).toBe(0);
     });
   });
 });

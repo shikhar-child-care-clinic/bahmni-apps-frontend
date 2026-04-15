@@ -25,7 +25,7 @@ jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   useTranslation: () => ({ t: (key: string) => key }),
   formatDateTime: () => ({ formattedResult: '15/01/2024 4:00 PM' }),
-  getDocumentReferences: jest.fn(),
+  getDocumentReferencePage: jest.fn(),
   useSubscribeConsultationSaved: jest.fn(),
 }));
 
@@ -117,7 +117,12 @@ const mockQueryData = (
   overrides: Partial<ReturnType<typeof useQuery>> = {},
 ) =>
   ({
-    data: documents,
+    data: {
+      documents,
+      total: documents.length,
+      nextUrl: undefined,
+      prevUrl: undefined,
+    },
     error: null,
     isError: false,
     isLoading: false,
@@ -948,13 +953,9 @@ describe('DocumentsTable', () => {
 
   describe('Accessibility', () => {
     it('passes accessibility tests with data', async () => {
-      (useQuery as jest.Mock).mockReturnValue({
-        data: [mockPdfDocument, mockImageDocument],
-        error: null,
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      });
+      (useQuery as jest.Mock).mockReturnValue(
+        mockQueryData([mockPdfDocument, mockImageDocument]),
+      );
 
       const { container } = renderComponent({ config: defaultConfig });
 
@@ -1021,13 +1022,7 @@ describe('DocumentsTable', () => {
 
     it('passes accessibility tests with modal open', async () => {
       const user = userEvent.setup();
-      (useQuery as jest.Mock).mockReturnValue({
-        data: [mockPdfDocument],
-        error: null,
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      });
+      (useQuery as jest.Mock).mockReturnValue(mockQueryData([mockPdfDocument]));
 
       const { container } = renderComponent({ config: defaultConfig });
 
@@ -1041,13 +1036,7 @@ describe('DocumentsTable', () => {
 
     it('closes modal when Escape key is pressed', async () => {
       const user = userEvent.setup();
-      (useQuery as jest.Mock).mockReturnValue({
-        data: [mockPdfDocument],
-        error: null,
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      });
+      (useQuery as jest.Mock).mockReturnValue(mockQueryData([mockPdfDocument]));
 
       renderComponent({ config: defaultConfig });
 
@@ -1063,13 +1052,7 @@ describe('DocumentsTable', () => {
 
     it('modal dialog is properly labelled with document identifier for screen readers', async () => {
       const user = userEvent.setup();
-      (useQuery as jest.Mock).mockReturnValue({
-        data: [mockPdfDocument],
-        error: null,
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      });
+      (useQuery as jest.Mock).mockReturnValue(mockQueryData([mockPdfDocument]));
 
       renderComponent({ config: defaultConfig });
 

@@ -636,4 +636,160 @@ describe('SortableDataTable', () => {
       expect(screen.getByText('Medication 6')).toBeInTheDocument();
     });
   });
+
+  describe('Server-side pagination (totalItems prop)', () => {
+    const serverPageRows = [
+      {
+        id: 'row-0',
+        name: 'Medication 1',
+        dosage: '1 Tablet',
+        dosageUnit: 'Tablet',
+        instruction: 'Oral',
+        startDate: '01/01/2025',
+        orderDate: '01/01/2025',
+        orderedBy: 'Dr. 1',
+        quantity: '1 Tablet',
+        status: 'active',
+      },
+      {
+        id: 'row-1',
+        name: 'Medication 2',
+        dosage: '2 Tablet',
+        dosageUnit: 'Tablet',
+        instruction: 'Oral',
+        startDate: '01/01/2025',
+        orderDate: '01/01/2025',
+        orderedBy: 'Dr. 2',
+        quantity: '2 Tablet',
+        status: 'active',
+      },
+    ];
+
+    it('renders pagination when totalItems exceeds pageSize', () => {
+      render(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={serverPageRows}
+          ariaLabel="Server Paginated Table"
+          renderCell={renderCell}
+          pageSize={2}
+          totalItems={10}
+          page={1}
+        />,
+      );
+
+      expect(
+        screen.getByRole('button', { name: /next page/i }),
+      ).toBeInTheDocument();
+    });
+
+    it('does not render pagination when totalItems equals pageSize', () => {
+      render(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={serverPageRows}
+          ariaLabel="Server No Pagination Table"
+          renderCell={renderCell}
+          pageSize={10}
+          totalItems={2}
+          page={1}
+        />,
+      );
+
+      expect(
+        screen.queryByRole('button', { name: /next page/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('renders all provided rows without client-side slicing in server-side mode', () => {
+      render(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={serverPageRows}
+          ariaLabel="Server All Rows Table"
+          renderCell={renderCell}
+          pageSize={2}
+          totalItems={20}
+          page={1}
+        />,
+      );
+
+      expect(screen.getByText('Medication 1')).toBeInTheDocument();
+      expect(screen.getByText('Medication 2')).toBeInTheDocument();
+    });
+
+    it('calls onPageChange when next page is clicked in server-side mode', async () => {
+      const user = userEvent.setup();
+      const onPageChange = jest.fn();
+
+      render(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={serverPageRows}
+          ariaLabel="Server Page Change Table"
+          renderCell={renderCell}
+          pageSize={2}
+          totalItems={10}
+          page={1}
+          onPageChange={onPageChange}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /next page/i }));
+
+      expect(onPageChange).toHaveBeenCalledWith(2, 2);
+    });
+
+    it('renders pagination component when totalItems exceeds pageSize with controlled page', () => {
+      render(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={serverPageRows}
+          ariaLabel="Server Controlled Page Table"
+          renderCell={renderCell}
+          pageSize={2}
+          totalItems={10}
+          page={3}
+        />,
+      );
+
+      // Pagination should be rendered — prev/next buttons are present
+      expect(
+        screen.getByRole('button', { name: /previous page/i }),
+      ).toBeInTheDocument();
+    });
+
+    it('does not reset page internally when rows change in server-side mode', async () => {
+      const onPageChange = jest.fn();
+      const { rerender } = render(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={serverPageRows}
+          ariaLabel="Server No Reset Table"
+          renderCell={renderCell}
+          pageSize={2}
+          totalItems={10}
+          page={2}
+          onPageChange={onPageChange}
+        />,
+      );
+
+      // Simulate new page data arriving (rows change) — page should not reset
+      rerender(
+        <SortableDataTable
+          headers={mockHeaders}
+          rows={[{ ...serverPageRows[0], id: 'row-new', name: 'New Med' }]}
+          ariaLabel="Server No Reset Table"
+          renderCell={renderCell}
+          pageSize={2}
+          totalItems={10}
+          page={2}
+          onPageChange={onPageChange}
+        />,
+      );
+
+      // onPageChange should NOT have been called with page 1 (no reset)
+      expect(onPageChange).not.toHaveBeenCalledWith(1, expect.any(Number));
+    });
+  });
 });
