@@ -9,6 +9,7 @@ export interface User {
 export interface UserLocation {
   name: string;
   uuid: string;
+  display?: string;
 }
 
 /**
@@ -27,3 +28,10 @@ export interface AppSetting {
 }
 
 export type AppSettingsResponse = AppSetting[];
+
+/**
+ * Interface representing Locations response from OpenMRS REST API
+ */
+export interface LocationsResponse {
+  results: UserLocation[];
+}
