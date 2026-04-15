@@ -1,6 +1,7 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
+import { getIcon, isValidIconName } from '../iconRegistry';
 import { ICON_SIZE, ICON_PADDING } from './constants';
 import styles from './styles/Icon.module.scss';
 
@@ -15,11 +16,11 @@ export interface IconProps {
 }
 
 /**
- * Icon component that renders FontAwesome icons with customizable size, color, and padding.
+ * Icon component that renders Bahmni registry (Carbon) icons or FontAwesome icons with customizable size, color, and padding.
  *
  * @component
  * @param {Object} props - Component props
- * @param {string} props.name - Icon name in the format "fa-home", "fa-regular-user", or "far-user"
+ * @param {string} props.name - Icon name: either a Bahmni registry name (e.g., "clinical", "registration") or FontAwesome format (e.g., "fa-home", "fas-user")
  * @param {ICON_SIZE} [props.size] - Icon size from ICON_SIZE enum (XXS, XS, SM, LG, XL, XXL, X1-X10)
  * @param {string} [props.color] - Icon color as CSS color value
  * @param {string} props.id - Unique identifier for the icon (used for testing and accessibility)
@@ -28,6 +29,23 @@ export interface IconProps {
  * @param {string} [props.testId] - Test identifier for testing purposes
  * @returns {React.ReactElement} React component
  */
+const getPaddingClass = (padding: ICON_PADDING): string => {
+  switch (padding) {
+    case ICON_PADDING.NONE:
+      return styles.paddingNone;
+    case ICON_PADDING.XXSMALL:
+      return styles.paddingXxsmall;
+    case ICON_PADDING.XSMALL:
+      return styles.paddingXsmall;
+    case ICON_PADDING.SMALL:
+      return styles.paddingSmall;
+    case ICON_PADDING.MEDIUM:
+      return styles.paddingMedium;
+    case ICON_PADDING.LARGE:
+      return styles.paddingLarge;
+  }
+};
+
 export const Icon: React.FC<IconProps> = ({
   name,
   size = ICON_SIZE.XS,
@@ -37,30 +55,33 @@ export const Icon: React.FC<IconProps> = ({
   padding = ICON_PADDING.XXSMALL,
   testId,
 }) => {
+  const paddingClass = getPaddingClass(padding);
+
+  // Branch 1: Bahmni registry icon (Carbon)
+  if (isValidIconName(name)) {
+    const IconComponent = getIcon(name);
+    if (IconComponent) {
+      return (
+        <span
+          className={`${styles.bahmniIcon} ${paddingClass}`}
+          id={id}
+          data-testid={testId}
+          aria-label={ariaLabel}
+        >
+          <IconComponent />
+        </span>
+      );
+    }
+  }
+
+  // Branch 2: FontAwesome icon (fa-* / fas-*)
   if (!name || !/^fas?-[a-zA-Z0-9_-]+$/.test(name)) {
     return;
   }
 
-  const getPaddingClass = (padding: ICON_PADDING): string => {
-    switch (padding) {
-      case ICON_PADDING.NONE:
-        return styles.paddingNone;
-      case ICON_PADDING.XXSMALL:
-        return styles.paddingXxsmall;
-      case ICON_PADDING.XSMALL:
-        return styles.paddingXsmall;
-      case ICON_PADDING.SMALL:
-        return styles.paddingSmall;
-      case ICON_PADDING.MEDIUM:
-        return styles.paddingMedium;
-      case ICON_PADDING.LARGE:
-        return styles.paddingLarge;
-    }
-  };
-
   return (
     <span
-      className={`${styles.bahmniIcon} ${getPaddingClass(padding)}`}
+      className={`${styles.bahmniIcon} ${paddingClass}`}
       id={id}
       data-testid={testId}
       aria-label={ariaLabel}

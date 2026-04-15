@@ -81,6 +81,20 @@ describe('Icon Component', () => {
     expect(icon.container).toBeEmptyDOMElement();
   });
 
+  it('renders Bahmni registry icon for valid name', () => {
+    render(
+      <BahmniIcon name="clinical" id="clinical-icon" ariaLabel="Clinical" />,
+    );
+    expect(screen.getByLabelText('Clinical')).toBeInTheDocument();
+  });
+
+  it('renders Bahmni registry icon for registration', () => {
+    render(
+      <BahmniIcon name="registration" id="reg-icon" ariaLabel="Registration" />,
+    );
+    expect(screen.getByLabelText('Registration')).toBeInTheDocument();
+  });
+
   describe('Accessibility', () => {
     test('accessible forms pass axe', async () => {
       const { container } = render(
