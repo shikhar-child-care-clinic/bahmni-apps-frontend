@@ -1,0 +1,58 @@
+@use "@carbon/react/scss/spacing" as *;
+@use "@carbon/react/scss/type" as *;
+
+.container {
+  padding: $spacing-05 $spacing-04;
+}
+
+.tileColumn {
+  padding: $spacing-03;
+}
+
+.skeletonTile {
+  height: 180px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.emptyState {
+  @include type-style("label-01");
+  text-align: center;
+  padding: $spacing-09 $spacing-04;
+  color: var(--cds-text-02);
+}
+
+.error {
+  text-align: center;
+  padding: $spacing-09 $spacing-04;
+
+  p {
+    color: var(--cds-text-error);
+    margin-bottom: $spacing-04;
+  }
+
+  button {
+    padding: $spacing-02 $spacing-03;
+    background: var(--cds-interactive-01);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--cds-interactive-02);
+    }
+  }
+}
