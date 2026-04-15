@@ -7,13 +7,7 @@ import {
   DocumentViewModel,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { useNotification } from '../notification';
 import { WidgetProps } from '../registry/model';
@@ -57,11 +51,7 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPageSize, setSelectedPageSize] = useState(configPageSize);
-  const [currentFetchUrl, setCurrentFetchUrl] = useState<string | undefined>(
-    undefined,
-  );
   const [serverTotal, setServerTotal] = useState<number | undefined>(undefined);
-  const pageUrlsCacheRef = useRef<Map<number, string>>(new Map());
 
   const handleViewAttachments = useCallback((doc: DocumentViewModel) => {
     setSelectedDoc(doc);
@@ -84,7 +74,6 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
       patientUUID!,
       encounterUuids,
       currentPage,
-      currentFetchUrl ?? null,
       selectedPageSize,
     ],
     enabled: !!patientUUID,
@@ -93,26 +82,21 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
         patientUUID!,
         encounterUuids,
         selectedPageSize,
-        currentFetchUrl,
+        currentPage,
       ),
   });
 
-  // Update server total and cache next page URL when data arrives
+  // Update server total when data arrives
   useEffect(() => {
     if (data) {
       setServerTotal(data.total);
-      if (data.nextUrl) {
-        pageUrlsCacheRef.current.set(currentPage + 1, data.nextUrl);
-      }
     }
-  }, [data, currentPage]);
+  }, [data]);
 
   // Reset pagination when patient changes
   useEffect(() => {
     setCurrentPage(1);
-    setCurrentFetchUrl(undefined);
     setServerTotal(undefined);
-    pageUrlsCacheRef.current.clear();
   }, [patientUUID]);
 
   useEffect(() => {
@@ -164,22 +148,14 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
   const handlePageChange = useCallback(
     (newPage: number, newPageSize: number) => {
       if (newPageSize !== selectedPageSize) {
-        // Page size changed: reset to page 1, clear URL cache, re-fetch with new _count
+        // Page size changed: reset to page 1, re-fetch with new _count
         setSelectedPageSize(newPageSize);
         setCurrentPage(1);
-        setCurrentFetchUrl(undefined);
         setServerTotal(undefined);
-        pageUrlsCacheRef.current.clear();
-      } else if (newPage === 1) {
-        setCurrentPage(1);
-        setCurrentFetchUrl(undefined);
       } else {
-        const url = pageUrlsCacheRef.current.get(newPage);
-        if (url) {
-          setCurrentPage(newPage);
-          setCurrentFetchUrl(url);
-        }
-        // If URL not yet cached (e.g. user jumps pages), ignore the navigation
+        // Offset-based pagination: any page can be fetched directly via
+        // _getpagesoffset = (page - 1) * _count — no cursor cache needed
+        setCurrentPage(newPage);
       }
     },
     [selectedPageSize],

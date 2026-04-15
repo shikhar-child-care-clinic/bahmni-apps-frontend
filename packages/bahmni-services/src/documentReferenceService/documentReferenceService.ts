@@ -76,52 +76,38 @@ export async function getFormattedDocumentReferences(
 export interface DocumentReferencePage {
   documents: DocumentViewModel[];
   total: number;
-  nextUrl?: string;
-  prevUrl?: string;
 }
 
 /**
- * Fetches a single page of patient documents from the FHIR DocumentReference endpoint.
- * Supports server-side pagination via FHIR Bundle link relations (next/previous).
+ * Fetches a single page of patient documents using offset-based pagination.
+ * Uses _getpagesoffset = (page - 1) * count to jump directly to any page.
  * @param patientUuid - The UUID of the patient to fetch documents for
  * @param encounterUuids - Optional array of encounter UUIDs to filter documents
  * @param count - Number of items per page (default 10)
- * @param pageUrl - If provided, fetch this URL directly (for next/prev navigation)
- * @returns Promise resolving to a DocumentReferencePage with documents and pagination info
+ * @param page - 1-based page number (default 1)
+ * @returns Promise resolving to a DocumentReferencePage with documents and total count
  */
 export async function getDocumentReferencePage(
   patientUuid: string,
   encounterUuids?: string[],
-  count?: number,
-  pageUrl?: string,
+  count: number = 10,
+  page: number = 1,
 ): Promise<DocumentReferencePage> {
-  let url: string;
-  if (pageUrl) {
-    // The FHIR server embeds its own hostname in link URLs (e.g. http://localhost/...).
-    // Strip the hostname and use only pathname + search so Axios resolves it against
-    // the actual server configured in the client, not the server's internal hostname.
-    try {
-      const parsed = new URL(pageUrl);
-      url = parsed.pathname + parsed.search;
-    } catch {
-      url = pageUrl;
-    }
-  } else {
-    url = PATIENT_DOCUMENT_REFERENCES_URL(patientUuid, encounterUuids, count);
-  }
+  const offset = (page - 1) * count;
+  const url = PATIENT_DOCUMENT_REFERENCES_URL(
+    patientUuid,
+    encounterUuids,
+    count,
+    offset,
+  );
   const bundle = await get<Bundle<DocumentReference>>(url);
 
   const entries = (bundle.entry ?? []).filter(
     (entry): entry is { resource: DocumentReference } => !!entry.resource,
   );
 
-  const nextUrl = bundle.link?.find((l) => l.relation === 'next')?.url;
-  const prevUrl = bundle.link?.find((l) => l.relation === 'previous')?.url;
-
   return {
     documents: mapDocumentReferencesToViewModels(entries),
     total: bundle.total ?? entries.length,
-    nextUrl,
-    prevUrl,
   };
 }

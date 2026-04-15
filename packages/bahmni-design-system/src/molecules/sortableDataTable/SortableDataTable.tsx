@@ -51,6 +51,8 @@ export const SortableDataTable = <T extends { id: string }>({
   page,
 }: SortableDataTableProps<T>) => {
   const [currentPage, setCurrentPage] = useState(1);
+  // 0 is safe when pageSize is undefined — internalPageSize is never used
+  // in slicing or rendering when pagination is disabled (guarded by pageSize !== undefined)
   const [internalPageSize, setInternalPageSize] = useState<number>(
     pageSize ?? 0,
   );

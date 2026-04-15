@@ -35,11 +35,9 @@ const mockedGetDocumentReferencePage =
     typeof getDocumentReferencePage
   >;
 
-const wrapPage = (documents: any[], nextUrl?: string, prevUrl?: string) => ({
+const wrapPage = (documents: any[], total?: number) => ({
   documents,
-  total: documents.length,
-  nextUrl,
-  prevUrl,
+  total: total ?? documents.length,
 });
 
 const mockAddNotification = jest.fn();
@@ -309,7 +307,7 @@ describe('DocumentsTable Integration', () => {
         'test-patient-uuid',
         encounterUuids,
         10,
-        undefined,
+        1,
       );
     });
   });
@@ -326,7 +324,7 @@ describe('DocumentsTable Integration', () => {
         'test-patient-uuid',
         undefined,
         10,
-        undefined,
+        1,
       );
     });
   });
@@ -381,26 +379,15 @@ describe('DocumentsTable Integration', () => {
     expect(rows[3]).toHaveTextContent('No_Date_Doc'); // no date last
   });
 
-  it('navigates to page 2 when server provides nextUrl', async () => {
+  it('navigates to page 2 via offset-based fetch', async () => {
     const user = userEvent.setup();
-    const nextPageUrl =
-      '/openmrs/ws/fhir2/R4/DocumentReference?patient=test-patient-uuid&_sort=-date&_count=2&_page=2';
 
-    // Page 1: newest 2 docs, server provides nextUrl
-    mockedGetDocumentReferencePage.mockResolvedValueOnce({
-      documents: [prescriptionDoc, xrayDoc],
-      total: 4,
-      nextUrl: nextPageUrl,
-      prevUrl: undefined,
-    });
-
-    // Page 2: older 2 docs
-    mockedGetDocumentReferencePage.mockResolvedValueOnce({
-      documents: [labDoc, multiAttachmentDoc],
-      total: 4,
-      nextUrl: undefined,
-      prevUrl: '/openmrs/ws/fhir2/R4/DocumentReference?_page=1',
-    });
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc, xrayDoc], 4),
+    );
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([labDoc, multiAttachmentDoc], 4),
+    );
 
     renderComponent({ config: { ...defaultConfig, pageSize: 2 } });
 
@@ -408,19 +395,136 @@ describe('DocumentsTable Integration', () => {
       expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
     });
 
-    // Page 1: first two docs visible
-    expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
-    expect(screen.getByText('XRay_Report_2024')).toBeInTheDocument();
-
-    // Navigate to page 2
     await user.click(screen.getByRole('button', { name: /next page/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Lab_Result_2024')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('MultiPage_Report_2024')).toBeInTheDocument();
+    // Service called with page=2 (offset computed internally: (2-1)*2=2)
+    expect(mockedGetDocumentReferencePage).toHaveBeenLastCalledWith(
+      'test-patient-uuid',
+      undefined,
+      2,
+      2,
+    );
     expect(screen.queryByText('Prescription_2024')).not.toBeInTheDocument();
+  });
+
+  it('navigates back to page 1 when previous button is clicked', async () => {
+    const user = userEvent.setup();
+
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc, xrayDoc], 4),
+    );
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([labDoc, multiAttachmentDoc], 4),
+    );
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc, xrayDoc], 4),
+    );
+
+    renderComponent({ config: { ...defaultConfig, pageSize: 2 } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /next page/i }));
+    await waitFor(() => {
+      expect(screen.getByText('Lab_Result_2024')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /previous page/i }));
+    await waitFor(() => {
+      expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
+    });
+
+    // Service called with page=1 (offset=0)
+    expect(mockedGetDocumentReferencePage).toHaveBeenLastCalledWith(
+      'test-patient-uuid',
+      undefined,
+      2,
+      1,
+    );
+    expect(screen.queryByText('Lab_Result_2024')).not.toBeInTheDocument();
+  });
+
+  it('re-fetches from page 1 when page size is changed via dropdown', async () => {
+    const user = userEvent.setup();
+
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc, xrayDoc], 4),
+    );
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc, xrayDoc, labDoc, multiAttachmentDoc], 4),
+    );
+
+    renderComponent({ config: { ...defaultConfig, pageSize: 2 } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
+    });
+
+    const select = screen.getByRole('combobox', { name: /items per page/i });
+    await user.selectOptions(select, '5');
+
+    await waitFor(() => {
+      expect(mockedGetDocumentReferencePage).toHaveBeenCalledTimes(2);
+    });
+
+    // Re-fetch from page 1 with new page size
+    expect(mockedGetDocumentReferencePage).toHaveBeenLastCalledWith(
+      'test-patient-uuid',
+      undefined,
+      5,
+      1,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Lab_Result_2024')).toBeInTheDocument();
+    });
+  });
+
+  it('jumps directly to any page using offset (no sequential traversal needed)', async () => {
+    const user = userEvent.setup();
+
+    // Page 1 response (total=10 → 5 pages with pageSize=2)
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([prescriptionDoc, xrayDoc], 10),
+    );
+
+    // Page 5 response fetched directly via offset
+    mockedGetDocumentReferencePage.mockResolvedValueOnce(
+      wrapPage([labDoc, multiAttachmentDoc], 10),
+    );
+
+    renderComponent({ config: { ...defaultConfig, pageSize: 2 } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Prescription_2024')).toBeInTheDocument();
+    });
+
+    // Jump to page 5 directly via page number combobox
+    const pageSelect = screen.getByRole('combobox', {
+      name: /page of \d+ pages/i,
+    });
+    await user.selectOptions(pageSelect, '5');
+
+    // Service called with page=5 directly (offset = (5-1)*2 = 8)
+    await waitFor(() => {
+      expect(mockedGetDocumentReferencePage).toHaveBeenCalledTimes(2);
+    });
+    expect(mockedGetDocumentReferencePage).toHaveBeenLastCalledWith(
+      'test-patient-uuid',
+      undefined,
+      2,
+      5,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Lab_Result_2024')).toBeInTheDocument();
+    });
   });
 
   it('accepts and passes pageSize configuration to SortableDataTable', async () => {
@@ -452,12 +556,12 @@ describe('DocumentsTable Integration', () => {
       expect(mockedGetDocumentReferencePage).toHaveBeenCalled();
     });
 
-    // Service is called with the configured pageSize
+    // Service is called with the configured pageSize and page 1
     expect(mockedGetDocumentReferencePage).toHaveBeenCalledWith(
       'test-patient-uuid',
       undefined,
       2,
-      undefined,
+      1,
     );
   });
 
@@ -565,7 +669,7 @@ describe('DocumentsTable Integration', () => {
           'test-patient-uuid',
           undefined,
           5,
-          undefined,
+          1,
         );
       });
     });
