@@ -10,5 +10,5 @@
 .error {
   @include type-style("label-01");
   padding: $spacing-03 $spacing-04;
-  color: $text-error;
+  color: var(--cds-text-error);
 }
