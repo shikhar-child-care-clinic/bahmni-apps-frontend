@@ -1,8 +1,15 @@
 @use "@carbon/react/scss/spacing" as *;
 @use "@carbon/react/scss/type" as *;
 
-.menuButton {
-  min-width: auto;
+.profileContainer {
+  display: flex;
+  align-items: center;
+  gap: $spacing-03;
+}
+
+.greeting {
+  @include type-style("body-compact-01");
+  white-space: nowrap;
 }
 
 .loading {

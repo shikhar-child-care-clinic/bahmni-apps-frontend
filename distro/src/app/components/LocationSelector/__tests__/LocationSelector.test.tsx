@@ -117,7 +117,7 @@ describe('LocationSelector', () => {
     });
   });
 
-  it('uses translation key for select location label', async () => {
+  it('renders dropdown with current location as label', async () => {
     render(
       <LocationProvider>
         <LocationSelector />
@@ -125,7 +125,7 @@ describe('LocationSelector', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('HOME_SELECT_LOCATION')).toBeInTheDocument();
+      expect(screen.getByText('General Ward')).toBeInTheDocument();
     });
   });
 

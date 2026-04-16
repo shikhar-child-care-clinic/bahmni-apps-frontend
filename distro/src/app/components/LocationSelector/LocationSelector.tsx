@@ -49,7 +49,8 @@ export const LocationSelector: React.FC = () => {
   return (
     <Dropdown
       id="location-selector"
-      titleText={t('HOME_SELECT_LOCATION')}
+      titleText=""
+      hideLabel
       label={location.name}
       items={availableLocations}
       itemToString={(item: UserLocation) => item?.display ?? item?.name ?? ''}
@@ -58,7 +59,7 @@ export const LocationSelector: React.FC = () => {
         handleLocationChange(selectedItem)
       }
       disabled={isUpdating}
-      size="md"
+      size="sm"
       data-testid="location-selector"
     />
   );

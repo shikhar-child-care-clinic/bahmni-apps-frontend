@@ -34,11 +34,11 @@ describe('HomePageHeader', () => {
     expect(header).toHaveAttribute('aria-label', 'Bahmni');
   });
 
-  it('renders Bahmni branding', () => {
+  it('renders Home branding', () => {
     render(<HomePageHeader />);
 
     expect(screen.getByTestId('header-name')).toBeInTheDocument();
-    expect(screen.getByText('Bahmni')).toBeInTheDocument();
+    expect(screen.getByText('Home')).toBeInTheDocument();
   });
 
   it('renders location selector', () => {

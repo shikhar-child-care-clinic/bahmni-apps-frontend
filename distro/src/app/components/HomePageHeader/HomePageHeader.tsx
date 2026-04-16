@@ -14,7 +14,7 @@ export const HomePageHeader: React.FC = () => (
     data-testid="home-page-header"
     className={styles.header}
   >
-    <HeaderName href="/" prefix="Bahmni" />
+    <HeaderName href="/" prefix="Home" />
     <HeaderGlobalBar>
       <div className={styles.locationSelector}>
         <LocationSelector />
