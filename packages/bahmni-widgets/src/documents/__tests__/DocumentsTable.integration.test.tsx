@@ -6,6 +6,7 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { usePatientUUID } from '../../hooks/usePatientUUID';
 import { useNotification } from '../../notification';
 import DocumentsTable from '../DocumentsTable';
@@ -109,11 +110,20 @@ describe('DocumentsTable Integration', () => {
     ],
   };
 
-  const renderComponent = (props = {}) =>
+  const renderComponent = (props = {}, patientUuid = 'test-patient-uuid') =>
     render(
-      <QueryClientProvider client={queryClient}>
-        <DocumentsTable {...{ config: defaultConfig, ...props }} />
-      </QueryClientProvider>,
+      <MemoryRouter initialEntries={[`/patient/${patientUuid}`]}>
+        <Routes>
+          <Route
+            path="/patient/:patientUuid"
+            element={
+              <QueryClientProvider client={queryClient}>
+                <DocumentsTable {...{ config: defaultConfig, ...props }} />
+              </QueryClientProvider>
+            }
+          />
+        </Routes>
+      </MemoryRouter>,
     );
 
   beforeEach(() => {
@@ -612,7 +622,20 @@ describe('DocumentsTable Integration', () => {
     (usePatientUUID as jest.Mock).mockReturnValue(null);
     mockedGetDocumentReferencePage.mockResolvedValueOnce(wrapPage([]));
 
-    renderComponent();
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <QueryClientProvider client={queryClient}>
+                <DocumentsTable config={defaultConfig} />
+              </QueryClientProvider>
+            }
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
 
     // Wait a render cycle to ensure no query fires
     await act(async () => {});

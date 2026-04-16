@@ -238,24 +238,12 @@ describe('SortableDataTable', () => {
     });
   });
 
-  it('handles undefined rows gracefully', () => {
+  it.each([undefined, null])('handles %s rows gracefully', (rows) => {
     render(
       <SortableDataTable
         headers={mockHeaders}
-        rows={undefined as any}
-        ariaLabel="Undefined Rows"
-      />,
-    );
-
-    expect(screen.getByTestId('sortable-data-table-empty')).toBeInTheDocument();
-  });
-
-  it('handles null rows gracefully', () => {
-    render(
-      <SortableDataTable
-        headers={mockHeaders}
-        rows={null as any}
-        ariaLabel="Null Rows"
+        rows={rows as any}
+        ariaLabel="Empty Rows"
       />,
     );
 
@@ -330,7 +318,6 @@ describe('SortableDataTable', () => {
   });
   describe('Accessibility', () => {
     it('has no accessibility violations', async () => {
-      // Arrange
       const { container } = render(
         <SortableDataTable
           headers={mockHeaders}
