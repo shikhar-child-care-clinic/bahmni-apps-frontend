@@ -1,5 +1,4 @@
 import {
-  User,
   Stethoscope,
   Image,
   Document,
@@ -13,12 +12,13 @@ import {
   ReportData,
   Terminal,
   ArrowRight,
+  UserFilled,
 } from '@carbon/icons-react';
 import React from 'react';
 import { BAHMNI_ICON_NAMES, BahmniIconName } from './constants';
 
 export const bahmniIconRegistry: Record<BahmniIconName, React.ComponentType> = {
-  [BAHMNI_ICON_NAMES.REGISTRATION]: User,
+  [BAHMNI_ICON_NAMES.REGISTRATION]: UserFilled,
   [BAHMNI_ICON_NAMES.CLINICAL]: Stethoscope,
   [BAHMNI_ICON_NAMES.PROGRAMS]: List,
   [BAHMNI_ICON_NAMES.RADIOLOGY]: Image,

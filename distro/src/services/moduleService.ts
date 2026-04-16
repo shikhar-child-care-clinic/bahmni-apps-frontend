@@ -13,8 +13,10 @@ export interface Module {
 }
 
 const BASE_URL = '/bahmni_config/openmrs/apps';
-const CUSTOM_URL = '/implementation_config/openmrs/apps';
 const EXTENSION_POINT_HOME = 'org.bahmni.home.dashboard';
+
+const toArray = (data: Module[] | Record<string, Module>): Module[] =>
+  Array.isArray(data) ? data : Object.values(data);
 
 export const fetchModuleExtensions = async (
   appName: string = 'home',
@@ -27,26 +29,7 @@ export const fetchModuleExtensions = async (
       throw new Error(`Failed to load base extensions: ${baseResponse.status}`);
     }
 
-    const baseExtensions: Module[] = await baseResponse.json();
-    let customExtensions: Module[] = [];
-
-    try {
-      const customUrl = `${CUSTOM_URL}/${appName}/extension.json`;
-      const customResponse = await fetch(customUrl);
-
-      if (customResponse.ok) {
-        customExtensions = await customResponse.json();
-      }
-    } catch {
-      // Custom config is optional - not an error if missing
-      // eslint-disable-next-line no-console
-      console.debug(
-        `Custom extensions not found at ${CUSTOM_URL}/${appName}/extension.json`,
-      );
-    }
-
-    const merged = mergeExtensions(baseExtensions, customExtensions);
-    return merged;
+    return toArray(await baseResponse.json());
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error fetching module extensions:', error);
@@ -109,23 +92,4 @@ export const getVisibleModules = async (
   const byPrivilege = filterByPrivilege(byPoint, userPrivileges);
   const byStatus = filterByOnlineStatus(byPrivilege);
   return sortByOrder(byStatus);
-};
-
-const mergeExtensions = (
-  baseExtensions: Module[],
-  customExtensions: Module[],
-): Module[] => {
-  if (!customExtensions || customExtensions.length === 0) {
-    return baseExtensions;
-  }
-
-  const customMap = new Map(customExtensions.map((ext) => [ext.id, ext]));
-  const merged = baseExtensions.map(
-    (baseExt) => customMap.get(baseExt.id) ?? baseExt,
-  );
-
-  const baseIds = new Set(baseExtensions.map((ext) => ext.id));
-  const newExtensions = customExtensions.filter((ext) => !baseIds.has(ext.id));
-
-  return [...merged, ...newExtensions];
 };

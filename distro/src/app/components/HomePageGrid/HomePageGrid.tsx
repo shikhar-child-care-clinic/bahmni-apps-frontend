@@ -52,7 +52,7 @@ export const HomePageGrid: React.FC = () => {
           {[...Array(6)].map(() => (
             <Column
               key={Math.random()}
-              lg={4}
+              lg={5}
               md={4}
               sm={4}
               className={styles.tileColumn}
@@ -100,7 +100,7 @@ export const HomePageGrid: React.FC = () => {
         {modules.map((module) => (
           <Column
             key={module.id}
-            lg={4}
+            lg={5}
             md={4}
             sm={4}
             className={styles.tileColumn}

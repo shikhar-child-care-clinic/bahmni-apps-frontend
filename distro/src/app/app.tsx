@@ -3,6 +3,8 @@ import {
   AppContextProvider,
   NotificationProvider,
   NotificationServiceComponent,
+  ActivePractitionerProvider,
+  UserPrivilegeProvider,
 } from '@bahmni/widgets';
 import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
@@ -34,18 +36,22 @@ export function App() {
   return (
     <LocationProvider>
       <AppContextProvider>
-        <NotificationProvider>
-          <NotificationServiceComponent />
-          <Suspense fallback={<Loading />}>
-            <Routes>
-              <Route index element={<IndexPage />} />
-              <Route path="/clinical/*" element={<ClinicalApp />} />
-              <Route path="/registration/*" element={<RegistrationApp />} />
-              <Route path="/appointments/*" element={<AppointmentsApp />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-        </NotificationProvider>
+        <ActivePractitionerProvider>
+          <UserPrivilegeProvider>
+            <NotificationProvider>
+              <NotificationServiceComponent />
+              <Suspense fallback={<Loading />}>
+                <Routes>
+                  <Route index element={<IndexPage />} />
+                  <Route path="/clinical/*" element={<ClinicalApp />} />
+                  <Route path="/registration/*" element={<RegistrationApp />} />
+                  <Route path="/appointments/*" element={<AppointmentsApp />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </Suspense>
+            </NotificationProvider>
+          </UserPrivilegeProvider>
+        </ActivePractitionerProvider>
       </AppContextProvider>
     </LocationProvider>
   );

@@ -1,4 +1,6 @@
+import { initFontAwesome } from '@bahmni/design-system';
 import { initAppI18n } from '@bahmni/services';
+import '@bahmni/widgets/styles';
 import React, { StrictMode } from 'react';
 import * as ReactDOMModule from 'react-dom';
 import { createRoot } from 'react-dom/client';
@@ -22,7 +24,8 @@ declare global {
 window.React = React;
 window.ReactDOM = ReactDOMModule;
 
-// Initialize i18n before rendering the app
+// Initialize i18n and FontAwesome before rendering the app
+initFontAwesome();
 initAppI18n('home').then(() => {
   const root = createRoot(document.getElementById('root') as HTMLElement);
   root.render(

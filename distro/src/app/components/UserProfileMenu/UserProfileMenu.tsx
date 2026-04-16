@@ -6,6 +6,7 @@ import {
   getFormattedError,
 } from '@bahmni/services';
 import { useActivePractitioner } from '@bahmni/widgets';
+import { UserAvatar } from '@carbon/icons-react';
 import React, { useState } from 'react';
 import styles from './styles/UserProfileMenu.module.scss';
 
@@ -47,23 +48,27 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
   };
 
   return (
-    <MenuButton
-      label={`Hi, ${user.display}`}
-      className={styles.menuButton}
-      data-testid="user-profile-menu"
-    >
-      <MenuItem
-        label={t('HOME_CHANGE_PASSWORD')}
-        onClick={onChangePassword}
-        data-testid="change-password-option"
-      />
-      <MenuItemDivider />
-      <MenuItem
-        label={t('HOME_LOGOUT')}
-        onClick={handleLogout}
-        disabled={isLoggingOut}
-        data-testid="logout-option"
-      />
-    </MenuButton>
+    <div className={styles.profileContainer}>
+      <UserAvatar size={20} aria-hidden="true" />
+      <MenuButton
+        label={`Hi, ${user.display}`}
+        className={styles.menuButton}
+        size="sm"
+        data-testid="user-profile-menu"
+      >
+        <MenuItem
+          label={t('HOME_CHANGE_PASSWORD')}
+          onClick={onChangePassword}
+          data-testid="change-password-option"
+        />
+        <MenuItemDivider />
+        <MenuItem
+          label={t('HOME_LOGOUT')}
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          data-testid="logout-option"
+        />
+      </MenuButton>
+    </div>
   );
 };
