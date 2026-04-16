@@ -46,6 +46,7 @@ const FormsTable: React.FC<WidgetProps> = ({
   const [selectedRecord, setSelectedRecord] =
     useState<FormRecordViewModel | null>(null);
   const numberOfVisits = config?.numberOfVisits as number;
+  const hideThumbnail = !!config?.hideThumbnail;
 
   const emptyEncounterFilter = shouldEnableEncounterFilter(
     episodeOfCareUuids,
@@ -311,6 +312,7 @@ const FormsTable: React.FC<WidgetProps> = ({
                     index={index}
                     formName={selectedRecord.formName}
                     comment={comment}
+                    hideThumbnail={hideThumbnail}
                   />
                 ))}
               </div>
