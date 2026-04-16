@@ -2,11 +2,12 @@ import { SortableDataTable, Tag } from '@bahmni/design-system';
 import {
   useTranslation,
   formatDateTime,
-  getPatientPrograms,
+  getPatientProgramsPage,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
+import { WidgetProps } from '../registry/model';
 import { PatientProgramViewModel } from './model';
 import styles from './styles/PatientProgramsTable.module.scss';
 import {
@@ -15,49 +16,96 @@ import {
   extractProgramAttributeNames,
 } from './utils';
 
-export const programsQueryKeys = (
-  patientUUID: string,
-  programAttributes: string[],
-) => ['programs', patientUUID, programAttributes] as const;
-
-const fetchPatientPrograms = async (
-  patientUUID: string,
-  programAttributes: string[],
-): Promise<PatientProgramViewModel[]> => {
-  const response = await getPatientPrograms(patientUUID!);
-  return createPatientProgramViewModal(response, programAttributes);
-};
-
-interface PatientProgramsTableProps {
-  config: {
-    fields: string[];
-  };
-}
-
 /**
  * Component to display patient programs using SortableDataTable
  */
-const PatientProgramsTable: React.FC<PatientProgramsTableProps> = ({
-  config,
-}) => {
+const PatientProgramsTable: React.FC<WidgetProps> = ({ config }) => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
+  // Number() safely handles non-numeric config values (NaN → falsy → fallback 15)
+  const configPageSize = Number(config?.pageSize) || 15;
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedPageSize, setSelectedPageSize] = useState(configPageSize);
+  const [serverTotal, setServerTotal] = useState<number | undefined>(undefined);
 
   const programAttributes = useMemo(
-    () => extractProgramAttributeNames(config?.fields),
+    () => extractProgramAttributeNames((config?.fields as string[]) ?? []),
     [config?.fields],
   );
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: programsQueryKeys(patientUUID!, programAttributes),
+    queryKey: [
+      'programs',
+      patientUUID!,
+      programAttributes,
+      currentPage,
+      selectedPageSize,
+    ],
     enabled: !!patientUUID,
-    queryFn: () => fetchPatientPrograms(patientUUID!, programAttributes),
+    queryFn: async () => {
+      const page = await getPatientProgramsPage(
+        patientUUID!,
+        selectedPageSize,
+        currentPage,
+      );
+      return {
+        programs: createPatientProgramViewModal(
+          { results: page.programs },
+          programAttributes,
+        ),
+        total: page.total,
+      };
+    },
   });
 
+  // Update server total when data arrives
+  useEffect(() => {
+    if (data) {
+      setServerTotal(data.total);
+    }
+  }, [data]);
+
+  // Reset pagination when patient changes
+  useEffect(() => {
+    setCurrentPage(1);
+    setServerTotal(undefined);
+  }, [patientUUID]);
+
+  const handlePageChange = useCallback(
+    (newPage: number, newPageSize: number) => {
+      if (newPageSize !== selectedPageSize) {
+        // Page size changed: reset to page 1, re-fetch with new limit
+        setSelectedPageSize(newPageSize);
+        setCurrentPage(1);
+        setServerTotal(undefined);
+      } else {
+        // Offset-based pagination: any page can be fetched directly via
+        // startIndex = (page - 1) * limit — no cursor cache needed
+        setCurrentPage(newPage);
+      }
+    },
+    [selectedPageSize],
+  );
+
   const headers = useMemo(
-    () => createProgramHeaders(config.fields, t),
+    () => createProgramHeaders((config?.fields as string[]) ?? [], t),
     [config?.fields],
   );
+
+  // Server-side sort is not supported by bahmniprogramenrollment endpoint.
+  // Apply client-side sort by dateEnrolled descending (most recent first).
+  const sortedPrograms = useMemo(() => {
+    const programs = data?.programs ?? [];
+    return [...programs].sort((a, b) => {
+      if (!a.dateEnrolled && !b.dateEnrolled) return 0;
+      if (!a.dateEnrolled) return 1;
+      if (!b.dateEnrolled) return -1;
+      return (
+        new Date(b.dateEnrolled).getTime() - new Date(a.dateEnrolled).getTime()
+      );
+    });
+  }, [data?.programs]);
 
   const renderCell = (program: PatientProgramViewModel, cellId: string) => {
     switch (cellId) {
@@ -144,13 +192,17 @@ const PatientProgramsTable: React.FC<PatientProgramsTableProps> = ({
       <SortableDataTable
         headers={headers}
         ariaLabel={t('PROGRAMS_TABLE_ARIA_LABEL')}
-        rows={data ?? []}
+        rows={sortedPrograms}
         loading={isLoading}
         errorStateMessage={isError ? t('ERROR_DEFAULT_TITLE') : null}
         emptyStateMessage={t('PROGRAMS_TABLE_MESSAGE_NO_DATA')}
         renderCell={renderCell}
         className={styles.table}
         dataTestId="patient-programs-table"
+        pageSize={selectedPageSize}
+        totalItems={serverTotal}
+        page={currentPage}
+        onPageChange={handlePageChange}
       />
     </div>
   );

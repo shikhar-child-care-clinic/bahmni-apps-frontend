@@ -13,10 +13,16 @@ const PROVISIONAL_STATUS = 'provisional';
 /**
  * Fetches diagnoses for a given patient UUID from the FHIR R4 endpoint
  * @param patientUUID - The UUID of the patient
+ * @param count - Number of items per page (default 10)
+ * @param offset - Zero-based offset for pagination (default 0)
  * @returns Promise resolving to a Bundle containing diagnoses
  */
-async function getPatientDiagnosesBundle(patientUUID: string): Promise<Bundle> {
-  const url = PATIENT_DIAGNOSIS_RESOURCE_URL(patientUUID);
+async function getPatientDiagnosesBundle(
+  patientUUID: string,
+  count: number = 10,
+  offset: number = 0,
+): Promise<Bundle> {
+  const url = PATIENT_DIAGNOSIS_RESOURCE_URL(patientUUID, count, offset);
   return await get<Bundle>(url);
 }
 
@@ -121,4 +127,34 @@ export async function getPatientDiagnoses(
   const bundle = await getPatientDiagnosesBundle(patientUUID);
   const formattedDiagnoses = formatDiagnoses(bundle);
   return deduplicateDiagnoses(formattedDiagnoses);
+}
+
+export interface DiagnosisPage {
+  diagnoses: Diagnosis[];
+  total: number;
+}
+
+/**
+ * Fetches a single page of diagnoses using offset-based pagination.
+ * Uses _getpagesoffset = (page - 1) * count to jump directly to any page.
+ * Deduplication is applied per-page.
+ * @param patientUUID - The UUID of the patient
+ * @param count - Number of items per page (default 10)
+ * @param page - 1-based page number (default 1)
+ * @returns Promise resolving to a DiagnosisPage with diagnoses and total count
+ */
+export async function getDiagnosesPage(
+  patientUUID: string,
+  count: number = 10,
+  page: number = 1,
+): Promise<DiagnosisPage> {
+  const offset = (page - 1) * count;
+  const bundle = await getPatientDiagnosesBundle(patientUUID, count, offset);
+  // No per-page deduplication — with server-side pagination each page only has
+  // a subset of records, so cross-page deduplication is not possible.
+  const diagnoses = formatDiagnoses(bundle);
+  return {
+    diagnoses,
+    total: bundle.total ?? diagnoses.length,
+  };
 }

@@ -2,9 +2,13 @@ import { Coding } from 'fhir/r4';
 import { OPENMRS_FHIR_R4 } from '../constants/app';
 import { HL7_CONDITION_CATEGORY_DIAGNOSIS_CODE } from '../constants/fhir';
 
-export const PATIENT_DIAGNOSIS_RESOURCE_URL = (patientUUID: string) =>
+export const PATIENT_DIAGNOSIS_RESOURCE_URL = (
+  patientUUID: string,
+  count: number = 10,
+  offset: number = 0,
+) =>
   OPENMRS_FHIR_R4 +
-  `/Condition?category=${HL7_CONDITION_CATEGORY_DIAGNOSIS_CODE}&patient=${patientUUID}&_count=100&_sort=-_lastUpdated`;
+  `/Condition?category=${HL7_CONDITION_CATEGORY_DIAGNOSIS_CODE}&patient=${patientUUID}&_count=${count}&_getpagesoffset=${offset}&_sort=-_lastUpdated`;
 
 export const CERTAINITY_CONCEPTS: Coding[] = [
   {
