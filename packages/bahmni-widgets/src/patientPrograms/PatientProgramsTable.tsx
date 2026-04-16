@@ -90,7 +90,7 @@ const PatientProgramsTable: React.FC<WidgetProps> = ({ config }) => {
 
   const headers = useMemo(
     () => createProgramHeaders((config?.fields as string[]) ?? [], t),
-    [config?.fields],
+    [config?.fields, t],
   );
 
   // Server-side sort is not supported by bahmniprogramenrollment endpoint.

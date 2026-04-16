@@ -322,6 +322,86 @@ describe('DiagnosesTable Integration', () => {
       expect(screen.queryByText('Hypertension')).not.toBeInTheDocument();
     });
 
+    it('navigates back to page 1 when previous button is clicked', async () => {
+      const user = userEvent.setup();
+      const queryClient = createTestQueryClient();
+
+      const page2Diagnoses: Diagnosis[] = [
+        {
+          id: '3',
+          display: 'Asthma',
+          certainty: {
+            code: 'confirmed',
+            display: 'CERTAINITY_CONFIRMED',
+            system: '',
+          },
+          recordedDate: '2024-02-01T10:30:00+00:00',
+          recorder: 'Dr. Wilson',
+        },
+      ];
+
+      mockGetDiagnosesPage.mockResolvedValueOnce(wrapPage(mockDiagnoses, 4));
+      mockGetDiagnosesPage.mockResolvedValueOnce(wrapPage(page2Diagnoses, 4));
+      mockGetDiagnosesPage.mockResolvedValueOnce(wrapPage(mockDiagnoses, 4));
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <DiagnosesTable config={{ pageSize: 2 }} />
+        </QueryClientProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Hypertension')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: /next page/i }));
+      await waitFor(() => {
+        expect(screen.getByText('Asthma')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: /previous page/i }));
+      await waitFor(() => {
+        expect(screen.getByText('Hypertension')).toBeInTheDocument();
+      });
+
+      expect(mockGetDiagnosesPage).toHaveBeenLastCalledWith(
+        'patient-123',
+        2,
+        1,
+      );
+    });
+
+    it('re-fetches from page 1 when page size is changed', async () => {
+      const user = userEvent.setup();
+      const queryClient = createTestQueryClient();
+
+      mockGetDiagnosesPage.mockResolvedValueOnce(wrapPage(mockDiagnoses, 4));
+      mockGetDiagnosesPage.mockResolvedValueOnce(wrapPage(mockDiagnoses, 4));
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <DiagnosesTable config={{ pageSize: 2 }} />
+        </QueryClientProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Hypertension')).toBeInTheDocument();
+      });
+
+      const select = screen.getByRole('combobox', { name: /items per page/i });
+      await user.selectOptions(select, '5');
+
+      await waitFor(() => {
+        expect(mockGetDiagnosesPage).toHaveBeenCalledTimes(2);
+      });
+
+      expect(mockGetDiagnosesPage).toHaveBeenLastCalledWith(
+        'patient-123',
+        5,
+        1,
+      );
+    });
+
     it('hides pagination when server total is fewer than or equal to pageSize', async () => {
       mockGetDiagnosesPage.mockResolvedValue(wrapPage(mockDiagnoses, 2));
 

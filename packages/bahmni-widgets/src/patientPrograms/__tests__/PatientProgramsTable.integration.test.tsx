@@ -692,5 +692,122 @@ describe('PatientProgramsTable Integration', () => {
         screen.getByRole('button', { name: /next page/i }),
       ).toBeInTheDocument();
     });
+
+    it('navigates back to page 1 when previous button is clicked', async () => {
+      const user = userEvent.setup();
+
+      mockedGetPatientProgramsPage.mockResolvedValueOnce(
+        wrapPage(mockPatientProgramsResponse.results, 4),
+      );
+      mockedGetPatientProgramsPage.mockResolvedValueOnce(
+        wrapPage(mockPatientProgramsWithAttributes.results, 4),
+      );
+      mockedGetPatientProgramsPage.mockResolvedValueOnce(
+        wrapPage(mockPatientProgramsResponse.results, 4),
+      );
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <PatientProgramsTable
+            config={{
+              fields: ['programName', 'startDate', 'state'],
+              pageSize: 2,
+            }}
+          />
+        </QueryClientProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('HIV Program')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: /next page/i }));
+      await waitFor(() => {
+        expect(mockedGetPatientProgramsPage).toHaveBeenCalledWith(
+          'test-patient-uuid',
+          2,
+          2,
+        );
+      });
+
+      await user.click(screen.getByRole('button', { name: /previous page/i }));
+      await waitFor(() => {
+        expect(mockedGetPatientProgramsPage).toHaveBeenLastCalledWith(
+          'test-patient-uuid',
+          2,
+          1,
+        );
+      });
+    });
+
+    it('re-fetches from page 1 when page size is changed', async () => {
+      const user = userEvent.setup();
+
+      mockedGetPatientProgramsPage.mockResolvedValueOnce(
+        wrapPage(mockPatientProgramsResponse.results, 4),
+      );
+      mockedGetPatientProgramsPage.mockResolvedValueOnce(
+        wrapPage(mockPatientProgramsResponse.results, 4),
+      );
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <PatientProgramsTable
+            config={{
+              fields: ['programName', 'startDate', 'state'],
+              pageSize: 2,
+            }}
+          />
+        </QueryClientProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('HIV Program')).toBeInTheDocument();
+      });
+
+      const select = screen.getByRole('combobox', { name: /items per page/i });
+      await user.selectOptions(select, '5');
+
+      await waitFor(() => {
+        expect(mockedGetPatientProgramsPage).toHaveBeenCalledTimes(2);
+      });
+
+      expect(mockedGetPatientProgramsPage).toHaveBeenLastCalledWith(
+        'test-patient-uuid',
+        5,
+        1,
+      );
+    });
+
+    it('renders programs sorted by dateEnrolled descending (most recent first)', async () => {
+      // Supply programs in ascending order — component must sort descending
+      const ascendingPrograms = {
+        results: [
+          mockPatientProgramsResponse.results[1], // TB: 2022-06-10 (older)
+          mockPatientProgramsResponse.results[0], // HIV: 2023-01-15 (newer)
+        ],
+      };
+
+      mockedGetPatientProgramsPage.mockResolvedValueOnce(
+        wrapPage(ascendingPrograms.results, 2),
+      );
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <PatientProgramsTable
+            config={{ fields: ['programName', 'startDate', 'state'] }}
+          />
+        </QueryClientProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('HIV Program')).toBeInTheDocument();
+      });
+
+      const rows = screen.getAllByRole('row');
+      // rows[0] is header; HIV (2023) must appear before TB (2022)
+      expect(rows[1]).toHaveTextContent('HIV Program');
+      expect(rows[2]).toHaveTextContent('TB Program');
+    });
   });
 });

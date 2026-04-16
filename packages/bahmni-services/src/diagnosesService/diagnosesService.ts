@@ -11,13 +11,6 @@ import { Diagnosis } from './models';
 const CONFIRMED_STATUS = 'confirmed';
 const PROVISIONAL_STATUS = 'provisional';
 
-/**
- * Fetches diagnoses for a given patient UUID from the FHIR R4 endpoint
- * @param patientUUID - The UUID of the patient
- * @param count - Number of items per page (default 10)
- * @param offset - Zero-based offset for pagination (default 0)
- * @returns Promise resolving to a Bundle containing diagnoses
- */
 // Fetches all diagnoses (for consultation forms — no pagination)
 async function getPatientDiagnosesBundle(patientUUID: string): Promise<Bundle> {
   return await get<Bundle>(PATIENT_DIAGNOSIS_RESOURCE_URL(patientUUID));
@@ -145,7 +138,7 @@ export interface DiagnosisPage {
 /**
  * Fetches a single page of diagnoses using offset-based pagination.
  * Uses _getpagesoffset = (page - 1) * count to jump directly to any page.
- * Deduplication is applied per-page.
+ * No per-page deduplication — cross-page dedup is not possible with server-side pagination.
  * @param patientUUID - The UUID of the patient
  * @param count - Number of items per page (default 10)
  * @param page - 1-based page number (default 1)
