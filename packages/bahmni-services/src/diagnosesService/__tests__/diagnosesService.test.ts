@@ -83,7 +83,7 @@ describe('diagnosesService', () => {
         const result = await getPatientDiagnoses(patientUUID);
 
         expect(get).toHaveBeenCalledWith(
-          `/openmrs/ws/fhir2/R4/Condition?category=encounter-diagnosis&patient=${patientUUID}&_count=10&_getpagesoffset=0&_sort=-_lastUpdated`,
+          `/openmrs/ws/fhir2/R4/Condition?category=encounter-diagnosis&patient=${patientUUID}&_count=100&_sort=-_lastUpdated`,
         );
         expect(result).toHaveLength(2);
         expect(result[0].id).toBe('diagnosis-1');
@@ -344,7 +344,7 @@ describe('diagnosesService', () => {
         const result = await getPatientDiagnoses(emptyUUID);
 
         expect(get).toHaveBeenCalledWith(
-          `/openmrs/ws/fhir2/R4/Condition?category=encounter-diagnosis&patient=${emptyUUID}&_count=10&_getpagesoffset=0&_sort=-_lastUpdated`,
+          `/openmrs/ws/fhir2/R4/Condition?category=encounter-diagnosis&patient=${emptyUUID}&_count=100&_sort=-_lastUpdated`,
         );
         expect(result).toEqual([]);
       });
@@ -357,7 +357,7 @@ describe('diagnosesService', () => {
         const result = await getPatientDiagnoses(specialUUID);
 
         expect(get).toHaveBeenCalledWith(
-          `/openmrs/ws/fhir2/R4/Condition?category=encounter-diagnosis&patient=${specialUUID}&_count=10&_getpagesoffset=0&_sort=-_lastUpdated`,
+          `/openmrs/ws/fhir2/R4/Condition?category=encounter-diagnosis&patient=${specialUUID}&_count=100&_sort=-_lastUpdated`,
         );
         expect(result).toEqual([]);
       });

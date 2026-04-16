@@ -3,6 +3,7 @@ import { get } from '../api';
 import {
   CERTAINITY_CONCEPTS,
   PATIENT_DIAGNOSIS_RESOURCE_URL,
+  PATIENT_DIAGNOSIS_PAGE_URL,
 } from './constants';
 import { Diagnosis } from './models';
 
@@ -17,13 +18,20 @@ const PROVISIONAL_STATUS = 'provisional';
  * @param offset - Zero-based offset for pagination (default 0)
  * @returns Promise resolving to a Bundle containing diagnoses
  */
-async function getPatientDiagnosesBundle(
+// Fetches all diagnoses (for consultation forms — no pagination)
+async function getPatientDiagnosesBundle(patientUUID: string): Promise<Bundle> {
+  return await get<Bundle>(PATIENT_DIAGNOSIS_RESOURCE_URL(patientUUID));
+}
+
+// Fetches a single page of diagnoses (for the paginated widget)
+async function getPatientDiagnosesBundlePage(
   patientUUID: string,
-  count: number = 10,
-  offset: number = 0,
+  count: number,
+  offset: number,
 ): Promise<Bundle> {
-  const url = PATIENT_DIAGNOSIS_RESOURCE_URL(patientUUID, count, offset);
-  return await get<Bundle>(url);
+  return await get<Bundle>(
+    PATIENT_DIAGNOSIS_PAGE_URL(patientUUID, count, offset),
+  );
 }
 
 /**
@@ -149,7 +157,11 @@ export async function getDiagnosesPage(
   page: number = 1,
 ): Promise<DiagnosisPage> {
   const offset = (page - 1) * count;
-  const bundle = await getPatientDiagnosesBundle(patientUUID, count, offset);
+  const bundle = await getPatientDiagnosesBundlePage(
+    patientUUID,
+    count,
+    offset,
+  );
   // No per-page deduplication — with server-side pagination each page only has
   // a subset of records, so cross-page deduplication is not possible.
   const diagnoses = formatDiagnoses(bundle);

@@ -1,6 +1,9 @@
 import { Condition, Bundle } from 'fhir/r4';
 import { get } from '../api';
-import { PATIENT_CONDITION_RESOURCE_URL } from './constants';
+import {
+  PATIENT_CONDITION_RESOURCE_URL,
+  PATIENT_CONDITION_PAGE_URL,
+} from './constants';
 
 /**
  * Fetches conditions for a given patient UUID from the FHIR R4 endpoint
@@ -48,7 +51,7 @@ export async function getConditionPage(
 ): Promise<ConditionPage> {
   const offset = (page - 1) * count;
   const bundle = await get<Bundle>(
-    PATIENT_CONDITION_RESOURCE_URL(patientUUID, count, offset),
+    PATIENT_CONDITION_PAGE_URL(patientUUID, count, offset),
   );
   const conditions =
     bundle.entry
