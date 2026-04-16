@@ -15,29 +15,14 @@ import {
   PatientProfileResponse,
 } from '@bahmni/services';
 import { useNotification } from '@bahmni/widgets';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  AdditionalIdentifiers,
-  AdditionalIdentifiersRef,
-} from '../../components/forms/additionalIdentifiers/AdditionalIdentifiers';
-import {
-  AdditionalInfo,
-  AdditionalInfoRef,
-} from '../../components/forms/additionalInfo/AdditionalInfo';
-import {
-  AddressInfo,
-  AddressInfoRef,
-} from '../../components/forms/addressInfo/AddressInfo';
-import {
-  ContactInfo,
-  ContactInfoRef,
-} from '../../components/forms/contactInfo/ContactInfo';
-import {
-  PatientRelationships,
-  PatientRelationshipsRef,
-} from '../../components/forms/patientRelationships/PatientRelationships';
-import { Profile, ProfileRef } from '../../components/forms/profile/Profile';
+import { AdditionalIdentifiersRef } from '../../components/forms/additionalIdentifiers/AdditionalIdentifiers';
+import { AdditionalInfoRef } from '../../components/forms/additionalInfo/AdditionalInfo';
+import { AddressInfoRef } from '../../components/forms/addressInfo/AddressInfo';
+import { ContactInfoRef } from '../../components/forms/contactInfo/ContactInfo';
+import { PatientRelationshipsRef } from '../../components/forms/patientRelationships/PatientRelationships';
+import Profile, { ProfileRef } from '../../components/forms/profile/Profile';
 import { RegistrationActions } from '../../components/registrationActions/RegistrationActions';
 import { BAHMNI_REGISTRATION_SEARCH, getPatientUrl } from '../../constants/app';
 
@@ -47,7 +32,11 @@ import { usePatientDetails } from '../../hooks/usePatientDetails';
 import { usePatientPhoto } from '../../hooks/usePatientPhoto';
 import { useRelationshipValidation } from '../../hooks/useRelationshipValidation';
 import { useUpdatePatient } from '../../hooks/useUpdatePatient';
+import { useRegistrationConfig } from '../../providers/registrationConfig';
+import { RegistrationFormSection } from '../../providers/registrationConfig/models';
+import { FormControlRefs, FormControlData, FormControlGuards } from './models';
 import { validateAllSections, collectFormData } from './patientFormService';
+import PatientRegisterSection from './PatientRegisterSection';
 import styles from './styles/index.module.scss';
 
 const PatientRegister = () => {
@@ -64,6 +53,7 @@ const PatientRegister = () => {
 
   const { shouldShowAdditionalIdentifiers } = useAdditionalIdentifiers();
   const { relationshipTypes } = useRelationshipValidation();
+  const { registrationConfig } = useRegistrationConfig();
 
   const patientProfileRef = useRef<ProfileRef>(null);
   const patientAddressRef = useRef<AddressInfoRef>(null);
@@ -110,6 +100,10 @@ const PatientRegister = () => {
   const isSaving =
     createPatientMutation.isPending || updatePatientMutation.isPending;
 
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(),
+  );
+
   // Dispatch audit event when page is viewed
   useEffect(() => {
     dispatchAuditEvent({
@@ -118,6 +112,28 @@ const PatientRegister = () => {
       module: AUDIT_LOG_EVENT_DETAILS.VIEWED_NEW_PATIENT_PAGE.module,
     });
   }, []);
+
+  const sections: RegistrationFormSection[] =
+    registrationConfig?.registrationForm?.sections ?? [];
+
+  const isSectionCollapsible = (section: RegistrationFormSection): boolean => {
+    // Default: all config sections are collapsible unless explicitly set to false.
+    // The Profile section (always visible, hardcoded above) serves as the
+    // non-collapsible "first section" per the AC.
+    return section.collapsible !== false;
+  };
+
+  const toggleSection = (sectionName: string) => {
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(sectionName)) {
+        next.delete(sectionName);
+      } else {
+        next.add(sectionName);
+      }
+      return next;
+    });
+  };
 
   const handleSave = async (): Promise<string | null> => {
     const isValid = validateAllSections(
@@ -137,6 +153,35 @@ const PatientRegister = () => {
     );
 
     if (!isValid) {
+      // Re-check validity per control to identify which sections to auto-expand
+      const controlValidators: Record<string, () => boolean> = {
+        address: () => patientAddressRef.current?.validate() ?? true,
+        contactInfo: () => patientContactRef.current?.validate() ?? true,
+        additionalInfo: () => patientAdditionalRef.current?.validate() ?? true,
+        additionalIdentifiers: () =>
+          shouldShowAdditionalIdentifiers
+            ? (patientAdditionalIdentifiersRef.current?.validate() ?? true)
+            : true,
+        relationships: () =>
+          patientRelationshipsRef.current?.validate() ?? true,
+      };
+
+      const sectionsWithErrors = new Set<string>();
+      sections.forEach((section) => {
+        if (!isSectionCollapsible(section)) return;
+        const hasErrors = section.controls.some(
+          (control) => !(controlValidators[control.type]?.() ?? true),
+        );
+        if (hasErrors) {
+          sectionsWithErrors.add(section.name);
+        }
+      });
+
+      const sectionsToExpand = new Set(expandedSections);
+      sectionsWithErrors.forEach((sectionName) => {
+        sectionsToExpand.add(sectionName);
+      });
+      setExpandedSections(sectionsToExpand);
       return null;
     }
 
@@ -190,6 +235,46 @@ const PatientRegister = () => {
   };
 
   const shouldShowActions = metadata?.patientUuid || patientUuidFromUrl == null;
+  const refs = useMemo<FormControlRefs>(
+    () => ({
+      profileRef: patientProfileRef,
+      addressRef: patientAddressRef,
+      contactRef: patientContactRef,
+      additionalRef: patientAdditionalRef,
+      additionalIdentifiersRef: patientAdditionalIdentifiersRef,
+      relationshipsRef: patientRelationshipsRef,
+    }),
+    [],
+  );
+
+  const data = useMemo<FormControlData>(
+    () => ({
+      profileInitialData,
+      addressInitialData,
+      personAttributesInitialData,
+      additionalIdentifiersInitialData,
+      relationshipsInitialData,
+      initialDobEstimated,
+      patientPhoto: patientPhoto ?? undefined,
+    }),
+    [
+      profileInitialData,
+      addressInitialData,
+      personAttributesInitialData,
+      additionalIdentifiersInitialData,
+      relationshipsInitialData,
+      initialDobEstimated,
+      patientPhoto,
+    ],
+  );
+
+  const guards = useMemo<FormControlGuards>(
+    () => ({
+      shouldShowAdditionalIdentifiers,
+      relationshipTypes,
+    }),
+    [shouldShowAdditionalIdentifiers, relationshipTypes],
+  );
 
   const breadcrumbs = [
     {
@@ -244,43 +329,32 @@ const PatientRegister = () => {
                 )}
               </span>
             </Tile>
-
-            <div className={styles.formContainer}>
-              <Profile
-                ref={patientProfileRef}
-                initialData={profileInitialData}
-                initialDobEstimated={initialDobEstimated}
-                initialPhoto={patientPhoto}
-              />
-              <AddressInfo
-                ref={patientAddressRef}
-                initialData={addressInitialData}
-              />
-              <ContactInfo
-                ref={patientContactRef}
-                initialData={personAttributesInitialData}
-              />
-            </div>
           </div>
-
-          <AdditionalInfo
-            ref={patientAdditionalRef}
-            initialData={personAttributesInitialData}
-          />
-
-          {shouldShowAdditionalIdentifiers && (
-            <AdditionalIdentifiers
-              ref={patientAdditionalIdentifiersRef}
-              initialData={additionalIdentifiersInitialData}
+          <div
+            className={`${styles.formContainer} ${styles.profileSectionContainer}`}
+          >
+            <Profile
+              ref={patientProfileRef}
+              initialData={profileInitialData}
+              initialDobEstimated={initialDobEstimated}
+              initialPhoto={patientPhoto}
             />
-          )}
-
-          {Array.isArray(relationshipTypes) && relationshipTypes.length > 0 && (
-            <PatientRelationships
-              ref={patientRelationshipsRef}
-              initialData={relationshipsInitialData}
+          </div>
+          {sections.map((section) => (
+            <PatientRegisterSection
+              key={section.name}
+              section={section}
+              refs={refs}
+              data={data}
+              guards={guards}
+              isCollapsible={isSectionCollapsible(section)}
+              isExpanded={
+                !isSectionCollapsible(section) ||
+                expandedSections.has(section.name)
+              }
+              onToggle={() => toggleSection(section.name)}
             />
-          )}
+          ))}
 
           {/* Footer Actions */}
           {shouldShowActions && (

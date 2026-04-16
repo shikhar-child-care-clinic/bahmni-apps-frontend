@@ -9,6 +9,7 @@ import React from 'react';
 import i18n from '../../../../../setupTests.i18n';
 import { FlattenedInvestigations } from '../../../../models/investigations';
 import { ServiceRequestInputEntry } from '../../../../models/serviceRequest';
+import { ClinicalAppProvider } from '../../../../providers/ClinicalAppProvider';
 import useServiceRequestStore from '../../../../stores/serviceRequestStore';
 import InvestigationsForm from '../InvestigationsForm';
 
@@ -24,6 +25,9 @@ jest.mock('@bahmni/services', () => ({
     ],
   }),
   getCurrentUserPrivileges: jest.fn(() => Promise.resolve([])),
+  findActiveEncounterInSession: jest
+    .fn()
+    .mockResolvedValue({ id: 'mock-encounter-id' }),
 }));
 
 jest.mock('@bahmni/widgets', () => ({
@@ -44,7 +48,9 @@ const createWrapper = () => {
     },
   });
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <ClinicalAppProvider episodeUuids={[]}>{children}</ClinicalAppProvider>
+    </QueryClientProvider>
   );
   Wrapper.displayName = 'QueryClientWrapper';
   return Wrapper;
