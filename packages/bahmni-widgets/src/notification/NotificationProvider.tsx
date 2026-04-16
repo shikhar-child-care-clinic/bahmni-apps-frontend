@@ -22,6 +22,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> =
       (notification: Omit<Notification, 'id'>): string => {
         const id = generateId();
 
+        // eslint-disable-next-line no-console
+        console.log('[Notification]', notification);
+
         setNotifications((prev) => {
           const existingNotification = prev.find(
             (n) =>
