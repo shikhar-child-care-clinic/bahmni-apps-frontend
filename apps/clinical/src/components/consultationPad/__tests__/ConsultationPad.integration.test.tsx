@@ -240,9 +240,7 @@ describe('ConsultationPad Integration', () => {
         { name: 'Add Allergies' },
         { name: 'Add Diagnoses' },
         { name: 'Add Orders' },
-        { name: 'Add Medications' },
         { name: 'Add Observations' },
-        { name: 'Add Vaccinations' },
       ],
     });
     // Mock implementation for each service
