@@ -30,7 +30,7 @@ function mapDocumentReferencesToViewModels(
         documentType:
           doc.type?.coding?.[0]?.display ??
           doc.category?.[0]?.coding?.[0]?.display,
-        uploadedOn: doc.date ?? doc.context?.period?.start ?? '',
+        uploadedOn: doc.date ?? '',
         uploadedBy: doc.author?.[0]?.display,
         contentType: firstAttachment?.contentType,
         documentUrl: firstAttachment?.url ?? '',

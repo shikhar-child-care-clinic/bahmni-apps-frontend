@@ -166,10 +166,7 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
     [config?.fields],
   );
 
-  // Client-side sort: applied per-page as a secondary sort. Server-side uses
-  // _sort=-date,-period: sorts by DocumentReference.date first (once backend populates it),
-  // falling back to context.period.start (currently populated by Bahmni) — no frontend
-  // change needed when the backend fix lands.
+  // Client-side sort: applied per-page as a secondary sort. Server-side uses _sort=-date.
   const sortedData = useMemo(() => {
     const docs = data?.documents ?? [];
     return [...docs].sort((a, b) => {
