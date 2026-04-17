@@ -23,7 +23,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> =
         const id = generateId();
 
         // eslint-disable-next-line no-console
-        console.log('[Notification]', notification);
+        console.trace('[Notification]', notification);
 
         setNotifications((prev) => {
           const existingNotification = prev.find(

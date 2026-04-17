@@ -135,5 +135,10 @@ export const getFormattedError = (
     message = 'An unknown error occurred';
   }
 
+  if (!message) {
+    // eslint-disable-next-line no-console
+    console.trace('[getFormattedError] empty message — raw error:', error);
+  }
+
   return { title, message };
 };
