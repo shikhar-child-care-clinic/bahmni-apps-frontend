@@ -435,7 +435,7 @@ describe('useUpdatePatient', () => {
         type: 'error',
         title: 'Error updating patient',
         timeout: 5000,
-        message: '[object Object]',
+        message: 'An unknown error occurred',
       });
     });
   });
