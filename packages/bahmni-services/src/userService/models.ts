@@ -2,6 +2,7 @@
  * Interface representing OpenMRS User resource from REST API
  */
 export interface User {
+  display: string;
   username: string;
   uuid: string;
 }

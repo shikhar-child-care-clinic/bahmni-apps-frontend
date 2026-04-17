@@ -5,7 +5,8 @@ import {
 } from '../constants/app';
 
 export const USER_RESOURCE_URL = (username: string) =>
-  OPENMRS_REST_V1 + `/user?username=${username}&v=custom:(username,uuid)`;
+  OPENMRS_REST_V1 +
+  `/user?username=${username}&v=custom:(display,username,uuid)`;
 export const BAHMNI_USER_LOCATION_COOKIE = 'bahmni.user.location';
 export const AVAILABLE_LOCATIONS_URL = `${OPENMRS_REST_V1}/location?tags=Login Location&v=default`;
 export const SAVE_USER_LOCATION_URL = (userUuid: string) =>

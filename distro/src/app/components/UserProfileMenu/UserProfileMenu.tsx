@@ -1,7 +1,17 @@
+<<<<<<< HEAD
 import { MenuButton, MenuItem, MenuItemDivider } from '@bahmni/design-system';
 import { useTranslation, logout } from '@bahmni/services';
+=======
+import {
+  useTranslation,
+  logout,
+  notificationService,
+  getFormattedError,
+} from '@bahmni/services';
+>>>>>>> 55c72293 (BAH-4519|Replace MenuButton with OverflowMenu for icon-based trigger)
 import { useActivePractitioner } from '@bahmni/widgets';
 import { UserAvatar } from '@carbon/icons-react';
+import { OverflowMenu, OverflowMenuItem } from '@carbon/react';
 import React, { useState } from 'react';
 import styles from './styles/UserProfileMenu.module.scss';
 
@@ -38,26 +48,28 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
 
   return (
     <div className={styles.profileContainer}>
-      <UserAvatar size={20} aria-hidden="true" />
-      <MenuButton
-        label={`Hi, ${user.display}`}
-        className={styles.menuButton}
+      <OverflowMenu
+        renderIcon={UserAvatar}
         size="sm"
+        flipped
+        iconDescription={t('HOME_USER_MENU')}
+        className={styles.overflowMenu}
         data-testid="user-profile-menu"
       >
-        <MenuItem
-          label={t('HOME_CHANGE_PASSWORD')}
+        <OverflowMenuItem
+          itemText={t('HOME_CHANGE_PASSWORD')}
           onClick={onChangePassword}
           data-testid="change-password-option"
         />
-        <MenuItemDivider />
-        <MenuItem
-          label={t('HOME_LOGOUT')}
+        <OverflowMenuItem
+          itemText={t('HOME_LOGOUT')}
           onClick={handleLogout}
           disabled={isLoggingOut}
           data-testid="logout-option"
+          hasDivider
         />
-      </MenuButton>
+      </OverflowMenu>
+      <span className={styles.greeting}>Hi, {user.display}</span>
     </div>
   );
 };

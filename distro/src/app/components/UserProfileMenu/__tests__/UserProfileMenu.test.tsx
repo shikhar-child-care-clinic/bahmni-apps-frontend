@@ -12,19 +12,34 @@ jest.mock('@bahmni/services', () => ({
   logout: jest.fn(),
 }));
 
-jest.mock('@bahmni/design-system', () => ({
-  MenuButton: ({ label, children, className, ...props }: any) => (
-    <button className={className} {...props}>
-      {label}
+jest.mock('@carbon/react', () => ({
+  OverflowMenu: ({
+    children,
+    className,
+    renderIcon: Icon,
+    iconDescription,
+    ...props
+  }: any) => (
+    <div className={className} {...props}>
+      {Icon && <Icon />}
+      <span>{iconDescription}</span>
       <div data-testid="menu-content">{children}</div>
-    </button>
+    </div>
   ),
-  MenuItem: ({ label, onClick, disabled, ...props }: any) => (
-    <button onClick={onClick} disabled={disabled} {...props}>
-      {label}
-    </button>
+  OverflowMenuItem: ({
+    itemText,
+    onClick,
+    disabled,
+    hasDivider,
+    ...props
+  }: any) => (
+    <>
+      {hasDivider && <hr data-testid="menu-divider" />}
+      <button onClick={onClick} disabled={disabled} {...props}>
+        {itemText}
+      </button>
+    </>
   ),
-  MenuItemDivider: () => <hr data-testid="menu-divider" />,
 }));
 
 const mockUseActivePractitioner = useActivePractitioner as jest.MockedFunction<
@@ -61,12 +76,16 @@ describe('UserProfileMenu', () => {
     window.location = { href: '' } as any;
   });
 
-  it('renders menu button with user greeting and display name', () => {
+  it('renders greeting text with user display name', () => {
     render(<UserProfileMenu />);
 
-    expect(screen.getByTestId('user-profile-menu')).toHaveTextContent(
-      'Hi, Dr. John Doe',
-    );
+    expect(screen.getByText('Hi, Dr. John Doe')).toBeInTheDocument();
+  });
+
+  it('renders user profile menu trigger', () => {
+    render(<UserProfileMenu />);
+
+    expect(screen.getByTestId('user-profile-menu')).toBeInTheDocument();
   });
 
   it('renders change password option', () => {
