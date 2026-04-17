@@ -32,11 +32,22 @@ const renderObservation = (
 
   if (valueType === 'Image')
     valueToDisplay = (
-      <ImageTile imageSrc={value} alt={value} id={`${value}-img`} hideThumbnail={hideThumbnail} />
+      <ImageTile
+        imageSrc={value}
+        alt={value}
+        id={`${value}-img`}
+        hideThumbnail={hideThumbnail}
+      />
     );
 
   if (valueType === 'Video')
-    valueToDisplay = <VideoTile id={`${value}-video`} videoSrc={value} hideThumbnail={hideThumbnail} />;
+    valueToDisplay = (
+      <VideoTile
+        id={`${value}-video`}
+        videoSrc={value}
+        hideThumbnail={hideThumbnail}
+      />
+    );
 
   if (valueType === 'PDF')
     valueToDisplay = <FileTile id={`${value}-pdf`} src={value} />;
@@ -82,7 +93,14 @@ const renderGroupedObservation = (
       open={isLatestEncounter}
     >
       {groupedObs.members?.map((child, childIndex) =>
-        renderObservation(child, childIndex, encounterIndex, title, t, hideThumbnail),
+        renderObservation(
+          child,
+          childIndex,
+          encounterIndex,
+          title,
+          t,
+          hideThumbnail,
+        ),
       )}
     </CollapsibleRowGroup>
   );
@@ -109,7 +127,14 @@ export const ObsByEncounter: React.FC<ObsByEncounterProps> = ({
         open={isLatestEncounter}
       >
         {encounter.observations.map((obs, obsIndex) =>
-          renderObservation(obs, obsIndex, encounterIndex, title, t, hideThumbnail),
+          renderObservation(
+            obs,
+            obsIndex,
+            encounterIndex,
+            title,
+            t,
+            hideThumbnail,
+          ),
         )}
         {encounter.groupedObservations.map((groupedObs, groupIndex) =>
           renderGroupedObservation(

@@ -26,7 +26,10 @@ interface ObservationMemberProps {
 /**
  * Helper function to render value with media support (images/videos)
  */
-const renderValueWithMedia = (valueAsString: string, hideThumbnail?: boolean): React.ReactNode => {
+const renderValueWithMedia = (
+  valueAsString: string,
+  hideThumbnail?: boolean,
+): React.ReactNode => {
   const valueType = getValueType(valueAsString);
 
   if (valueType === 'Image') {
@@ -41,7 +44,13 @@ const renderValueWithMedia = (valueAsString: string, hideThumbnail?: boolean): R
   }
 
   if (valueType === 'Video') {
-    return <VideoTile id={`${valueAsString}-video`} videoSrc={valueAsString} hideThumbnail={hideThumbnail} />;
+    return (
+      <VideoTile
+        id={`${valueAsString}-video`}
+        videoSrc={valueAsString}
+        hideThumbnail={hideThumbnail}
+      />
+    );
   }
 
   if (valueType === 'PDF') {

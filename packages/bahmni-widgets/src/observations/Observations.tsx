@@ -36,7 +36,11 @@ export const observationsQueryKeys = (
 
 const Observations: React.FC<WidgetProps> = ({ config }) => {
   const observationConfig = config as ObservationConfig;
-  const { conceptNames = [], conceptUuid = [], hideThumbnail: hideThumbnailConfig } = observationConfig;
+  const {
+    conceptNames = [],
+    conceptUuid = [],
+    hideThumbnail: hideThumbnailConfig,
+  } = observationConfig;
   const hideThumbnail = !!hideThumbnailConfig;
   const notifiedIndices = useRef(new Set());
   const patientUUID = usePatientUUID();
@@ -176,7 +180,11 @@ const Observations: React.FC<WidgetProps> = ({ config }) => {
         <p>{translatedTitle}</p>
       </Tile>
       {hasData ? (
-        <ObsByEncounter groupedData={groupedData} title={translatedTitle} hideThumbnail={hideThumbnail} />
+        <ObsByEncounter
+          groupedData={groupedData}
+          title={translatedTitle}
+          hideThumbnail={hideThumbnail}
+        />
       ) : (
         <SortableDataTable
           headers={headers}
