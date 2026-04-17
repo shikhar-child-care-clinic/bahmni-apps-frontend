@@ -36,7 +36,15 @@ export async function getCurrentUser(): Promise<User | null> {
     return userResponse.results[0];
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (_) {
-    throw new Error(i18next.t('ERROR_FETCHING_USER_DETAILS'));
+    const msg = i18next.t('ERROR_FETCHING_USER_DETAILS');
+    // eslint-disable-next-line no-console
+    console.trace(
+      '[getUserLoginLocation] i18next msg:',
+      JSON.stringify(msg),
+      'i18next initialized:',
+      i18next.isInitialized,
+    );
+    throw new Error(msg);
   }
 }
 
@@ -49,13 +57,31 @@ export async function getCurrentUser(): Promise<User | null> {
 export const getUserLoginLocation = (): UserLocation => {
   const encodedUserLocation =
     getCookieByName(BAHMNI_USER_LOCATION_COOKIE) ?? null;
-  if (!encodedUserLocation)
-    throw new Error(i18next.t('ERROR_FETCHING_USER_LOCATION_DETAILS'));
+  if (!encodedUserLocation) {
+    const msg = i18next.t('ERROR_FETCHING_USER_LOCATION_DETAILS');
+    // eslint-disable-next-line no-console
+    console.trace(
+      '[getUserLoginLocation] missing cookie — i18next msg:',
+      JSON.stringify(msg),
+      'initialized:',
+      i18next.isInitialized,
+    );
+    throw new Error(msg);
+  }
   const userLocation: UserLocation = JSON.parse(
     decodeURIComponent(encodedUserLocation).replace(/^"(.*)"$/, '$1'),
   );
-  if (!userLocation.uuid)
-    throw new Error(i18next.t('ERROR_FETCHING_USER_LOCATION_DETAILS'));
+  if (!userLocation.uuid) {
+    const msg = i18next.t('ERROR_FETCHING_USER_LOCATION_DETAILS');
+    // eslint-disable-next-line no-console
+    console.trace(
+      '[getUserLoginLocation] missing uuid — i18next msg:',
+      JSON.stringify(msg),
+      'initialized:',
+      i18next.isInitialized,
+    );
+    throw new Error(msg);
+  }
   return userLocation;
 };
 
