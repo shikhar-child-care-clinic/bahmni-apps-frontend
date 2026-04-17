@@ -5,6 +5,21 @@
 
 .sectionWrapper {
   box-shadow: 0px 2px 6px 0px $shadow;
+  :global(.cds--data-table:has(td:nth-child(5))) td,
+  :global(.cds--data-table:has(td:nth-child(5))) th {
+    min-width: 110px;
+  }
+  :global(div[id^="accordion-item"]) {
+    padding-block-end: $spacing-05;
+  }
+}
+
+:global(html:has([data-separator]) div[id^="accordion-item"]) {
+  overflow-x: auto;
+}
+
+:global(html:has([data-separator]) .cds--data-table:has(td:nth-child(5))) {
+  min-width: 1000px;
 }
 
 .sectionName {
