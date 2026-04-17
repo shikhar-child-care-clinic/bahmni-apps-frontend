@@ -1,11 +1,16 @@
-import { useNotification, usePatientUUID } from '@bahmni/widgets';
+import {
+  useNotification,
+  usePatientUUID,
+  useHasPrivilege,
+  UserPrivilegeProvider,
+} from '@bahmni/widgets';
 import {
   QueryClient,
   QueryClientProvider,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Medication } from 'fhir/r4';
 import { axe, toHaveNoViolations } from 'jest-axe';
@@ -31,10 +36,6 @@ jest.mock('../../../../services/medicationService', () => ({
     (medication) =>
       medication?.code?.text ?? medication?.code?.display ?? 'Test Medication',
   ),
-  getActiveMedicationsFromBundle: jest.fn(() => ({
-    activeMedications: [],
-    medicationMap: {},
-  })),
 }));
 
 // Mock @bahmni/widgets hooks
@@ -44,6 +45,8 @@ jest.mock('@bahmni/widgets', () => {
     ...widgets,
     useNotification: jest.fn(),
     usePatientUUID: jest.fn(),
+    useHasPrivilege: jest.fn(),
+    UserPrivilegeProvider: ({ children }: { children: ReactNode }) => children,
   };
 });
 
@@ -52,14 +55,6 @@ jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),
   useQuery: jest.fn(),
   useQueryClient: jest.fn(),
-}));
-
-// Mock CSS modules
-jest.mock('../styles/MedicationsForm.module.scss', () => ({
-  medicationsFormTile: 'medicationsFormTile',
-  medicationsFormTitle: 'medicationsFormTitle',
-  medicationsBox: 'medicationsBox',
-  duplicateNotification: 'duplicateNotification',
 }));
 
 const mockUseNotification = useNotification as jest.MockedFunction<
@@ -72,6 +67,11 @@ const mockUseQuery = useQuery as jest.MockedFunction<typeof useQuery>;
 const mockUseQueryClient = useQueryClient as jest.MockedFunction<
   typeof useQueryClient
 >;
+const mockUseHasPrivilege = useHasPrivilege as jest.MockedFunction<
+  typeof useHasPrivilege
+>;
+const mockUserPrivilegesWithMedications = true;
+const mockUserPrivilegesEmpty = false;
 
 // Mock data
 const mockMedication: Medication = {
@@ -137,7 +137,6 @@ const mockSelectedMedication: MedicationInputEntry = {
 
 const mockStore = {
   selectedMedications: [],
-  hasOverlapDuplicates: false,
   addMedication: jest.fn(),
   removeMedication: jest.fn(),
   updateDosage: jest.fn(),
@@ -154,8 +153,6 @@ const mockStore = {
   updateStartDate: jest.fn(),
   updateNote: jest.fn(),
   validateAllMedications: jest.fn(),
-  validateMedicationsForOverlaps: jest.fn(),
-  setOverlapDuplicates: jest.fn(),
   reset: jest.fn(),
   getState: jest.fn(),
 };
@@ -178,7 +175,9 @@ const createQueryClient = () =>
 const renderWithQueryClient = (ui: ReactNode) => {
   const queryClient = createQueryClient();
   return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+    <QueryClientProvider client={queryClient}>
+      <UserPrivilegeProvider>{ui}</UserPrivilegeProvider>
+    </QueryClientProvider>,
   );
 };
 
@@ -196,6 +195,9 @@ describe('MedicationsForm', () => {
     // Mock @bahmni/widgets hooks
     mockUseNotification.mockReturnValue({
       addNotification: jest.fn(),
+      notifications: [],
+      removeNotification: jest.fn(),
+      clearAllNotifications: jest.fn(),
     } as ReturnType<typeof useNotification>);
     mockUsePatientUUID.mockReturnValue('patient-uuid-123');
 
@@ -210,6 +212,8 @@ describe('MedicationsForm', () => {
     mockUseQueryClient.mockReturnValue({
       invalidateQueries: jest.fn(),
     } as unknown as ReturnType<typeof useQueryClient>);
+
+    mockUseHasPrivilege.mockReturnValue(mockUserPrivilegesWithMedications);
   });
 
   // HAPPY PATH TESTS
@@ -267,7 +271,11 @@ describe('MedicationsForm', () => {
         searchResults: [mockMedication],
       });
 
-      render(<MedicationsForm />);
+      render(
+        <UserPrivilegeProvider>
+          <MedicationsForm />
+        </UserPrivilegeProvider>,
+      );
 
       const searchBox = screen.getByRole('combobox', {
         name: /search to add medication/i,
@@ -295,7 +303,11 @@ describe('MedicationsForm', () => {
         ...mockMedicationSearchHook,
         searchResults: [mockMedication],
       });
-      render(<MedicationsForm />);
+      render(
+        <UserPrivilegeProvider>
+          <MedicationsForm />
+        </UserPrivilegeProvider>,
+      );
       const searchBox = screen.getByRole('combobox', {
         name: /search to add medication/i,
       });
@@ -477,99 +489,20 @@ describe('MedicationsForm', () => {
       });
     });
 
-    test('prevents adding duplicate medications', () => {
-      (useMedicationSearch as jest.Mock).mockReturnValue({
-        ...mockMedicationSearchHook,
-        searchResults: [mockMedication],
-      });
-      (useMedicationStore as unknown as jest.Mock).mockReturnValue({
-        ...mockStore,
-        selectedMedications: [mockSelectedMedication],
-      });
-
-      renderWithQueryClient(<MedicationsForm />);
-
-      // Should show the selected medication in the added medicines section
-      expect(screen.getByText(/Added Medications/i)).toBeInTheDocument();
-      expect(screen.getByText(/Paracetamol 500mg/)).toBeInTheDocument();
-    });
-
-    test('shows already selected text for medications in the selected list', async () => {
-      const user = userEvent.setup();
-      const secondMedication: Medication = {
-        id: 'test-medication-2',
-        resourceType: 'Medication',
-        code: {
-          text: 'Ibuprofen 400mg',
-          coding: [
-            {
-              code: 'ibuprofen-400',
-              display: 'Ibuprofen 400mg',
-              system: 'http://snomed.info/sct',
-            },
-          ],
-        },
-      };
-
-      // Mock search results with both medications
-      (useMedicationSearch as jest.Mock).mockReturnValue({
-        ...mockMedicationSearchHook,
-        searchResults: [mockMedication, secondMedication],
-      });
-
-      // Mock store with one medication already selected
-      (useMedicationStore as unknown as jest.Mock).mockReturnValue({
-        ...mockStore,
-        selectedMedications: [mockSelectedMedication],
-      });
-
-      renderWithQueryClient(<MedicationsForm />);
-
-      const searchBox = screen.getByRole('combobox', {
-        name: /search to add medication/i,
-      });
-
-      // Type in search box to trigger search results
-      await user.type(searchBox, 'med');
-
-      // Wait for search results to appear
-      await waitFor(() => {
-        // The already selected medication should show with "already selected" text
-        expect(
-          screen.getByText('Paracetamol 500mg (Already added)'),
-        ).toBeInTheDocument();
-
-        // The non-selected medication should show normally
-        expect(screen.getByText('Ibuprofen 400mg')).toBeInTheDocument();
-      });
-
-      // Verify that the already selected medication option is disabled
-      const options = screen.getAllByRole('option');
-      const paracetamolOption = options.find((option) =>
-        option.textContent?.includes('Paracetamol 500mg (Already added)'),
-      );
-      expect(paracetamolOption).toHaveAttribute('disabled');
-    });
-
     test('does not add medication when selected item is invalid', async () => {
+      const user = userEvent.setup();
       renderWithQueryClient(<MedicationsForm />);
 
       const searchBox = screen.getByRole('combobox', {
         name: /search to add medication/i,
       });
 
-      // Test with undefined selectedItem
-      fireEvent.change(searchBox, {
-        target: { value: 'test' },
-        selectedItem: undefined,
-      });
-      expect(mockStore.addMedication).not.toHaveBeenCalled();
+      // Test by typing without selecting an item
+      await user.type(searchBox, 'test');
 
-      // Test with null selectedItem
-      fireEvent.change(searchBox, {
-        target: { value: 'test' },
-        selectedItem: null,
-      });
+      // Don't select anything - just clear the search
+      await user.clear(searchBox);
+
       expect(mockStore.addMedication).not.toHaveBeenCalled();
     });
 
@@ -650,7 +583,11 @@ describe('MedicationsForm', () => {
         searchResults: [mockMedication],
       });
 
-      render(<MedicationsForm />);
+      render(
+        <UserPrivilegeProvider>
+          <MedicationsForm />
+        </UserPrivilegeProvider>,
+      );
 
       const searchBox = screen.getByRole('combobox', {
         name: /search to add medication/i,
@@ -682,186 +619,6 @@ describe('MedicationsForm', () => {
     });
   });
 
-  // DUPLICATE NOTIFICATION TESTS
-  describe('Duplicate Notification Feature', () => {
-    const duplicateNotificationPattern =
-      /one or more drugs you are trying to order are already active/i;
-
-    test('shows duplicate notification when medications have overlapping dates', async () => {
-      const med1: MedicationInputEntry = {
-        ...mockSelectedMedication,
-        id: 'med-1',
-        startDate: new Date('2025-01-01'),
-        duration: 10,
-        durationUnit: { code: 'd', display: 'Days', daysMultiplier: 1 },
-        medication: {
-          ...mockMedication,
-          code: {
-            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
-          },
-        },
-      };
-
-      const med2: MedicationInputEntry = {
-        ...mockSelectedMedication,
-        id: 'med-2',
-        startDate: new Date('2025-01-05'),
-        duration: 10,
-        durationUnit: { code: 'd', display: 'Days', daysMultiplier: 1 },
-        medication: {
-          ...mockMedication,
-          code: {
-            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
-          },
-        },
-      };
-
-      (useMedicationStore as unknown as jest.Mock).mockReturnValue({
-        ...mockStore,
-        selectedMedications: [med1, med2],
-      });
-
-      render(<MedicationsForm />);
-
-      await waitFor(() => {
-        expect(
-          screen.getByText(duplicateNotificationPattern),
-        ).toBeInTheDocument();
-      });
-    });
-
-    test('does not show duplicate notification when medications have non-overlapping dates', async () => {
-      const med1: MedicationInputEntry = {
-        ...mockSelectedMedication,
-        id: 'med-1',
-        startDate: new Date('2025-01-01'),
-        duration: 5,
-        durationUnit: { code: 'd', display: 'Days', daysMultiplier: 1 },
-        medication: {
-          ...mockMedication,
-          code: {
-            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
-          },
-        },
-      };
-
-      const med2: MedicationInputEntry = {
-        ...mockSelectedMedication,
-        id: 'med-2',
-        startDate: new Date('2025-01-10'),
-        duration: 5,
-        durationUnit: { code: 'd', display: 'Days', daysMultiplier: 1 },
-        medication: {
-          ...mockMedication,
-          code: {
-            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
-          },
-        },
-      };
-
-      (useMedicationStore as unknown as jest.Mock).mockReturnValue({
-        ...mockStore,
-        selectedMedications: [med1, med2],
-      });
-
-      render(<MedicationsForm />);
-
-      await waitFor(() => {
-        expect(
-          screen.queryByText(duplicateNotificationPattern),
-        ).not.toBeInTheDocument();
-      });
-    });
-
-    test('shows duplicate notification when STAT medication matches another with same code', async () => {
-      const statMed: MedicationInputEntry = {
-        ...mockSelectedMedication,
-        id: 'stat-med',
-        isSTAT: true,
-        medication: {
-          ...mockMedication,
-          code: {
-            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
-          },
-        },
-      };
-
-      const regularMed: MedicationInputEntry = {
-        ...mockSelectedMedication,
-        id: 'regular-med',
-        isSTAT: false,
-        startDate: new Date('2025-01-15'),
-        duration: 5,
-        durationUnit: { code: 'd', display: 'Days', daysMultiplier: 1 },
-        medication: {
-          ...mockMedication,
-          code: {
-            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
-          },
-        },
-      };
-
-      (useMedicationStore as unknown as jest.Mock).mockReturnValue({
-        ...mockStore,
-        selectedMedications: [statMed, regularMed],
-      });
-
-      render(<MedicationsForm />);
-
-      await waitFor(() => {
-        expect(
-          screen.queryByText(duplicateNotificationPattern),
-        ).toBeInTheDocument();
-      });
-    });
-
-    test('shows duplicate notification for PRN medications with same code and overlapping dates', async () => {
-      const prnMed: MedicationInputEntry = {
-        ...mockSelectedMedication,
-        id: 'prn-med',
-        isPRN: true,
-        startDate: new Date('2025-01-01'),
-        duration: 10,
-        durationUnit: { code: 'd', display: 'Days', daysMultiplier: 1 },
-        medication: {
-          ...mockMedication,
-          code: {
-            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
-          },
-        },
-      };
-
-      const scheduledMed: MedicationInputEntry = {
-        ...mockSelectedMedication,
-        id: 'scheduled-med',
-        isPRN: false,
-        isSTAT: false,
-        startDate: new Date('2025-01-01'),
-        duration: 10,
-        durationUnit: { code: 'd', display: 'Days', daysMultiplier: 1 },
-        medication: {
-          ...mockMedication,
-          code: {
-            coding: [{ code: 'code1', system: 'http://snomed.info/sct' }],
-          },
-        },
-      };
-
-      (useMedicationStore as unknown as jest.Mock).mockReturnValue({
-        ...mockStore,
-        selectedMedications: [prnMed, scheduledMed],
-      });
-
-      render(<MedicationsForm />);
-
-      await waitFor(() => {
-        expect(
-          screen.queryByText(duplicateNotificationPattern),
-        ).toBeInTheDocument();
-      });
-    });
-  });
-
   // SNAPSHOT TESTS
   describe('Snapshot Tests', () => {
     test('matches snapshot with no medications', () => {
@@ -877,6 +634,22 @@ describe('MedicationsForm', () => {
 
       const { container } = renderWithQueryClient(<MedicationsForm />);
       expect(container).toMatchSnapshot();
+    });
+  });
+
+  describe('Privilege Guard', () => {
+    test('renders null when user lacks Add Orders privilege', () => {
+      mockUseHasPrivilege.mockReturnValue(mockUserPrivilegesEmpty);
+      const { container } = render(<MedicationsForm />);
+      expect(container).toBeEmptyDOMElement();
+    });
+    test('renders form when user has Add Orders privilege', () => {
+      render(
+        <UserPrivilegeProvider>
+          <MedicationsForm />
+        </UserPrivilegeProvider>,
+      );
+      expect(screen.getByTestId('medications-form-tile')).toBeInTheDocument();
     });
   });
 });

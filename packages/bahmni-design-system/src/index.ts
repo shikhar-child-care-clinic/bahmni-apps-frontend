@@ -1,6 +1,6 @@
 import '@carbon/styles/css/styles.css';
 
-export { Close } from '@carbon/icons-react';
+export { Close, TrashCan } from '@carbon/icons-react';
 
 export { Button, type ButtonProps } from './atoms/button';
 export { IconButton, type IconButtonProps } from './atoms/iconButton';
@@ -81,7 +81,7 @@ export {
   DatePickerInput,
   type DatePickerProps,
   type DatePickerInputProps,
-} from './atoms/datePicker';
+} from './molecules/datePicker';
 export { TimePicker, type TimePickerProps } from './atoms/timePicker';
 export {
   TimePickerSelect,

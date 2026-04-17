@@ -6,7 +6,11 @@ import {
   notificationService,
   getConditions,
 } from '@bahmni/services';
-import { NotificationProvider, useActivePractitioner } from '@bahmni/widgets';
+import {
+  NotificationProvider,
+  useActivePractitioner,
+  useUserPrivilege,
+} from '@bahmni/widgets';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -46,15 +50,6 @@ jest.mock('@bahmni/form2-controls', () => ({
   )),
 }));
 
-// Mock the form2-controls CSS
-jest.mock('@bahmni/form2-controls/dist/bundle.css', () => ({}));
-
-jest.mock('../../forms/medications/MedicationsForm', () => {
-  return function MockMedicationsForm() {
-    return <div data-testid="medications-form">Medications Form</div>;
-  };
-});
-
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   getFormattedError: jest.fn(),
@@ -62,9 +57,15 @@ jest.mock('@bahmni/services', () => ({
   logAuditEvent: jest.fn(),
   getCurrentUserPrivileges: jest.fn(),
   getConditions: jest.fn(),
+  getPatientMedicationBundle: jest
+    .fn()
+    .mockResolvedValue({ resourceType: 'Bundle', entry: [] }),
+  getConfig: jest.fn().mockResolvedValue({}),
+  fetchMedicationOrdersMetadata: jest.fn().mockResolvedValue({}),
 }));
 
 // Mock useUserPrivilege hook
+
 jest.mock('@bahmni/widgets', () => ({
   ...jest.requireActual('@bahmni/widgets'),
   useActivePractitioner: jest.fn(),
@@ -72,27 +73,36 @@ jest.mock('@bahmni/widgets', () => ({
   useEncounterSession: jest.fn(() => ({
     activeEncounter: { id: 'encounter-123' },
   })),
-  useUserPrivilege: jest.fn(() => ({
-    userPrivileges: ['Get Patients', 'Add Patients'],
-  })),
+  useUserPrivilege: jest.fn(),
+  useHasPrivilege: jest.fn(() => true),
   conditionsQueryKeys: jest.fn((patientUUID: string) => [
     'conditions',
     patientUUID,
   ]),
 }));
 
-// Mock TanStack Query
-jest.mock('@tanstack/react-query', () => ({
-  ...jest.requireActual('@tanstack/react-query'),
-  useQuery: jest.fn(() => ({
-    data: [],
-    isLoading: false,
-    error: null,
-  })),
-  QueryClient: jest.requireActual('@tanstack/react-query').QueryClient,
-  QueryClientProvider: jest.requireActual('@tanstack/react-query')
-    .QueryClientProvider,
-}));
+// Mock TanStack Query - use stable references to prevent infinite re-render loops
+// caused by useMemo/useEffect dependencies comparing array references
+jest.mock('@tanstack/react-query', () => {
+  const stableEmptyArray: never[] = [];
+  const stableRefetch = jest.fn();
+  return {
+    ...jest.requireActual('@tanstack/react-query'),
+    useQuery: jest.fn(() => ({
+      data: stableEmptyArray,
+      isLoading: false,
+      error: null,
+      refetch: stableRefetch,
+    })),
+    QueryClient: jest.requireActual('@tanstack/react-query').QueryClient,
+    QueryClientProvider: jest.requireActual('@tanstack/react-query')
+      .QueryClientProvider,
+  };
+});
+
+const mockUseUserPrivilege = useUserPrivilege as jest.MockedFunction<
+  typeof useUserPrivilege
+>;
 
 // Create mock user
 const mockUser: User = {
@@ -223,6 +233,16 @@ describe('ConsultationPad Integration', () => {
       { name: 'app:clinical:observationForms' },
       { name: 'app:clinical:locationpicker' },
     ]);
+    // Set up the default mock return value for useUserPrivilege
+    mockUseUserPrivilege.mockReturnValue({
+      userPrivileges: [
+        { name: 'Add Encounters' },
+        { name: 'Add Allergies' },
+        { name: 'Add Diagnoses' },
+        { name: 'Add Orders' },
+        { name: 'Add Observations' },
+      ],
+    });
     // Mock implementation for each service
     (logAuditEvent as jest.Mock).mockResolvedValue({ logged: true });
     (getLocations as jest.Mock).mockResolvedValue(mockLocations);

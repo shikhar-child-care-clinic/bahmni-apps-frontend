@@ -76,6 +76,7 @@ export {
   getUpcomingAppointments,
   getPastAppointments,
   getAllAppointmentServices,
+  deleteAppointmentService,
   APPOINTMENT_STATUSES,
   APPOINTMENT_IDENTIFIER_SYSTEM,
   type AppointmentService,
@@ -84,6 +85,7 @@ export { getFormattedError } from './errorHandling';
 export {
   capitalize,
   generateId,
+  generateUUID,
   getCookieByName,
   isStringEmpty,
   getPriorityByOrder,
@@ -100,19 +102,14 @@ export {
   type FormatDateResult,
   calculateAge,
   formatDateTime,
-  formatDate,
   formatDateDistance,
   calculateOnsetDate,
   sortByDate,
-  DATE_FORMAT,
-  DATE_PICKER_INPUT_FORMAT,
-  DATE_TIME_FORMAT,
-  ISO_DATE_FORMAT,
-  FULL_MONTH_DATE_FORMAT,
-  REGISTRATION_DATE_FORMAT,
+  DEFAULT_DATE_FORMAT,
+  DEFAULT_DATE_FORMAT_STORAGE_KEY,
+  DEFAULT_TIME_FORMAT,
   getTodayDate,
-  calculateAgeinYearsAndMonths,
-  formatDateAndTime,
+  getFormattedAge,
   DURATION_UNIT_TO_DAYS,
   calculateEndDate,
   doDateRangesOverlap,
@@ -186,7 +183,12 @@ export {
 
 export { getConfig } from './configService';
 
-export { getCurrentUser, getUserLoginLocation, type User } from './userService';
+export {
+  getCurrentUser,
+  getUserLoginLocation,
+  getDefaultDateFormat,
+  type User,
+} from './userService';
 export { USER_PINNED_PREFERENCE_URL } from './observationFormsService/constants';
 export {
   getPatientObservationsBundle,
@@ -249,6 +251,7 @@ export {
   getCurrentUserPrivileges,
   hasPrivilege,
   type UserPrivilege,
+  type SessionResponse,
 } from './privilegeService';
 export {
   fetchObservationForms,

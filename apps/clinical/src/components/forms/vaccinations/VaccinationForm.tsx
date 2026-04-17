@@ -4,7 +4,6 @@ import {
   ComboBox,
   DropdownSkeleton,
   Tile,
-  InlineNotification,
 } from '@bahmni/design-system';
 import {
   useTranslation,
@@ -15,10 +14,14 @@ import {
   getConfig,
   fetchMedicationOrdersMetadata,
 } from '@bahmni/services';
-import { usePatientUUID } from '@bahmni/widgets';
+import {
+  usePatientUUID,
+  useHasPrivilege,
+  CONSULTATION_PAD_PRIVILEGES,
+} from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
 import { Bundle } from 'fhir/r4';
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 
 import { MedicationFilterResult } from '../../../models/medication';
 import {
@@ -28,14 +31,8 @@ import {
 import {
   getMedicationDisplay,
   getMedicationsFromBundle,
-  getActiveMedicationsFromBundle,
 } from '../../../services/medicationService';
 import { useVaccinationStore } from '../../../stores/vaccinationsStore';
-import {
-  checkMedicationsOverlap,
-  isDuplicateMedication,
-  medicationsMatchByCode,
-} from '../../../utils/fhir/medicationUtilities';
 import { MEDICATIONS_CONFIG_URL } from '../medications/constants';
 import medicationConfigSchema from '../medications/schema.json';
 
@@ -45,14 +42,15 @@ import styles from './styles/VaccinationForm.module.scss';
 /**
  * VaccinationForm component
  *
- * Uses the same FHIR code-based overlap/duplicate detection as MedicationsForm.
+ * A component that displays a search interface for vaccinations and a list of selected vaccinations.
  */
 const VaccinationForm: React.FC = React.memo(() => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();
+  const canAddVaccinations = useHasPrivilege(
+    CONSULTATION_PAD_PRIVILEGES.VACCINATIONS,
+  );
   const [searchVaccinationTerm, setSearchVaccinationTerm] = useState('');
-  const [showDuplicateNotification, setShowDuplicateNotification] =
-    useState(false);
   const isSelectingRef = useRef(false);
   const [selectedVaccinationItem] = useState<MedicationFilterResult | null>(
     null,
@@ -82,6 +80,7 @@ const VaccinationForm: React.FC = React.memo(() => {
   } = useQuery({
     queryKey: ['vaccinations'],
     queryFn: getVaccinations,
+    enabled: canAddVaccinations,
   });
 
   const searchResults = useMemo(
@@ -91,12 +90,12 @@ const VaccinationForm: React.FC = React.memo(() => {
   );
 
   const {
-    data: vaccinationBundle,
     isLoading: existingVaccinationsLoading,
     refetch: refetchVaccinations,
   } = useQuery<Bundle>({
     queryKey: ['patientVaccinations', patientUUID],
-    enabled: !!patientUUID && patientUUID.trim().length > 0,
+    enabled:
+      !!patientUUID && patientUUID.trim().length > 0 && canAddVaccinations,
     queryFn: () =>
       getPatientMedicationBundle(patientUUID!, [], undefined, true),
     refetchOnMount: 'always',
@@ -112,11 +111,6 @@ const VaccinationForm: React.FC = React.memo(() => {
       }
     },
     [patientUUID, refetchVaccinations],
-  );
-
-  const { activeMedications: activeVaccinations, medicationMap } = useMemo(
-    () => getActiveMedicationsFromBundle(vaccinationBundle),
-    [vaccinationBundle],
   );
 
   const {
@@ -137,16 +131,6 @@ const VaccinationForm: React.FC = React.memo(() => {
     updateNote,
   } = useVaccinationStore();
 
-  // Monitor selected vaccinations and update notification based on current overlap status
-  useEffect(() => {
-    const hasOverlaps = checkMedicationsOverlap(
-      selectedVaccinations,
-      activeVaccinations,
-      medicationMap,
-    );
-    setShowDuplicateNotification(hasOverlaps);
-  }, [selectedVaccinations, activeVaccinations, medicationMap]);
-
   const handleSearch = (searchTerm: string) => {
     if (!isSelectingRef.current) {
       setSearchVaccinationTerm(searchTerm);
@@ -159,19 +143,6 @@ const VaccinationForm: React.FC = React.memo(() => {
     }
 
     const displayName = getMedicationDisplay(selectedItem.medication);
-
-    const newStartDate = new Date();
-    const isDuplicate = isDuplicateMedication(
-      selectedItem.medication,
-      newStartDate,
-      1,
-      'd',
-      activeVaccinations,
-      selectedVaccinations,
-      medicationMap,
-    );
-
-    setShowDuplicateNotification(isDuplicate);
 
     isSelectingRef.current = true;
     addVaccination(selectedItem.medication, displayName);
@@ -229,16 +200,10 @@ const VaccinationForm: React.FC = React.memo(() => {
     return filtered.map((item) => {
       const itemDisplayName = getMedicationDisplay(item);
 
-      const isAlreadySelected = selectedVaccinations.some((selected) =>
-        medicationsMatchByCode(item, selected.medication),
-      );
-
       return {
         medication: item,
-        displayName: isAlreadySelected
-          ? `${itemDisplayName} (${t('VACCINATION_ALREADY_SELECTED')})`
-          : itemDisplayName,
-        disabled: isAlreadySelected,
+        displayName: itemDisplayName,
+        disabled: false,
       };
     });
   }, [
@@ -247,9 +212,10 @@ const VaccinationForm: React.FC = React.memo(() => {
     existingVaccinationsLoading,
     error,
     searchResults,
-    selectedVaccinations,
     t,
   ]);
+
+  if (!canAddVaccinations) return null;
 
   return (
     <Tile
@@ -288,16 +254,6 @@ const VaccinationForm: React.FC = React.memo(() => {
           aria-label={t('VACCINATION_SEARCH_PLACEHOLDER')}
         />
       )}
-      {showDuplicateNotification && (
-        <InlineNotification
-          kind="error"
-          lowContrast
-          subtitle={t('ERROR_DUPLICATE_ACTIVE_VACCINATION')}
-          onClose={() => setShowDuplicateNotification(false)}
-          hideCloseButton={false}
-          className={styles.duplicateNotification}
-        />
-      )}
       {medicationConfig &&
         selectedVaccinations &&
         selectedVaccinations.length > 0 && (
@@ -313,7 +269,7 @@ const VaccinationForm: React.FC = React.memo(() => {
               >
                 <SelectedVaccinationItem
                   vaccinationInputEntry={vaccination}
-                  medicationConfig={medicationConfig!}
+                  medicationConfig={medicationConfig}
                   updateDosage={updateDosage}
                   updateDosageUnit={updateDosageUnit}
                   updateFrequency={updateFrequency}

@@ -1,3 +1,4 @@
+import { useHasPrivilege } from '@bahmni/widgets';
 import {
   QueryClient,
   QueryClientProvider,
@@ -17,13 +18,6 @@ expect.extend(toHaveNoViolations);
 // Mock modules
 jest.mock('../../../../stores/allergyStore');
 jest.mock('../../../../hooks/useAllergenSearch');
-jest.mock('../styles/AllergiesForm.module.scss', () => ({
-  allergiesFormTile: 'allergiesFormTile',
-  allergiesFormTitle: 'allergiesFormTitle',
-  allergiesBox: 'allergiesBox',
-  selectedAllergyItem: 'selectedAllergyItem',
-  duplicateNotification: 'duplicateNotification',
-}));
 
 jest.mock('@bahmni/widgets', () => ({
   ...jest.requireActual('@bahmni/widgets'),
@@ -31,10 +25,12 @@ jest.mock('@bahmni/widgets', () => ({
     addNotification: jest.fn(),
   })),
   usePatientUUID: jest.fn(() => 'test-patient-uuid'),
+  useHasPrivilege: jest.fn(),
 }));
 
 // Mock @bahmni/services
 jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
   useTranslation: jest.fn(() => ({
     t: (key: string) => {
       const translations: Record<string, string> = {
@@ -112,6 +108,14 @@ const mockSelectedAllergy = {
   hasBeenValidated: false,
 };
 
+const mockUseHasPrivilege = useHasPrivilege as jest.MockedFunction<
+  typeof useHasPrivilege
+>;
+
+const mockUserPrivilegesWithAllergies = true;
+
+const mockUserPrivilegesEmpty = false;
+
 const mockAllergyStore = {
   selectedAllergies: [],
   addAllergy: jest.fn(),
@@ -177,6 +181,7 @@ describe('AllergiesForm', () => {
     mockAllergyStore.selectedAllergies = [];
 
     // Set default mocks
+    mockUseHasPrivilege.mockReturnValue(mockUserPrivilegesWithAllergies);
     (
       useAllergyStore as jest.MockedFunction<typeof useAllergyStore>
     ).mockReturnValue(mockAllergyStore);
@@ -345,7 +350,6 @@ describe('AllergiesForm', () => {
 
   describe('Input Validation', () => {
     const testCases = [
-      { name: 'null selectedItem', selectedItem: null },
       { name: 'undefined selectedItem', selectedItem: undefined },
       {
         name: 'selectedItem with empty uuid',
@@ -799,6 +803,19 @@ describe('AllergiesForm', () => {
         selectedAllergies: [mockSelectedAllergy],
       });
       expect(container).toMatchSnapshot();
+    });
+  });
+
+  describe('Privilege Guard', () => {
+    it('renders null when user lacks Add Allergies privilege', () => {
+      mockUseHasPrivilege.mockReturnValue(mockUserPrivilegesEmpty);
+      const { container } = renderAllergiesForm();
+      expect(container).toBeEmptyDOMElement();
+    });
+
+    it('renders form when user has Add Allergies privilege', () => {
+      renderAllergiesForm();
+      expect(screen.getByTestId('allergies-form-tile')).toBeInTheDocument();
     });
   });
 });

@@ -1,8 +1,8 @@
 import {
   Column,
   Grid,
-  MenuItemDivider,
   ActionArea,
+  MenuItemDivider,
 } from '@bahmni/design-system';
 import {
   AUDIT_LOG_EVENT_DETAILS,
@@ -13,7 +13,12 @@ import {
   Form2Observation,
   dispatchConsultationSaved,
 } from '@bahmni/services';
-import { useNotification, useActivePractitioner } from '@bahmni/widgets';
+import {
+  useNotification,
+  useActivePractitioner,
+  useHasPrivilege,
+  CONSULTATION_PAD_PRIVILEGES,
+} from '@bahmni/widgets';
 import { Bundle } from 'fhir/r4';
 import React, { useEffect } from 'react';
 import { useEncounterSession } from '../../../src/hooks/useEncounterSession';
@@ -142,7 +147,6 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
   const {
     selectedMedications,
     validateAllMedications,
-    hasOverlapDuplicates,
     reset: resetMedications,
   } = useMedicationStore();
 
@@ -155,6 +159,25 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
   const { activeEncounter } = useEncounterSession({
     practitioner: practitionerState.practitioner,
   });
+
+  const canAddAllergies = useHasPrivilege(
+    CONSULTATION_PAD_PRIVILEGES.ALLERGIES,
+  );
+  const canAddInvestigations = useHasPrivilege(
+    CONSULTATION_PAD_PRIVILEGES.INVESTIGATIONS,
+  );
+  const canAddConditionsAndDiagnoses = useHasPrivilege(
+    CONSULTATION_PAD_PRIVILEGES.CONDITIONS_AND_DIAGNOSES,
+  );
+  const canAddMedications = useHasPrivilege(
+    CONSULTATION_PAD_PRIVILEGES.MEDICATIONS,
+  );
+  const canAddVaccinations = useHasPrivilege(
+    CONSULTATION_PAD_PRIVILEGES.VACCINATIONS,
+  );
+  const canAddObservations = useHasPrivilege(
+    CONSULTATION_PAD_PRIVILEGES.OBSERVATIONS,
+  );
 
   // Clean up on unmount
   useEffect(() => {
@@ -344,23 +367,13 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         });
       }
 
-      if (hasOverlapDuplicates && selectedMedications.length > 0) {
-        addNotification({
-          title: t('ERROR_DEFAULT_TITLE'),
-          message: t('ERROR_DUPLICATE_ACTIVE_MEDICATION'),
-          type: 'error',
-          timeout: 5000,
-        });
-      }
-
       const isVaccinationsValid = validateAllVaccinations();
       if (
         !isConditionsAndDiagnosesValid ||
         !isAllergiesValid ||
         !isMedicationsValid ||
         !isObservationFormValid ||
-        !isVaccinationsValid ||
-        hasOverlapDuplicates
+        !isVaccinationsValid
       ) {
         return;
       }
@@ -449,15 +462,15 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
       <BasicForm practitionerState={practitionerState} />
       <MenuItemDivider />
       <AllergiesForm />
-      <MenuItemDivider />
+      {canAddAllergies && <MenuItemDivider />}
       <InvestigationsForm />
-      <MenuItemDivider />
+      {canAddInvestigations && <MenuItemDivider />}
       <ConditionsAndDiagnoses />
-      <MenuItemDivider />
+      {canAddConditionsAndDiagnoses && <MenuItemDivider />}
       <MedicationsForm />
-      <MenuItemDivider />
+      {canAddMedications && <MenuItemDivider />}
       <VaccinationForm />
-      <MenuItemDivider />
+      {canAddVaccinations && <MenuItemDivider />}
       <ObservationForms
         onFormSelect={handleFormSelection}
         selectedForms={selectedForms}
@@ -469,7 +482,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({ onClose }) => {
         isAllFormsLoading={isObservationFormsLoading}
         observationFormsError={observationFormsError}
       />
-      <MenuItemDivider />
+      {canAddObservations && <MenuItemDivider />}
     </>
   );
 

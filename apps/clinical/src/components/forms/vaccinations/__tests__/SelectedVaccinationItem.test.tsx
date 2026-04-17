@@ -19,7 +19,6 @@ expect.extend(toHaveNoViolations);
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   getTodayDate: jest.fn().mockReturnValue(new Date('2025-01-01')),
-  DATE_PICKER_INPUT_FORMAT: 'd/m/Y',
 }));
 
 jest.mock('../../../../services/medicationsValueCalculator', () => ({
@@ -31,21 +30,6 @@ jest.mock('../../../../services/medicationsValueCalculator', () => ({
     .mockImplementation((frequency) => frequency.uuid === '0'),
 }));
 
-jest.mock('../styles/SelectedVaccinationItem.module.scss', () => ({
-  vaccinationTitle: 'vaccinationTitle',
-  vaccineDetails: 'vaccineDetails',
-  vaccinationActions: 'vaccinationActions',
-  statControl: 'statControl',
-  dosageControls: 'dosageControls',
-  dosageInput: 'dosageInput',
-  dosageUnit: 'dosageUnit',
-  column: 'column',
-  durationControls: 'durationControls',
-  durationInput: 'durationInput',
-  durationUnit: 'durationUnit',
-  footerRow: 'footerRow',
-}));
-
 const createMockMedication = (overrides = {}): Medication => ({
   id: 'test-vac-1',
   resourceType: 'Medication',
@@ -55,7 +39,7 @@ const createMockMedication = (overrides = {}): Medication => ({
       {
         code: 'covid-19-vaccine',
         display: 'COVID-19 Vaccine',
-        system: 'http://snomed.info/sct',
+        system: 'https://snomed.info/sct',
       },
     ],
   },
@@ -138,11 +122,13 @@ const createDefaultProps = (overrides = {}): SelectedVaccinationItemProps => ({
 describe('SelectedVaccinationItem', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    window.HTMLElement.prototype.scrollIntoView = jest.fn();
+    localStorage.setItem('default_dateFormat', 'dd/MM/yyyy');
+    globalThis.HTMLElement.prototype.scrollIntoView = jest.fn();
   });
   afterEach(() => {
     jest.restoreAllMocks();
     jest.spyOn(console, 'error').mockImplementation(() => {});
+    localStorage.clear();
   });
   describe('Component Rendering', () => {
     test('renders vaccination display name correctly', () => {
@@ -473,7 +459,9 @@ describe('SelectedVaccinationItem', () => {
         const props = createDefaultProps({ updateStartDate });
         const user = userEvent.setup();
         render(<SelectedVaccinationItem {...props} />);
-        const dateInput = screen.getByPlaceholderText('d/m/Y');
+        const dateInput = screen.getByTestId(
+          'vaccination-start-date-input-entry-1',
+        );
         await user.click(dateInput);
         await user.clear(dateInput);
         await user.type(dateInput, '15/02/2025');
@@ -496,7 +484,9 @@ describe('SelectedVaccinationItem', () => {
           }),
         });
         render(<SelectedVaccinationItem {...props} />);
-        const dateInput = screen.getByPlaceholderText('d/m/Y');
+        const dateInput = screen.getByTestId(
+          'vaccination-start-date-input-entry-1',
+        );
         expect(dateInput).toBeDisabled();
       });
     });
@@ -807,7 +797,9 @@ describe('SelectedVaccinationItem', () => {
         expect(
           screen.getByRole('combobox', { name: /Duration Unit/i }),
         ).toBeDisabled();
-        expect(screen.getByPlaceholderText('d/m/Y')).toBeDisabled();
+        expect(
+          screen.getByTestId('vaccination-start-date-input-entry-1'),
+        ).toBeDisabled();
       });
       test('does not update frequency if immediate frequency is not found in config', () => {
         const updateFrequency = jest.fn();
@@ -979,7 +971,9 @@ describe('SelectedVaccinationItem', () => {
       const props = createDefaultProps({ updateStartDate });
       const user = userEvent.setup();
       render(<SelectedVaccinationItem {...props} />);
-      const dateInput = screen.getByPlaceholderText('d/m/Y');
+      const dateInput = screen.getByTestId(
+        'vaccination-start-date-input-entry-1',
+      );
       await user.click(dateInput);
       await user.clear(dateInput);
       await user.type(dateInput, '1/1/2020');
@@ -999,7 +993,9 @@ describe('SelectedVaccinationItem', () => {
       const year = tomorrow.getFullYear();
       const tomorrowString = `${day}/${month}/${year}`;
       render(<SelectedVaccinationItem {...props} />);
-      const dateInput = screen.getByPlaceholderText('d/m/Y');
+      const dateInput = screen.getByTestId(
+        'vaccination-start-date-input-entry-1',
+      );
       await user.click(dateInput);
       await user.clear(dateInput);
       await user.type(dateInput, tomorrowString);

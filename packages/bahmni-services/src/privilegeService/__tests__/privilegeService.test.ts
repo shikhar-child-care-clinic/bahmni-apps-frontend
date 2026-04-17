@@ -18,49 +18,37 @@ describe('privilegeService', () => {
   });
 
   describe('getCurrentUserPrivileges', () => {
-    it('should return user privileges when API call succeeds with multiple privileges', async () => {
-      // Arrange
+    it('should return user privileges from session API', async () => {
       const mockPrivileges = [
-        { name: 'app:clinical:observationForms' },
-        { name: 'view:forms' },
-        { name: 'edit:forms' },
-        { name: 'delete:forms' },
+        { name: 'Add Encounters' },
+        { name: 'Add Allergies' },
+        { name: 'Add Orders' },
       ];
 
-      mockedGet.mockResolvedValue(mockPrivileges);
+      mockedGet.mockResolvedValue({ user: { privileges: mockPrivileges } });
 
-      // Act
       const result = await getCurrentUserPrivileges();
 
-      // Assert
       expect(result).toEqual(mockPrivileges);
-      expect(result).toHaveLength(4);
-      expect(mockedGet).toHaveBeenCalledWith(
-        '/openmrs/ws/rest/v1/bahmnicore/whoami',
-      );
+      expect(result).toHaveLength(3);
+      expect(mockedGet).toHaveBeenCalledWith('/openmrs/ws/rest/v1/session');
       expect(mockedGet).toHaveBeenCalledTimes(1);
     });
 
     it('should return single privilege when user has only one privilege', async () => {
-      // Arrange
-      const mockPrivileges = [{ name: 'app:clinical:observationForms' }];
+      const mockPrivileges = [{ name: 'Add Encounters' }];
 
-      mockedGet.mockResolvedValue(mockPrivileges);
+      mockedGet.mockResolvedValue({ user: { privileges: mockPrivileges } });
 
-      // Act
       const result = await getCurrentUserPrivileges();
 
-      // Assert
       expect(result).toEqual(mockPrivileges);
       expect(result).toHaveLength(1);
-      expect(result![0].name).toBe('app:clinical:observationForms');
-      expect(mockedGet).toHaveBeenCalledWith(
-        '/openmrs/ws/rest/v1/bahmnicore/whoami',
-      );
+      expect(result![0].name).toBe('Add Encounters');
+      expect(mockedGet).toHaveBeenCalledWith('/openmrs/ws/rest/v1/session');
     });
 
     it('should return privileges with complex privilege names', async () => {
-      // Arrange
       const mockPrivileges = [
         { name: 'app:clinical:observationForms:view' },
         { name: 'app:clinical:observationForms:edit' },
@@ -68,39 +56,19 @@ describe('privilegeService', () => {
         { name: 'app:clinical:consultationPad:access' },
       ];
 
-      mockedGet.mockResolvedValue(mockPrivileges);
+      mockedGet.mockResolvedValue({ user: { privileges: mockPrivileges } });
 
-      // Act
       const result = await getCurrentUserPrivileges();
 
-      // Assert
       expect(result).toEqual(mockPrivileges);
       expect(result).toHaveLength(4);
       expect(
         result!.every((privilege) => privilege.name.includes('app:clinical')),
       ).toBe(true);
-      expect(mockedGet).toHaveBeenCalledWith(
-        '/openmrs/ws/rest/v1/bahmnicore/whoami',
-      );
-    });
-
-    it('should return empty array when user has no privileges', async () => {
-      // Arrange
-      mockedGet.mockResolvedValue([]);
-
-      // Act
-      const result = await getCurrentUserPrivileges();
-
-      // Assert
-      expect(result).toEqual([]);
-      expect(result).toHaveLength(0);
-      expect(mockedGet).toHaveBeenCalledWith(
-        '/openmrs/ws/rest/v1/bahmnicore/whoami',
-      );
+      expect(mockedGet).toHaveBeenCalledWith('/openmrs/ws/rest/v1/session');
     });
 
     it('should handle server errors (500)', async () => {
-      // Arrange
       const serverError = new Error('Internal server error');
       const formattedError = {
         title: 'Server Error',
@@ -110,7 +78,6 @@ describe('privilegeService', () => {
       mockedGet.mockRejectedValue(serverError);
       mockedGetFormattedError.mockReturnValue(formattedError);
 
-      // Act & Assert
       await expect(getCurrentUserPrivileges()).rejects.toThrow(
         'Internal server error occurred',
       );
@@ -118,56 +85,22 @@ describe('privilegeService', () => {
       expect(mockedGetFormattedError).toHaveBeenCalledWith(serverError);
     });
 
-    it('should handle undefined response', async () => {
-      // Arrange
-      mockedGet.mockResolvedValue(undefined);
+    it('should handle response with no privileges array', async () => {
+      mockedGet.mockResolvedValue({ user: { privileges: [] } });
 
-      // Act
       const result = await getCurrentUserPrivileges();
 
-      // Assert
-      expect(result).toBeUndefined();
-      expect(mockedGet).toHaveBeenCalledWith(
-        '/openmrs/ws/rest/v1/bahmnicore/whoami',
-      );
+      expect(result).toEqual([]);
+      expect(mockedGet).toHaveBeenCalledWith('/openmrs/ws/rest/v1/session');
     });
 
-    it('should handle response with empty privilege names', async () => {
-      // Arrange
-      const mockPrivileges = [
-        { name: '' },
-        { name: 'valid:privilege' },
-        { name: '   ' },
-      ];
+    it('should handle response with null privileges', async () => {
+      mockedGet.mockResolvedValue({ user: { privileges: null } });
 
-      mockedGet.mockResolvedValue(mockPrivileges);
-
-      // Act
       const result = await getCurrentUserPrivileges();
 
-      // Assert
-      expect(result).toEqual(mockPrivileges);
-      expect(result).toHaveLength(3);
-      expect(mockedGet).toHaveBeenCalledWith(
-        '/openmrs/ws/rest/v1/bahmnicore/whoami',
-      );
-    });
-
-    it('should handle response with null privilege objects', async () => {
-      // Arrange
-      const mockPrivileges = [null, { name: 'valid:privilege' }, undefined];
-
-      mockedGet.mockResolvedValue(mockPrivileges);
-
-      // Act
-      const result = await getCurrentUserPrivileges();
-
-      // Assert
-      expect(result).toEqual(mockPrivileges);
-      expect(result).toHaveLength(3);
-      expect(mockedGet).toHaveBeenCalledWith(
-        '/openmrs/ws/rest/v1/bahmnicore/whoami',
-      );
+      expect(result).toBeNull();
+      expect(mockedGet).toHaveBeenCalledWith('/openmrs/ws/rest/v1/session');
     });
   });
 
@@ -180,63 +113,71 @@ describe('privilegeService', () => {
     ];
 
     it('should return true when user has the specified privilege', () => {
-      // Act
       const result = hasPrivilege(
         mockUserPrivileges,
         'app:clinical:observationForms',
       );
 
-      // Assert
       expect(result).toBe(true);
     });
 
     it('should return true when user has privilege with exact match', () => {
-      // Act
       const result = hasPrivilege(mockUserPrivileges, 'view:forms');
 
-      // Assert
       expect(result).toBe(true);
     });
 
     it('should return false when user does not have the specified privilege', () => {
-      // Act
       const result = hasPrivilege(mockUserPrivileges, 'nonexistent:privilege');
 
-      // Assert
       expect(result).toBe(false);
     });
 
-    it('should return false when user privileges is null', () => {
-      // Act
-      const result = hasPrivilege(null, 'app:clinical:observationForms');
+    it('should return false when user privileges is null or empty', () => {
+      expect(hasPrivilege(null, 'app:clinical:observationForms')).toBe(false);
+      expect(hasPrivilege([], 'app:clinical:observationForms')).toBe(false);
+    });
 
-      // Assert
+    it('should return true when privilege is passed as array and any matches', () => {
+      const result = hasPrivilege(mockUserPrivileges, [
+        'nonexistent:privilege',
+        'view:forms',
+      ]);
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false when privilege is passed as array and none match', () => {
+      const result = hasPrivilege(mockUserPrivileges, [
+        'nonexistent:privilege',
+        'another:missing',
+      ]);
+
       expect(result).toBe(false);
     });
 
-    it('should return false when user privileges is empty array', () => {
-      // Act
-      const result = hasPrivilege([], 'app:clinical:observationForms');
-
-      // Assert
-      expect(result).toBe(false);
-    });
-
-    it('should return false when privilege name is empty string', () => {
-      // Act
+    it('should return true when privilege name is empty string (treated as no restriction)', () => {
       const result = hasPrivilege(mockUserPrivileges, '');
 
-      // Assert
-      expect(result).toBe(false);
+      expect(result).toBe(true);
     });
+
+    it('should return true when privilege name is undefined (treated as no restriction)', () => {
+      const result = hasPrivilege(mockUserPrivileges, undefined);
+      expect(result).toBe(true);
+    });
+
+    it('should return true when privilege is an empty array (treated as no restriction)', () => {
+      const result = hasPrivilege(mockUserPrivileges, []);
+      expect(result).toBe(true);
+    });
+
     it('should handle privileges with special characters', () => {
-      // Arrange
       const specialPrivileges: UserPrivilege[] = [
         { uuid: '1', name: 'app:clinical-forms_view.restricted' },
         { uuid: '2', name: 'app:clinical@forms#edit' },
       ];
 
-      // Act
       const result1 = hasPrivilege(
         specialPrivileges,
         'app:clinical-forms_view.restricted',
@@ -246,7 +187,6 @@ describe('privilegeService', () => {
         'app:clinical@forms#edit',
       );
 
-      // Assert
       expect(result1).toBe(true);
       expect(result2).toBe(true);
     });
