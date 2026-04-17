@@ -15,13 +15,7 @@ import { OverflowMenu, OverflowMenuItem } from '@carbon/react';
 import React, { useState } from 'react';
 import styles from './styles/UserProfileMenu.module.scss';
 
-interface UserProfileMenuProps {
-  onChangePassword?: () => void;
-}
-
-export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
-  onChangePassword,
-}) => {
+export const UserProfileMenu: React.FC = () => {
   const { t } = useTranslation();
   const { user, loading } = useActivePractitioner();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -38,7 +32,7 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
     setIsLoggingOut(true);
     try {
       await logout();
-      window.location.href = '/';
+      window.location.href = '/bahmni/home/index.html#/login';
     } catch (error) {
       setIsLoggingOut(false);
       // eslint-disable-next-line no-console
@@ -58,7 +52,9 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
       >
         <OverflowMenuItem
           itemText={t('HOME_CHANGE_PASSWORD')}
-          onClick={onChangePassword}
+          onClick={() => {
+            window.location.href = '/bahmni/home/index.html#/changePassword';
+          }}
           data-testid="change-password-option"
         />
         <OverflowMenuItem

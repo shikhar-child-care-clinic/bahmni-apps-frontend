@@ -110,14 +110,15 @@ describe('UserProfileMenu', () => {
     expect(screen.getByTestId('menu-divider')).toBeInTheDocument();
   });
 
-  it('calls onChangePassword when change password option is clicked', () => {
-    const onChangePassword = jest.fn();
-    render(<UserProfileMenu onChangePassword={onChangePassword} />);
+  it('redirects to old app change password page on click', () => {
+    render(<UserProfileMenu />);
 
     const changePasswordBtn = screen.getByTestId('change-password-option');
     fireEvent.click(changePasswordBtn);
 
-    expect(onChangePassword).toHaveBeenCalled();
+    expect(window.location.href).toBe(
+      '/bahmni/home/index.html#/changePassword',
+    );
   });
 
   it('calls logout and redirects on logout click', async () => {
@@ -132,7 +133,7 @@ describe('UserProfileMenu', () => {
       expect(mockLogout).toHaveBeenCalled();
     });
 
-    expect(window.location.href).toBe('/');
+    expect(window.location.href).toBe('/bahmni/home/index.html#/login');
   });
 
   it('disables logout button while logging out', async () => {
