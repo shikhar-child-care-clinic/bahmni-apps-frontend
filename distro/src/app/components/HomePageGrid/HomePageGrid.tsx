@@ -1,9 +1,4 @@
-import {
-  Grid,
-  Column,
-  InlineNotification,
-  Button,
-} from '@bahmni/design-system';
+import { Grid, Column } from '@bahmni/design-system';
 import { useTranslation } from '@bahmni/services';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Module, getVisibleModules } from '../../../services/moduleService';
@@ -14,12 +9,10 @@ export const HomePageGrid: React.FC = () => {
   const { t } = useTranslation();
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const loadModules = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
 
       const visibleModules = await getVisibleModules(
         'org.bahmni.home.dashboard',
@@ -27,14 +20,12 @@ export const HomePageGrid: React.FC = () => {
 
       setModules(visibleModules);
     } catch (err) {
-      const message = t('HOME_ERROR_FETCH_CONFIG');
-      setError(message);
       // eslint-disable-next-line no-console
       console.error('Error loading modules:', err);
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     loadModules();
@@ -61,27 +52,6 @@ export const HomePageGrid: React.FC = () => {
             </Column>
           ))}
         </Grid>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div
-        className={styles.errorContainer}
-        data-testid="home-error"
-        role="alert"
-      >
-        <InlineNotification
-          kind="error"
-          lowContrast
-          subtitle={error}
-          hideCloseButton={false}
-          onClose={() => setError(null)}
-        />
-        <Button onClick={loadModules} data-testid="retry-button">
-          {t('HOME_RETRY')}
-        </Button>
       </div>
     );
   }

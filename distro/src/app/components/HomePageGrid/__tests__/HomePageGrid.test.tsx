@@ -85,20 +85,6 @@ describe('HomePageGrid', () => {
     });
   });
 
-  it('renders error message on fetch failure', async () => {
-    mockGetVisibleModules.mockRejectedValue(
-      new Error('Failed to load extensions'),
-    );
-
-    render(<HomePageGrid />);
-
-    await waitFor(() => {
-      expect(
-        screen.getByText('Failed to load home page configuration'),
-      ).toBeInTheDocument();
-    });
-  });
-
   it('passes module data to AppTile components', async () => {
     mockGetVisibleModules.mockResolvedValue(mockModules);
 
@@ -124,18 +110,6 @@ describe('HomePageGrid', () => {
     const statusEl = screen.getByRole('status');
     expect(statusEl).toHaveAttribute('aria-busy', 'true');
     expect(statusEl).toHaveAttribute('aria-label', 'Loading modules');
-  });
-
-  it('error state has role="alert"', async () => {
-    mockGetVisibleModules.mockRejectedValue(
-      new Error('Failed to load extensions'),
-    );
-
-    render(<HomePageGrid />);
-
-    await waitFor(() => {
-      expect(screen.getByRole('alert')).toBeInTheDocument();
-    });
   });
 
   it('has no accessibility violations in normal state', async () => {
