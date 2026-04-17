@@ -2,6 +2,7 @@ import {
   getVisitTypes,
   checkIfActiveVisitExists,
   createVisitForPatient,
+  getFormattedError,
   useTranslation,
   type VisitType,
 } from '@bahmni/services';
@@ -52,9 +53,11 @@ export const useCreateVisit = () => {
         queryKey: ['hasActiveVisit', patientUuid],
       });
     } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('[useCreateVisit] failed:', error);
       addNotification({
         title: t('ERROR_DEFAULT_TITLE'),
-        message: error instanceof Error ? error.message : String(error),
+        message: getFormattedError(error).message,
         type: 'error',
         timeout: 5000,
       });

@@ -8,6 +8,7 @@ import {
   AUDIT_LOG_EVENT_DETAILS,
   AuditEventType,
   dispatchAuditEvent,
+  getFormattedError,
   PersonAttributeType,
   useTranslation,
 } from '@bahmni/services';
@@ -77,10 +78,12 @@ export const useCreatePatient = () => {
       }
     },
     onError: (error) => {
+      // eslint-disable-next-line no-console
+      console.error('[useCreatePatient] failed:', error);
       addNotification({
         type: 'error',
         title: t('ERROR_SAVING_PATIENT'),
-        message: error instanceof Error ? error.message : String(error),
+        message: getFormattedError(error).message,
         timeout: 5000,
       });
     },

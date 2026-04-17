@@ -16,6 +16,8 @@ export const getCurrentUserPrivileges = async (): Promise<
 
     return session.user.privileges;
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('[getCurrentUserPrivileges] failed:', error);
     const { message } = getFormattedError(error);
     throw new Error(message);
   }

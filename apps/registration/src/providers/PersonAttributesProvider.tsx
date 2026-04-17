@@ -47,6 +47,8 @@ export const PersonAttributesProvider: React.FC<
   // Show error notifications
   useEffect(() => {
     if (queryError) {
+      // eslint-disable-next-line no-console
+      console.error('[PersonAttributesProvider] failed:', queryError);
       const { title, message } = getFormattedError(queryError);
       notificationService.showError(title, message);
     }

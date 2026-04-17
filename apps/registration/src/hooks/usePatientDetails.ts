@@ -1,6 +1,7 @@
 import {
   getPatientProfile,
   formatDateTime,
+  getFormattedError,
   useTranslation,
 } from '@bahmni/services';
 import { useNotification } from '@bahmni/widgets';
@@ -51,10 +52,12 @@ export const usePatientDetails = ({ patientUuid }: UsePatientDetailsProps) => {
 
   useEffect(() => {
     if (error) {
+      // eslint-disable-next-line no-console
+      console.error('[usePatientDetails] failed:', error);
       addNotification({
         type: 'error',
         title: t('ERROR_LOADING_PATIENT_DETAILS'),
-        message: error instanceof Error ? error.message : String(error),
+        message: getFormattedError(error).message,
       });
     }
   }, [error, t, addNotification]);
