@@ -11,8 +11,8 @@ jest.mock('../../api');
 const mockedGet = get as jest.MockedFunction<typeof get>;
 
 const PATIENT_UUID = 'test-patient-uuid';
-const BASE_URL = `/openmrs/ws/fhir2/R4/DocumentReference?patient=${PATIENT_UUID}&_sort=-date&_count=100&_getpagesoffset=0`;
-const PAGE_BASE_URL = `/openmrs/ws/fhir2/R4/DocumentReference?patient=${PATIENT_UUID}&_sort=-date&_count=10&_getpagesoffset=0`;
+const BASE_URL = `/openmrs/ws/fhir2/R4/DocumentReference?patient=${PATIENT_UUID}&_sort=-_lastUpdated&_count=100&_getpagesoffset=0`;
+const PAGE_BASE_URL = `/openmrs/ws/fhir2/R4/DocumentReference?patient=${PATIENT_UUID}&_sort=-_lastUpdated&_count=10&_getpagesoffset=0`;
 
 const mockDocumentReference: DocumentReference = {
   resourceType: 'DocumentReference',
