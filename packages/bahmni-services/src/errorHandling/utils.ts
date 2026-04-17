@@ -80,11 +80,13 @@ export const getFormattedError = (
           }
 
           // Handle non-FHIR errors
+          /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
           const backendMessage =
-            responseData?.error?.message ?? responseData?.message;
+            responseData?.error?.message || responseData?.message;
           message =
-            backendMessage ??
+            backendMessage ||
             'Invalid input parameters. Please check your request and try again.';
+          /* eslint-enable @typescript-eslint/prefer-nullish-coalescing */
           break;
         }
         case 401:
@@ -112,10 +114,12 @@ export const getFormattedError = (
           title = 'Error';
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const responseData = axiosError.response.data as Record<string, any>;
+          /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
           message =
-            responseData?.message ??
-            axiosError.message ??
+            responseData?.message ||
+            axiosError.message ||
             'An unknown error occurred';
+          /* eslint-enable @typescript-eslint/prefer-nullish-coalescing */
         }
       }
     } else if (error instanceof Error) {
