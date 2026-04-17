@@ -138,6 +138,7 @@ export const getFormattedError = (
   if (!message) {
     // eslint-disable-next-line no-console
     console.trace('[getFormattedError] empty message — raw error:', error);
+    message = 'An unexpected error occurred';
   }
 
   return { title, message };
