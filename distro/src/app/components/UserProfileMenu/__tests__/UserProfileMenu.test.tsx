@@ -1,18 +1,18 @@
 import { logout, useTranslation, getFormattedError } from '@bahmni/services';
-import { useActivePractitioner } from '@bahmni/widgets';
+import { useActivePractitioner, useNotification } from '@bahmni/widgets';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { UserProfileMenu } from '../UserProfileMenu';
 
+const mockAddNotification = jest.fn();
+
 jest.mock('@bahmni/widgets', () => ({
   useActivePractitioner: jest.fn(),
+  useNotification: jest.fn(),
 }));
 
 jest.mock('@bahmni/services', () => ({
   useTranslation: jest.fn(),
   logout: jest.fn(),
-  notificationService: {
-    showError: jest.fn(),
-  },
   getFormattedError: jest.fn(),
 }));
 
@@ -49,6 +49,9 @@ jest.mock('@carbon/react', () => ({
 const mockUseActivePractitioner = useActivePractitioner as jest.MockedFunction<
   typeof useActivePractitioner
 >;
+const mockUseNotification = useNotification as jest.MockedFunction<
+  typeof useNotification
+>;
 const mockLogout = logout as jest.MockedFunction<typeof logout>;
 const mockUseTranslation = useTranslation as jest.MockedFunction<
   typeof useTranslation
@@ -67,6 +70,12 @@ describe('UserProfileMenu', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseNotification.mockReturnValue({
+      addNotification: mockAddNotification,
+      notifications: [],
+      removeNotification: jest.fn(),
+      clearAllNotifications: jest.fn(),
+    });
     mockUseActivePractitioner.mockReturnValue({
       practitioner: { uuid: 'practitioner-uuid' },
       user: mockUser,
@@ -204,6 +213,11 @@ describe('UserProfileMenu', () => {
       expect(mockLogout).toHaveBeenCalled();
     });
 
+    expect(mockAddNotification).toHaveBeenCalledWith({
+      title: 'Error',
+      message: 'HOME_ERROR_LOGOUT_FAILED',
+      type: 'error',
+    });
     expect(logoutBtn).not.toBeDisabled();
     consoleErrorSpy.mockRestore();
   });
