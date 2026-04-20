@@ -3,7 +3,6 @@ import {
   useTranslation,
   formatDateTime,
   getDocumentReferencePage,
-  DocumentReferencePage,
   DocumentViewModel,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
@@ -46,7 +45,6 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
   const { t } = useTranslation();
   const { addNotification } = useNotification();
 
-  // Number() safely handles non-numeric config values (NaN → falsy → fallback 10)
   const configPageSize = Number(config?.pageSize) || 10;
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -86,14 +84,12 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
       ),
   });
 
-  // Update server total when data arrives
   useEffect(() => {
     if (data) {
       setServerTotal(data.total);
     }
   }, [data]);
 
-  // Reset pagination when patient changes
   useEffect(() => {
     setCurrentPage(1);
     setServerTotal(undefined);
@@ -148,13 +144,10 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
   const handlePageChange = useCallback(
     (newPage: number, newPageSize: number) => {
       if (newPageSize !== selectedPageSize) {
-        // Page size changed: reset to page 1, re-fetch with new _count
         setSelectedPageSize(newPageSize);
         setCurrentPage(1);
         setServerTotal(undefined);
       } else {
-        // Offset-based pagination: any page can be fetched directly via
-        // _getpagesoffset = (page - 1) * _count — no cursor cache needed
         setCurrentPage(newPage);
       }
     },
@@ -166,7 +159,6 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
     [config?.fields],
   );
 
-  // Client-side sort: applied per-page as a secondary sort. Server-side uses _sort=-date.
   const sortedData = useMemo(() => {
     const docs = data?.documents ?? [];
     return [...docs].sort((a, b) => {
