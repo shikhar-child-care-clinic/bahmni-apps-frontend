@@ -264,7 +264,7 @@ describe('programService', () => {
       expect(result.total).toBe(42);
     });
 
-    it('should fall back to results length when totalCount is absent', async () => {
+    it('should return undefined total when totalCount is absent', async () => {
       const mockResponse: PatientProgramsResponse = {
         results: mockEnrollments.slice(0, 2),
       };
@@ -272,7 +272,7 @@ describe('programService', () => {
 
       const result = await getPatientProgramsPage(patientUUID, 15, 1);
 
-      expect(result.total).toBe(2);
+      expect(result.total).toBeUndefined();
     });
 
     it('should return empty programs when no enrollments exist', async () => {

@@ -28,11 +28,11 @@ const ConditionsTable: React.FC<WidgetProps> = ({ config }) => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPageSize, setSelectedPageSize] = useState(configPageSize);
-  const [serverTotal, setServerTotal] = useState<number | undefined>(undefined);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['conditions', patientUUID!, currentPage, selectedPageSize],
     enabled: !!patientUUID,
+    placeholderData: (prev) => prev,
     queryFn: async () => {
       const page = await getConditionPage(
         patientUUID!,
@@ -62,17 +62,9 @@ const ConditionsTable: React.FC<WidgetProps> = ({ config }) => {
     [patientUUID, refetch],
   );
 
-  // Update server total when data arrives
-  useEffect(() => {
-    if (data) {
-      setServerTotal(data.total);
-    }
-  }, [data]);
-
   // Reset pagination when patient changes
   useEffect(() => {
     setCurrentPage(1);
-    setServerTotal(undefined);
   }, [patientUUID]);
 
   useEffect(() => {
@@ -90,7 +82,6 @@ const ConditionsTable: React.FC<WidgetProps> = ({ config }) => {
         // Page size changed: reset to page 1, re-fetch with new _count
         setSelectedPageSize(newPageSize);
         setCurrentPage(1);
-        setServerTotal(undefined);
       } else {
         // Offset-based pagination: any page can be fetched directly via
         // _getpagesoffset = (page - 1) * _count — no cursor cache needed
@@ -171,7 +162,7 @@ const ConditionsTable: React.FC<WidgetProps> = ({ config }) => {
           className={styles.conditionsTableBody}
           dataTestId="conditions-table"
           pageSize={selectedPageSize}
-          totalItems={serverTotal}
+          totalItems={data?.total}
           page={currentPage}
           onPageChange={handlePageChange}
         />

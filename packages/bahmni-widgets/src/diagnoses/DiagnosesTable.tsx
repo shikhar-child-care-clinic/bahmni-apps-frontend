@@ -25,12 +25,12 @@ const DiagnosesTable: React.FC<WidgetProps> = ({ config }) => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPageSize, setSelectedPageSize] = useState(configPageSize);
-  const [serverTotal, setServerTotal] = useState<number | undefined>(undefined);
 
   // Use TanStack Query for data fetching and caching
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['diagnoses', patientUUID!, currentPage, selectedPageSize],
     enabled: !!patientUUID,
+    placeholderData: (prev) => prev,
     queryFn: () =>
       getDiagnosesPage(patientUUID!, selectedPageSize, currentPage),
   });
@@ -51,17 +51,9 @@ const DiagnosesTable: React.FC<WidgetProps> = ({ config }) => {
     [patientUUID, refetch],
   );
 
-  // Update server total when data arrives
-  useEffect(() => {
-    if (data) {
-      setServerTotal(data.total);
-    }
-  }, [data]);
-
   // Reset pagination when patient changes
   useEffect(() => {
     setCurrentPage(1);
-    setServerTotal(undefined);
   }, [patientUUID]);
 
   // Handle errors with notifications
@@ -81,7 +73,6 @@ const DiagnosesTable: React.FC<WidgetProps> = ({ config }) => {
         // Page size changed: reset to page 1, re-fetch with new _count
         setSelectedPageSize(newPageSize);
         setCurrentPage(1);
-        setServerTotal(undefined);
       } else {
         // Offset-based pagination: any page can be fetched directly via
         // _getpagesoffset = (page - 1) * _count — no cursor cache needed
@@ -158,7 +149,7 @@ const DiagnosesTable: React.FC<WidgetProps> = ({ config }) => {
           className={styles.diagnosesTableBody}
           dataTestId="diagnoses-table"
           pageSize={selectedPageSize}
-          totalItems={serverTotal}
+          totalItems={data?.total}
           page={currentPage}
           onPageChange={handlePageChange}
         />

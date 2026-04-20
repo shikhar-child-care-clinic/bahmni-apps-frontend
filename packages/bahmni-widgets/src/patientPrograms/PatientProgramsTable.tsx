@@ -27,7 +27,6 @@ const PatientProgramsTable: React.FC<WidgetProps> = ({ config }) => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPageSize, setSelectedPageSize] = useState(configPageSize);
-  const [serverTotal, setServerTotal] = useState<number | undefined>(undefined);
 
   const programAttributes = useMemo(
     () => extractProgramAttributeNames((config?.fields as string[]) ?? []),
@@ -43,6 +42,7 @@ const PatientProgramsTable: React.FC<WidgetProps> = ({ config }) => {
       selectedPageSize,
     ],
     enabled: !!patientUUID,
+    placeholderData: (prev) => prev,
     queryFn: async () => {
       const page = await getPatientProgramsPage(
         patientUUID!,
@@ -59,17 +59,9 @@ const PatientProgramsTable: React.FC<WidgetProps> = ({ config }) => {
     },
   });
 
-  // Update server total when data arrives
-  useEffect(() => {
-    if (data) {
-      setServerTotal(data.total);
-    }
-  }, [data]);
-
   // Reset pagination when patient changes
   useEffect(() => {
     setCurrentPage(1);
-    setServerTotal(undefined);
   }, [patientUUID]);
 
   const handlePageChange = useCallback(
@@ -78,7 +70,6 @@ const PatientProgramsTable: React.FC<WidgetProps> = ({ config }) => {
         // Page size changed: reset to page 1, re-fetch with new limit
         setSelectedPageSize(newPageSize);
         setCurrentPage(1);
-        setServerTotal(undefined);
       } else {
         // Offset-based pagination: any page can be fetched directly via
         // startIndex = (page - 1) * limit — no cursor cache needed
@@ -200,7 +191,7 @@ const PatientProgramsTable: React.FC<WidgetProps> = ({ config }) => {
         className={styles.table}
         dataTestId="patient-programs-table"
         pageSize={selectedPageSize}
-        totalItems={serverTotal}
+        totalItems={data?.total}
         page={currentPage}
         onPageChange={handlePageChange}
       />

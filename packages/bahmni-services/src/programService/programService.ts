@@ -21,7 +21,7 @@ export const getPatientPrograms = async (
 
 export interface ProgramPage {
   programs: ProgramEnrollment[];
-  total: number;
+  total: number | undefined;
 }
 
 /**
@@ -43,7 +43,7 @@ export const getPatientProgramsPage = async (
   );
   return {
     programs: response.results,
-    total: response.totalCount ?? response.results.length,
+    total: response.totalCount,
   };
 };
 

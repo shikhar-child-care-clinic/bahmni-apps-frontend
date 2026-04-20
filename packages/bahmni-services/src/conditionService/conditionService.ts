@@ -33,7 +33,7 @@ export async function getConditions(patientUUID: string): Promise<Condition[]> {
 
 export interface ConditionPage {
   conditions: Condition[];
-  total: number;
+  total: number | undefined;
 }
 
 /**
@@ -59,6 +59,6 @@ export async function getConditionPage(
       .map((entry) => entry.resource as Condition) ?? [];
   return {
     conditions,
-    total: bundle.total ?? conditions.length,
+    total: bundle.total,
   };
 }

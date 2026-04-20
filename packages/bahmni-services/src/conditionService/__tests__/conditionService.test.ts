@@ -128,13 +128,13 @@ describe('conditionService', () => {
       expect(result.total).toBe(42);
     });
 
-    it('should fall back to conditions length when bundle total is undefined', async () => {
+    it('should return undefined total when bundle total is missing', async () => {
       const bundleWithoutTotal = { ...mockConditionBundle, total: undefined };
       (get as jest.Mock).mockResolvedValueOnce(bundleWithoutTotal);
 
       const result = await getConditionPage(patientUUID, 10, 1);
 
-      expect(result.total).toBe(result.conditions.length);
+      expect(result.total).toBeUndefined();
     });
 
     it('should return empty conditions for empty bundle', async () => {

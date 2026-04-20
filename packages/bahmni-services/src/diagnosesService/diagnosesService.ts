@@ -132,7 +132,7 @@ export async function getPatientDiagnoses(
 
 export interface DiagnosisPage {
   diagnoses: Diagnosis[];
-  total: number;
+  total: number | undefined;
 }
 
 /**
@@ -160,6 +160,6 @@ export async function getDiagnosesPage(
   const diagnoses = formatDiagnoses(bundle);
   return {
     diagnoses,
-    total: bundle.total ?? diagnoses.length,
+    total: bundle.total,
   };
 }

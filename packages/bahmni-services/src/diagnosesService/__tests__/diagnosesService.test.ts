@@ -746,7 +746,7 @@ describe('diagnosesService', () => {
       expect(result.total).toBe(42);
     });
 
-    it('should fall back to diagnoses length when bundle total is undefined', async () => {
+    it('should return undefined total when bundle total is missing', async () => {
       const bundle = {
         ...createMockBundle([createMockDiagnosis()]),
         total: undefined,
@@ -755,7 +755,7 @@ describe('diagnosesService', () => {
 
       const result = await getDiagnosesPage(patientUUID, 10, 1);
 
-      expect(result.total).toBe(result.diagnoses.length);
+      expect(result.total).toBeUndefined();
     });
 
     it('should return empty diagnoses for empty bundle', async () => {
