@@ -122,15 +122,15 @@ describe('AppointmentsTable', () => {
       );
     });
 
-    it('should use default pageSize of 25 when config is absent', () => {
+    it('should use default pageSize of 10 when config is absent', () => {
       render(<AppointmentsTable config={{}} episodeOfCareUuids={[]} />);
 
       expect(mockUpcomingAppointments).toHaveBeenCalledWith(
-        expect.objectContaining({ pageSize: 25 }),
+        expect.objectContaining({ pageSize: 10 }),
         undefined,
       );
       expect(mockPastAppointments).toHaveBeenCalledWith(
-        expect.objectContaining({ pageSize: 25 }),
+        expect.objectContaining({ pageSize: 10 }),
         undefined,
       );
     });

@@ -32,7 +32,7 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
 
   const configuredFields =
     (config?.fields as string[] | undefined) ?? DEFAULT_FIELDS;
-  const configPageSize = Number(config?.pageSize) || 25;
+  const configPageSize = Number(config?.pageSize) || 10;
 
   const headers = useMemo(
     () =>

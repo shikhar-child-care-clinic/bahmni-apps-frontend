@@ -47,7 +47,7 @@ export const getAppointmentTestCases = (
   mocks: ReturnType<typeof getAppointmentMocks>,
 ) => {
   const { Component, queryKeyPrefix, testProps = {} } = config;
-  const defaultPageSize = testProps.pageSize ?? 25;
+  const defaultPageSize = testProps.pageSize ?? 10;
   const mergedProps = { pageSize: defaultPageSize, ...testProps };
 
   return {

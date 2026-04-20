@@ -1,12 +1,6 @@
-import {
-  getUpcomingAppointmentsPage,
-  useSubscribeConsultationSaved,
-  useTranslation,
-} from '@bahmni/services';
-import { useQuery } from '@tanstack/react-query';
-import React, { useCallback, useEffect, useState } from 'react';
-import { useNotification } from '../../notification';
-import { useFormattedAppointments } from '../hooks/useFormattedAppointments';
+import { getUpcomingAppointmentsPage } from '@bahmni/services';
+import React from 'react';
+import { usePaginatedAppointments } from '../hooks/usePaginatedAppointments';
 import type { FormattedAppointment } from '../utils';
 import AppointmentTabContent from './AppointmentTabContent';
 
@@ -25,74 +19,21 @@ const UpcomingAppointments: React.FC<UpcomingAppointmentsProps> = ({
   sortable,
   renderCell,
 }) => {
-  const { t } = useTranslation();
-  const { addNotification } = useNotification();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedPageSize, setSelectedPageSize] = useState(pageSize);
-  const [serverTotal, setServerTotal] = useState<number | undefined>(undefined);
-
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: [
-      'appointments-upcoming',
-      patientUUID,
-      currentPage,
-      selectedPageSize,
-    ],
-    enabled: !!patientUUID,
-    queryFn: () =>
-      getUpcomingAppointmentsPage(patientUUID, selectedPageSize, currentPage),
-  });
-
-  const formattedAppointments = useFormattedAppointments({
-    data: data?.bundle,
+  const {
+    formattedAppointments,
+    isLoading,
+    currentPage,
+    selectedPageSize,
+    serverTotal,
+    handlePageChange,
+  } = usePaginatedAppointments({
+    queryKeyPrefix: 'appointments-upcoming',
+    patientUUID,
+    pageSize,
     idPrefix: 'upcoming',
+    queryFn: (count, page) =>
+      getUpcomingAppointmentsPage(patientUUID, count, page),
   });
-
-  useEffect(() => {
-    if (isError) {
-      addNotification({
-        title: t('ERROR_DEFAULT_TITLE'),
-        message: error?.message || t('APPOINTMENTS_ERROR_FETCHING'),
-        type: 'error',
-      });
-    }
-  }, [isError, error, addNotification, t]);
-
-  useEffect(() => {
-    if (data) {
-      setServerTotal(data.total);
-    }
-  }, [data]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-    setServerTotal(undefined);
-  }, [patientUUID]);
-
-  useSubscribeConsultationSaved(
-    (payload) => {
-      if (
-        payload.patientUUID === patientUUID &&
-        payload.updatedResources.conditions
-      ) {
-        refetch();
-      }
-    },
-    [patientUUID, refetch],
-  );
-
-  const handlePageChange = useCallback(
-    (newPage: number, newPageSize: number) => {
-      if (newPageSize !== selectedPageSize) {
-        setSelectedPageSize(newPageSize);
-        setCurrentPage(1);
-        setServerTotal(undefined);
-      } else {
-        setCurrentPage(newPage);
-      }
-    },
-    [selectedPageSize],
-  );
 
   return (
     <AppointmentTabContent

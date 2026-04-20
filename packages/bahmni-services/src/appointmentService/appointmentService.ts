@@ -128,7 +128,7 @@ export async function getUpcomingAppointmentsPage(
   const bundle = await get<Bundle<Appointment>>(
     getUpcomingAppointmentsPageUrl(patientUuid, count, offset),
   );
-  return { bundle, total: bundle.total ?? 0 };
+  return { bundle, total: bundle.total ?? bundle.entry?.length ?? 0 };
 }
 
 /**
@@ -147,5 +147,5 @@ export async function getPastAppointmentsPage(
   const bundle = await get<Bundle<Appointment>>(
     getPastAppointmentsPageUrl(patientUuid, count, offset),
   );
-  return { bundle, total: bundle.total ?? 0 };
+  return { bundle, total: bundle.total ?? bundle.entry?.length ?? 0 };
 }

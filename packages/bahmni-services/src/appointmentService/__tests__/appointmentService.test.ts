@@ -247,13 +247,13 @@ describe('Appointment Service', () => {
       expect(result.total).toBe(99);
     });
 
-    it('should fall back to 0 when bundle total is undefined', async () => {
+    it('should fall back to entry length when bundle total is undefined', async () => {
       const mockBundle = setupMockBundle([upcomingAppointment]);
       delete (mockBundle as any).total;
 
       const result = await getUpcomingAppointmentsPage(patientUUID, 10, 1);
 
-      expect(result.total).toBe(0);
+      expect(result.total).toBe(1);
     });
 
     it('should propagate API errors', async () => {
@@ -310,13 +310,13 @@ describe('Appointment Service', () => {
       expect(result.total).toBe(77);
     });
 
-    it('should fall back to 0 when bundle total is undefined', async () => {
+    it('should fall back to entry length when bundle total is undefined', async () => {
       const mockBundle = setupMockBundle([pastAppointment]);
       delete (mockBundle as any).total;
 
       const result = await getPastAppointmentsPage(patientUUID, 10, 1);
 
-      expect(result.total).toBe(0);
+      expect(result.total).toBe(1);
     });
 
     it('should propagate API errors', async () => {
