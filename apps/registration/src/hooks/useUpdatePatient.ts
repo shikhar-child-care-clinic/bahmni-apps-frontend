@@ -75,6 +75,8 @@ export const useUpdatePatient = () => {
     onError: (error) => {
       // eslint-disable-next-line no-console
       console.error('[useUpdatePatient] failed:', error);
+      // eslint-disable-next-line no-console
+      console.log('[useUpdatePatient] onError: showing error notification', error);
       addNotification({
         type: 'error',
         title: t('ERROR_UPDATING_PATIENT'),

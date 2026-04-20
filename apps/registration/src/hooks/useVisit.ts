@@ -55,6 +55,8 @@ export const useCreateVisit = () => {
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('[useCreateVisit] failed:', error);
+      // eslint-disable-next-line no-console
+      console.log('[useCreateVisit] catch: showing error notification', error);
       addNotification({
         title: t('ERROR_DEFAULT_TITLE'),
         message: getFormattedError(error).message,
