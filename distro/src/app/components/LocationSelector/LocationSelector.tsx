@@ -54,6 +54,9 @@ export const LocationSelector: React.FC = () => {
     );
   }
 
+  const selectedItem =
+    availableLocations.find((loc) => loc.uuid === location.uuid) ?? null;
+
   return (
     <Dropdown
       id="location-selector"
@@ -62,7 +65,7 @@ export const LocationSelector: React.FC = () => {
       label={location.name}
       items={availableLocations}
       itemToString={(item: UserLocation) => item?.display ?? item?.name ?? ''}
-      selectedItem={location}
+      selectedItem={selectedItem}
       onChange={({ selectedItem }: { selectedItem: UserLocation }) =>
         handleLocationChange(selectedItem)
       }
