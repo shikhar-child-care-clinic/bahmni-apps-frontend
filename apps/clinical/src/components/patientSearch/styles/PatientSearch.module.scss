@@ -3,7 +3,7 @@
 @use "@carbon/react/scss/theme" as *;
 @use "@carbon/react/scss/type" as *;
 
-$header-actions-offset: 6rem; // offset to clear global action buttons in header
+$header-actions-offset: 6rem; // 3 action buttons × 2rem each — offset to clear global action buttons in header
 
 .patientSearchContainer {
   position: fixed;
@@ -31,7 +31,7 @@ $header-actions-offset: 6rem; // offset to clear global action buttons in header
   background: $layer;
   border: 1px solid $border-subtle-01;
   border-top: none;
-  box-shadow: 0 4px 8px $shadow;
+  box-shadow: 0 $spacing-02 $spacing-03 $shadow;
   max-height: 16rem;
   overflow-y: auto;
 }

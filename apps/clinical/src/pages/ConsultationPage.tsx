@@ -246,6 +246,8 @@ const ConsultationPage: React.FC = () => {
 
   return (
     <ClinicalAppProvider episodeUuids={episodeUuids}>
+      {/* Rendered outside ActionAreaLayout: uses position:fixed to overlay the header area.
+          Placed here (inside ClinicalAppProvider) so it has access to clinical context. */}
       <PatientSearch isOpen={isSearchOpen} onClose={handleSearchClose} />
       <ActionAreaLayout
         headerWSideNav={
