@@ -13,13 +13,6 @@ export {
   ICON_SIZE,
   ICON_PADDING,
 } from './molecules/icon';
-export {
-  bahmniIconRegistry,
-  getIcon,
-  isValidIconName,
-  BAHMNI_ICON_NAMES,
-  type BahmniIconName,
-} from './molecules/iconRegistry';
 export { initFontAwesome } from './fontawesome';
 export { LabelValue, type LabelValueProps } from './atoms/labelValue';
 export {

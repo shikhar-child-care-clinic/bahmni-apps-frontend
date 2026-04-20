@@ -1,7 +1,6 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
-import { getIcon, isValidIconName } from '../iconRegistry';
 import { ICON_SIZE, ICON_PADDING } from './constants';
 import styles from './styles/Icon.module.scss';
 
@@ -16,11 +15,11 @@ export interface IconProps {
 }
 
 /**
- * Icon component that renders Bahmni registry (Carbon) icons or FontAwesome icons with customizable size, color, and padding.
+ * Icon component that renders FontAwesome icons with customizable size, color, and padding.
  *
  * @component
  * @param {Object} props - Component props
- * @param {string} props.name - Icon name: either a Bahmni registry name (e.g., "clinical", "registration") or FontAwesome format (e.g., "fa-home", "fas-user")
+ * @param {string} props.name - Icon name in FontAwesome format (e.g., "fa-home", "fa-user", "fa-stethoscope")
  * @param {ICON_SIZE} [props.size] - Icon size from ICON_SIZE enum (XXS, XS, SM, LG, XL, XXL, X1-X10)
  * @param {string} [props.color] - Icon color as CSS color value
  * @param {string} props.id - Unique identifier for the icon (used for testing and accessibility)
@@ -57,24 +56,6 @@ export const Icon: React.FC<IconProps> = ({
 }) => {
   const paddingClass = getPaddingClass(padding);
 
-  // Branch 1: Bahmni registry icon (Carbon)
-  if (isValidIconName(name)) {
-    const IconComponent = getIcon(name);
-    if (IconComponent) {
-      return (
-        <span
-          className={`${styles.bahmniIcon} ${paddingClass}`}
-          id={id}
-          data-testid={testId}
-          aria-label={ariaLabel}
-        >
-          <IconComponent />
-        </span>
-      );
-    }
-  }
-
-  // Branch 2: FontAwesome icon (fa-* / fas-*)
   if (!name || !/^fas?-[a-zA-Z0-9_-]+$/.test(name)) {
     return;
   }
