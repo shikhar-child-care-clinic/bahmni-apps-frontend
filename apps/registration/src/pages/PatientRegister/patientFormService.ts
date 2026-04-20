@@ -57,7 +57,16 @@ export function validateAllSections(
 
   if (!allValid) {
     // eslint-disable-next-line no-console
-    console.log('[patientFormService] validateAllSections: showing validation error notification', { isProfileValid, isAddressValid, isContactValid, isAdditionalValid, isRelationshipsValid });
+    console.log(
+      '[patientFormService] validateAllSections: showing validation error notification',
+      {
+        isProfileValid,
+        isAddressValid,
+        isContactValid,
+        isAdditionalValid,
+        isRelationshipsValid,
+      },
+    );
     addNotification({
       title: t('NOTIFICATION_ERROR_TITLE'),
       message: t('NOTIFICATION_VALIDATION_ERRORS'),
@@ -94,7 +103,9 @@ export function collectFormData(
   const profileData = profileRef.current?.getData();
   if (!profileData) {
     // eslint-disable-next-line no-console
-    console.log('[patientFormService] collectFormData: profileRef.getData() returned null/undefined');
+    console.log(
+      '[patientFormService] collectFormData: profileRef.getData() returned null/undefined',
+    );
     addNotification({
       title: t('NOTIFICATION_ERROR_TITLE'),
       message: t('NOTIFICATION_UNABLE_TO_GET_PATIENT_DATA'),
@@ -107,7 +118,9 @@ export function collectFormData(
   const addressData = addressRef.current?.getData();
   if (!addressData) {
     // eslint-disable-next-line no-console
-    console.log('[patientFormService] collectFormData: addressRef.getData() returned null/undefined');
+    console.log(
+      '[patientFormService] collectFormData: addressRef.getData() returned null/undefined',
+    );
     addNotification({
       title: t('NOTIFICATION_ERROR_TITLE'),
       message: t('NOTIFICATION_UNABLE_TO_GET_ADDRESS_DATA'),
@@ -120,7 +133,9 @@ export function collectFormData(
   const contactData = contactRef.current?.getData();
   if (!contactData) {
     // eslint-disable-next-line no-console
-    console.log('[patientFormService] collectFormData: contactRef.getData() returned null/undefined');
+    console.log(
+      '[patientFormService] collectFormData: contactRef.getData() returned null/undefined',
+    );
     addNotification({
       title: t('NOTIFICATION_ERROR_TITLE'),
       message: t('NOTIFICATION_UNABLE_TO_GET_CONTACT_DATA'),
@@ -133,7 +148,9 @@ export function collectFormData(
   const additionalData = additionalRef.current?.getData();
   if (!additionalData) {
     // eslint-disable-next-line no-console
-    console.log('[patientFormService] collectFormData: additionalRef.getData() returned null/undefined');
+    console.log(
+      '[patientFormService] collectFormData: additionalRef.getData() returned null/undefined',
+    );
     addNotification({
       title: t('NOTIFICATION_ERROR_TITLE'),
       message: t('NOTIFICATION_UNABLE_TO_GET_ADDITIONAL_DATA'),

@@ -81,7 +81,10 @@ export const useCreatePatient = () => {
       // eslint-disable-next-line no-console
       console.error('[useCreatePatient] failed:', error);
       // eslint-disable-next-line no-console
-      console.log('[useCreatePatient] onError: showing error notification', error);
+      console.log(
+        '[useCreatePatient] onError: showing error notification',
+        error,
+      );
       addNotification({
         type: 'error',
         title: t('ERROR_SAVING_PATIENT'),

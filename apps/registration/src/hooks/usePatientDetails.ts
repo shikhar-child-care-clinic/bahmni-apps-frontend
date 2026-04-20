@@ -55,7 +55,10 @@ export const usePatientDetails = ({ patientUuid }: UsePatientDetailsProps) => {
       // eslint-disable-next-line no-console
       console.error('[usePatientDetails] failed:', error);
       // eslint-disable-next-line no-console
-      console.log('[usePatientDetails] useEffect: showing error notification', error);
+      console.log(
+        '[usePatientDetails] useEffect: showing error notification',
+        error,
+      );
       addNotification({
         type: 'error',
         title: t('ERROR_LOADING_PATIENT_DETAILS'),
