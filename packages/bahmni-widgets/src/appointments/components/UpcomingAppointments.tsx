@@ -1,12 +1,18 @@
-import { getUpcomingAppointments } from '@bahmni/services';
-import React from 'react';
-import { useAppointmentQuery } from '../hooks/useAppointmentQuery';
+import {
+  getUpcomingAppointmentsPage,
+  useSubscribeConsultationSaved,
+  useTranslation,
+} from '@bahmni/services';
+import { useQuery } from '@tanstack/react-query';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useNotification } from '../../notification';
 import { useFormattedAppointments } from '../hooks/useFormattedAppointments';
 import type { FormattedAppointment } from '../utils';
 import AppointmentTabContent from './AppointmentTabContent';
 
 interface UpcomingAppointmentsProps {
   patientUUID: string;
+  pageSize: number;
   headers: Array<{ key: string; header: string }>;
   sortable: Array<{ key: string; sortable: boolean }>;
   renderCell: (row: FormattedAppointment, key: string) => React.ReactNode;
@@ -14,20 +20,79 @@ interface UpcomingAppointmentsProps {
 
 const UpcomingAppointments: React.FC<UpcomingAppointmentsProps> = ({
   patientUUID,
+  pageSize,
   headers,
   sortable,
   renderCell,
 }) => {
-  const { data, isLoading } = useAppointmentQuery({
-    queryKey: ['appointments-upcoming', patientUUID],
-    queryFn: () => getUpcomingAppointments(patientUUID),
-    patientUUID,
+  const { t } = useTranslation();
+  const { addNotification } = useNotification();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedPageSize, setSelectedPageSize] = useState(pageSize);
+  const [serverTotal, setServerTotal] = useState<number | undefined>(undefined);
+
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: [
+      'appointments-upcoming',
+      patientUUID,
+      currentPage,
+      selectedPageSize,
+    ],
+    enabled: !!patientUUID,
+    queryFn: () =>
+      getUpcomingAppointmentsPage(patientUUID, selectedPageSize, currentPage),
   });
 
   const formattedAppointments = useFormattedAppointments({
-    data,
+    data: data?.bundle,
     idPrefix: 'upcoming',
   });
+
+  useEffect(() => {
+    if (isError) {
+      addNotification({
+        title: t('ERROR_DEFAULT_TITLE'),
+        message: error?.message || t('APPOINTMENTS_ERROR_FETCHING'),
+        type: 'error',
+      });
+    }
+  }, [isError, error, addNotification, t]);
+
+  useEffect(() => {
+    if (data) {
+      setServerTotal(data.total);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setServerTotal(undefined);
+  }, [patientUUID]);
+
+  useSubscribeConsultationSaved(
+    (payload) => {
+      if (
+        payload.patientUUID === patientUUID &&
+        payload.updatedResources.conditions
+      ) {
+        refetch();
+      }
+    },
+    [patientUUID, refetch],
+  );
+
+  const handlePageChange = useCallback(
+    (newPage: number, newPageSize: number) => {
+      if (newPageSize !== selectedPageSize) {
+        setSelectedPageSize(newPageSize);
+        setCurrentPage(1);
+        setServerTotal(undefined);
+      } else {
+        setCurrentPage(newPage);
+      }
+    },
+    [selectedPageSize],
+  );
 
   return (
     <AppointmentTabContent
@@ -37,6 +102,10 @@ const UpcomingAppointments: React.FC<UpcomingAppointmentsProps> = ({
       headers={headers}
       sortable={sortable}
       renderCell={renderCell}
+      pageSize={selectedPageSize}
+      page={currentPage}
+      totalItems={serverTotal}
+      onPageChange={handlePageChange}
     />
   );
 };

@@ -24,7 +24,7 @@ describe('PastAppointments', () => {
     {
       Component: PastAppointments,
       queryKeyPrefix: 'appointments-past',
-      testProps: { numberOfPastAppointments: 5 },
+      testProps: { pageSize: 25 },
     },
     mocks,
   );
@@ -35,7 +35,7 @@ describe('PastAppointments', () => {
     testCases.errorNotificationTest,
   );
   it(
-    'should call useQuery with correct parameters including numberOfPastAppointments',
+    'should call useQuery with correct parameters including pageSize',
     testCases.correctParametersTest,
   );
 });

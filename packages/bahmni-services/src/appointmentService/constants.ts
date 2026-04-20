@@ -62,3 +62,21 @@ export const ALL_APPOINTMENT_SERVICES_URL =
 
 export const getDeleteAppointmentServiceUrl = (uuid: string): string =>
   `${OPENMRS_REST_V1}/appointmentService?uuid=${uuid}`;
+
+export const getUpcomingAppointmentsPageUrl = (
+  patientUUID: string,
+  count: number = 10,
+  offset: number = 0,
+): string => {
+  const timestamp = new Date().toISOString();
+  return `${OPENMRS_FHIR_R4}/Appointment?patient=${patientUUID}&date=ge${timestamp}&_sort=date&_count=${count}&_getpagesoffset=${offset}`;
+};
+
+export const getPastAppointmentsPageUrl = (
+  patientUUID: string,
+  count: number = 10,
+  offset: number = 0,
+): string => {
+  const timestamp = subMinutes(new Date(), 1).toISOString();
+  return `${OPENMRS_FHIR_R4}/Appointment?patient=${patientUUID}&date=le${timestamp}&_sort=-date&_count=${count}&_getpagesoffset=${offset}`;
+};

@@ -4,6 +4,9 @@ export {
   getAppointmentById,
   getUpcomingAppointments,
   getPastAppointments,
+  getUpcomingAppointmentsPage,
+  getPastAppointmentsPage,
+  type AppointmentPage,
   getAllAppointmentServices,
   deleteAppointmentService,
 } from './appointmentService';
