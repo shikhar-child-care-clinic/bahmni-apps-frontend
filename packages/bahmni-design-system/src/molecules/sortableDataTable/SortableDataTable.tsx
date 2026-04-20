@@ -56,6 +56,10 @@ export const SortableDataTable = <T extends { id: string }>({
   );
 
   useEffect(() => {
+    if (pageSize !== undefined) setInternalPageSize(pageSize);
+  }, [pageSize]);
+
+  useEffect(() => {
     if (totalItems === undefined) {
       setCurrentPage(1);
     }
