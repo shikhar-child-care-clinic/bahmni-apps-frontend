@@ -3,6 +3,9 @@
 @use "@carbon/react/scss/theme" as *;
 @use "@carbon/react/scss/type" as *;
 
+$table-min-width: 62.5rem;
+$table-cell-min-width: 6.875rem;
+
 .sectionWrapper {
   box-shadow: 0px 2px 6px 0px $shadow;
   :global(html:has([data-separator])) & {
@@ -10,18 +13,17 @@
   }
 }
 
-:global(html:has([data-separator]) div[id^="accordion-item"]) {
+:global(html:has([data-separator]) #main-display-area div[id^="accordion-item"]) {
   overflow-x: auto;
   padding-block-end: $spacing-05;
 }
 
 :global(html:has([data-separator]) #main-display-area .cds--data-table:has(td:nth-child(5))) {
-  min-width: 1000px;
-}
+  min-width: $table-min-width;
 
-:global(html:has([data-separator]) #main-display-area .cds--data-table:has(td:nth-child(5))) td,
-:global(html:has([data-separator]) #main-display-area .cds--data-table:has(td:nth-child(5))) th {
-  min-width: 110px;
+  td, th {
+    min-width: $table-cell-min-width;
+  }
 }
 
 .sectionName {
