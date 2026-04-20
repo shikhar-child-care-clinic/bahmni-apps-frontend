@@ -363,5 +363,8 @@
   "YEARS_other": " años",
   "SEARCH_PATIENT_ID_PLACEHOLDER": "Buscar por ID de paciente",
   "NO_MATCHING_RECORDS": "No se encontraron registros",
-  "SEARCHING": "Buscando..."
+  "SEARCHING": "Buscando...",
+  "GLOBAL_ACTION_SEARCH": "Buscar",
+  "GLOBAL_ACTION_NOTIFICATIONS": "Notificaciones",
+  "GLOBAL_ACTION_USER": "Usuario"
 }

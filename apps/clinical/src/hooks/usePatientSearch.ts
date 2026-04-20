@@ -4,6 +4,7 @@ import {
   searchPatientByNameOrId,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 interface UsePatientSearchResult {
   results: PatientSearchResult[];
@@ -30,12 +31,16 @@ const usePatientSearch = (searchTerm: string): UsePatientSearchResult => {
     enabled: searchTerm.trim().length > 0,
   });
 
-  const results = (searchResults?.pageOfResults ?? [])
-    .filter(isPatientSearchResult)
-    .filter(
-      (patient) =>
-        patient.identifier.toLowerCase() === searchTerm.toLowerCase(),
-    );
+  const results = useMemo(
+    () =>
+      (searchResults?.pageOfResults ?? [])
+        .filter(isPatientSearchResult)
+        .filter(
+          (patient) =>
+            patient.identifier.toLowerCase() === searchTerm.toLowerCase(),
+        ),
+    [searchResults, searchTerm],
+  );
 
   return { results, isLoading, isError, error: error as Error | null };
 };

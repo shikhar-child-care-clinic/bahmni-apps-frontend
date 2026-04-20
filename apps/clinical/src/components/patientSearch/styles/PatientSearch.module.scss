@@ -3,11 +3,13 @@
 @use "@carbon/react/scss/theme" as *;
 @use "@carbon/react/scss/type" as *;
 
+$header-actions-offset: 6rem; // offset to clear global action buttons in header
+
 .patientSearchContainer {
   position: fixed;
   top: 0;
-  right: 6rem;
-  z-index: 9000;
+  right: $header-actions-offset;
+  z-index: 9000; // above header (z-index: 8000) but below modals
   padding-block: $spacing-02;
   width: 20rem;
   display: flex;

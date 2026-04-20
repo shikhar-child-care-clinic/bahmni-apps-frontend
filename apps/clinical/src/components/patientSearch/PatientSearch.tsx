@@ -4,7 +4,7 @@ import { useNotification } from '@bahmni/widgets';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import usePatientSearch from '../../hooks/usePatientSearch';
-import styles from './PatientSearch.module.scss';
+import styles from './styles/PatientSearch.module.scss';
 
 interface PatientSearchProps {
   isOpen: boolean;
@@ -124,6 +124,7 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(event.target.value);
+    setSubmittedTerm('');
   };
 
   const handleClear = () => {

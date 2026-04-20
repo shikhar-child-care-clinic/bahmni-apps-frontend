@@ -85,7 +85,7 @@ const ConsultationPage: React.FC = () => {
     () => [
       {
         id: 'search',
-        label: 'Search',
+        label: t('GLOBAL_ACTION_SEARCH'),
         renderIcon: (
           <Icon id="search-icon" name="fa-search" size={ICON_SIZE.LG} />
         ),
@@ -93,7 +93,7 @@ const ConsultationPage: React.FC = () => {
       },
       {
         id: 'notifications',
-        label: 'Notifications',
+        label: t('GLOBAL_ACTION_NOTIFICATIONS'),
         renderIcon: (
           <Icon id="notifications-icon" name="fa-bell" size={ICON_SIZE.LG} />
         ),
@@ -101,12 +101,12 @@ const ConsultationPage: React.FC = () => {
       },
       {
         id: 'user',
-        label: 'User',
+        label: t('GLOBAL_ACTION_USER'),
         renderIcon: <Icon id="user-icon" name="fa-user" size={ICON_SIZE.LG} />,
         onClick: () => {},
       },
     ],
-    [handleSearchOpen],
+    [handleSearchOpen, t],
   );
   const viewingForm = useObservationFormsStore((state) => state.viewingForm);
 
