@@ -40,9 +40,9 @@ export const HomePageGrid: React.FC = () => {
         aria-busy="true"
       >
         <Grid>
-          {[...Array(6)].map(() => (
+          {Array.from({ length: 6 }, (_, i) => `skeleton-${i}`).map((key) => (
             <Column
-              key={Math.random()}
+              key={key}
               lg={5}
               md={4}
               sm={4}
