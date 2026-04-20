@@ -317,6 +317,7 @@
   "RADIOLOGY_INVESTIGATION_NAME": "Procedure Name",
   "RADIOLOGY_VIEW_IMAGES": "View Images",
   "RADIOLOGY_VIEW_REPORT": "View Report",
+  "RADIOLOGY_VIEW_QC": "View QC",
   "REACTIONS": "Reaction(s)",
   "REVOKED_STATUS": "Cancelled",
   "SELECT_ENCOUNTER_TYPE": "Select encounter type",

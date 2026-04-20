@@ -20,6 +20,7 @@ import {
   shouldEnableEncounterFilter,
   useSubscribeConsultationSaved,
   useTranslation,
+  fetchQualityAssessment,
 } from '@bahmni/services';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import type { DiagnosticReport } from 'fhir/r4';
@@ -37,6 +38,7 @@ import {
   updateInvestigationsWithReportInfo,
 } from '../utils/Investigations';
 import { RadiologyInvestigationViewModel } from './models';
+import { QualityAssessment } from './QualityAssessment';
 import styles from './styles/RadiologyInvestigationTable.module.scss';
 import {
   createRadiologyInvestigationViewModels,
@@ -83,6 +85,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
   );
   const [selectedInvestigation, setSelectedInvestigation] =
     useState<RadiologyInvestigationViewModel | null>(null);
+  const [qcImagingStudyId, setQcImagingStudyId] = useState<string | null>(null);
 
   const emptyEncounterFilter = shouldEnableEncounterFilter(
     episodeOfCareUuids,
@@ -124,6 +127,28 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     },
     [patientUUID, categoryName],
   );
+
+  const {
+    data: qualityAssessmentData,
+    isLoading: isQCLoading,
+    isError: isQCError,
+    error: qcError,
+  } = useQuery({
+    queryKey: ['qualityAssessment', qcImagingStudyId],
+    queryFn: () => fetchQualityAssessment(qcImagingStudyId!),
+    enabled: !!qcImagingStudyId,
+  });
+
+  useEffect(() => {
+    if (isQCError && qcError) {
+      addNotification({
+        title: t('ERROR_DEFAULT_TITLE'),
+        message: getFormattedError(qcError).message,
+        type: 'error',
+      });
+      setQcImagingStudyId(null);
+    }
+  }, [isQCError, qcError, addNotification, t]);
 
   const headers = useMemo(
     () => [
@@ -248,8 +273,12 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     );
     const hasViewImagesLink = availableStudies.length > 0 && pacsViewerUrl;
     const hasViewReportLink = !!investigation.reportId;
+    const hasImagingStudyId =
+      investigation.imagingStudies &&
+      investigation.imagingStudies.length > 0 &&
+      investigation.imagingStudies[0]?.id;
 
-    if (hasViewImagesLink || hasViewReportLink) {
+    if (hasViewImagesLink || hasViewReportLink || hasImagingStudyId) {
       return (
         <div
           id={`${investigation.id}-results`}
@@ -283,6 +312,17 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
               onClick={() => setSelectedInvestigation(investigation)}
             >
               {t('RADIOLOGY_VIEW_REPORT')}
+            </Link>
+          )}
+          {hasImagingStudyId && (
+            <Link
+              id={`${investigation.id}-view-qc-link`}
+              testId={`${investigation.id}-view-qc-link-test-id`}
+              onClick={() =>
+                setQcImagingStudyId(investigation.imagingStudies![0].id)
+              }
+            >
+              {t('RADIOLOGY_VIEW_QC')}
             </Link>
           )}
         </div>
@@ -455,6 +495,27 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
           <Modal.Body>
             <RadiologyInvestigationReport
               reportId={selectedInvestigation.reportId!}
+            />
+          </Modal.Body>
+        </Modal>
+      )}
+
+      {qcImagingStudyId && (
+        <Modal
+          open={!!qcImagingStudyId}
+          onRequestClose={() => setQcImagingStudyId(null)}
+          passiveModal
+          modalLabel={t('RADIOLOGY_VIEW_QC')}
+          modalHeading={t('RADIOLOGY_VIEW_QC')}
+          testId="quality-assessment-modal"
+          size="lg"
+          id="qualityAssessmentModalId"
+          portalId={'main-display-area'}
+        >
+          <Modal.Body>
+            <QualityAssessment
+              imagingStudy={qualityAssessmentData ?? null}
+              isLoading={isQCLoading}
             />
           </Modal.Body>
         </Modal>
