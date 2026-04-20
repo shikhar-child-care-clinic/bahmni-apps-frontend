@@ -303,6 +303,8 @@ export {
 export {
   getDocumentReferences,
   getFormattedDocumentReferences,
+  getDocumentReferencePage,
+  type DocumentReferencePage,
   type DocumentViewModel,
   type DocumentReference,
 } from './documentReferenceService';
