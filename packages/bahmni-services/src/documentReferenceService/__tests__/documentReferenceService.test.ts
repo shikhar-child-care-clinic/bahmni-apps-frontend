@@ -12,6 +12,7 @@ const mockedGet = get as jest.MockedFunction<typeof get>;
 
 const PATIENT_UUID = 'test-patient-uuid';
 const BASE_URL = `/openmrs/ws/fhir2/R4/DocumentReference?patient=${PATIENT_UUID}&_sort=-date&_count=10&_getpagesoffset=0`;
+const PAGE_BASE_URL = BASE_URL;
 
 const mockDocumentReference: DocumentReference = {
   resourceType: 'DocumentReference',
@@ -402,7 +403,7 @@ describe('documentReferenceService', () => {
 
       await getDocumentReferencePage(PATIENT_UUID);
 
-      expect(mockedGet).toHaveBeenCalledWith(BASE_URL);
+      expect(mockedGet).toHaveBeenCalledWith(PAGE_BASE_URL);
     });
 
     it('fetches page 1 with custom count and offset 0', async () => {
@@ -472,7 +473,7 @@ describe('documentReferenceService', () => {
       await getDocumentReferencePage(PATIENT_UUID, encounterUuids);
 
       expect(mockedGet).toHaveBeenCalledWith(
-        `${BASE_URL}&encounter=enc-uuid-1,enc-uuid-2`,
+        `${PAGE_BASE_URL}&encounter=enc-uuid-1,enc-uuid-2`,
       );
     });
 

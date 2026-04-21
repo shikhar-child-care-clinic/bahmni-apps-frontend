@@ -57,6 +57,10 @@ export const SortableDataTable = <T extends { id: string }>({
     pageSize ?? 0,
   );
 
+  useEffect(() => {
+    if (pageSize !== undefined) setInternalPageSize(pageSize);
+  }, [pageSize]);
+
   // Reset to page 1 when rows change to prevent showing a stale empty page
   // In server-side mode (totalItems defined), page is controlled externally
   useEffect(() => {

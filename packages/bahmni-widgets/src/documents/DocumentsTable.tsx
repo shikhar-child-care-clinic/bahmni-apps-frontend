@@ -100,6 +100,17 @@ const DocumentsTable: React.FC<WidgetProps> = ({ config, encounterUuids }) => {
   }, [patientUUID]);
 
   useEffect(() => {
+    if (data) {
+      setServerTotal(data.total);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setServerTotal(undefined);
+  }, [patientUUID]);
+
+  useEffect(() => {
     if (isError) {
       addNotification({
         title: t('ERROR_DEFAULT_TITLE'),
