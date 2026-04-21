@@ -14,6 +14,9 @@
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
+  :global(html:has([data-separator]) #main-display-area) & {
+    overflow-x: auto;
+  }
   div:last-child {
     padding-block: 0;
   }
@@ -38,6 +41,9 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  :global(html:has([data-separator]) #main-display-area) & {
+    min-width: 62.5rem;
+  }
 }
 
 .accordion:last-child {
