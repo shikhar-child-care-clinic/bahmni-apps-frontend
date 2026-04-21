@@ -29,7 +29,11 @@ export const AppTile: React.FC<AppTileProps> = ({
   }
 
   const handleClick = () => {
-    navigate(url);
+    if (url.startsWith('http') || url.startsWith('/')) {
+      window.location.href = url;
+    } else {
+      navigate(url);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

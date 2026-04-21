@@ -49,12 +49,25 @@ describe('AppTile', () => {
     privileges: ['Add Patients'],
   };
 
+  const originalLocation = window.location;
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockNavigate.mockClear();
     mockUseTranslation.mockReturnValue({
       t: (key: string) => key, // Return key as-is for testing
     } as any);
+    Object.defineProperty(window, 'location', {
+      writable: true,
+      value: { ...originalLocation, href: '' },
+    });
+  });
+
+  afterAll(() => {
+    Object.defineProperty(window, 'location', {
+      writable: true,
+      value: originalLocation,
+    });
   });
 
   it('renders tile when user has access', () => {
@@ -74,7 +87,7 @@ describe('AppTile', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('navigates to url on tile click', () => {
+  it('uses window.location.href for absolute path URLs on click', () => {
     mockUseHasPrivilege.mockReturnValue(true);
 
     render(<AppTile {...defaultProps} />);
@@ -82,7 +95,19 @@ describe('AppTile', () => {
     const tile = screen.getByTestId('app-tile-registration');
     fireEvent.click(tile);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/registration');
+    expect(window.location.href).toBe('/registration');
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('uses react router navigate for relative URLs on click', () => {
+    mockUseHasPrivilege.mockReturnValue(true);
+
+    render(<AppTile {...defaultProps} url="registration" />);
+
+    const tile = screen.getByTestId('app-tile-registration');
+    fireEvent.click(tile);
+
+    expect(mockNavigate).toHaveBeenCalledWith('registration');
   });
 
   it('renders tile without privileges when not specified', () => {
@@ -125,7 +150,7 @@ describe('AppTile', () => {
     const tile = screen.getByTestId('app-tile-registration');
     fireEvent.keyDown(tile, { key: 'Enter' });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/registration');
+    expect(window.location.href).toBe('/registration');
   });
 
   it('activates on Space key', () => {
@@ -136,7 +161,7 @@ describe('AppTile', () => {
     const tile = screen.getByTestId('app-tile-registration');
     fireEvent.keyDown(tile, { key: ' ' });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/registration');
+    expect(window.location.href).toBe('/registration');
   });
 
   it('has no accessibility violations', async () => {
