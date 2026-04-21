@@ -285,7 +285,9 @@ describe('QualityAssessment', () => {
 
       await screen.findByTestId('observations-renderer-test-id');
 
-      expect(mockOnDateLoaded).toHaveBeenCalledWith('2026-04-20T10:50:44+00:00');
+      expect(mockOnDateLoaded).toHaveBeenCalledWith(
+        '2026-04-20T10:50:44+00:00',
+      );
     });
 
     it('should call onDateLoaded with issued date if effectiveDateTime is not available', async () => {
@@ -318,7 +320,9 @@ describe('QualityAssessment', () => {
 
       await screen.findByTestId('observations-renderer-test-id');
 
-      expect(mockOnDateLoaded).toHaveBeenCalledWith('2026-04-20T10:50:48.000+00:00');
+      expect(mockOnDateLoaded).toHaveBeenCalledWith(
+        '2026-04-20T10:50:48.000+00:00',
+      );
     });
   });
 });
