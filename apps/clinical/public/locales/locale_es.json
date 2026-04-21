@@ -318,6 +318,7 @@
   "RADIOLOGY_VIEW_IMAGES": "Ver Imágenes",
   "RADIOLOGY_VIEW_REPORT": "Ver Informe",
   "RADIOLOGY_VIEW_QC": "Ver Evaluación de Calidad",
+  "RADIOLOGY_QUALITY_ASSESSMENT": "Evaluación de Calidad",
   "ERROR_LOADING_OBSERVATIONS": "Error al cargar observaciones",
   "NO_OBSERVATIONS_AVAILABLE": "No hay observaciones disponibles",
   "NO_REPORT_DATA": "No hay datos de informe disponibles",

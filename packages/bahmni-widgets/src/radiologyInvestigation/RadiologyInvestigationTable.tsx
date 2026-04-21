@@ -20,7 +20,6 @@ import {
   shouldEnableEncounterFilter,
   useSubscribeConsultationSaved,
   useTranslation,
-  fetchQualityAssessment,
 } from '@bahmni/services';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import type { DiagnosticReport } from 'fhir/r4';
@@ -49,6 +48,11 @@ import {
 
 export const radiologyInvestigationQueryKeys = (patientUUID: string) =>
   ['radiologyInvestigation', patientUUID] as const;
+
+enum ModalType {
+  REPORT = 'report',
+  QC = 'qc',
+}
 
 const fetchRadiologyInvestigations = async (
   patientUUID: string,
@@ -85,7 +89,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
   );
   const [selectedInvestigation, setSelectedInvestigation] =
     useState<RadiologyInvestigationViewModel | null>(null);
-  const [qcImagingStudyId, setQcImagingStudyId] = useState<string | null>(null);
+  const [modalType, setModalType] = useState<ModalType | null>(null);
 
   const emptyEncounterFilter = shouldEnableEncounterFilter(
     episodeOfCareUuids,
@@ -127,28 +131,6 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     },
     [patientUUID, categoryName],
   );
-
-  const {
-    data: qualityAssessmentData,
-    isLoading: isQCLoading,
-    isError: isQCError,
-    error: qcError,
-  } = useQuery({
-    queryKey: ['qualityAssessment', qcImagingStudyId],
-    queryFn: () => fetchQualityAssessment(qcImagingStudyId!),
-    enabled: !!qcImagingStudyId,
-  });
-
-  useEffect(() => {
-    if (isQCError && qcError) {
-      addNotification({
-        title: t('ERROR_DEFAULT_TITLE'),
-        message: getFormattedError(qcError).message,
-        type: 'error',
-      });
-      setQcImagingStudyId(null);
-    }
-  }, [isQCError, qcError, addNotification, t]);
 
   const headers = useMemo(
     () => [
@@ -309,7 +291,10 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
             <Link
               id={`${investigation.id}-view-report-link`}
               testId={`${investigation.id}-view-report-link-test-id`}
-              onClick={() => setSelectedInvestigation(investigation)}
+              onClick={() => {
+                setSelectedInvestigation(investigation);
+                setModalType(ModalType.REPORT);
+              }}
             >
               {t('RADIOLOGY_VIEW_REPORT')}
             </Link>
@@ -318,9 +303,10 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
             <Link
               id={`${investigation.id}-view-qc-link`}
               testId={`${investigation.id}-view-qc-link-test-id`}
-              onClick={() =>
-                setQcImagingStudyId(investigation.imagingStudies![0].id)
-              }
+              onClick={() => {
+                setSelectedInvestigation(investigation);
+                setModalType(ModalType.QC);
+              }}
             >
               {t('RADIOLOGY_VIEW_QC')}
             </Link>
@@ -480,10 +466,13 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
         })}
       </Accordion>
 
-      {selectedInvestigation && (
+      {selectedInvestigation && modalType === ModalType.REPORT && (
         <Modal
           open={!!selectedInvestigation}
-          onRequestClose={() => setSelectedInvestigation(null)}
+          onRequestClose={() => {
+            setSelectedInvestigation(null);
+            setModalType(null);
+          }}
           passiveModal
           modalLabel={`Recorded On : ${reportedOn}  | Recorded By: ${selectedInvestigation.reportedBy}`}
           modalHeading={selectedInvestigation.testName}
@@ -500,13 +489,16 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
         </Modal>
       )}
 
-      {qcImagingStudyId && (
+      {selectedInvestigation && modalType === ModalType.QC && (
         <Modal
-          open={!!qcImagingStudyId}
-          onRequestClose={() => setQcImagingStudyId(null)}
+          open={!!selectedInvestigation}
+          onRequestClose={() => {
+            setSelectedInvestigation(null);
+            setModalType(null);
+          }}
           passiveModal
-          modalLabel={t('RADIOLOGY_VIEW_QC')}
-          modalHeading={selectedInvestigation?.testName}
+          modalLabel={`Recorded On : ${reportedOn}  | Recorded By: ${selectedInvestigation.reportedBy}`}
+          modalHeading={t('RADIOLOGY_QUALITY_ASSESSMENT')}
           testId="quality-assessment-modal"
           size="lg"
           id="modalIdForActionAreaLayout"
@@ -514,12 +506,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
         >
           <Modal.Body>
             <QualityAssessment
-              imagingStudy={qualityAssessmentData ?? null}
-              isLoading={isQCLoading}
-              isError={isQCError}
-              errorMessage={
-                qcError ? getFormattedError(qcError).message : undefined
-              }
+              imagingStudyId={selectedInvestigation.imagingStudies![0].id}
             />
           </Modal.Body>
         </Modal>

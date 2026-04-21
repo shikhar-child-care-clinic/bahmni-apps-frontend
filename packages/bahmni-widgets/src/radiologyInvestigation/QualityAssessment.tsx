@@ -1,22 +1,32 @@
-import { useTranslation } from '@bahmni/services';
-import type { ImagingStudy, Observation } from 'fhir/r4';
+import {
+  fetchQualityAssessment,
+  getFormattedError,
+  useTranslation,
+} from '@bahmni/services';
+import { useQuery } from '@tanstack/react-query';
+import type { Observation } from 'fhir/r4';
 import React, { useMemo } from 'react';
 import { ObservationsRenderer } from '../observationsRenderer';
 
 export interface QualityAssessmentProps {
-  imagingStudy: ImagingStudy | null;
-  isLoading?: boolean;
-  isError?: boolean;
-  errorMessage?: string;
+  imagingStudyId: string | null;
 }
 
 export const QualityAssessment: React.FC<QualityAssessmentProps> = ({
-  imagingStudy,
-  isLoading = false,
-  isError = false,
-  errorMessage,
+  imagingStudyId,
 }) => {
   const { t } = useTranslation();
+
+  const {
+    data: imagingStudy,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ['qualityAssessment', imagingStudyId],
+    queryFn: () => fetchQualityAssessment(imagingStudyId!),
+    enabled: !!imagingStudyId,
+  });
 
   const observations = useMemo(() => {
     if (!imagingStudy?.contained) {
@@ -27,6 +37,8 @@ export const QualityAssessment: React.FC<QualityAssessmentProps> = ({
       (resource) => resource.resourceType === 'Observation',
     ) as Observation[];
   }, [imagingStudy]);
+
+  const errorMessage = isError && error ? getFormattedError(error).message : '';
 
   return (
     <ObservationsRenderer
