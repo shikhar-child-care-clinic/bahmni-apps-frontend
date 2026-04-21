@@ -71,11 +71,26 @@ describe('ImageTile', () => {
   it('should render icon when hideThumbnail is true', () => {
     render(<ImageTile {...defaultProps} hideThumbnail />);
 
+    const button = screen.getByTestId('test-image-test-id');
+    expect(button).toHaveClass('hideThumbnail');
+
     const icon = screen.getByTestId('test-image-hidden-thumbnail-test-id');
     expect(icon).toBeInTheDocument();
 
     const thumbnailImage = screen.queryByTestId('test-image-thumbnail-test-id');
     expect(thumbnailImage).not.toBeInTheDocument();
+  });
+
+  it('should still open modal when hideThumbnail is true and thumbnail is clicked', async () => {
+    render(<ImageTile {...defaultProps} modalTitle="Image Preview" hideThumbnail />);
+
+    const button = screen.getByTestId('test-image-test-id');
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(screen.getByText('Image Preview')).toBeInTheDocument();
+      expect(screen.getByTestId('test-image-modal-image-test-id')).toBeInTheDocument();
+    });
   });
 
   it('should apply custom className to thumbnail button', () => {

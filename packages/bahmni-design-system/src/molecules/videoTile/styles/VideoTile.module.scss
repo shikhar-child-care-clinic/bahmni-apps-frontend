@@ -15,7 +15,6 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: $spacing-02;
 
   &:hover {
     border-color: $border-interactive;
@@ -37,6 +36,7 @@
 .hideThumbnail {
   background-color: $background-brand;
   color: $background;
+  padding: $spacing-02;
 }
 
 .videoIcon {

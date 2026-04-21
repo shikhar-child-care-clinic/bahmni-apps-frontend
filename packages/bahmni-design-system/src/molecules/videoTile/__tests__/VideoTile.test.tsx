@@ -93,6 +93,9 @@ describe('VideoTile', () => {
   it('should render icon and hide thumbnail when hideThumbnail is true', () => {
     render(<VideoTile {...defaultProps} hideThumbnail />);
 
+    const button = screen.getByTestId('test-video-test-id');
+    expect(button).toHaveClass('hideThumbnail');
+
     const icon = screen.getByTestId('test-video-hidden-thumbnail-test-id');
     expect(icon).toBeInTheDocument();
 
@@ -101,6 +104,18 @@ describe('VideoTile', () => {
 
     const playIcon = screen.queryByTestId('test-video-video-play-test-id');
     expect(playIcon).not.toBeInTheDocument();
+  });
+
+  it('should still open modal when hideThumbnail is true and thumbnail is clicked', async () => {
+    render(<VideoTile {...defaultProps} modalTitle="Video Preview" hideThumbnail />);
+
+    const button = screen.getByTestId('test-video-test-id');
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(screen.getByText('Video Preview')).toBeInTheDocument();
+      expect(screen.getByTestId('test-video-modal-video-test-id')).toBeInTheDocument();
+    });
   });
 
   it('should apply custom className to thumbnail button', () => {

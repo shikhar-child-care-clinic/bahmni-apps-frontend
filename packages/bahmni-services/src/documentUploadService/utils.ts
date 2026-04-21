@@ -8,6 +8,10 @@ export async function processFileForUpload(
     const reader = new FileReader();
     reader.onload = () => {
       const base64Content = (reader.result as string).split(',')[1];
+      if (!base64Content) {
+        reject(new Error('File is empty or could not be read'));
+        return;
+      }
       const fullFileName = file.name;
       let fileName = fullFileName;
       let format = '';
@@ -29,7 +33,7 @@ export async function processFileForUpload(
     };
 
     reader.onerror = () => {
-      reject(new Error('Failed to read file'));
+      reject(reader.error ?? new Error('Failed to read file'));
     };
 
     reader.readAsDataURL(file);

@@ -39,9 +39,8 @@ const Observations: React.FC<WidgetProps> = ({ config }) => {
   const {
     conceptNames = [],
     conceptUuid = [],
-    hideThumbnail: hideThumbnailConfig,
+    hideThumbnail = false,
   } = observationConfig;
-  const hideThumbnail = !!hideThumbnailConfig;
   const notifiedIndices = useRef(new Set());
   const patientUUID = usePatientUUID();
   const { addNotification } = useNotification();
