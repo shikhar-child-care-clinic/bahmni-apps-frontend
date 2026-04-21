@@ -11,7 +11,7 @@ import {
   getUpcomingAppointmentsPageUrl,
   getPastAppointmentsPageUrl,
 } from './constants';
-import { AppointmentService } from './models';
+import { AppointmentPage, AppointmentService } from './models';
 
 /**
  * Search for appointments by specified attributes.
@@ -106,11 +106,6 @@ export const getAllAppointmentServices = async (): Promise<
 export const deleteAppointmentService = async (uuid: string): Promise<void> => {
   await del(getDeleteAppointmentServiceUrl(uuid));
 };
-
-export interface AppointmentPage {
-  bundle: Bundle<Appointment>;
-  total: number;
-}
 
 /**
  * Fetches a single page of upcoming appointments using offset-based pagination.

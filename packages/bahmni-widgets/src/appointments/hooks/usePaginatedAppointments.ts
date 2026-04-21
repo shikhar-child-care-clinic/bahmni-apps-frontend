@@ -1,11 +1,9 @@
 import {
   type AppointmentPage,
-  useSubscribeConsultationSaved,
   useTranslation,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
-import { useCallback, useEffect, useState } from 'react';
-import { useNotification } from '../../notification';
+import { useCallback, useEffect, useState } from 'react';import { useNotification } from '../../notification';
 import { FormattedAppointment } from '../utils';
 import { useFormattedAppointments } from './useFormattedAppointments';
 
@@ -39,7 +37,7 @@ export const usePaginatedAppointments = ({
   const [selectedPageSize, setSelectedPageSize] = useState(pageSize);
   const [serverTotal, setServerTotal] = useState<number | undefined>(undefined);
 
-  const { data, isLoading, isError, error, refetch } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: [queryKeyPrefix, patientUUID, currentPage, selectedPageSize],
     enabled: !!patientUUID,
     queryFn: () => queryFn(selectedPageSize, currentPage),
@@ -70,18 +68,6 @@ export const usePaginatedAppointments = ({
     setCurrentPage(1);
     setServerTotal(undefined);
   }, [patientUUID]);
-
-  useSubscribeConsultationSaved(
-    (payload) => {
-      if (
-        payload.patientUUID === patientUUID &&
-        payload.updatedResources.conditions
-      ) {
-        refetch();
-      }
-    },
-    [patientUUID, refetch],
-  );
 
   const handlePageChange = useCallback(
     (newPage: number, newPageSize: number) => {

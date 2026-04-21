@@ -15,6 +15,13 @@ interface AppointmentAttribute {
   value: string;
 }
 
+import type { Appointment, Bundle } from 'fhir/r4';
+
+export interface AppointmentPage {
+  bundle: Bundle<Appointment>;
+  total: number;
+}
+
 export interface AppointmentService {
   appointmentServiceId: number;
   uuid: string;
