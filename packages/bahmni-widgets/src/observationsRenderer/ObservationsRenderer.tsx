@@ -90,7 +90,7 @@ const ObservationMember: React.FC<ObservationMemberProps> = ({
         >
           {member.members?.map((nestedMember, nestedIndex) => (
             <ObservationMember
-              key={`${nestedMember.id}-${nestedIndex}`}
+              key={nestedMember.id}
               member={nestedMember}
               depth={depth + 1}
               memberIndex={nestedIndex}
@@ -196,7 +196,7 @@ const renderObservation = (
           >
             {observation.members?.map((member, memberIndex) => (
               <ObservationMember
-                key={`${member.id}-${memberIndex}`}
+                key={member.id}
                 member={member}
                 depth={0}
                 memberIndex={memberIndex}

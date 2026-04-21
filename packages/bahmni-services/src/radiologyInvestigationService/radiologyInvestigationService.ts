@@ -1,6 +1,6 @@
 import { Bundle, ServiceRequest, ImagingStudy } from 'fhir/r4';
-import { getServiceRequests } from '../orderRequestService';
 import { get } from '../api';
+import { getServiceRequests } from '../orderRequestService';
 import { IMAGING_STUDY_FETCH_QC_URL } from './constants';
 
 /**
