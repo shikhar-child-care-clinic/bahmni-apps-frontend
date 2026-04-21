@@ -264,6 +264,7 @@ export const ObservationsRenderer: React.FC<ObservationsRendererProps> = ({
         loading
         ariaLabel="Loading observations"
         className={classNames(styles.fullWidth, className)}
+        dataTestId="observations-table"
       />
     );
   }
