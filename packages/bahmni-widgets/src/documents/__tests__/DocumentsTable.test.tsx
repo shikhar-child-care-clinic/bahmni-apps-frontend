@@ -811,15 +811,13 @@ describe('DocumentsTable', () => {
       ).toBeInTheDocument();
     });
 
-    it('hides pagination when documents are fewer than or equal to pageSize', () => {
+    it('shows pagination footer but disables next when documents are fewer than or equal to pageSize', () => {
       (useQuery as jest.Mock).mockReturnValue(
         mockQueryData([mockPdfDocument, mockImageDocument]),
       );
       renderComponent({ config: { ...defaultConfig, pageSize: 10 } });
 
-      expect(
-        screen.queryByRole('button', { name: /next page/i }),
-      ).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /next page/i })).toBeDisabled();
     });
 
     it('respects config pageSize to show only that many rows per page', () => {
