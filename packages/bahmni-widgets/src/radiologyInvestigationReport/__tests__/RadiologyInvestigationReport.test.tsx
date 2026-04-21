@@ -1,11 +1,7 @@
 import { getDiagnosticReportBundle } from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
-import {
-  ExtractedObservation,
-  ExtractedObservationsResult,
-} from '../../observations/models';
-import { extractObservationsFromBundle } from '../../observations/utils';
+import { Observation } from 'fhir/r4';
 import { RadiologyInvestigationReport } from '../RadiologyInvestigationReport';
 
 jest.mock('@bahmni/services', () => ({
@@ -13,12 +9,7 @@ jest.mock('@bahmni/services', () => ({
   getDiagnosticReportBundle: jest.fn(),
 }));
 
-jest.mock('../../observations/utils', () => ({
-  ...jest.requireActual('../../observations/utils'),
-  extractObservationsFromBundle: jest.fn(),
-}));
-
-describe('Observations Component', () => {
+describe('RadiologyInvestigationReport Component', () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -50,52 +41,40 @@ describe('Observations Component', () => {
     expect(screen.getByTestId(/skeleton/i)).toBeInTheDocument();
   });
 
-  it('should render null when transformedObservations is null', async () => {
+  it('should render empty state when no observations exist', async () => {
     (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
       resourceType: 'Bundle',
       entry: [],
     });
-    (extractObservationsFromBundle as jest.Mock).mockReturnValue(null);
 
-    const { container } = renderWithQueryClient(
-      <RadiologyInvestigationReport reportId="report-1" />,
-    );
+    renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
-    await screen.findByTestId(/skeleton/i);
-    expect(container.querySelector('#radiology-observations')).toBeNull();
+    expect(await screen.findByText(/NO_REPORT_DATA/)).toBeInTheDocument();
   });
 
   it('should render observations without members', async () => {
-    const mockObservations: ExtractedObservation[] = [
-      {
-        id: 'obs-1',
-        display: 'Heart Rate',
-        observationValue: {
-          value: 72,
-          unit: 'bpm',
-          type: 'quantity',
-          isAbnormal: false,
-        },
+    const mockObservation: Observation = {
+      resourceType: 'Observation',
+      id: 'obs-1',
+      status: 'final',
+      code: {
+        text: 'Heart Rate',
       },
-    ];
-
-    const transformedObservations: ExtractedObservationsResult = {
-      observations: mockObservations,
-      groupedObservations: [],
+      valueQuantity: {
+        value: 72,
+        unit: 'bpm',
+      },
     };
 
     (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
       resourceType: 'Bundle',
-      entry: [],
+      entry: [{ resource: mockObservation }],
     });
-    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
-      transformedObservations,
-    );
 
     renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
     expect(
-      await screen.findByTestId('radiology-observations-test-id'),
+      await screen.findByTestId('observations-renderer-test-id'),
     ).toBeInTheDocument();
     expect(
       screen.getByTestId('observation-item-Heart Rate-0'),
@@ -109,39 +88,42 @@ describe('Observations Component', () => {
   });
 
   it('should render observations with reference range', async () => {
-    const mockObservations: ExtractedObservation[] = [
-      {
-        id: 'obs-1',
-        display: 'Blood Glucose',
-        observationValue: {
-          value: 95,
-          unit: 'mg/dL',
-          type: 'quantity',
-          isAbnormal: false,
-          referenceRange: {
-            low: { value: 70 },
-            high: { value: 100 },
-          },
-        },
+    const mockObservation: Observation = {
+      resourceType: 'Observation',
+      id: 'obs-1',
+      status: 'final',
+      code: {
+        text: 'Blood Glucose',
       },
-    ];
-
-    const transformedObservations: ExtractedObservationsResult = {
-      observations: mockObservations,
-      groupedObservations: [],
+      valueQuantity: {
+        value: 95,
+        unit: 'mg/dL',
+      },
+      referenceRange: [
+        {
+          type: {
+            coding: [
+              {
+                system:
+                  'http://terminology.hl7.org/CodeSystem/referencerange-meaning',
+                code: 'normal',
+              },
+            ],
+          },
+          low: { value: 70 },
+          high: { value: 100 },
+        },
+      ],
     };
 
     (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
       resourceType: 'Bundle',
-      entry: [],
+      entry: [{ resource: mockObservation }],
     });
-    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
-      transformedObservations,
-    );
 
     renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
-    await screen.findByTestId('radiology-observations-test-id');
+    await screen.findByTestId('observations-renderer-test-id');
 
     expect(
       screen.getByTestId('observation-label-Blood Glucose-0'),
@@ -155,38 +137,52 @@ describe('Observations Component', () => {
   });
 
   it('should render abnormal observations with proper styling', async () => {
-    const mockObservations: ExtractedObservation[] = [
-      {
-        id: 'obs-1',
-        display: 'High Temperature',
-        observationValue: {
-          value: 39.5,
-          unit: '°C',
-          type: 'quantity',
-          isAbnormal: true,
-          referenceRange: {
-            high: { value: 37.5 },
-          },
-        },
+    const mockObservation: Observation = {
+      resourceType: 'Observation',
+      id: 'obs-1',
+      status: 'final',
+      code: {
+        text: 'High Temperature',
       },
-    ];
-
-    const transformedObservations: ExtractedObservationsResult = {
-      observations: mockObservations,
-      groupedObservations: [],
+      valueQuantity: {
+        value: 39.5,
+        unit: '°C',
+      },
+      interpretation: [
+        {
+          coding: [
+            {
+              system:
+                'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation',
+              code: 'A',
+            },
+          ],
+        },
+      ],
+      referenceRange: [
+        {
+          type: {
+            coding: [
+              {
+                system:
+                  'http://terminology.hl7.org/CodeSystem/referencerange-meaning',
+                code: 'normal',
+              },
+            ],
+          },
+          high: { value: 37.5 },
+        },
+      ],
     };
 
     (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
       resourceType: 'Bundle',
-      entry: [],
+      entry: [{ resource: mockObservation }],
     });
-    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
-      transformedObservations,
-    );
 
     renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
-    await screen.findByTestId('radiology-observations-test-id');
+    await screen.findByTestId('observations-renderer-test-id');
 
     const label = screen.getByTestId('observation-label-High Temperature-0');
     const value = screen.getByTestId('observation-value-High Temperature-0');
@@ -196,38 +192,41 @@ describe('Observations Component', () => {
   });
 
   it('should render observations with only low reference range', async () => {
-    const mockObservations: ExtractedObservation[] = [
-      {
-        id: 'obs-1',
-        display: 'Hemoglobin',
-        observationValue: {
-          value: 13,
-          unit: 'g/dL',
-          type: 'quantity',
-          isAbnormal: false,
-          referenceRange: {
-            low: { value: 12 },
-          },
-        },
+    const mockObservation: Observation = {
+      resourceType: 'Observation',
+      id: 'obs-1',
+      status: 'final',
+      code: {
+        text: 'Hemoglobin',
       },
-    ];
-
-    const transformedObservations: ExtractedObservationsResult = {
-      observations: mockObservations,
-      groupedObservations: [],
+      valueQuantity: {
+        value: 13,
+        unit: 'g/dL',
+      },
+      referenceRange: [
+        {
+          type: {
+            coding: [
+              {
+                system:
+                  'http://terminology.hl7.org/CodeSystem/referencerange-meaning',
+                code: 'normal',
+              },
+            ],
+          },
+          low: { value: 12 },
+        },
+      ],
     };
 
     (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
       resourceType: 'Bundle',
-      entry: [],
+      entry: [{ resource: mockObservation }],
     });
-    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
-      transformedObservations,
-    );
 
     renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
-    await screen.findByTestId('radiology-observations-test-id');
+    await screen.findByTestId('observations-renderer-test-id');
 
     expect(
       screen.getByTestId('observation-label-Hemoglobin-0'),
@@ -235,38 +234,41 @@ describe('Observations Component', () => {
   });
 
   it('should render observations with only high reference range', async () => {
-    const mockObservations: ExtractedObservation[] = [
-      {
-        id: 'obs-1',
-        display: 'Blood Pressure',
-        observationValue: {
-          value: 115,
-          unit: 'mmHg',
-          type: 'quantity',
-          isAbnormal: false,
-          referenceRange: {
-            high: { value: 120 },
-          },
-        },
+    const mockObservation: Observation = {
+      resourceType: 'Observation',
+      id: 'obs-1',
+      status: 'final',
+      code: {
+        text: 'Blood Pressure',
       },
-    ];
-
-    const transformedObservations: ExtractedObservationsResult = {
-      observations: mockObservations,
-      groupedObservations: [],
+      valueQuantity: {
+        value: 115,
+        unit: 'mmHg',
+      },
+      referenceRange: [
+        {
+          type: {
+            coding: [
+              {
+                system:
+                  'http://terminology.hl7.org/CodeSystem/referencerange-meaning',
+                code: 'normal',
+              },
+            ],
+          },
+          high: { value: 120 },
+        },
+      ],
     };
 
     (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
       resourceType: 'Bundle',
-      entry: [],
+      entry: [{ resource: mockObservation }],
     });
-    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
-      transformedObservations,
-    );
 
     renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
-    await screen.findByTestId('radiology-observations-test-id');
+    await screen.findByTestId('observations-renderer-test-id');
 
     expect(
       screen.getByTestId('observation-label-Blood Pressure-0'),
@@ -274,49 +276,57 @@ describe('Observations Component', () => {
   });
 
   it('should render grouped observations with members', async () => {
-    const transformedObservations: ExtractedObservationsResult = {
-      observations: [],
-      groupedObservations: [
-        {
-          id: 'group-1',
-          display: 'Complete Blood Count',
-          members: [
-            {
-              id: 'member-1',
-              display: 'WBC',
-              observationValue: {
-                value: 7000,
-                unit: 'cells/μL',
-                type: 'quantity',
-                isAbnormal: false,
-              },
-            },
-            {
-              id: 'member-2',
-              display: 'RBC',
-              observationValue: {
-                value: 4.5,
-                unit: 'million/μL',
-                type: 'quantity',
-                isAbnormal: false,
-              },
-            },
-          ],
-        },
+    const groupObservation: Observation = {
+      resourceType: 'Observation',
+      id: 'group-1',
+      status: 'final',
+      code: {
+        text: 'Complete Blood Count',
+      },
+      hasMember: [
+        { reference: 'Observation/member-1' },
+        { reference: 'Observation/member-2' },
       ],
+    };
+
+    const member1: Observation = {
+      resourceType: 'Observation',
+      id: 'member-1',
+      status: 'final',
+      code: {
+        text: 'WBC',
+      },
+      valueQuantity: {
+        value: 7000,
+        unit: 'cells/μL',
+      },
+    };
+
+    const member2: Observation = {
+      resourceType: 'Observation',
+      id: 'member-2',
+      status: 'final',
+      code: {
+        text: 'RBC',
+      },
+      valueQuantity: {
+        value: 4.5,
+        unit: 'million/μL',
+      },
     };
 
     (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
       resourceType: 'Bundle',
-      entry: [],
+      entry: [
+        { resource: groupObservation },
+        { resource: member1 },
+        { resource: member2 },
+      ],
     });
-    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
-      transformedObservations,
-    );
 
     renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
-    await screen.findByTestId('radiology-observations-test-id');
+    await screen.findByTestId('observations-renderer-test-id');
 
     expect(
       screen.getByTestId('observation-label-Complete Blood Count-0'),
@@ -335,45 +345,51 @@ describe('Observations Component', () => {
   });
 
   it('should render nested grouped observations with proper indentation', async () => {
-    const transformedObservations: ExtractedObservationsResult = {
-      observations: [],
-      groupedObservations: [
-        {
-          id: 'group-1',
-          display: 'Panel',
-          members: [
-            {
-              id: 'nested-group-1',
-              display: 'Sub Panel',
-              members: [
-                {
-                  id: 'member-1',
-                  display: 'Nested Value',
-                  observationValue: {
-                    value: 100,
-                    unit: 'mg/dL',
-                    type: 'quantity',
-                    isAbnormal: false,
-                  },
-                },
-              ],
-            },
-          ],
-        },
-      ] as any,
+    const panelObservation: Observation = {
+      resourceType: 'Observation',
+      id: 'group-1',
+      status: 'final',
+      code: {
+        text: 'Panel',
+      },
+      hasMember: [{ reference: 'Observation/nested-group-1' }],
+    };
+
+    const subPanelObservation: Observation = {
+      resourceType: 'Observation',
+      id: 'nested-group-1',
+      status: 'final',
+      code: {
+        text: 'Sub Panel',
+      },
+      hasMember: [{ reference: 'Observation/member-1' }],
+    };
+
+    const nestedValue: Observation = {
+      resourceType: 'Observation',
+      id: 'member-1',
+      status: 'final',
+      code: {
+        text: 'Nested Value',
+      },
+      valueQuantity: {
+        value: 100,
+        unit: 'mg/dL',
+      },
     };
 
     (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
       resourceType: 'Bundle',
-      entry: [],
+      entry: [
+        { resource: panelObservation },
+        { resource: subPanelObservation },
+        { resource: nestedValue },
+      ],
     });
-    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
-      transformedObservations,
-    );
 
     renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
-    await screen.findByTestId('radiology-observations-test-id');
+    await screen.findByTestId('observations-renderer-test-id');
 
     expect(
       screen.getByTestId('obs-nested-group-Sub Panel-0'),
@@ -387,42 +403,62 @@ describe('Observations Component', () => {
   });
 
   it('should render abnormal values in grouped observations', async () => {
-    const transformedObservations: ExtractedObservationsResult = {
-      observations: [],
-      groupedObservations: [
+    const groupObservation: Observation = {
+      resourceType: 'Observation',
+      id: 'group-1',
+      status: 'final',
+      code: {
+        text: 'Liver Function',
+      },
+      hasMember: [{ reference: 'Observation/member-1' }],
+    };
+
+    const altMember: Observation = {
+      resourceType: 'Observation',
+      id: 'member-1',
+      status: 'final',
+      code: {
+        text: 'ALT',
+      },
+      valueQuantity: {
+        value: 150,
+        unit: 'U/L',
+      },
+      interpretation: [
         {
-          id: 'group-1',
-          display: 'Liver Function',
-          members: [
+          coding: [
             {
-              id: 'member-1',
-              display: 'ALT',
-              observationValue: {
-                value: 150,
-                unit: 'U/L',
-                type: 'quantity',
-                isAbnormal: true,
-                referenceRange: {
-                  high: { value: 40 },
-                },
-              },
+              system:
+                'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation',
+              code: 'A',
             },
           ],
         },
-      ] as any,
+      ],
+      referenceRange: [
+        {
+          type: {
+            coding: [
+              {
+                system:
+                  'http://terminology.hl7.org/CodeSystem/referencerange-meaning',
+                code: 'normal',
+              },
+            ],
+          },
+          high: { value: 40 },
+        },
+      ],
     };
 
     (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
       resourceType: 'Bundle',
-      entry: [],
+      entry: [{ resource: groupObservation }, { resource: altMember }],
     });
-    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
-      transformedObservations,
-    );
 
     renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
-    await screen.findByTestId('radiology-observations-test-id');
+    await screen.findByTestId('observations-renderer-test-id');
 
     const memberLabel = screen.getByTestId('obs-member-label-ALT-0');
     const memberValue = screen.getByTestId('obs-member-value-ALT-0');
@@ -433,87 +469,81 @@ describe('Observations Component', () => {
   });
 
   it('should render observations without units', async () => {
-    const mockObservations: ExtractedObservation[] = [
-      {
-        id: 'obs-1',
-        display: 'Result',
-        observationValue: {
-          value: 'Positive',
-          type: 'string',
-          isAbnormal: false,
-        },
+    const mockObservation: Observation = {
+      resourceType: 'Observation',
+      id: 'obs-1',
+      status: 'final',
+      code: {
+        text: 'Result',
       },
-    ];
-
-    const transformedObservations: ExtractedObservationsResult = {
-      observations: mockObservations,
-      groupedObservations: [],
+      valueString: 'Positive',
     };
 
     (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
       resourceType: 'Bundle',
-      entry: [],
+      entry: [{ resource: mockObservation }],
     });
-    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
-      transformedObservations,
-    );
 
     renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
-    await screen.findByTestId('radiology-observations-test-id');
+    await screen.findByTestId('observations-renderer-test-id');
 
     expect(screen.getByTestId('observation-value-Result-0')).toHaveTextContent(
       'Positive',
     );
   });
 
-  it('should render multiple observations and grouped observations together', async () => {
-    const transformedObservations: ExtractedObservationsResult = {
-      observations: [
-        {
-          id: 'obs-1',
-          display: 'Simple Test',
-          conceptId: '12345',
-          observationValue: {
-            value: 10,
-            unit: 'mg',
-            type: 'quantity',
-            isAbnormal: false,
-          },
-        },
-      ],
-      groupedObservations: [
-        {
-          id: 'group-1',
-          display: 'Panel Test',
-          members: [
-            {
-              id: 'member-1',
-              display: 'Panel Member',
-              conceptId: '23456',
-              observationValue: {
-                value: 20,
-                unit: 'mg',
-                type: 'quantity',
-                isAbnormal: false,
-              },
-            },
-          ],
-        },
-      ] as any,
+  it('should render multiple observations together', async () => {
+    const simpleObs: Observation = {
+      resourceType: 'Observation',
+      id: 'obs-1',
+      status: 'final',
+      code: {
+        text: 'Simple Test',
+        coding: [{ code: '12345' }],
+      },
+      valueQuantity: {
+        value: 10,
+        unit: 'mg',
+      },
+    };
+
+    const groupObs: Observation = {
+      resourceType: 'Observation',
+      id: 'group-1',
+      status: 'final',
+      code: {
+        text: 'Panel Test',
+      },
+      hasMember: [{ reference: 'Observation/member-1' }],
+    };
+
+    const panelMember: Observation = {
+      resourceType: 'Observation',
+      id: 'member-1',
+      status: 'final',
+      code: {
+        text: 'Panel Member',
+        coding: [{ code: '23456' }],
+      },
+      valueQuantity: {
+        value: 20,
+        unit: 'mg',
+      },
     };
 
     (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
       resourceType: 'Bundle',
-      entry: [],
+      entry: [
+        { resource: simpleObs },
+        { resource: groupObs },
+        { resource: panelMember },
+      ],
     });
-    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
-      transformedObservations,
-    );
 
     renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
 
-    await screen.findByTestId('radiology-observations-test-id');
+    await screen.findByTestId('observations-renderer-test-id');
 
     expect(
       screen.getByTestId('observation-item-Simple Test-0'),
@@ -524,44 +554,41 @@ describe('Observations Component', () => {
   });
 
   it('should render multiselect observation values as comma separated', async () => {
-    const transformedObservations: ExtractedObservationsResult = {
-      observations: [
-        {
-          id: 'obs-1',
-          display: 'Simple Test',
-          conceptId: '12345',
-          observationValue: {
-            value: 10,
-            unit: 'mg',
-            type: 'quantity',
-            isAbnormal: false,
-          },
-        },
-        {
-          id: 'obs-1',
-          display: 'Simple Test',
-          conceptId: '12345',
-          observationValue: {
-            value: 20,
-            unit: 'mg',
-            type: 'quantity',
-            isAbnormal: false,
-          },
-        },
-      ],
-      groupedObservations: [] as any,
+    const obs1: Observation = {
+      resourceType: 'Observation',
+      id: 'obs-1',
+      status: 'final',
+      code: {
+        text: 'Simple Test',
+        coding: [{ code: '12345' }],
+      },
+      valueQuantity: {
+        value: 10,
+        unit: 'mg',
+      },
+    };
+
+    const obs2: Observation = {
+      resourceType: 'Observation',
+      id: 'obs-2',
+      status: 'final',
+      code: {
+        text: 'Simple Test',
+        coding: [{ code: '12345' }],
+      },
+      valueQuantity: {
+        value: 20,
+        unit: 'mg',
+      },
     };
 
     (getDiagnosticReportBundle as jest.Mock).mockResolvedValue({
       resourceType: 'Bundle',
-      entry: [],
+      entry: [{ resource: obs1 }, { resource: obs2 }],
     });
-    (extractObservationsFromBundle as jest.Mock).mockReturnValue(
-      transformedObservations,
-    );
 
     renderWithQueryClient(<RadiologyInvestigationReport reportId="report-1" />);
-    await screen.findByTestId('radiology-observations-test-id');
+    await screen.findByTestId('observations-renderer-test-id');
 
     expect(
       screen.getByTestId('observation-item-Simple Test-0'),

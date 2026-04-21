@@ -516,6 +516,10 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
             <QualityAssessment
               imagingStudy={qualityAssessmentData ?? null}
               isLoading={isQCLoading}
+              isError={isQCError}
+              errorMessage={
+                qcError ? getFormattedError(qcError).message : undefined
+              }
             />
           </Modal.Body>
         </Modal>
