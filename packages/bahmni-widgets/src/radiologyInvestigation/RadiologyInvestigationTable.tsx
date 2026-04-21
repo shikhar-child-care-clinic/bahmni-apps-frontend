@@ -299,7 +299,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
               {t('RADIOLOGY_VIEW_REPORT')}
             </Link>
           )}
-          {hasImagingStudyId && (
+          {hasImagingStudyId && hasViewReportLink && (
             <Link
               id={`${investigation.id}-view-qc-link`}
               testId={`${investigation.id}-view-qc-link-test-id`}
