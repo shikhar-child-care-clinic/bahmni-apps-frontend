@@ -29,6 +29,30 @@
     overflow: visible !important;
   }
 
+  :global(.cds--data-table) {
+    thead tr th {
+      border-top: none !important;
+      border-bottom: none !important;
+    }
+
+    thead tr th:first-child {
+      padding-inline-start: 0 !important;
+    }
+
+    tbody tr td {
+      border-top: none !important;
+      border-bottom: none !important;
+    }
+
+    tbody tr td:first-child {
+      padding-inline-start: 0 !important;
+    }
+
+    tr:hover td {
+      border-bottom: none !important;
+    }
+  }
+
 
   :global(.cds--combo-box) {
     width: $spacing-13 + $spacing-12 + $spacing-02 + $spacing-01;
@@ -74,7 +98,7 @@
 }
 
 .addButtonContainer {
-  padding: $spacing-06;
+  padding-block: $spacing-06;
 }
 
 .wrapButton {
