@@ -90,12 +90,19 @@ describe('AppTile', () => {
   it('uses window.location.href for hash URLs on click', () => {
     mockUseHasPrivilege.mockReturnValue(true);
 
-    render(<AppTile {...defaultProps} url="/bahmni/registration/index.html#/patient/search" />);
+    render(
+      <AppTile
+        {...defaultProps}
+        url="/bahmni/registration/index.html#/patient/search"
+      />,
+    );
 
     const tile = screen.getByTestId('app-tile-registration');
     fireEvent.click(tile);
 
-    expect(window.location.href).toBe('/bahmni/registration/index.html#/patient/search');
+    expect(window.location.href).toBe(
+      '/bahmni/registration/index.html#/patient/search',
+    );
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
@@ -145,23 +152,37 @@ describe('AppTile', () => {
   it('activates on Enter key', () => {
     mockUseHasPrivilege.mockReturnValue(true);
 
-    render(<AppTile {...defaultProps} url="/bahmni/registration/index.html#/patient/search" />);
+    render(
+      <AppTile
+        {...defaultProps}
+        url="/bahmni/registration/index.html#/patient/search"
+      />,
+    );
 
     const tile = screen.getByTestId('app-tile-registration');
     fireEvent.keyDown(tile, { key: 'Enter' });
 
-    expect(window.location.href).toBe('/bahmni/registration/index.html#/patient/search');
+    expect(window.location.href).toBe(
+      '/bahmni/registration/index.html#/patient/search',
+    );
   });
 
   it('activates on Space key', () => {
     mockUseHasPrivilege.mockReturnValue(true);
 
-    render(<AppTile {...defaultProps} url="/bahmni/registration/index.html#/patient/search" />);
+    render(
+      <AppTile
+        {...defaultProps}
+        url="/bahmni/registration/index.html#/patient/search"
+      />,
+    );
 
     const tile = screen.getByTestId('app-tile-registration');
     fireEvent.keyDown(tile, { key: ' ' });
 
-    expect(window.location.href).toBe('/bahmni/registration/index.html#/patient/search');
+    expect(window.location.href).toBe(
+      '/bahmni/registration/index.html#/patient/search',
+    );
   });
 
   it('has no accessibility violations', async () => {

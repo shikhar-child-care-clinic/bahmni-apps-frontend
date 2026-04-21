@@ -60,8 +60,8 @@ export const AppTile: React.FC<AppTileProps> = ({
         {translatedLabel}
       </p>
       <div className={styles.bottom}>
-        <Icon name={icon} id={id} size={ICON_SIZE.LG} aria-hidden="true" />
-        <ArrowRight size={20} className={styles.arrow} />
+        <Icon name={icon} id={id} size={ICON_SIZE.X2} aria-hidden="true" />
+        <ArrowRight size={20} className={styles.arrow} aria-hidden="true" />
       </div>
     </Tile>
   );
