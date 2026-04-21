@@ -2,11 +2,13 @@ import type { Observation, Reference } from 'fhir/r4';
 import { ExtractedObservation, ObservationValue } from '../observations/models';
 
 const NORMAL_REFERENCE_RANGE_CODE = 'normal';
+// FHIR canonical URI - identifier defined by HL7 spec, not an actual HTTP endpoint
 const REFERENCE_RANGE_SYSTEM =
-  'http://terminology.hl7.org/CodeSystem/referencerange-meaning';
+  'http://terminology.hl7.org/CodeSystem/referencerange-meaning'; // NOSONAR
 const ABNORMAL_INTERPRETATION_CODE = 'A';
+// FHIR canonical URI - identifier defined by HL7 spec, not an actual HTTP endpoint
 const INTERPRETATION_SYSTEM =
-  'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation';
+  'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation'; // NOSONAR
 
 export const extractId = (ref?: string | Reference): string | undefined => {
   const referenceStr = typeof ref === 'string' ? ref : ref?.reference;
