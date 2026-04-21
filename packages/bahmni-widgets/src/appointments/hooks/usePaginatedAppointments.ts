@@ -1,9 +1,7 @@
-import {
-  type AppointmentPage,
-  useTranslation,
-} from '@bahmni/services';
+import { type AppointmentPage, useTranslation } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
-import { useCallback, useEffect, useState } from 'react';import { useNotification } from '../../notification';
+import { useCallback, useEffect, useState } from 'react';
+import { useNotification } from '../../notification';
 import { FormattedAppointment } from '../utils';
 import { useFormattedAppointments } from './useFormattedAppointments';
 
