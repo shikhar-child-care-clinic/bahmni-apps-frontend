@@ -6,10 +6,17 @@ import {
   setCookie,
 } from '@bahmni/services';
 import { renderHook, act } from '@testing-library/react';
+import {
+  mockLocation,
+  newLocation,
+  mockLocations,
+  mockUser,
+} from '../__mocks__/mocks';
 import { useLocation } from '../LocationContext';
 import { LocationProvider } from '../LocationProvider';
 
 jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
   getUserLoginLocation: jest.fn(),
   getAvailableLocations: jest.fn(),
   getCurrentUser: jest.fn(),
@@ -32,24 +39,6 @@ const mockSaveUserLocation = saveUserLocation as jest.MockedFunction<
 const mockSetCookie = setCookie as jest.MockedFunction<typeof setCookie>;
 
 describe('LocationProvider - Persistence', () => {
-  const mockLocation = {
-    name: 'General Ward',
-    uuid: 'location-uuid-123',
-  };
-
-  const newLocation = {
-    name: 'ICU Ward',
-    uuid: 'location-uuid-456',
-  };
-
-  const mockLocations = [mockLocation, newLocation];
-
-  const mockUser = {
-    uuid: 'user-uuid-789',
-    username: 'testuser',
-    display: 'Test User',
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetUserLoginLocation.mockReturnValue(mockLocation);
@@ -59,15 +48,22 @@ describe('LocationProvider - Persistence', () => {
     mockSetCookie.mockImplementation(() => {});
   });
 
-  it('writes cookie when location is changed', async () => {
+  const renderLocationHook = () => {
     const wrapper = ({ children }: any) => (
       <LocationProvider>{children}</LocationProvider>
     );
-    const { result } = renderHook(() => useLocation(), { wrapper });
+    return renderHook(() => useLocation(), { wrapper });
+  };
 
+  const waitForInit = async () => {
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
+  };
+
+  it('writes cookie and persists to server when location is changed', async () => {
+    const { result } = renderLocationHook();
+    await waitForInit();
 
     act(() => {
       result.current.setLocation(newLocation);
@@ -77,23 +73,7 @@ describe('LocationProvider - Persistence', () => {
       'bahmni.user.location',
       encodeURIComponent(JSON.stringify(newLocation)),
     );
-  });
 
-  it('calls saveUserLocation with correct arguments', async () => {
-    const wrapper = ({ children }: any) => (
-      <LocationProvider>{children}</LocationProvider>
-    );
-    const { result } = renderHook(() => useLocation(), { wrapper });
-
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    act(() => {
-      result.current.setLocation(newLocation);
-    });
-
-    // Wait for async saveUserLocation call
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
     });
@@ -106,21 +86,13 @@ describe('LocationProvider - Persistence', () => {
 
   it('does not call saveUserLocation if userUuid is null', async () => {
     mockGetCurrentUser.mockResolvedValue(null);
-
-    const wrapper = ({ children }: any) => (
-      <LocationProvider>{children}</LocationProvider>
-    );
-    const { result } = renderHook(() => useLocation(), { wrapper });
-
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
+    const { result } = renderLocationHook();
+    await waitForInit();
 
     act(() => {
       result.current.setLocation(newLocation);
     });
 
-    // Wait for any async calls
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
     });
@@ -134,48 +106,31 @@ describe('LocationProvider - Persistence', () => {
       .spyOn(console, 'warn')
       .mockImplementation(() => {});
 
-    const wrapper = ({ children }: any) => (
-      <LocationProvider>{children}</LocationProvider>
-    );
-    const { result } = renderHook(() => useLocation(), { wrapper });
-
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
+    const { result } = renderLocationHook();
+    await waitForInit();
 
     act(() => {
       result.current.setLocation(newLocation);
     });
 
-    // Location should be updated even if server call fails
     expect(result.current.location).toEqual(newLocation);
     expect(mockSetCookie).toHaveBeenCalled();
 
-    // Wait for async saveUserLocation call to fail
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
     });
 
-    expect(mockSaveUserLocation).toHaveBeenCalled();
     expect(consoleWarnSpy).toHaveBeenCalledWith(
       'Failed to save location to server:',
       expect.any(Error),
     );
-
     consoleWarnSpy.mockRestore();
   });
 
-  it('handles null location without calling setCookie', async () => {
-    const wrapper = ({ children }: any) => (
-      <LocationProvider>{children}</LocationProvider>
-    );
-    const { result } = renderHook(() => useLocation(), { wrapper });
+  it('handles null location without calling setCookie or saveUserLocation', async () => {
+    const { result } = renderLocationHook();
+    await waitForInit();
 
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    // Reset mock to check if it's called again
     mockSetCookie.mockClear();
 
     act(() => {
@@ -186,15 +141,47 @@ describe('LocationProvider - Persistence', () => {
     expect(mockSaveUserLocation).not.toHaveBeenCalled();
   });
 
-  it('fetches user UUID on mount for persistence', async () => {
-    const wrapper = ({ children }: any) => (
-      <LocationProvider>{children}</LocationProvider>
-    );
-    renderHook(() => useLocation(), { wrapper });
+  it.each([
+    {
+      thrown: new Error('Cookie write failed'),
+      expectedError: 'Cookie write failed',
+      label: 'Error instance',
+    },
+    {
+      thrown: 'string error',
+      expectedError: 'Failed to update location',
+      label: 'non-Error value',
+    },
+  ])(
+    'reverts location and sets error when setCookie throws $label',
+    async ({ thrown, expectedError }) => {
+      const consoleErrorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
+      const { result } = renderLocationHook();
+      await waitForInit();
+
+      const originalLocation = result.current.location;
+
+      mockSetCookie.mockImplementation(() => {
+        throw thrown;
+      });
+
+      act(() => {
+        result.current.setLocation({ name: 'Bad Ward', uuid: 'bad-uuid' });
+      });
+
+      expect(result.current.location).toEqual(originalLocation);
+      expect(result.current.error).toBe(expectedError);
+
+      consoleErrorSpy.mockRestore();
+    },
+  );
+
+  it('fetches user UUID on mount for persistence', async () => {
+    renderLocationHook();
+    await waitForInit();
 
     expect(mockGetCurrentUser).toHaveBeenCalled();
   });

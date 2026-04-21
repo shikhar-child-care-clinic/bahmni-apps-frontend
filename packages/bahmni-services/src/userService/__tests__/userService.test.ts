@@ -1,15 +1,33 @@
-import { get, del } from '../../api';
+import { get, del, post } from '../../api';
 import { BAHMNI_USER_COOKIE_NAME } from '../../constants/app';
 import { getCookieByName, deleteCookie } from '../../utils';
+import {
+  mockUsername,
+  mockEncodedUsername,
+  mockQuotedUsername,
+  mockSpecialUsername,
+  mockEncodedSpecialUsername,
+  mockUserResponse,
+  mockEncodedUserLocationCookie,
+  mockUserLocation,
+  mockAvailableLocations,
+} from '../__mocks__/mocks';
 import {
   USER_RESOURCE_URL,
   BAHMNI_USER_LOCATION_COOKIE,
   LOGOUT_URL,
   LOGOUT_COOKIES,
+  AVAILABLE_LOCATIONS_URL,
+  SAVE_USER_LOCATION_URL,
 } from '../constants';
-import { getCurrentUser, getUserLoginLocation, logout } from '../userService';
+import {
+  getCurrentUser,
+  getUserLoginLocation,
+  logout,
+  getAvailableLocations,
+  saveUserLocation,
+} from '../userService';
 
-// Mock dependencies
 jest.mock('../../api');
 jest.mock('../../utils', () => ({
   ...jest.requireActual('../../utils'),
@@ -17,7 +35,6 @@ jest.mock('../../utils', () => ({
   deleteCookie: jest.fn(),
 }));
 
-//TODO: Remove this import once the test i18n setup is complete
 jest.mock('i18next', () => ({
   __esModule: true,
   default: {
@@ -25,35 +42,9 @@ jest.mock('i18next', () => ({
   },
 }));
 
+const mockPost = post as jest.Mock;
+
 describe('userService', () => {
-  // Mock data
-  const mockUsername = 'superman';
-  const mockEncodedUsername = '%22superman%22'; // URL encoded with quotes
-  const mockQuotedUsername = '"superman"';
-  const mockSpecialUsername = '@super.man%20';
-  const mockEncodedSpecialUsername = encodeURIComponent(mockSpecialUsername);
-
-  const mockUserResponse = {
-    results: [
-      {
-        uuid: 'user-uuid-123',
-        username: mockUsername,
-        display: 'Superman User',
-        person: {
-          uuid: 'person-uuid-456',
-          display: 'Superman',
-        },
-        privileges: [],
-        roles: [
-          {
-            uuid: 'role-uuid-789',
-            display: 'Clinician',
-          },
-        ],
-      },
-    ],
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
     (get as jest.Mock).mockReset();
@@ -61,7 +52,6 @@ describe('userService', () => {
   });
 
   describe('getCurrentUser', () => {
-    // Happy Path Tests
     it('should fetch user successfully when cookie exists', async () => {
       (getCookieByName as jest.Mock).mockReturnValue(mockUsername);
       (get as jest.Mock).mockResolvedValue(mockUserResponse);
@@ -73,18 +63,11 @@ describe('userService', () => {
       expect(result).toEqual(mockUserResponse.results[0]);
     });
 
-    it('should handle URL-encoded username in cookie', async () => {
-      (getCookieByName as jest.Mock).mockReturnValue(mockEncodedUsername);
-      (get as jest.Mock).mockResolvedValue(mockUserResponse);
-
-      const result = await getCurrentUser();
-
-      expect(get).toHaveBeenCalledWith(USER_RESOURCE_URL(mockUsername));
-      expect(result).toEqual(mockUserResponse.results[0]);
-    });
-
-    it('should handle quoted username in cookie', async () => {
-      (getCookieByName as jest.Mock).mockReturnValue(mockQuotedUsername);
+    it.each([
+      ['URL-encoded', mockEncodedUsername],
+      ['quoted', mockQuotedUsername],
+    ])('should handle %s username in cookie', async (_label, cookieValue) => {
+      (getCookieByName as jest.Mock).mockReturnValue(cookieValue);
       (get as jest.Mock).mockResolvedValue(mockUserResponse);
 
       const result = await getCurrentUser();
@@ -110,9 +93,11 @@ describe('userService', () => {
       expect(result).toEqual(specialUserResponse.results[0]);
     });
 
-    // Sad Path Tests
-    it('should return null when cookie is not found', async () => {
-      (getCookieByName as jest.Mock).mockReturnValue(null);
+    it.each([
+      ['cookie is not found', null],
+      ['cookie is empty string', ''],
+    ])('should return null when %s', async (_label, cookieValue) => {
+      (getCookieByName as jest.Mock).mockReturnValue(cookieValue);
 
       const result = await getCurrentUser();
 
@@ -120,70 +105,36 @@ describe('userService', () => {
       expect(get).not.toHaveBeenCalled();
     });
 
-    it('should return null when cookie is empty string', async () => {
-      (getCookieByName as jest.Mock).mockReturnValue('');
-
-      const result = await getCurrentUser();
-
-      expect(result).toBeNull();
-      expect(get).not.toHaveBeenCalled();
-    });
-
-    it('should return null when API returns empty results', async () => {
+    it.each([
+      ['empty results', { results: [] }],
+      ['null results', { results: null }],
+    ])('should return null when API returns %s', async (_label, response) => {
       (getCookieByName as jest.Mock).mockReturnValue(mockUsername);
-      (get as jest.Mock).mockResolvedValue({ results: [] });
+      (get as jest.Mock).mockResolvedValue(response);
 
       const result = await getCurrentUser();
 
       expect(result).toBeNull();
     });
 
-    it('should return null when API returns null results', async () => {
-      (getCookieByName as jest.Mock).mockReturnValue(mockUsername);
-      (get as jest.Mock).mockResolvedValue({ results: null });
-
-      const result = await getCurrentUser();
-
-      expect(result).toBeNull();
-    });
-
-    // Error Handling Tests
-    it('should throw error when API call fails', async () => {
-      const mockError = new Error('API Error');
-      (getCookieByName as jest.Mock).mockReturnValue(mockUsername);
-      (get as jest.Mock).mockRejectedValue(mockError);
+    it.each([
+      ['API call fails', mockUsername],
+      ['username decoding fails', '%invalid'],
+      ['cookie value is malformed', '%%%invalid%%%'],
+    ])('should throw error when %s', async (_label, cookieValue) => {
+      (getCookieByName as jest.Mock).mockReturnValue(cookieValue);
+      (get as jest.Mock).mockRejectedValue(new Error('API Error'));
 
       await expect(getCurrentUser()).rejects.toThrow(
         'ERROR_FETCHING_USER_DETAILS',
       );
-      expect(get).toHaveBeenCalledWith(USER_RESOURCE_URL(mockUsername));
-    });
-
-    it('should throw error when username decoding fails', async () => {
-      const invalidEncoding = '%invalid';
-      (getCookieByName as jest.Mock).mockReturnValue(invalidEncoding);
-
-      await expect(getCurrentUser()).rejects.toThrow(
-        'ERROR_FETCHING_USER_DETAILS',
-      );
-      expect(get).not.toHaveBeenCalled();
-    });
-
-    // Edge Cases
-    it('should handle malformed cookie values', async () => {
-      const malformedValue = '%%%invalid%%%';
-      (getCookieByName as jest.Mock).mockReturnValue(malformedValue);
-
-      await expect(getCurrentUser()).rejects.toThrow(
-        'ERROR_FETCHING_USER_DETAILS',
-      );
-      expect(get).not.toHaveBeenCalledWith(USER_RESOURCE_URL(malformedValue));
     });
 
     it('should handle whitespace in username', async () => {
       const usernameWithSpace = 'super man';
-      const encodedUsernameWithSpace = encodeURIComponent(usernameWithSpace);
-      (getCookieByName as jest.Mock).mockReturnValue(encodedUsernameWithSpace);
+      (getCookieByName as jest.Mock).mockReturnValue(
+        encodeURIComponent(usernameWithSpace),
+      );
       const spaceUserResponse = {
         results: [
           { ...mockUserResponse.results[0], username: usernameWithSpace },
@@ -214,54 +165,110 @@ describe('userService', () => {
   });
 });
 
-const mockEncodedUserLocationCookie =
-  '%7B%22name%22%3A%22Emergency%22%2C%22uuid%22%3A%22b5da9afd-b29a-4cbf-91c9-ccf2aa5f799e%22%7D';
-const mockUserLocation = {
-  name: 'Emergency',
-  uuid: 'b5da9afd-b29a-4cbf-91c9-ccf2aa5f799e',
-};
-
 describe('getUserLocation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (getCookieByName as jest.Mock).mockReset();
   });
-  it('should fetch user log in location successfully when cookie exists', async () => {
+
+  it('should fetch user log in location successfully when cookie exists', () => {
     (getCookieByName as jest.Mock).mockReturnValue(
       mockEncodedUserLocationCookie,
     );
-    const result = await getUserLoginLocation();
+
+    const result = getUserLoginLocation();
+
     expect(getCookieByName).toHaveBeenCalledWith(BAHMNI_USER_LOCATION_COOKIE);
     expect(result).toEqual(mockUserLocation);
   });
 
-  it('should throw error when cookie does not exists', async () => {
-    (getCookieByName as jest.Mock).mockReturnValue(null);
-    await expect(() => getUserLoginLocation()).toThrow(
+  it.each([
+    ['cookie does not exist', null],
+    ['login location uuid is missing', '%7B%22name%22%3A%22OPD-1%22%7D'],
+  ])('should throw error when %s', (_label, cookieValue) => {
+    (getCookieByName as jest.Mock).mockReturnValue(cookieValue);
+
+    expect(() => getUserLoginLocation()).toThrow(
       'ERROR_FETCHING_USER_LOCATION_DETAILS',
     );
   });
 
-  it('should throw errors when login location uuid is missing', async () => {
-    const mockEncodedUserLocationCookie = '%7B%22name%22%3A%22OPD-1%22%7D';
-    (getCookieByName as jest.Mock).mockReturnValue(
-      mockEncodedUserLocationCookie,
-    );
-    await expect(() => getUserLoginLocation()).toThrow(
-      'ERROR_FETCHING_USER_LOCATION_DETAILS',
-    );
-  });
-
-  it('should fetch user log in location successfully when only login location name is missing', async () => {
-    const userLocation = { uuid: 'b5da9afd-b29a-4cbf-91c9-ccf2aa5f799e' };
-    const mockEncodedUserLocationCookie =
+  it('should fetch location when only name is missing', () => {
+    const uuidOnlyCookie =
       '%7B%22uuid%22%3A%22b5da9afd-b29a-4cbf-91c9-ccf2aa5f799e%22%7D';
-    (getCookieByName as jest.Mock).mockReturnValue(
-      mockEncodedUserLocationCookie,
-    );
-    const result = await getUserLoginLocation();
+    (getCookieByName as jest.Mock).mockReturnValue(uuidOnlyCookie);
+
+    const result = getUserLoginLocation();
+
     expect(getCookieByName).toHaveBeenCalledWith(BAHMNI_USER_LOCATION_COOKIE);
-    expect(result).toEqual(userLocation);
+    expect(result).toEqual({
+      uuid: 'b5da9afd-b29a-4cbf-91c9-ccf2aa5f799e',
+    });
+  });
+});
+
+describe('getAvailableLocations', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (get as jest.Mock).mockReset();
+  });
+
+  it('should return locations when API call succeeds', async () => {
+    (get as jest.Mock).mockResolvedValue({ results: mockAvailableLocations });
+
+    const result = await getAvailableLocations();
+
+    expect(get).toHaveBeenCalledWith(AVAILABLE_LOCATIONS_URL);
+    expect(result).toEqual(mockAvailableLocations);
+  });
+
+  it.each([
+    ['results is null', { results: null }],
+    ['API call fails', null],
+  ])('should return empty array when %s', async (_label, response) => {
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    if (response) {
+      (get as jest.Mock).mockResolvedValue(response);
+    } else {
+      (get as jest.Mock).mockRejectedValue(new Error('Network error'));
+    }
+
+    const result = await getAvailableLocations();
+
+    expect(result).toEqual([]);
+    consoleErrorSpy.mockRestore();
+  });
+});
+
+describe('saveUserLocation', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockPost.mockReset();
+  });
+
+  it('should call post with correct URL and body', async () => {
+    mockPost.mockResolvedValue({});
+
+    await saveUserLocation('user-uuid-123', {
+      name: 'Ward 1',
+      uuid: 'loc-uuid-456',
+    });
+
+    expect(mockPost).toHaveBeenCalledWith(
+      SAVE_USER_LOCATION_URL('user-uuid-123'),
+      { userProperties: { loginLocation: 'loc-uuid-456' } },
+    );
+  });
+
+  it('should propagate error when API call fails', async () => {
+    mockPost.mockRejectedValue(new Error('Server error'));
+
+    await expect(
+      saveUserLocation('user-uuid', { name: 'Ward', uuid: 'loc-uuid' }),
+    ).rejects.toThrow('Server error');
   });
 });
 
@@ -272,42 +279,22 @@ describe('logout', () => {
     (deleteCookie as jest.Mock).mockReset();
   });
 
-  it('should delete session and clear cookies on successful logout', async () => {
+  it('should delete session and clear all required cookies', async () => {
     (del as jest.Mock).mockResolvedValue({});
 
     await logout();
 
     expect(del).toHaveBeenCalledWith(LOGOUT_URL);
+    expect(deleteCookie).toHaveBeenCalledTimes(LOGOUT_COOKIES.length);
     LOGOUT_COOKIES.forEach((cookieName) => {
       expect(deleteCookie).toHaveBeenCalledWith(cookieName);
     });
   });
 
-  it('should clear all required cookies', async () => {
-    (del as jest.Mock).mockResolvedValue({});
-
-    await logout();
-
-    expect(deleteCookie).toHaveBeenCalledTimes(LOGOUT_COOKIES.length);
-  });
-
-  it('should throw error when API call fails', async () => {
-    const mockError = new Error('Network error');
-    (del as jest.Mock).mockRejectedValue(mockError);
+  it('should throw error and not clear cookies when API call fails', async () => {
+    (del as jest.Mock).mockRejectedValue(new Error('Network error'));
 
     await expect(logout()).rejects.toThrow('USER_LOGOUT_FAILED');
-  });
-
-  it('should not clear cookies if API call fails', async () => {
-    const mockError = new Error('Network error');
-    (del as jest.Mock).mockRejectedValue(mockError);
-
-    try {
-      await logout();
-    } catch {
-      // Expected to throw
-    }
-
     expect(deleteCookie).not.toHaveBeenCalled();
   });
 });

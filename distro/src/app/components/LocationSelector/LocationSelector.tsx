@@ -29,7 +29,11 @@ export const LocationSelector: React.FC = () => {
 
   // Show loading state
   if (loading) {
-    return <div className={styles.loading}>{t('LOADING')}</div>;
+    return (
+      <div className={styles.loading} data-testid="location-loading">
+        {t('LOADING')}
+      </div>
+    );
   }
 
   // Show error state
@@ -43,7 +47,11 @@ export const LocationSelector: React.FC = () => {
 
   // Show when no location selected
   if (!location) {
-    return <div className={styles.noLocation}>{t('NO_LOCATION_SELECTED')}</div>;
+    return (
+      <div className={styles.noLocation} data-testid="location-no-selection">
+        {t('NO_LOCATION_SELECTED')}
+      </div>
+    );
   }
 
   const selectedItem =
