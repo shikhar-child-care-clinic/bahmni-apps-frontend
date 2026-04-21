@@ -20,7 +20,7 @@ describe('homeConfigService', () => {
       await fetchHomeConfig();
 
       expect(mockedGet).toHaveBeenCalledWith(
-        '/bahmni_config/openmrs/apps/home/extension.json',
+        '/bahmni_config/openmrs/apps/home/v2/extension.json',
       );
     });
 

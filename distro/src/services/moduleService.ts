@@ -22,7 +22,7 @@ export const fetchModuleExtensions = async (
   appName: string = 'home',
 ): Promise<Module[]> => {
   try {
-    const baseUrl = `${BASE_URL}/${appName}/extension.json`;
+    const baseUrl = `${BASE_URL}/${appName}/v2/extension.json`;
     const baseResponse = await fetch(baseUrl);
 
     if (!baseResponse.ok) {

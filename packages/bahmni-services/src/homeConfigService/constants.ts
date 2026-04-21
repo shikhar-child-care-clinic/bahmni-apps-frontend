@@ -1,5 +1,5 @@
 export const HOME_CONFIG_URL =
-  '/bahmni_config/openmrs/apps/home/extension.json';
+  '/bahmni_config/openmrs/apps/home/v2/extension.json';
 
 export const ERROR_MESSAGES = {
   FETCH_FAILED: 'HOME_CONFIG_ERROR_FETCH_FAILED',
