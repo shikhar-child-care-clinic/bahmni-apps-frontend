@@ -4,7 +4,6 @@ import {
   AccordionItem,
   Link,
   Modal,
-  SkeletonText,
 } from '@bahmni/design-system';
 import {
   formatDateTime,
@@ -98,16 +97,20 @@ const FormsTable: React.FC<WidgetProps> = ({
   }, [selectedRecord, getFormUuidByName]);
 
   // Fetch form metadata when a record is selected
-  const { isLoading: isLoadingMetadata, error: metadataError } =
-    useQuery<FormMetadata>({
-      queryKey: ['formMetadata', selectedFormUuid],
-      queryFn: () => fetchFormMetadata(selectedFormUuid!),
-      enabled: !!selectedFormUuid && isModalOpen,
-    });
+  const {
+    isLoading: isLoadingMetadata,
+    isError: isMetadataError,
+    error: metadataError,
+  } = useQuery<FormMetadata>({
+    queryKey: ['formMetadata', selectedFormUuid],
+    queryFn: () => fetchFormMetadata(selectedFormUuid!),
+    enabled: !!selectedFormUuid && isModalOpen,
+  });
 
   const {
     data: fhirObservationBundle,
     isLoading: isLoadingEncounterData,
+    isError: isFormDataError,
     error: formDataError,
   } = useQuery<Bundle<Observation>>({
     queryKey: ['formsEncounterFHIR', selectedRecord?.encounterUuid],
@@ -146,6 +149,16 @@ const FormsTable: React.FC<WidgetProps> = ({
       return !formFieldPath || formFieldPath.includes(selectedRecord.formName);
     });
   }, [fhirObservationBundle, selectedRecord?.formName]);
+
+  const modalErrorMessage = useMemo(() => {
+    if (metadataError) {
+      return getFormattedError(metadataError).message;
+    }
+    if (formDataError) {
+      return getFormattedError(formDataError).message;
+    }
+    return undefined;
+  }, [metadataError, formDataError]);
 
   const headers = useMemo(
     () => [
@@ -294,29 +307,14 @@ const FormsTable: React.FC<WidgetProps> = ({
           size="md"
           testId="form-details-modal"
         >
-          <div className={styles.formContent}>
-            {isLoadingMetadata || isLoadingEncounterData ? (
-              <SkeletonText width="100%" lineCount={3} />
-            ) : metadataError ? (
-              <div>
-                {getFormattedError(metadataError).message ??
-                  t('ERROR_FETCHING_FORM_METADATA')}
-              </div>
-            ) : formDataError ? (
-              <div>
-                {getFormattedError(formDataError).message ??
-                  t('ERROR_FETCHING_FORM_DATA')}
-              </div>
-            ) : (
-              <ObservationsRenderer
-                observations={filteredObservations}
-                isLoading={false}
-                isError={false}
-                emptyStateMessage={t('NO_FORM_DATA_AVAILABLE')}
-                testIdPrefix={selectedRecord.formName}
-              />
-            )}
-          </div>
+          <ObservationsRenderer
+            observations={filteredObservations}
+            isLoading={isLoadingMetadata || isLoadingEncounterData}
+            isError={isMetadataError || isFormDataError}
+            errorMessage={modalErrorMessage}
+            emptyStateMessage={t('NO_FORM_DATA_AVAILABLE')}
+            testIdPrefix={selectedRecord.formName}
+          />
         </Modal>
       )}
     </>
