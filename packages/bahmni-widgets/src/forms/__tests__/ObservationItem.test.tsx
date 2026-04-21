@@ -506,7 +506,9 @@ describe('ObservationItem', () => {
         },
       };
 
-      render(<ObservationItem observation={observation} index={0} hideThumbnail />);
+      render(
+        <ObservationItem observation={observation} index={0} hideThumbnail />,
+      );
 
       expect(screen.getByTestId('image-tile')).toHaveAttribute(
         'data-hide-thumbnail',
@@ -524,7 +526,9 @@ describe('ObservationItem', () => {
         },
       };
 
-      render(<ObservationItem observation={observation} index={0} hideThumbnail />);
+      render(
+        <ObservationItem observation={observation} index={0} hideThumbnail />,
+      );
 
       expect(screen.getByTestId('video-tile')).toHaveAttribute(
         'data-hide-thumbnail',

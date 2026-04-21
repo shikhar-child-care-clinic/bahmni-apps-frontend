@@ -107,14 +107,18 @@ describe('VideoTile', () => {
   });
 
   it('should still open modal when hideThumbnail is true and thumbnail is clicked', async () => {
-    render(<VideoTile {...defaultProps} modalTitle="Video Preview" hideThumbnail />);
+    render(
+      <VideoTile {...defaultProps} modalTitle="Video Preview" hideThumbnail />,
+    );
 
     const button = screen.getByTestId('test-video-test-id');
     fireEvent.click(button);
 
     await waitFor(() => {
       expect(screen.getByText('Video Preview')).toBeInTheDocument();
-      expect(screen.getByTestId('test-video-modal-video-test-id')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('test-video-modal-video-test-id'),
+      ).toBeInTheDocument();
     });
   });
 

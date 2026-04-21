@@ -50,7 +50,8 @@ const FormsTable: React.FC<WidgetProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] =
     useState<FormRecordViewModel | null>(null);
-  const { numberOfVisits, hideThumbnail = false } = (config ?? {}) as FormsTableConfig;
+  const { numberOfVisits, hideThumbnail = false } = (config ??
+    {}) as FormsTableConfig;
 
   const emptyEncounterFilter = shouldEnableEncounterFilter(
     episodeOfCareUuids,

@@ -82,14 +82,18 @@ describe('ImageTile', () => {
   });
 
   it('should still open modal when hideThumbnail is true and thumbnail is clicked', async () => {
-    render(<ImageTile {...defaultProps} modalTitle="Image Preview" hideThumbnail />);
+    render(
+      <ImageTile {...defaultProps} modalTitle="Image Preview" hideThumbnail />,
+    );
 
     const button = screen.getByTestId('test-image-test-id');
     fireEvent.click(button);
 
     await waitFor(() => {
       expect(screen.getByText('Image Preview')).toBeInTheDocument();
-      expect(screen.getByTestId('test-image-modal-image-test-id')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('test-image-modal-image-test-id'),
+      ).toBeInTheDocument();
     });
   });
 

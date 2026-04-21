@@ -319,4 +319,7 @@ export {
 } from './documentReferenceService';
 
 export { uploadDocument } from './documentUploadService';
-export type { DocumentUploadResponse, ProcessedFileData } from './documentUploadService';
+export type {
+  DocumentUploadResponse,
+  ProcessedFileData,
+} from './documentUploadService';
