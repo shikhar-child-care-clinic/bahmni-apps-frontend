@@ -802,7 +802,7 @@ describe('DocumentsTable', () => {
       ],
     }));
 
-    it('renders pagination when documents exceed default pageSize of 10', () => {
+    it('renders pagination when documents exceed default pageSize of 5', () => {
       (useQuery as jest.Mock).mockReturnValue(mockQueryData(manyDocs));
       renderComponent({ config: defaultConfig });
 

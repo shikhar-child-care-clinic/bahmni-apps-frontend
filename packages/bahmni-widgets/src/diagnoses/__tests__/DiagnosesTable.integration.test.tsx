@@ -141,7 +141,7 @@ describe('DiagnosesTable Integration', () => {
       expect(screen.getByText('Provisional')).toBeInTheDocument();
     });
 
-    expect(mockGetDiagnosesPage).toHaveBeenCalledWith('patient-123', 10, 1);
+    expect(mockGetDiagnosesPage).toHaveBeenCalledWith('patient-123', 5, 1);
   });
 
   it('propagates service errors through hook to component UI', async () => {
@@ -273,7 +273,7 @@ describe('DiagnosesTable Integration', () => {
       renderWithQueryClient(<DiagnosesTable />);
 
       await waitFor(() => {
-        expect(mockGetDiagnosesPage).toHaveBeenCalledWith('patient-123', 10, 1);
+        expect(mockGetDiagnosesPage).toHaveBeenCalledWith('patient-123', 5, 1);
       });
     });
 

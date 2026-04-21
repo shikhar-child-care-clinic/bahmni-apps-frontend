@@ -510,12 +510,6 @@ exports[`PatientProgramsTable should match snapshot with program data 1`] = `
                       </option>
                       <option
                         class="cds--select-option"
-                        value="15"
-                      >
-                        15
-                      </option>
-                      <option
-                        class="cds--select-option"
                         value="25"
                       >
                         25

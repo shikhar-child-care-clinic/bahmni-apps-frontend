@@ -156,7 +156,7 @@ describe('ConditionsTable Integration', () => {
     await waitFor(() => {
       expect(mockedGetConditionPage).toHaveBeenCalledWith(
         'test-patient-uuid',
-        10,
+        5,
         1,
       );
     });

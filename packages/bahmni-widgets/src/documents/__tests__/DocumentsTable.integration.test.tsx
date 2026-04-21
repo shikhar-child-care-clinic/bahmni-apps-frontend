@@ -316,7 +316,7 @@ describe('DocumentsTable Integration', () => {
       expect(mockedGetDocumentReferencePage).toHaveBeenCalledWith(
         'test-patient-uuid',
         encounterUuids,
-        10,
+        5,
         1,
       );
     });
@@ -333,7 +333,7 @@ describe('DocumentsTable Integration', () => {
       expect(mockedGetDocumentReferencePage).toHaveBeenCalledWith(
         'test-patient-uuid',
         undefined,
-        10,
+        5,
         1,
       );
     });

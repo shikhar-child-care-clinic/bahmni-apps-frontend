@@ -493,7 +493,7 @@ describe('PatientProgramsTable Integration', () => {
     expect(mockedGetPatientProgramsPage).toHaveBeenCalledTimes(1);
     expect(mockedGetPatientProgramsPage).toHaveBeenCalledWith(
       'test-patient-uuid',
-      15,
+      5,
       1,
     );
   });
@@ -601,7 +601,7 @@ describe('PatientProgramsTable Integration', () => {
       await waitFor(() => {
         expect(mockedGetPatientProgramsPage).toHaveBeenCalledWith(
           'test-patient-uuid',
-          15,
+          5,
           1,
         );
       });
