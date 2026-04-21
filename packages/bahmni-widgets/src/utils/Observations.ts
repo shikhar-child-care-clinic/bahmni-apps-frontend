@@ -180,9 +180,13 @@ export function groupMultiSelectObservations(
       valueGroupedObs: ExtractedObservation[],
       observation: ExtractedObservation,
     ) => {
-      const matchedObs = valueGroupedObs.find(
-        (obs: ExtractedObservation) => obs.conceptId === observation.conceptId,
-      );
+      // Only group if conceptId is defined and truthy
+      const matchedObs = observation.conceptId
+        ? valueGroupedObs.find(
+            (obs: ExtractedObservation) =>
+              obs.conceptId === observation.conceptId,
+          )
+        : undefined;
 
       if (matchedObs?.observationValue && observation.observationValue) {
         matchedObs.observationValue.value =
