@@ -506,10 +506,10 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
           onRequestClose={() => setQcImagingStudyId(null)}
           passiveModal
           modalLabel={t('RADIOLOGY_VIEW_QC')}
-          modalHeading={t('RADIOLOGY_VIEW_QC')}
+          modalHeading={selectedInvestigation?.testName}
           testId="quality-assessment-modal"
           size="lg"
-          id="qualityAssessmentModalId"
+          id="modalIdForActionAreaLayout"
           portalId={'main-display-area'}
         >
           <Modal.Body>
