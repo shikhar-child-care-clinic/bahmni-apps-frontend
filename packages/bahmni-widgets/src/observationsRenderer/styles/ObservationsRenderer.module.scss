@@ -74,7 +74,8 @@
   @include type-style("body-compact-01");
   color: $text-secondary;
   font-weight: normal;
-  margin-inline-start: $spacing-02;
+  margin-block-start: $spacing-02;
+  margin-block-end: 0;
 }
 
 .nestedGroup {
@@ -98,4 +99,16 @@
 
 .fullWidth {
   width: 100%;
+}
+
+.commentSection {
+  margin-block-start: $spacing-04;
+  padding-block-start: $spacing-04;
+  border-block-start: 1px solid $border-subtle-01;
+}
+
+.commentText {
+  @include type-style("body-compact-01");
+  color: $text-secondary;
+  font-style: italic;
 }

@@ -25,11 +25,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bundle, Observation } from 'fhir/r4';
 import React, { useCallback, useMemo, useState } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
+import { ObservationsRenderer } from '../observationsRenderer';
 import { WidgetProps } from '../registry/model';
 import { FormRecordViewModel, GroupedFormRecords } from './models';
-import ObservationItem from './ObservationItem';
 import styles from './styles/FormsTable.module.scss';
-import { filterObservationsByFormName } from './utils';
+import { extractFormFieldPath } from './utils';
 
 /**
  * Component to display patient forms grouped by form name in accordion format
@@ -130,16 +130,21 @@ const FormsTable: React.FC<WidgetProps> = ({
     [patientUuid],
   );
 
-  // Extract observations from FHIR bundle and filter by form name
+  // Extract raw FHIR observations from bundle and filter by form name
   const filteredObservations = useMemo(() => {
-    if (!fhirObservationBundle || !selectedRecord?.formName) {
+    if (!fhirObservationBundle?.entry || !selectedRecord?.formName) {
       return [];
     }
 
-    return filterObservationsByFormName(
-      fhirObservationBundle,
-      selectedRecord.formName,
-    );
+    const allObservations = fhirObservationBundle.entry
+      .filter((entry) => entry.resource?.resourceType === 'Observation')
+      .map((entry) => entry.resource as Observation);
+
+    // Filter by form name using formFieldPath
+    return allObservations.filter((obs) => {
+      const formFieldPath = extractFormFieldPath(obs);
+      return !formFieldPath || formFieldPath.includes(selectedRecord.formName);
+    });
   }, [fhirObservationBundle, selectedRecord?.formName]);
 
   const headers = useMemo(
@@ -302,20 +307,14 @@ const FormsTable: React.FC<WidgetProps> = ({
                 {getFormattedError(formDataError).message ??
                   t('ERROR_FETCHING_FORM_DATA')}
               </div>
-            ) : filteredObservations.length > 0 ? (
-              <div className={styles.formDetailsContainer}>
-                {filteredObservations.map(({ obs, comment }, index) => (
-                  <ObservationItem
-                    key={`${obs.id}`}
-                    observation={obs}
-                    index={index}
-                    formName={selectedRecord.formName}
-                    comment={comment}
-                  />
-                ))}
-              </div>
             ) : (
-              <div>{t('NO_FORM_DATA_AVAILABLE')}</div>
+              <ObservationsRenderer
+                observations={filteredObservations}
+                isLoading={false}
+                isError={false}
+                emptyStateMessage={t('NO_FORM_DATA_AVAILABLE')}
+                testIdPrefix={selectedRecord.formName}
+              />
             )}
           </div>
         </Modal>

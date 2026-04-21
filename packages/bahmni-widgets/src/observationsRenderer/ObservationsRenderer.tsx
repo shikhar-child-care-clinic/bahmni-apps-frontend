@@ -1,5 +1,10 @@
-import { SortableDataTable } from '@bahmni/design-system';
-import { useTranslation } from '@bahmni/services';
+import {
+  SortableDataTable,
+  ImageTile,
+  VideoTile,
+  FileTile,
+} from '@bahmni/design-system';
+import { useTranslation, getValueType } from '@bahmni/services';
 import classNames from 'classnames';
 import type { Observation } from 'fhir/r4';
 import React, { useMemo } from 'react';
@@ -20,32 +25,60 @@ export interface ObservationsRendererProps {
   errorMessage?: string;
   emptyStateMessage?: string;
   className?: string;
+  testIdPrefix?: string;
 }
 
 interface ObservationMemberProps {
   member: ExtractedObservation;
   depth?: number;
   memberIndex?: number;
+  testIdPrefix?: string;
 }
+
+const renderValueWithMedia = (valueAsString: string): React.ReactNode => {
+  const valueType = getValueType(valueAsString);
+
+  if (valueType === 'Image') {
+    return (
+      <ImageTile
+        imageSrc={valueAsString}
+        alt={valueAsString}
+        id={`${valueAsString}-img`}
+      />
+    );
+  }
+
+  if (valueType === 'Video') {
+    return <VideoTile id={`${valueAsString}-video`} videoSrc={valueAsString} />;
+  }
+
+  if (valueType === 'PDF') {
+    return <FileTile id={`${valueAsString}-pdf`} src={valueAsString} />;
+  }
+
+  return valueAsString;
+};
 
 const ObservationMember: React.FC<ObservationMemberProps> = ({
   member,
   depth = 0,
   memberIndex = 0,
+  testIdPrefix = '',
 }) => {
   const { t } = useTranslation();
   const hasMembers = member.members && member.members.length > 0;
   const displayLabel = member.display;
+  const prefix = testIdPrefix ? `${testIdPrefix}-` : '';
 
   if (hasMembers) {
     return (
       <div
         className={styles.nestedGroup}
-        data-testid={`obs-nested-group-${displayLabel}-${memberIndex}`}
+        data-testid={`${prefix}obs-nested-group-${displayLabel}-${memberIndex}`}
       >
         <div
           className={styles.nestedGroupLabel}
-          data-testid={`obs-nested-group-label-${displayLabel}-${memberIndex}`}
+          data-testid={`${prefix}obs-nested-group-label-${displayLabel}-${memberIndex}`}
           // eslint-disable-next-line react/forbid-dom-props
           style={{ paddingLeft: `${depth * 16}px` }}
         >
@@ -53,7 +86,7 @@ const ObservationMember: React.FC<ObservationMemberProps> = ({
         </div>
         <div
           className={styles.nestedGroupMembers}
-          data-testid={`obs-nested-group-members-${displayLabel}-${memberIndex}`}
+          data-testid={`${prefix}obs-nested-group-members-${displayLabel}-${memberIndex}`}
         >
           {member.members?.map((nestedMember, nestedIndex) => (
             <ObservationMember
@@ -61,6 +94,7 @@ const ObservationMember: React.FC<ObservationMemberProps> = ({
               member={nestedMember}
               depth={depth + 1}
               memberIndex={nestedIndex}
+              testIdPrefix={testIdPrefix}
             />
           ))}
         </div>
@@ -70,34 +104,52 @@ const ObservationMember: React.FC<ObservationMemberProps> = ({
 
   const { rangeString, isAbnormal } = getObservationDisplayInfo(member);
   const formattedValue = formatObservationValue(member, t);
+  const valueToDisplay = formattedValue
+    ? renderValueWithMedia(formattedValue)
+    : null;
 
   return (
-    <div
-      className={styles.memberRow}
-      data-testid={`obs-member-row-${displayLabel}-${memberIndex}`}
-      // eslint-disable-next-line react/forbid-dom-props
-      style={{ paddingLeft: `${depth * 16}px` }}
-    >
-      <p
-        className={classNames(
-          styles.memberLabel,
-          isAbnormal ? styles.abnormalValue : '',
-        )}
-        data-testid={`obs-member-label-${displayLabel}-${memberIndex}`}
+    <>
+      <div
+        className={styles.memberRow}
+        data-testid={`${prefix}obs-member-row-${displayLabel}-${memberIndex}`}
+        // eslint-disable-next-line react/forbid-dom-props
+        style={{ paddingLeft: `${depth * 16}px` }}
       >
-        {displayLabel}
-        {rangeString}
-      </p>
-      <p
-        className={classNames(
-          styles.memberValue,
-          isAbnormal ? styles.abnormalValue : '',
-        )}
-        data-testid={`obs-member-value-${displayLabel}-${memberIndex}`}
-      >
-        {formattedValue}
-      </p>
-    </div>
+        <div
+          className={classNames(
+            styles.memberLabel,
+            isAbnormal ? styles.abnormalValue : '',
+          )}
+          data-testid={`${prefix}obs-member-label-${displayLabel}-${memberIndex}`}
+        >
+          <span>{displayLabel}</span>
+          {rangeString && <p className={styles.rangeInfo}>{rangeString}</p>}
+        </div>
+        <div
+          className={classNames(
+            styles.memberValue,
+            isAbnormal ? styles.abnormalValue : '',
+          )}
+          data-testid={`${prefix}obs-member-value-${displayLabel}-${memberIndex}`}
+        >
+          {valueToDisplay}
+        </div>
+      </div>
+      {member.comment && (
+        <div
+          className={styles.commentSection}
+          data-testid={`${prefix}obs-member-comment-${displayLabel}-${memberIndex}`}
+          // eslint-disable-next-line react/forbid-dom-props
+          style={{ paddingLeft: `${depth * 16}px` }}
+        >
+          <span className={styles.commentText}>
+            {member.comment}
+            {member.encounter?.provider && ` - by ${member.encounter.provider}`}
+          </span>
+        </div>
+      )}
+    </>
   );
 };
 
@@ -105,37 +157,42 @@ const renderObservation = (
   observation: ExtractedObservation,
   index: number,
   t: (key: string) => string,
+  testIdPrefix = '',
 ) => {
   const hasMembers = observation.members && observation.members.length > 0;
   const { rangeString, isAbnormal } = getObservationDisplayInfo(observation);
   const formattedValue = formatObservationValue(observation, t);
+  const valueToDisplay = formattedValue
+    ? renderValueWithMedia(formattedValue)
+    : null;
+  const prefix = testIdPrefix ? `${testIdPrefix}-` : '';
 
   return (
     <div
       key={`${observation.id}-${index}`}
       className={styles.observation}
-      data-testid={`observation-item-${observation.display}-${index}`}
+      data-testid={`${prefix}observation-item-${observation.display}-${index}`}
     >
       <div
         className={hasMembers ? styles.groupContainer : styles.rowContainer}
-        data-testid={`observation-container-${observation.display}-${index}`}
+        data-testid={`${prefix}observation-container-${observation.display}-${index}`}
       >
-        <p
+        <div
           className={classNames(
             hasMembers ? styles.groupLabel : styles.rowLabel,
             !hasMembers && isAbnormal ? styles.abnormalValue : '',
           )}
-          data-testid={`observation-label-${observation.display}-${index}`}
+          data-testid={`${prefix}observation-label-${observation.display}-${index}`}
         >
-          {observation.display}
+          <span>{observation.display}</span>
           {!hasMembers && rangeString && (
-            <span className={styles.rangeInfo}>{rangeString}</span>
+            <p className={styles.rangeInfo}>{rangeString}</p>
           )}
-        </p>
+        </div>
         {hasMembers ? (
           <div
             className={styles.groupMembers}
-            data-testid={`observation-group-members-${observation.display}-${index}`}
+            data-testid={`${prefix}observation-group-members-${observation.display}-${index}`}
           >
             {observation.members?.map((member, memberIndex) => (
               <ObservationMember
@@ -143,21 +200,34 @@ const renderObservation = (
                 member={member}
                 depth={0}
                 memberIndex={memberIndex}
+                testIdPrefix={testIdPrefix}
               />
             ))}
           </div>
         ) : (
-          <p
+          <div
             className={classNames(
               styles.rowValue,
               isAbnormal ? styles.abnormalValue : '',
             )}
-            data-testid={`observation-value-${observation.display}-${index}`}
+            data-testid={`${prefix}observation-value-${observation.display}-${index}`}
           >
-            {formattedValue}
-          </p>
+            {valueToDisplay}
+          </div>
         )}
       </div>
+      {observation.comment && (
+        <div
+          className={styles.commentSection}
+          data-testid={`${prefix}observation-comment-${observation.display}-${index}`}
+        >
+          <span className={styles.commentText}>
+            {observation.comment}
+            {observation.encounter?.provider &&
+              ` - by ${observation.encounter.provider}`}
+          </span>
+        </div>
+      )}
     </div>
   );
 };
@@ -169,6 +239,7 @@ export const ObservationsRenderer: React.FC<ObservationsRendererProps> = ({
   errorMessage,
   emptyStateMessage,
   className,
+  testIdPrefix = '',
 }) => {
   const { t } = useTranslation();
 
@@ -229,7 +300,7 @@ export const ObservationsRenderer: React.FC<ObservationsRendererProps> = ({
       className={classNames(styles.resultsContainer, className)}
     >
       {processedObservations.map((obs, index) =>
-        renderObservation(obs, index, t),
+        renderObservation(obs, index, t, testIdPrefix),
       )}
     </div>
   );

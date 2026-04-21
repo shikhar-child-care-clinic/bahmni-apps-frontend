@@ -84,7 +84,7 @@ export function extractObservationValue(
   if (valueCodeableConcept) {
     return {
       value:
-        valueCodeableConcept.text ?? valueCodeableConcept!.coding![0]!.display!,
+        valueCodeableConcept.text ?? valueCodeableConcept.coding![0].display!,
       type: 'codeable',
       isAbnormal,
     };
@@ -237,6 +237,7 @@ export function transformObservations(
       members: members.length > 0 ? members : undefined,
       sortId,
       conceptId: observation.code?.coding?.[0]?.code,
+      comment: observation.note?.[0]?.text,
     };
   };
 
