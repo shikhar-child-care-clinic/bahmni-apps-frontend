@@ -15,6 +15,9 @@ $table-cell-min-width: 6.875rem;
 
 :global(html:has([data-separator]) #main-display-area div[id^="accordion-item"]) {
   overflow-x: auto;
+}
+
+:global(html:has([data-separator]) #main-display-area div[id^="accordion-item"]:has(.cds--data-table td:nth-child(5))) {
   padding-block-end: $spacing-05;
 }
 
