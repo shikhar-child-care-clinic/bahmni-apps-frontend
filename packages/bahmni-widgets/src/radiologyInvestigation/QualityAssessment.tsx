@@ -5,15 +5,17 @@ import {
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import type { Observation } from 'fhir/r4';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { ObservationsRenderer } from '../observationsRenderer';
 
 export interface QualityAssessmentProps {
   imagingStudyId: string | null;
+  onDateLoaded?: (date: string | undefined) => void;
 }
 
 export const QualityAssessment: React.FC<QualityAssessmentProps> = ({
   imagingStudyId,
+  onDateLoaded,
 }) => {
   const { t } = useTranslation();
 
@@ -37,6 +39,14 @@ export const QualityAssessment: React.FC<QualityAssessmentProps> = ({
       (resource) => resource.resourceType === 'Observation',
     ) as Observation[];
   }, [imagingStudy]);
+
+  useEffect(() => {
+    if (imagingStudy && onDateLoaded) {
+      const firstObs = observations[0];
+      const date = firstObs?.effectiveDateTime ?? firstObs?.issued;
+      onDateLoaded(date);
+    }
+  }, [imagingStudy, observations, onDateLoaded]);
 
   const errorMessage = isError && error ? getFormattedError(error).message : '';
 

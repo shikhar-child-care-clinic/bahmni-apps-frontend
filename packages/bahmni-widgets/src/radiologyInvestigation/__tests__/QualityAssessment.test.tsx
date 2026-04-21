@@ -254,5 +254,71 @@ describe('QualityAssessment', () => {
       expect(fetchQualityAssessment).toHaveBeenCalledTimes(1);
       expect(fetchQualityAssessment).toHaveBeenCalledWith('study-1');
     });
+
+    it('should call onDateLoaded with observation date when data is loaded', async () => {
+      const mockOnDateLoaded = jest.fn();
+      const mockObservation: Observation = {
+        resourceType: 'Observation',
+        id: 'obs-1',
+        status: 'final',
+        code: { text: 'Quality Score' },
+        valueString: 'High',
+        effectiveDateTime: '2026-04-20T10:50:44+00:00',
+      };
+
+      const mockImagingStudy: ImagingStudy = {
+        resourceType: 'ImagingStudy',
+        id: 'study-1',
+        status: 'available',
+        subject: { reference: 'Patient/123' },
+        contained: [mockObservation],
+      };
+
+      (fetchQualityAssessment as jest.Mock).mockResolvedValue(mockImagingStudy);
+
+      renderWithQueryClient(
+        <QualityAssessment
+          imagingStudyId="study-1"
+          onDateLoaded={mockOnDateLoaded}
+        />,
+      );
+
+      await screen.findByTestId('observations-renderer-test-id');
+
+      expect(mockOnDateLoaded).toHaveBeenCalledWith('2026-04-20T10:50:44+00:00');
+    });
+
+    it('should call onDateLoaded with issued date if effectiveDateTime is not available', async () => {
+      const mockOnDateLoaded = jest.fn();
+      const mockObservation: Observation = {
+        resourceType: 'Observation',
+        id: 'obs-1',
+        status: 'final',
+        code: { text: 'Quality Score' },
+        valueString: 'High',
+        issued: '2026-04-20T10:50:48.000+00:00',
+      };
+
+      const mockImagingStudy: ImagingStudy = {
+        resourceType: 'ImagingStudy',
+        id: 'study-1',
+        status: 'available',
+        subject: { reference: 'Patient/123' },
+        contained: [mockObservation],
+      };
+
+      (fetchQualityAssessment as jest.Mock).mockResolvedValue(mockImagingStudy);
+
+      renderWithQueryClient(
+        <QualityAssessment
+          imagingStudyId="study-1"
+          onDateLoaded={mockOnDateLoaded}
+        />,
+      );
+
+      await screen.findByTestId('observations-renderer-test-id');
+
+      expect(mockOnDateLoaded).toHaveBeenCalledWith('2026-04-20T10:50:48.000+00:00');
+    });
   });
 });

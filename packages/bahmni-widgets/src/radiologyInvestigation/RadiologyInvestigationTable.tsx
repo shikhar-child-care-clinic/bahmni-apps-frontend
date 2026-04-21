@@ -51,7 +51,7 @@ export const radiologyInvestigationQueryKeys = (patientUUID: string) =>
 
 enum ModalType {
   REPORT = 'report',
-  QC = 'qc',
+  QA = 'qa',
 }
 
 const fetchRadiologyInvestigations = async (
@@ -90,6 +90,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
   const [selectedInvestigation, setSelectedInvestigation] =
     useState<RadiologyInvestigationViewModel | null>(null);
   const [modalType, setModalType] = useState<ModalType | null>(null);
+  const [qaRecordedDate, setQaRecordedDate] = useState<string | undefined>();
 
   const emptyEncounterFilter = shouldEnableEncounterFilter(
     episodeOfCareUuids,
@@ -305,7 +306,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
               testId={`${investigation.id}-view-qc-link-test-id`}
               onClick={() => {
                 setSelectedInvestigation(investigation);
-                setModalType(ModalType.QC);
+                setModalType(ModalType.QA);
               }}
             >
               {t('RADIOLOGY_VIEW_QC')}
@@ -489,15 +490,20 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
         </Modal>
       )}
 
-      {selectedInvestigation && modalType === ModalType.QC && (
+      {selectedInvestigation && modalType === ModalType.QA && (
         <Modal
           open={!!selectedInvestigation}
           onRequestClose={() => {
             setSelectedInvestigation(null);
             setModalType(null);
+            setQaRecordedDate(undefined);
           }}
           passiveModal
-          modalLabel={`Recorded On : ${reportedOn}  | Recorded By: ${selectedInvestigation.reportedBy}`}
+          modalLabel={
+            qaRecordedDate
+              ? `Recorded On : ${formatDateTime(qaRecordedDate, t, true).formattedResult} | Recorded By: ${selectedInvestigation.reportedBy}`
+              : `Recorded By: ${selectedInvestigation.reportedBy}`
+          }
           modalHeading={t('RADIOLOGY_QUALITY_ASSESSMENT')}
           testId="quality-assessment-modal"
           size="lg"
@@ -507,6 +513,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
           <Modal.Body>
             <QualityAssessment
               imagingStudyId={selectedInvestigation.imagingStudies![0].id}
+              onDateLoaded={setQaRecordedDate}
             />
           </Modal.Body>
         </Modal>
