@@ -1,6 +1,7 @@
 import { Tile, Icon, ICON_SIZE } from '@bahmni/design-system';
 import { useTranslation } from '@bahmni/services';
 import { useHasPrivilege } from '@bahmni/widgets';
+import { ArrowRight } from '@carbon/icons-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './styles/AppTile.module.scss';
@@ -29,7 +30,7 @@ export const AppTile: React.FC<AppTileProps> = ({
   }
 
   const handleClick = () => {
-    if (url.startsWith('http') || url.startsWith('/')) {
+    if (url.includes('#')) {
       window.location.href = url;
     } else {
       navigate(url);
@@ -55,11 +56,12 @@ export const AppTile: React.FC<AppTileProps> = ({
       onKeyDown={handleKeyDown}
       data-testid={`app-tile-${id}`}
     >
-      <div className={styles.content}>
+      <p className={styles.label} aria-hidden="true">
+        {translatedLabel}
+      </p>
+      <div className={styles.bottom}>
         <Icon name={icon} id={id} size={ICON_SIZE.LG} aria-hidden="true" />
-        <p className={styles.label} aria-hidden="true">
-          {translatedLabel}
-        </p>
+        <ArrowRight size={20} className={styles.arrow} />
       </div>
     </Tile>
   );
