@@ -184,11 +184,11 @@ export function groupMultiSelectObservations(
         (obs: ExtractedObservation) => obs.conceptId === observation.conceptId,
       );
 
-      if (matchedObs?.observationValue) {
+      if (matchedObs?.observationValue && observation.observationValue) {
         matchedObs.observationValue.value =
           matchedObs.observationValue.value +
           ', ' +
-          observation.observationValue?.value;
+          observation.observationValue.value;
       } else {
         valueGroupedObs.push(observation);
       }
@@ -222,6 +222,9 @@ export function transformObservations(
       .filter((obs): obs is Observation => !!obs)
       .map((obs) => extractSingleObservation(obs));
 
+    const groupedMembers =
+      members.length > 0 ? groupMultiSelectObservations(members) : [];
+
     const sortId =
       observation.extension
         ?.find(({ url }) => url.includes('form-namespace-path'))
@@ -234,7 +237,7 @@ export function transformObservations(
       observationValue: extractObservationValue(observation),
       effectiveDateTime: observation.effectiveDateTime,
       issued: observation.issued,
-      members: members.length > 0 ? members : undefined,
+      members: groupedMembers.length > 0 ? groupedMembers : undefined,
       sortId,
       conceptId: observation.code?.coding?.[0]?.code,
       comment: observation.note?.[0]?.text,

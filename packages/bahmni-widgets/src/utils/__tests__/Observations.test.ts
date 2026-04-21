@@ -707,5 +707,57 @@ describe('Observations Utils', () => {
 
       expect(result[0].display).toBe('Coded Display');
     });
+
+    it('should group multi-select members with same conceptId', () => {
+      const observations: Observation[] = [
+        {
+          resourceType: 'Observation',
+          id: 'parent',
+          status: 'final',
+          code: {
+            text: 'Image quality reason',
+          },
+          valueString: 'Combined values',
+          hasMember: [
+            { reference: 'Observation/member-1' },
+            { reference: 'Observation/member-2' },
+          ],
+        },
+        {
+          resourceType: 'Observation',
+          id: 'member-1',
+          status: 'final',
+          code: {
+            text: 'Image quality issue',
+            coding: [{ code: 'quality-issue-concept' }],
+          },
+          valueCodeableConcept: {
+            text: 'Blurring',
+          },
+        },
+        {
+          resourceType: 'Observation',
+          id: 'member-2',
+          status: 'final',
+          code: {
+            text: 'Image quality issue',
+            coding: [{ code: 'quality-issue-concept' }],
+          },
+          valueCodeableConcept: {
+            text: 'Rotation',
+          },
+        },
+      ];
+
+      const result = transformObservations(observations);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('parent');
+      expect(result[0].members).toHaveLength(1);
+      expect(result[0].members?.[0].display).toBe('Image quality issue');
+      expect(result[0].members?.[0].observationValue?.value).toBe(
+        'Blurring, Rotation',
+      );
+    });
   });
 });
