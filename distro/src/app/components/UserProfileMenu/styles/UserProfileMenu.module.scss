@@ -22,6 +22,10 @@
   background: transparent;
 }
 
+:global(.cds--overflow-menu-options--open) {
+  margin-top: $spacing-03;
+}
+
 .loading {
   @include type-style("label-01");
   padding: $spacing-03 $spacing-04;

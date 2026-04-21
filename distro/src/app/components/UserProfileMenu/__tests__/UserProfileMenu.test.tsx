@@ -13,7 +13,7 @@ jest.mock('@bahmni/widgets', () => ({
 jest.mock('@bahmni/services', () => ({
   useTranslation: jest.fn(),
   logout: jest.fn(),
-  getFormattedError: jest.fn(),
+  getFormattedError: jest.fn().mockReturnValue({ title: 'Error' }),
 }));
 
 jest.mock('@carbon/react', () => ({

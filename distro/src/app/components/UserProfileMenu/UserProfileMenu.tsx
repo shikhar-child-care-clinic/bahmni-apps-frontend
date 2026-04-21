@@ -1,20 +1,5 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-import { MenuButton, MenuItem, MenuItemDivider } from '@bahmni/design-system';
-import { useTranslation, logout } from '@bahmni/services';
-=======
-import {
-  useTranslation,
-  logout,
-  notificationService,
-  getFormattedError,
-} from '@bahmni/services';
->>>>>>> 55c72293 (BAH-4519|Replace MenuButton with OverflowMenu for icon-based trigger)
-import { useActivePractitioner } from '@bahmni/widgets';
-=======
 import { useTranslation, logout, getFormattedError } from '@bahmni/services';
 import { useActivePractitioner, useNotification } from '@bahmni/widgets';
->>>>>>> 5e1414c6 (BAH-4519|Fix.Use useNotification hook for logout error toast msg)
 import { UserAvatar } from '@carbon/icons-react';
 import { OverflowMenu, OverflowMenuItem } from '@carbon/react';
 import React, { useState } from 'react';
@@ -41,15 +26,12 @@ export const UserProfileMenu: React.FC = () => {
       window.location.href = '/bahmni/home/index.html#/login';
     } catch (error) {
       setIsLoggingOut(false);
-<<<<<<< HEAD
-=======
       const { title } = getFormattedError(error);
       addNotification({
         title,
         message: t('HOME_ERROR_LOGOUT_FAILED'),
         type: 'error',
       });
->>>>>>> 5e1414c6 (BAH-4519|Fix.Use useNotification hook for logout error toast msg)
       // eslint-disable-next-line no-console
       console.error('Logout failed:', error);
     }

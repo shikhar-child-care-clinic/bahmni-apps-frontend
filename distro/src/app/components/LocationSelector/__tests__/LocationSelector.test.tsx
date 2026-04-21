@@ -129,7 +129,7 @@ describe('LocationSelector', () => {
     });
   });
 
-  it('displays error message when location fetch fails', () => {
+  it('displays error message when location fetch fails', async () => {
     mockGetUserLoginLocation.mockImplementation(() => {
       throw new Error('Failed to fetch location');
     });
@@ -140,7 +140,9 @@ describe('LocationSelector', () => {
       </LocationProvider>,
     );
 
-    expect(screen.getByTestId('location-error')).toBeInTheDocument();
-    expect(screen.getByText('Failed to fetch location')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('location-error')).toBeInTheDocument();
+      expect(screen.getByText('Failed to fetch location')).toBeInTheDocument();
+    });
   });
 });

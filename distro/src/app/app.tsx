@@ -36,15 +36,6 @@ export function App() {
   return (
     <LocationProvider>
       <AppContextProvider>
-        <Suspense fallback={<Loading />}>
-          <Routes>
-            <Route index element={<IndexPage />} />
-            <Route path="/clinical/*" element={<ClinicalApp />} />
-            <Route path="/registration/*" element={<RegistrationApp />} />
-            <Route path="/appointments/*" element={<AppointmentsApp />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Suspense>
         <ActivePractitionerProvider>
           <UserPrivilegeProvider>
             <NotificationProvider>
