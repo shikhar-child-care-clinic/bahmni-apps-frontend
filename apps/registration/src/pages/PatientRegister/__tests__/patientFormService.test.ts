@@ -270,7 +270,7 @@ describe('patientFormService', () => {
       expect(mockAddNotification).toHaveBeenCalledTimes(1);
     });
 
-    it('should return false when ref current is null', () => {
+    it('should return false when profileRef.current is null', () => {
       const mockRefs: PatientFormRefs = {
         profileRef: {
           current: null,
@@ -307,6 +307,124 @@ describe('patientFormService', () => {
         type: 'error',
         timeout: 5000,
       });
+    });
+
+    it('should return true when addressRef.current is null (section not rendered)', () => {
+      const mockRefs: PatientFormRefs = {
+        profileRef: {
+          current: {
+            validate: jest.fn(() => true),
+            getData: jest.fn(),
+            clearData: jest.fn(),
+            setCustomError: jest.fn(),
+          },
+        },
+        addressRef: { current: null },
+        contactRef: {
+          current: {
+            validate: jest.fn(() => true),
+            getData: jest.fn(),
+          },
+        },
+        additionalRef: {
+          current: {
+            validate: jest.fn(() => true),
+            getData: jest.fn(),
+          },
+        },
+        additionalIdentifiersRef: { current: null },
+      };
+
+      const result = validateAllSections(mockRefs, mockAddNotification, mockT);
+
+      expect(result).toBe(true);
+      expect(mockAddNotification).not.toHaveBeenCalled();
+    });
+
+    it('should return true when contactRef.current is null (section not rendered)', () => {
+      const mockRefs: PatientFormRefs = {
+        profileRef: {
+          current: {
+            validate: jest.fn(() => true),
+            getData: jest.fn(),
+            clearData: jest.fn(),
+            setCustomError: jest.fn(),
+          },
+        },
+        addressRef: {
+          current: {
+            validate: jest.fn(() => true),
+            getData: jest.fn(),
+          },
+        },
+        contactRef: { current: null },
+        additionalRef: {
+          current: {
+            validate: jest.fn(() => true),
+            getData: jest.fn(),
+          },
+        },
+        additionalIdentifiersRef: { current: null },
+      };
+
+      const result = validateAllSections(mockRefs, mockAddNotification, mockT);
+
+      expect(result).toBe(true);
+      expect(mockAddNotification).not.toHaveBeenCalled();
+    });
+
+    it('should return true when additionalRef.current is null (section not rendered)', () => {
+      const mockRefs: PatientFormRefs = {
+        profileRef: {
+          current: {
+            validate: jest.fn(() => true),
+            getData: jest.fn(),
+            clearData: jest.fn(),
+            setCustomError: jest.fn(),
+          },
+        },
+        addressRef: {
+          current: {
+            validate: jest.fn(() => true),
+            getData: jest.fn(),
+          },
+        },
+        contactRef: {
+          current: {
+            validate: jest.fn(() => true),
+            getData: jest.fn(),
+          },
+        },
+        additionalRef: { current: null },
+        additionalIdentifiersRef: { current: null },
+      };
+
+      const result = validateAllSections(mockRefs, mockAddNotification, mockT);
+
+      expect(result).toBe(true);
+      expect(mockAddNotification).not.toHaveBeenCalled();
+    });
+
+    it('should return true when all optional section refs are null (only profile rendered)', () => {
+      const mockRefs: PatientFormRefs = {
+        profileRef: {
+          current: {
+            validate: jest.fn(() => true),
+            getData: jest.fn(),
+            clearData: jest.fn(),
+            setCustomError: jest.fn(),
+          },
+        },
+        addressRef: { current: null },
+        contactRef: { current: null },
+        additionalRef: { current: null },
+        additionalIdentifiersRef: { current: null },
+      };
+
+      const result = validateAllSections(mockRefs, mockAddNotification, mockT);
+
+      expect(result).toBe(true);
+      expect(mockAddNotification).not.toHaveBeenCalled();
     });
 
     it('should validate all sections even if first one fails', () => {
@@ -576,151 +694,7 @@ describe('patientFormService', () => {
       });
     });
 
-    it('should return null when address data is missing', () => {
-      const mockRefs: PatientFormRefs = {
-        profileRef: {
-          current: {
-            validate: jest.fn(),
-            getData: jest.fn(() => ({
-              firstName: 'John',
-              lastName: 'Doe',
-              gender: 'male',
-            })) as any,
-            clearData: jest.fn(),
-            setCustomError: jest.fn(),
-          },
-        },
-        addressRef: {
-          current: {
-            validate: jest.fn(),
-            getData: jest.fn(() => null) as any,
-          },
-        },
-        contactRef: {
-          current: {
-            validate: jest.fn(),
-            getData: jest.fn(() => ({ phoneNumber: '1234567890' })) as any,
-          },
-        },
-        additionalRef: {
-          current: {
-            validate: jest.fn(),
-            getData: jest.fn(() => ({ email: 'test@example.com' })) as any,
-          },
-        },
-        additionalIdentifiersRef: {
-          current: null,
-        },
-      };
-
-      const result = collectFormData(mockRefs, mockAddNotification, mockT);
-
-      expect(result).toBeNull();
-      expect(mockAddNotification).toHaveBeenCalledWith({
-        title: 'NOTIFICATION_ERROR_TITLE',
-        message: 'NOTIFICATION_UNABLE_TO_GET_ADDRESS_DATA',
-        type: 'error',
-        timeout: 5000,
-      });
-    });
-
-    it('should return null when contact data is missing', () => {
-      const mockRefs: PatientFormRefs = {
-        profileRef: {
-          current: {
-            validate: jest.fn(),
-            getData: jest.fn(() => ({
-              firstName: 'John',
-              lastName: 'Doe',
-              gender: 'male',
-            })) as any,
-            clearData: jest.fn(),
-            setCustomError: jest.fn(),
-          },
-        },
-        addressRef: {
-          current: {
-            validate: jest.fn(),
-            getData: jest.fn(() => ({ address1: '123 Main St' })) as any,
-          },
-        },
-        contactRef: {
-          current: {
-            validate: jest.fn(),
-            getData: jest.fn(() => null) as any,
-          },
-        },
-        additionalRef: {
-          current: {
-            validate: jest.fn(),
-            getData: jest.fn(() => ({ email: 'test@example.com' })) as any,
-          },
-        },
-        additionalIdentifiersRef: {
-          current: null,
-        },
-      };
-
-      const result = collectFormData(mockRefs, mockAddNotification, mockT);
-
-      expect(result).toBeNull();
-      expect(mockAddNotification).toHaveBeenCalledWith({
-        title: 'NOTIFICATION_ERROR_TITLE',
-        message: 'NOTIFICATION_UNABLE_TO_GET_CONTACT_DATA',
-        type: 'error',
-        timeout: 5000,
-      });
-    });
-
-    it('should return null when additional data is missing', () => {
-      const mockRefs: PatientFormRefs = {
-        profileRef: {
-          current: {
-            validate: jest.fn(),
-            getData: jest.fn(() => ({
-              firstName: 'John',
-              lastName: 'Doe',
-              gender: 'male',
-            })) as any,
-            clearData: jest.fn(),
-            setCustomError: jest.fn(),
-          },
-        },
-        addressRef: {
-          current: {
-            validate: jest.fn(),
-            getData: jest.fn(() => ({ address1: '123 Main St' })) as any,
-          },
-        },
-        contactRef: {
-          current: {
-            validate: jest.fn(),
-            getData: jest.fn(() => ({ phoneNumber: '1234567890' })) as any,
-          },
-        },
-        additionalRef: {
-          current: {
-            validate: jest.fn(),
-            getData: jest.fn(() => null) as any,
-          },
-        },
-        additionalIdentifiersRef: {
-          current: null,
-        },
-      };
-
-      const result = collectFormData(mockRefs, mockAddNotification, mockT);
-
-      expect(result).toBeNull();
-      expect(mockAddNotification).toHaveBeenCalledWith({
-        title: 'NOTIFICATION_ERROR_TITLE',
-        message: 'NOTIFICATION_UNABLE_TO_GET_ADDITIONAL_DATA',
-        type: 'error',
-        timeout: 5000,
-      });
-    });
-
-    it('should return null when ref current is null', () => {
+    it('should return null when profileRef.current is null', () => {
       const mockRefs: PatientFormRefs = {
         profileRef: {
           current: null,
@@ -759,16 +733,111 @@ describe('patientFormService', () => {
       });
     });
 
-    it('should call getData on all refs before the failing one', () => {
+    it('should use empty object for address when addressRef.current is null (section not rendered)', () => {
+      const mockProfileData = {
+        firstName: 'John',
+        dobEstimated: false,
+        patientIdentifier: {
+          identifierPrefix: 'BDH',
+          identifierType: 'Primary',
+          preferred: true,
+          voided: false,
+        },
+      };
+
       const mockRefs: PatientFormRefs = {
         profileRef: {
           current: {
             validate: jest.fn(),
-            getData: jest.fn(() => ({
-              firstName: 'John',
-              lastName: 'Doe',
-              gender: 'male',
-            })) as any,
+            getData: jest.fn(() => mockProfileData) as any,
+            clearData: jest.fn(),
+            setCustomError: jest.fn(),
+          },
+        },
+        addressRef: { current: null },
+        contactRef: {
+          current: {
+            validate: jest.fn(),
+            getData: jest.fn(() => ({ phoneNumber: '1234567890' })) as any,
+          },
+        },
+        additionalRef: {
+          current: {
+            validate: jest.fn(),
+            getData: jest.fn(() => ({})) as any,
+          },
+        },
+        additionalIdentifiersRef: { current: null },
+      };
+
+      const result = collectFormData(mockRefs, mockAddNotification, mockT);
+
+      expect(result).not.toBeNull();
+      expect(result?.address).toEqual({});
+      expect(mockAddNotification).not.toHaveBeenCalled();
+    });
+
+    it('should use empty object for contact when contactRef.current is null (section not rendered)', () => {
+      const mockProfileData = {
+        firstName: 'John',
+        dobEstimated: false,
+        patientIdentifier: {
+          identifierPrefix: 'BDH',
+          identifierType: 'Primary',
+          preferred: true,
+          voided: false,
+        },
+      };
+
+      const mockRefs: PatientFormRefs = {
+        profileRef: {
+          current: {
+            validate: jest.fn(),
+            getData: jest.fn(() => mockProfileData) as any,
+            clearData: jest.fn(),
+            setCustomError: jest.fn(),
+          },
+        },
+        addressRef: {
+          current: {
+            validate: jest.fn(),
+            getData: jest.fn(() => ({ address1: '123 Main St' })) as any,
+          },
+        },
+        contactRef: { current: null },
+        additionalRef: {
+          current: {
+            validate: jest.fn(),
+            getData: jest.fn(() => ({})) as any,
+          },
+        },
+        additionalIdentifiersRef: { current: null },
+      };
+
+      const result = collectFormData(mockRefs, mockAddNotification, mockT);
+
+      expect(result).not.toBeNull();
+      expect(result?.contact).toEqual({});
+      expect(mockAddNotification).not.toHaveBeenCalled();
+    });
+
+    it('should use empty object for additional when additionalRef.current is null (section not rendered)', () => {
+      const mockProfileData = {
+        firstName: 'John',
+        dobEstimated: false,
+        patientIdentifier: {
+          identifierPrefix: 'BDH',
+          identifierType: 'Primary',
+          preferred: true,
+          voided: false,
+        },
+      };
+
+      const mockRefs: PatientFormRefs = {
+        profileRef: {
+          current: {
+            validate: jest.fn(),
+            getData: jest.fn(() => mockProfileData) as any,
             clearData: jest.fn(),
             setCustomError: jest.fn(),
           },
@@ -782,30 +851,61 @@ describe('patientFormService', () => {
         contactRef: {
           current: {
             validate: jest.fn(),
-            getData: jest.fn(() => null) as any,
+            getData: jest.fn(() => ({ phoneNumber: '1234567890' })) as any,
           },
         },
-        additionalRef: {
-          current: {
-            validate: jest.fn(),
-            getData: jest.fn(() => ({ email: 'test@example.com' })) as any,
-          },
-        },
-        additionalIdentifiersRef: {
-          current: null,
+        additionalRef: { current: null },
+        additionalIdentifiersRef: { current: null },
+      };
+
+      const result = collectFormData(mockRefs, mockAddNotification, mockT);
+
+      expect(result).not.toBeNull();
+      expect(result?.additional).toEqual({});
+      expect(mockAddNotification).not.toHaveBeenCalled();
+    });
+
+    it('should succeed with empty data when all optional section refs are null (only profile rendered)', () => {
+      const mockProfileData = {
+        firstName: 'John',
+        dobEstimated: false,
+        patientIdentifier: {
+          identifierPrefix: 'BDH',
+          identifierType: 'Primary',
+          preferred: true,
+          voided: false,
         },
       };
 
-      collectFormData(mockRefs, mockAddNotification, mockT);
+      const mockRefs: PatientFormRefs = {
+        profileRef: {
+          current: {
+            validate: jest.fn(),
+            getData: jest.fn(() => mockProfileData) as any,
+            clearData: jest.fn(),
+            setCustomError: jest.fn(),
+          },
+        },
+        addressRef: { current: null },
+        contactRef: { current: null },
+        additionalRef: { current: null },
+        additionalIdentifiersRef: { current: null },
+      };
 
-      expect(mockRefs.profileRef.current?.getData).toHaveBeenCalled();
-      expect(mockRefs.addressRef.current?.getData).toHaveBeenCalled();
-      expect(mockRefs.contactRef.current?.getData).toHaveBeenCalled();
-      // Should not call additionalRef.getData because contactRef returned null
-      expect(mockRefs.additionalRef.current?.getData).not.toHaveBeenCalled();
+      const result = collectFormData(mockRefs, mockAddNotification, mockT);
+
+      expect(result).toEqual({
+        profile: mockProfileData,
+        address: {},
+        contact: {},
+        additional: {},
+        relationships: [],
+        additionalIdentifiers: {},
+      });
+      expect(mockAddNotification).not.toHaveBeenCalled();
     });
 
-    it('should handle undefined getData return values', () => {
+    it('should handle undefined getData return value for profile', () => {
       const mockRefs: PatientFormRefs = {
         profileRef: {
           current: {
