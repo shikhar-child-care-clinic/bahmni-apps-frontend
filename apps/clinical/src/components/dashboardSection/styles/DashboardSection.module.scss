@@ -38,8 +38,7 @@ $table-cell-min-width: 6.875rem;
 }
 
 .divider {
-  height: $spacing-07;
-  background-color: $layer-01;
+  display: none;
 }
 
 .widgetLoading {

@@ -51,6 +51,8 @@ export const SortableDataTable = <T extends { id: string }>({
   page,
 }: SortableDataTableProps<T>) => {
   const [currentPage, setCurrentPage] = useState(1);
+  // 0 is safe when pageSize is undefined — internalPageSize is never used
+  // in slicing or rendering when pagination is disabled (guarded by pageSize !== undefined)
   const [internalPageSize, setInternalPageSize] = useState<number>(
     pageSize ?? 0,
   );
@@ -59,12 +61,15 @@ export const SortableDataTable = <T extends { id: string }>({
     if (pageSize !== undefined) setInternalPageSize(pageSize);
   }, [pageSize]);
 
+  // Reset to page 1 when rows change to prevent showing a stale empty page
+  // In server-side mode (totalItems defined), page is controlled externally
   useEffect(() => {
     if (totalItems === undefined) {
       setCurrentPage(1);
     }
   }, [rows?.length, totalItems]);
 
+  // useMemo must be called before early returns (Rules of Hooks)
   const effectivePageSizes = useMemo(
     () =>
       pageSize !== undefined && !pageSizes.includes(pageSize)
@@ -112,6 +117,8 @@ export const SortableDataTable = <T extends { id: string }>({
 
   const rowMap = new Map(rows.map((row) => [row.id, row]));
 
+  // In server-side mode (totalItems defined), use server total for pagination visibility
+  // In client-side mode, use rows.length
   const showPagination =
     pageSize !== undefined &&
     (totalItems !== undefined ? totalItems > pageSize : rows.length > pageSize);
@@ -130,6 +137,7 @@ export const SortableDataTable = <T extends { id: string }>({
           getTableProps,
         }) => {
           const startIndex = (currentPage - 1) * internalPageSize;
+          // In server-side mode, rows are already the correct page — no slicing needed
           const paginatedRows =
             pageSize !== undefined && totalItems === undefined
               ? tableRows.slice(startIndex, startIndex + internalPageSize)
