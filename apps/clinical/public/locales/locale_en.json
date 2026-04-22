@@ -366,5 +366,11 @@
   "NO_MATCHING_VACCINATIONS_FOUND": "No matching Vaccinations found",
   "ERROR_FETCHING_VACCINATION_CONFIG": "Error fetching Vaccination configuration",
   "YEARS_one": " year",
-  "YEARS_other": " years"
+  "YEARS_other": " years",
+  "SEARCH_PATIENT_ID_PLACEHOLDER": "Search by Patient ID",
+  "NO_MATCHING_RECORDS": "No matching records",
+  "SEARCHING": "Searching...",
+  "GLOBAL_ACTION_SEARCH": "Search",
+  "GLOBAL_ACTION_NOTIFICATIONS": "Notifications",
+  "GLOBAL_ACTION_USER": "User"
 }
