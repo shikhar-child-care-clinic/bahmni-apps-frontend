@@ -320,6 +320,7 @@ const FormsTable: React.FC<WidgetProps> = ({
             errorMessage={modalErrorMessage}
             emptyStateMessage={t('NO_FORM_DATA_AVAILABLE')}
             testIdPrefix={selectedRecord.formName}
+            hideThumbnail={hideThumbnail}
           />
         </Modal>
       )}

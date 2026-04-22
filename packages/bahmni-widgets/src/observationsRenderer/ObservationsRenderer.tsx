@@ -26,6 +26,7 @@ export interface ObservationsRendererProps {
   emptyStateMessage?: string;
   className?: string;
   testIdPrefix?: string;
+  hideThumbnail?: boolean;
 }
 
 interface ObservationMemberProps {
@@ -33,9 +34,13 @@ interface ObservationMemberProps {
   depth?: number;
   memberIndex?: number;
   testIdPrefix?: string;
+  hideThumbnail?: boolean;
 }
 
-const renderValueWithMedia = (valueAsString: string): React.ReactNode => {
+const renderValueWithMedia = (
+  valueAsString: string,
+  hideThumbnail = false,
+): React.ReactNode => {
   const valueType = getValueType(valueAsString);
 
   if (valueType === 'Image') {
@@ -44,12 +49,19 @@ const renderValueWithMedia = (valueAsString: string): React.ReactNode => {
         imageSrc={valueAsString}
         alt={valueAsString}
         id={`${valueAsString}-img`}
+        hideThumbnail={hideThumbnail}
       />
     );
   }
 
   if (valueType === 'Video') {
-    return <VideoTile id={`${valueAsString}-video`} videoSrc={valueAsString} />;
+    return (
+      <VideoTile
+        id={`${valueAsString}-video`}
+        videoSrc={valueAsString}
+        hideThumbnail={hideThumbnail}
+      />
+    );
   }
 
   if (valueType === 'PDF') {
@@ -64,6 +76,7 @@ const ObservationMember: React.FC<ObservationMemberProps> = ({
   depth = 0,
   memberIndex = 0,
   testIdPrefix = '',
+  hideThumbnail = false,
 }) => {
   const { t } = useTranslation();
   const hasMembers = member.members && member.members.length > 0;
@@ -95,6 +108,7 @@ const ObservationMember: React.FC<ObservationMemberProps> = ({
               depth={depth + 1}
               memberIndex={nestedIndex}
               testIdPrefix={testIdPrefix}
+              hideThumbnail={hideThumbnail}
             />
           ))}
         </div>
@@ -105,7 +119,7 @@ const ObservationMember: React.FC<ObservationMemberProps> = ({
   const { rangeString, isAbnormal } = getObservationDisplayInfo(member);
   const formattedValue = formatObservationValue(member, t);
   const valueToDisplay = formattedValue
-    ? renderValueWithMedia(formattedValue)
+    ? renderValueWithMedia(formattedValue, hideThumbnail)
     : null;
 
   return (
@@ -158,12 +172,13 @@ const renderObservation = (
   index: number,
   t: (key: string) => string,
   testIdPrefix = '',
+  hideThumbnail = false,
 ) => {
   const hasMembers = observation.members && observation.members.length > 0;
   const { rangeString, isAbnormal } = getObservationDisplayInfo(observation);
   const formattedValue = formatObservationValue(observation, t);
   const valueToDisplay = formattedValue
-    ? renderValueWithMedia(formattedValue)
+    ? renderValueWithMedia(formattedValue, hideThumbnail)
     : null;
   const prefix = testIdPrefix ? `${testIdPrefix}-` : '';
 
@@ -201,6 +216,7 @@ const renderObservation = (
                 depth={0}
                 memberIndex={memberIndex}
                 testIdPrefix={testIdPrefix}
+                hideThumbnail={hideThumbnail}
               />
             ))}
           </div>
@@ -240,6 +256,7 @@ export const ObservationsRenderer: React.FC<ObservationsRendererProps> = ({
   emptyStateMessage,
   className,
   testIdPrefix = '',
+  hideThumbnail = false,
 }) => {
   const { t } = useTranslation();
 
@@ -301,7 +318,7 @@ export const ObservationsRenderer: React.FC<ObservationsRendererProps> = ({
       className={classNames(styles.resultsContainer, className)}
     >
       {processedObservations.map((obs, index) =>
-        renderObservation(obs, index, t, testIdPrefix),
+        renderObservation(obs, index, t, testIdPrefix, hideThumbnail),
       )}
     </div>
   );
