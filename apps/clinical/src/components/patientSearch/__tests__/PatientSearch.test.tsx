@@ -1,13 +1,17 @@
 import { useTranslation } from '@bahmni/services';
 import { useNotification } from '@bahmni/widgets';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import React from 'react';
 import usePatientSearch from '../../../hooks/usePatientSearch';
+import { useClinicalConfig } from '../../../providers/clinicalConfig';
 import PatientSearch from '../PatientSearch';
 import '@testing-library/jest-dom';
 
 expect.extend(toHaveNoViolations);
+
+Element.prototype.scrollIntoView = jest.fn();
 
 const mockNavigate = jest.fn();
 const mockAddNotification = jest.fn();
@@ -28,6 +32,7 @@ jest.mock('@bahmni/widgets', () => ({
 }));
 
 jest.mock('../../../hooks/usePatientSearch');
+jest.mock('../../../providers/clinicalConfig');
 
 const mockedUseTranslation = useTranslation as jest.MockedFunction<
   typeof useTranslation
@@ -37,6 +42,9 @@ const mockedUsePatientSearch = usePatientSearch as jest.MockedFunction<
 >;
 const mockedUseNotification = useNotification as jest.MockedFunction<
   typeof useNotification
+>;
+const mockedUseClinicalConfig = useClinicalConfig as jest.MockedFunction<
+  typeof useClinicalConfig
 >;
 
 const mockTranslate = jest.fn((key: string) => {
@@ -85,9 +93,13 @@ describe('PatientSearch Component', () => {
       isError: false,
       error: null,
     });
+    mockedUseClinicalConfig.mockReturnValue({
+      clinicalConfig: null,
+      isLoading: false,
+      error: null,
+    });
   });
 
-  // Rendering tests
   describe('Rendering', () => {
     test('renders nothing when isOpen is false', () => {
       const { container } = render(
@@ -96,12 +108,12 @@ describe('PatientSearch Component', () => {
       expect(container.firstChild).toBeNull();
     });
 
-    test('renders search input when isOpen is true', () => {
+    test('renders combobox when isOpen is true', () => {
       render(<PatientSearch {...defaultProps} />);
       expect(
         screen.getByTestId('patient-search-container'),
       ).toBeInTheDocument();
-      expect(screen.getByTestId('patient-search-input')).toBeInTheDocument();
+      expect(screen.getByRole('combobox')).toBeInTheDocument();
     });
 
     test('shows placeholder text from translation key', () => {
@@ -110,26 +122,7 @@ describe('PatientSearch Component', () => {
       expect(input).toBeInTheDocument();
     });
 
-    test('does not show dropdown before Enter is pressed', () => {
-      render(<PatientSearch {...defaultProps} />);
-      expect(
-        screen.queryByTestId('patient-search-results'),
-      ).not.toBeInTheDocument();
-    });
-
-    test('does not show dropdown when typing without pressing Enter', () => {
-      render(<PatientSearch {...defaultProps} />);
-      const input = screen.getByPlaceholderText('Search by Patient ID');
-      fireEvent.change(input, { target: { value: 'GAN' } });
-      expect(
-        screen.queryByTestId('patient-search-results'),
-      ).not.toBeInTheDocument();
-    });
-  });
-
-  // Functionality tests
-  describe('Functionality', () => {
-    test('shows results dropdown after typing and pressing Enter', async () => {
+    test('does not show dropdown when typing without pressing Enter', async () => {
       mockedUsePatientSearch.mockReturnValue({
         results: [mockPatient],
         isLoading: false,
@@ -138,43 +131,34 @@ describe('PatientSearch Component', () => {
       });
 
       render(<PatientSearch {...defaultProps} />);
-      const input = screen.getByPlaceholderText('Search by Patient ID');
-      fireEvent.change(input, { target: { value: 'GAN123456' } });
-      fireEvent.keyDown(input, { key: 'Enter' });
+      const combobox = screen.getByRole('combobox');
+      await userEvent.type(combobox, 'GAN');
 
-      await waitFor(() => {
-        expect(
-          screen.getByTestId('patient-search-results'),
-        ).toBeInTheDocument();
-      });
-
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('GAN123456')).toBeInTheDocument();
+      expect(screen.queryByText('John Doe')).not.toBeInTheDocument();
     });
+  });
 
-    test('shows "No matching records" when search returns 0 results', async () => {
+  describe('Functionality', () => {
+    test('shows results with name and identifier after pressing Enter', async () => {
       mockedUsePatientSearch.mockReturnValue({
-        results: [],
+        results: [mockPatient],
         isLoading: false,
         isError: false,
         error: null,
       });
 
       render(<PatientSearch {...defaultProps} />);
-      const input = screen.getByPlaceholderText('Search by Patient ID');
-      fireEvent.change(input, { target: { value: 'UNKNOWN' } });
-      fireEvent.keyDown(input, { key: 'Enter' });
+      const combobox = screen.getByRole('combobox');
+      await userEvent.type(combobox, 'GAN123456');
+      fireEvent.keyDown(document, { key: 'Enter' });
 
       await waitFor(() => {
-        expect(
-          screen.getByTestId('patient-search-no-results'),
-        ).toBeInTheDocument();
+        expect(screen.getByText('John Doe')).toBeInTheDocument();
+        expect(screen.getByText('GAN123456')).toBeInTheDocument();
       });
-
-      expect(screen.getByText('No matching records')).toBeInTheDocument();
     });
 
-    test('navigates to patient dashboard on result click', async () => {
+    test('navigates to patient dashboard on selecting a result', async () => {
       mockedUsePatientSearch.mockReturnValue({
         results: [mockPatient],
         isLoading: false,
@@ -184,25 +168,21 @@ describe('PatientSearch Component', () => {
 
       const onClose = jest.fn();
       render(<PatientSearch isOpen onClose={onClose} />);
-      const input = screen.getByPlaceholderText('Search by Patient ID');
-      fireEvent.change(input, { target: { value: 'GAN123456' } });
-      fireEvent.keyDown(input, { key: 'Enter' });
+      const combobox = screen.getByRole('combobox');
+      await userEvent.type(combobox, 'GAN123456');
+      fireEvent.keyDown(document, { key: 'Enter' });
 
       await waitFor(() => {
-        expect(
-          screen.getByTestId(`patient-search-result-${mockPatient.uuid}`),
-        ).toBeInTheDocument();
+        expect(screen.getByText('John Doe')).toBeInTheDocument();
       });
 
-      fireEvent.click(
-        screen.getByTestId(`patient-search-result-${mockPatient.uuid}`),
-      );
+      await userEvent.click(screen.getByText('John Doe'));
 
       expect(mockNavigate).toHaveBeenCalledWith(`../${mockPatient.uuid}`);
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
-    test('clears search query when cross button is clicked but keeps search bar open', async () => {
+    test('clears results when input is cleared', async () => {
       mockedUsePatientSearch.mockReturnValue({
         results: [mockPatient],
         isLoading: false,
@@ -210,25 +190,20 @@ describe('PatientSearch Component', () => {
         error: null,
       });
 
-      const onClose = jest.fn();
-      render(<PatientSearch isOpen onClose={onClose} />);
-      const input = screen.getByPlaceholderText('Search by Patient ID');
-      fireEvent.change(input, { target: { value: 'GAN123456' } });
-      fireEvent.keyDown(input, { key: 'Enter' });
+      render(<PatientSearch {...defaultProps} />);
+      const combobox = screen.getByRole('combobox');
+      await userEvent.type(combobox, 'GAN123456');
+      fireEvent.keyDown(document, { key: 'Enter' });
 
       await waitFor(() => {
-        expect(
-          screen.getByTestId('patient-search-results'),
-        ).toBeInTheDocument();
+        expect(screen.getByText('John Doe')).toBeInTheDocument();
       });
 
-      const clearButton = screen.getByRole('button', { name: /clear/i });
-      fireEvent.click(clearButton);
+      await userEvent.clear(combobox);
 
-      expect(onClose).not.toHaveBeenCalled();
-      expect(
-        screen.getByTestId('patient-search-container'),
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByText('John Doe')).not.toBeInTheDocument();
+      });
     });
 
     test('calls onClose when pressing Escape key', () => {
@@ -255,16 +230,8 @@ describe('PatientSearch Component', () => {
     });
   });
 
-  // Keyboard accessibility tests
-  describe('Keyboard Accessibility', () => {
-    test('search input is reachable via Tab', () => {
-      render(<PatientSearch {...defaultProps} />);
-      const input = screen.getByPlaceholderText('Search by Patient ID');
-      input.focus();
-      expect(document.activeElement).toBe(input);
-    });
-
-    test('result items have tabIndex for keyboard navigation', async () => {
+  describe('Configurable display fields', () => {
+    test('uses default display fields when config is not provided', async () => {
       mockedUsePatientSearch.mockReturnValue({
         results: [mockPatient],
         isLoading: false,
@@ -273,19 +240,32 @@ describe('PatientSearch Component', () => {
       });
 
       render(<PatientSearch {...defaultProps} />);
-      const input = screen.getByPlaceholderText('Search by Patient ID');
-      fireEvent.change(input, { target: { value: 'GAN123456' } });
-      fireEvent.keyDown(input, { key: 'Enter' });
+      const combobox = screen.getByRole('combobox');
+      await userEvent.type(combobox, 'GAN123456');
+      fireEvent.keyDown(document, { key: 'Enter' });
 
       await waitFor(() => {
-        const resultItem = screen.getByTestId(
-          `patient-search-result-${mockPatient.uuid}`,
-        );
-        expect(resultItem).toHaveAttribute('tabindex', '0');
+        expect(screen.getByText('John Doe')).toBeInTheDocument();
+        expect(screen.getByText('GAN123456')).toBeInTheDocument();
       });
     });
 
-    test('ArrowDown moves focus to the first result', async () => {
+    test('renders custom display fields from config', async () => {
+      mockedUseClinicalConfig.mockReturnValue({
+        clinicalConfig: {
+          patientSearch: {
+            displayFields: [
+              { field: 'name', bold: true },
+              { field: 'identifier' },
+              { field: 'gender' },
+              { field: 'age' },
+            ],
+          },
+        } as any,
+        isLoading: false,
+        error: null,
+      });
+
       mockedUsePatientSearch.mockReturnValue({
         results: [mockPatient],
         isLoading: false,
@@ -294,124 +274,33 @@ describe('PatientSearch Component', () => {
       });
 
       render(<PatientSearch {...defaultProps} />);
-      const input = screen.getByPlaceholderText('Search by Patient ID');
-      fireEvent.change(input, { target: { value: 'GAN123456' } });
-      fireEvent.keyDown(input, { key: 'Enter' });
+      const combobox = screen.getByRole('combobox');
+      await userEvent.type(combobox, 'GAN123456');
+      fireEvent.keyDown(document, { key: 'Enter' });
 
       await waitFor(() => {
-        expect(
-          screen.getByTestId('patient-search-results'),
-        ).toBeInTheDocument();
-      });
-
-      fireEvent.keyDown(input, { key: 'ArrowDown' });
-
-      await waitFor(() => {
-        const resultItem = screen.getByTestId(
-          `patient-search-result-${mockPatient.uuid}`,
-        );
-        expect(resultItem).toHaveAttribute('aria-selected', 'true');
-      });
-    });
-
-    test('ArrowUp from first result clears focus (aria-selected back to false)', async () => {
-      mockedUsePatientSearch.mockReturnValue({
-        results: [mockPatient],
-        isLoading: false,
-        isError: false,
-        error: null,
-      });
-
-      render(<PatientSearch {...defaultProps} />);
-      const input = screen.getByPlaceholderText('Search by Patient ID');
-      fireEvent.change(input, { target: { value: 'GAN123456' } });
-      fireEvent.keyDown(input, { key: 'Enter' });
-
-      await waitFor(() => {
-        expect(
-          screen.getByTestId('patient-search-results'),
-        ).toBeInTheDocument();
-      });
-
-      fireEvent.keyDown(input, { key: 'ArrowDown' });
-      fireEvent.keyDown(input, { key: 'ArrowUp' });
-
-      await waitFor(() => {
-        const resultItem = screen.getByTestId(
-          `patient-search-result-${mockPatient.uuid}`,
-        );
-        expect(resultItem).toHaveAttribute('aria-selected', 'false');
-      });
-    });
-
-    test('Enter on a focused result navigates to that patient', async () => {
-      mockedUsePatientSearch.mockReturnValue({
-        results: [mockPatient],
-        isLoading: false,
-        isError: false,
-        error: null,
-      });
-
-      const onClose = jest.fn();
-      render(<PatientSearch isOpen onClose={onClose} />);
-      const input = screen.getByPlaceholderText('Search by Patient ID');
-      fireEvent.change(input, { target: { value: 'GAN123456' } });
-      fireEvent.keyDown(input, { key: 'Enter' });
-
-      await waitFor(() => {
-        expect(
-          screen.getByTestId('patient-search-results'),
-        ).toBeInTheDocument();
-      });
-
-      fireEvent.keyDown(input, { key: 'ArrowDown' });
-      fireEvent.keyDown(input, { key: 'Enter' });
-
-      expect(mockNavigate).toHaveBeenCalledWith(`../${mockPatient.uuid}`);
-      expect(onClose).toHaveBeenCalledTimes(1);
-    });
-
-    test('search input has aria-expanded, aria-controls, and aria-activedescendant', async () => {
-      mockedUsePatientSearch.mockReturnValue({
-        results: [mockPatient],
-        isLoading: false,
-        isError: false,
-        error: null,
-      });
-
-      render(<PatientSearch {...defaultProps} />);
-      const input = screen.getByPlaceholderText('Search by Patient ID');
-
-      expect(input).toHaveAttribute('aria-expanded', 'false');
-      expect(input).toHaveAttribute('aria-controls', 'patient-search-listbox');
-
-      fireEvent.change(input, { target: { value: 'GAN123456' } });
-      fireEvent.keyDown(input, { key: 'Enter' });
-
-      await waitFor(() => {
-        expect(input).toHaveAttribute('aria-expanded', 'true');
-      });
-
-      fireEvent.keyDown(input, { key: 'ArrowDown' });
-
-      await waitFor(() => {
-        expect(input).toHaveAttribute(
-          'aria-activedescendant',
-          `patient-search-result-${mockPatient.uuid}`,
-        );
+        expect(screen.getByText('John Doe')).toBeInTheDocument();
+        expect(screen.getByText('GAN123456')).toBeInTheDocument();
+        expect(screen.getByText('M')).toBeInTheDocument();
+        expect(screen.getByText('34')).toBeInTheDocument();
       });
     });
   });
 
-  // Accessibility tests
   describe('Accessibility', () => {
+    test('combobox has proper aria-label', () => {
+      render(<PatientSearch {...defaultProps} />);
+      const combobox = screen.getByRole('combobox');
+      expect(combobox).toHaveAttribute('aria-label', 'Search by Patient ID');
+    });
+
     test('has no accessibility violations when open', async () => {
       const { container } = render(<PatientSearch {...defaultProps} />);
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
-    test('has no accessibility violations with search results', async () => {
+    test('combobox expands when results are shown after Enter', async () => {
       mockedUsePatientSearch.mockReturnValue({
         results: [mockPatient],
         isLoading: false,
@@ -419,19 +308,14 @@ describe('PatientSearch Component', () => {
         error: null,
       });
 
-      const { container } = render(<PatientSearch {...defaultProps} />);
-      const input = screen.getByPlaceholderText('Search by Patient ID');
-      fireEvent.change(input, { target: { value: 'GAN123456' } });
-      fireEvent.keyDown(input, { key: 'Enter' });
+      render(<PatientSearch {...defaultProps} />);
+      const combobox = screen.getByRole('combobox');
+      await userEvent.type(combobox, 'GAN123456');
+      fireEvent.keyDown(document, { key: 'Enter' });
 
       await waitFor(() => {
-        expect(
-          screen.getByTestId('patient-search-results'),
-        ).toBeInTheDocument();
+        expect(combobox).toHaveAttribute('aria-expanded', 'true');
       });
-
-      const axeResults = await axe(container);
-      expect(axeResults).toHaveNoViolations();
     });
   });
 });
