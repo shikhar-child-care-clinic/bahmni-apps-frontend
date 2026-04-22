@@ -32,7 +32,7 @@ module.exports = (env, argv) => {
       },
       proxy: [
         {
-          context: ['/bahmni_config', '/openmrs'],
+          context: (pathname) => !pathname.startsWith(publicPath),
           target: 'https://localhost/',
           changeOrigin: true,
           secure: false,

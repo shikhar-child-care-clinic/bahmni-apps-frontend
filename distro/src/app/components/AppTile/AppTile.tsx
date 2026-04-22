@@ -30,7 +30,7 @@ export const AppTile: React.FC<AppTileProps> = ({
   }
 
   const handleClick = () => {
-    if (url.includes('#')) {
+    if (url.startsWith('/') || url.startsWith('http')) {
       window.location.href = url;
     } else {
       navigate(url);
