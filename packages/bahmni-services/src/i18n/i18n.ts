@@ -22,6 +22,9 @@ export const initI18n = async (namespace: string) => {
         i18n.addResourceBundle(lang, ns, resources, true, true);
       });
     });
+
+    i18n.options.defaultNS = namespace;
+    i18n.options.fallbackNS = Object.keys(i18n.store.data[i18n.language] ?? {});
   } else {
     // First initialization
     await i18n
