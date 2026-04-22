@@ -39,9 +39,13 @@
 }
 
 .errorContainer {
-  padding: $spacing-05 $spacing-04;
+  margin-top: 3.75rem;
+  padding: $spacing-07;
+  max-width: 50rem;
+  margin-left: auto;
+  margin-right: auto;
   display: flex;
   flex-direction: column;
-  gap: $spacing-03;
-  align-items: flex-start;
+  gap: $spacing-05;
+  align-items: center;
 }
