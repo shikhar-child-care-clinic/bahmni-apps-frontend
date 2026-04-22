@@ -12,10 +12,7 @@
 .greeting {
   @include type-style("body-compact-01");
   white-space: nowrap;
-  background-color: $blue-60;
-  color: $white-0;
-  padding: $spacing-02 $spacing-05;
-  border-radius: 0.25rem;
+  color: inherit;
 }
 
 .overflowMenu {
