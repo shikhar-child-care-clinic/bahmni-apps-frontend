@@ -11,6 +11,10 @@
   }
 }
 
+.container .container {
+  overflow-x: visible !important;
+}
+
 .accordion {
   display: flex;
   flex-direction: column;
@@ -44,7 +48,7 @@
   max-width: 100%;
   box-sizing: border-box;
   :global(html:has([data-separator]) #main-display-area) & {
-    min-width: 45rem;
+    min-width: 40rem;
     padding-block-end: $spacing-05;
   }
 }
