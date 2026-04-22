@@ -320,3 +320,9 @@ export {
   type DocumentViewModel,
   type DocumentReference,
 } from './documentReferenceService';
+
+export { uploadDocument } from './documentUploadService';
+export type {
+  DocumentUploadResponse,
+  ProcessedFileData,
+} from './documentUploadService';
