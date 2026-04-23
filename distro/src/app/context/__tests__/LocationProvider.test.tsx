@@ -10,6 +10,7 @@ import { useLocation } from '../LocationContext';
 import { LocationProvider } from '../LocationProvider';
 
 jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
   getUserLoginLocation: jest.fn(),
   getAvailableLocations: jest.fn(),
   getCurrentUser: jest.fn(),
@@ -18,10 +19,6 @@ jest.mock('@bahmni/services', () => ({
   notificationService: {
     showWarning: jest.fn(),
   },
-}));
-
-jest.mock('i18next', () => ({
-  t: jest.fn((key) => key),
 }));
 
 const mockGetUserLoginLocation = getUserLoginLocation as jest.MockedFunction<
@@ -204,5 +201,62 @@ describe('LocationProvider - Persistence', () => {
     });
 
     expect(mockGetCurrentUser).toHaveBeenCalled();
+  });
+
+  it('reverts location and sets error when setCookie throws', async () => {
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    mockSetCookie.mockImplementation(() => {
+      throw new Error('Cookie write failed');
+    });
+
+    const wrapper = ({ children }: any) => (
+      <LocationProvider>{children}</LocationProvider>
+    );
+    const { result } = renderHook(() => useLocation(), { wrapper });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    act(() => {
+      result.current.setLocation(newLocation);
+    });
+
+    expect(result.current.location).toEqual(mockLocation);
+    expect(result.current.error).toBe('Cookie write failed');
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Error updating location:',
+      expect.any(Error),
+    );
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('sets generic error message for non-Error throws', async () => {
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    mockSetCookie.mockImplementation(() => {
+      throw 'string error';
+    });
+
+    const wrapper = ({ children }: any) => (
+      <LocationProvider>{children}</LocationProvider>
+    );
+    const { result } = renderHook(() => useLocation(), { wrapper });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    act(() => {
+      result.current.setLocation(newLocation);
+    });
+
+    expect(result.current.error).toBe('Failed to update location');
+
+    consoleErrorSpy.mockRestore();
   });
 });

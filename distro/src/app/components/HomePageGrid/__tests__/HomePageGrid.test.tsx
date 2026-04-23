@@ -1,4 +1,3 @@
-import { useTranslation } from '@bahmni/services';
 import { render, screen, waitFor } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { getVisibleModules } from '../../../../services/moduleService';
@@ -19,30 +18,13 @@ jest.mock('../../../../services/moduleService', () => ({
   getVisibleModules: jest.fn(),
 }));
 
-jest.mock('@bahmni/services', () => ({
-  useTranslation: jest.fn(),
-}));
-
 const mockGetVisibleModules = getVisibleModules as jest.MockedFunction<
   typeof getVisibleModules
->;
-const mockUseTranslation = useTranslation as jest.MockedFunction<
-  typeof useTranslation
 >;
 
 describe('HomePageGrid', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseTranslation.mockReturnValue({
-      t: (key: string) => {
-        const translations: Record<string, string> = {
-          HOME_ERROR_FETCH_CONFIG: 'Failed to load home page configuration',
-          HOME_LOADING_MODULES: 'Loading modules',
-          HOME_NO_MODULES: 'No modules available',
-        };
-        return translations[key] || key;
-      },
-    } as any);
   });
 
   it('renders loading skeleton on mount', () => {

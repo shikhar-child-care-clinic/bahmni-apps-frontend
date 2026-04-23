@@ -17,10 +17,10 @@
 
 .overflowMenu {
   background: transparent;
-}
 
-:global(.cds--overflow-menu-options--open) {
-  margin-top: $spacing-03;
+  :global(.cds--overflow-menu-options--open) {
+    margin-top: $spacing-03;
+  }
 }
 
 .loading {

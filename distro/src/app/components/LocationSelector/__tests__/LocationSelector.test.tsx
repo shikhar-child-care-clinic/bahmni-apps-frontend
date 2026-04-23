@@ -1,146 +1,118 @@
-import {
-  useTranslation,
-  getUserLoginLocation,
-  getAvailableLocations,
-  getCurrentUser,
-  saveUserLocation,
-  setCookie,
-} from '@bahmni/services';
-import { render, screen, waitFor } from '@testing-library/react';
-import { LocationProvider } from '../../../context/LocationProvider';
+import { render, screen, fireEvent, act } from '@testing-library/react';
+import { LocationContext } from '../../../context/LocationContext';
 import { LocationSelector } from '../LocationSelector';
-
-jest.mock('@bahmni/services', () => ({
-  useTranslation: jest.fn(),
-  getUserLoginLocation: jest.fn(),
-  getAvailableLocations: jest.fn(),
-  getCurrentUser: jest.fn(),
-  saveUserLocation: jest.fn(),
-  setCookie: jest.fn(),
-}));
+import { mockLocation, mockLocations } from './__mocks__/LocationSelectorMocks';
 
 jest.mock('@bahmni/design-system', () => ({
-  Dropdown: ({ label, titleText, ...props }: any) => (
+  Dropdown: ({ items, onChange, label, disabled, ...props }: any) => (
     <div {...props}>
-      <label>{titleText}</label>
-      <div>{label}</div>
+      <div data-testid="dropdown-label">{label}</div>
+      {items?.map((item: any) => (
+        <button
+          key={item.uuid}
+          data-testid={`location-option-${item.uuid}`}
+          onClick={() => onChange({ selectedItem: item })}
+          disabled={disabled}
+        >
+          {item.name}
+        </button>
+      ))}
     </div>
   ),
 }));
 
-const mockUseTranslation = useTranslation as jest.MockedFunction<
-  typeof useTranslation
->;
-const mockGetUserLoginLocation = getUserLoginLocation as jest.MockedFunction<
-  typeof getUserLoginLocation
->;
-const mockGetAvailableLocations = getAvailableLocations as jest.MockedFunction<
-  typeof getAvailableLocations
->;
-const mockGetCurrentUser = getCurrentUser as jest.MockedFunction<
-  typeof getCurrentUser
->;
-const mockSaveUserLocation = saveUserLocation as jest.MockedFunction<
-  typeof saveUserLocation
->;
-const mockSetCookie = setCookie as jest.MockedFunction<typeof setCookie>;
+const renderWithContext = (contextOverrides = {}) => {
+  const defaultContext = {
+    location: mockLocation,
+    setLocation: jest.fn(),
+    availableLocations: mockLocations,
+    loading: false,
+    error: null,
+  };
+
+  const value = { ...defaultContext, ...contextOverrides };
+
+  return {
+    ...render(
+      <LocationContext.Provider value={value}>
+        <LocationSelector />
+      </LocationContext.Provider>,
+    ),
+    context: value,
+  };
+};
 
 describe('LocationSelector', () => {
-  const mockLocation = {
-    name: 'General Ward',
-    uuid: 'location-uuid-123',
-  };
+  it('renders dropdown with current location name', () => {
+    renderWithContext();
 
-  const mockLocations = [
-    { name: 'General Ward', uuid: 'location-uuid-123' },
-    { name: 'ICU Ward', uuid: 'location-uuid-456' },
-  ];
-
-  const mockUser = {
-    uuid: 'user-uuid-789',
-    username: 'testuser',
-    display: 'Test User',
-  };
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    localStorage.clear();
-
-    mockUseTranslation.mockReturnValue({
-      t: (key: string) => key,
-    } as any);
-
-    mockGetUserLoginLocation.mockReturnValue(mockLocation);
-    mockGetAvailableLocations.mockResolvedValue(mockLocations);
-    mockGetCurrentUser.mockResolvedValue(mockUser);
-    mockSaveUserLocation.mockResolvedValue(undefined);
-    mockSetCookie.mockImplementation(() => {});
+    expect(screen.getByTestId('location-selector')).toBeInTheDocument();
+    expect(screen.getByTestId('dropdown-label')).toHaveTextContent(
+      'General Ward',
+    );
   });
 
-  it('renders location selector dropdown', async () => {
-    render(
-      <LocationProvider>
-        <LocationSelector />
-      </LocationProvider>,
-    );
+  it('renders loading state', () => {
+    renderWithContext({ loading: true });
 
-    await waitFor(() => {
-      expect(screen.getByTestId('location-selector')).toBeInTheDocument();
-    });
+    expect(screen.getByRole('status')).toHaveTextContent('LOADING');
   });
 
-  it('displays current location name', async () => {
-    render(
-      <LocationProvider>
-        <LocationSelector />
-      </LocationProvider>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText(mockLocation.name)).toBeInTheDocument();
-    });
-  });
-
-  it('displays error state when location fetch fails', async () => {
-    mockGetUserLoginLocation.mockImplementation(() => {
-      throw new Error('Failed to fetch');
-    });
-
-    render(
-      <LocationProvider>
-        <LocationSelector />
-      </LocationProvider>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId('location-error')).toBeInTheDocument();
-    });
-  });
-
-  it('renders dropdown with current location as label', async () => {
-    render(
-      <LocationProvider>
-        <LocationSelector />
-      </LocationProvider>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('General Ward')).toBeInTheDocument();
-    });
-  });
-
-  it('displays error message when location fetch fails', () => {
-    mockGetUserLoginLocation.mockImplementation(() => {
-      throw new Error('Failed to fetch location');
-    });
-
-    render(
-      <LocationProvider>
-        <LocationSelector />
-      </LocationProvider>,
-    );
+  it('renders error state', () => {
+    renderWithContext({ error: 'Failed to fetch location' });
 
     expect(screen.getByTestId('location-error')).toBeInTheDocument();
-    expect(screen.getByText('Failed to fetch location')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Failed to fetch location',
+    );
+  });
+
+  it('renders no-location state when location is null', () => {
+    renderWithContext({ location: null });
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'NO_LOCATION_SELECTED',
+    );
+  });
+
+  it('calls setLocation when a different location is selected', async () => {
+    const { context } = renderWithContext();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('location-option-location-uuid-456'));
+    });
+
+    expect(context.setLocation).toHaveBeenCalledWith(mockLocations[1]);
+  });
+
+  it('does not call setLocation when same location is selected', async () => {
+    const { context } = renderWithContext();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('location-option-location-uuid-123'));
+    });
+
+    expect(context.setLocation).not.toHaveBeenCalled();
+  });
+
+  it('handles error from setLocation gracefully', async () => {
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    const failingSetLocation = jest.fn(() => {
+      throw new Error('Update failed');
+    });
+
+    renderWithContext({ setLocation: failingSetLocation });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('location-option-location-uuid-456'));
+    });
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Failed to change location:',
+      expect.any(Error),
+    );
+    consoleErrorSpy.mockRestore();
   });
 });

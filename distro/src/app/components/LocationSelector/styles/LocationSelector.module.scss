@@ -2,8 +2,10 @@
 @use "@carbon/react/scss/type" as *;
 @use "@carbon/react/scss/colors" as *;
 
-:global(.cds--dropdown) {
-  min-width: 12rem;
+.dropdownWrapper {
+  :global(.cds--dropdown) {
+    min-width: 12rem;
+  }
 }
 
 .loading {

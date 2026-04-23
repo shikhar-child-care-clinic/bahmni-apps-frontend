@@ -1,4 +1,4 @@
-import { logout, useTranslation, getFormattedError } from '@bahmni/services';
+import { logout, getFormattedError } from '@bahmni/services';
 import { useActivePractitioner, useNotification } from '@bahmni/widgets';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { UserProfileMenu } from '../UserProfileMenu';
@@ -11,7 +11,7 @@ jest.mock('@bahmni/widgets', () => ({
 }));
 
 jest.mock('@bahmni/services', () => ({
-  useTranslation: jest.fn(),
+  ...jest.requireActual('@bahmni/services'),
   logout: jest.fn(),
   getFormattedError: jest.fn(),
 }));
@@ -53,9 +53,6 @@ const mockUseNotification = useNotification as jest.MockedFunction<
   typeof useNotification
 >;
 const mockLogout = logout as jest.MockedFunction<typeof logout>;
-const mockUseTranslation = useTranslation as jest.MockedFunction<
-  typeof useTranslation
->;
 const mockGetFormattedError = getFormattedError as jest.MockedFunction<
   typeof getFormattedError
 >;
@@ -65,8 +62,6 @@ describe('UserProfileMenu', () => {
     uuid: 'user-uuid-123',
     display: 'Dr. John Doe',
   };
-
-  const mockTranslate = (key: string) => key;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -82,10 +77,6 @@ describe('UserProfileMenu', () => {
       loading: false,
       error: null,
       refetch: jest.fn(),
-    } as any);
-
-    mockUseTranslation.mockReturnValue({
-      t: mockTranslate,
     } as any);
 
     mockGetFormattedError.mockReturnValue({
@@ -113,16 +104,14 @@ describe('UserProfileMenu', () => {
     render(<UserProfileMenu />);
 
     expect(screen.getByTestId('change-password-option')).toHaveTextContent(
-      'HOME_CHANGE_PASSWORD',
+      'Change Password',
     );
   });
 
   it('renders logout option', () => {
     render(<UserProfileMenu />);
 
-    expect(screen.getByTestId('logout-option')).toHaveTextContent(
-      'HOME_LOGOUT',
-    );
+    expect(screen.getByTestId('logout-option')).toHaveTextContent('Logout');
   });
 
   it('renders menu divider', () => {
@@ -215,7 +204,7 @@ describe('UserProfileMenu', () => {
 
     expect(mockAddNotification).toHaveBeenCalledWith({
       title: 'Error',
-      message: 'HOME_ERROR_LOGOUT_FAILED',
+      message: 'Failed to logout. Please try again.',
       type: 'error',
     });
     expect(logoutBtn).not.toBeDisabled();

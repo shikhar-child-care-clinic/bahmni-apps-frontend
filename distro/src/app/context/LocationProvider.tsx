@@ -58,17 +58,14 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
       setError(null);
       setLocationState(newLocation);
 
-      // Only persist if location is not null
       if (newLocation) {
         setCookie(
           BAHMNI_USER_LOCATION_COOKIE,
           encodeURIComponent(JSON.stringify(newLocation)),
         );
 
-        // Persist to server asynchronously (fire and forget)
         if (userUuid) {
           saveUserLocation(userUuid, newLocation).catch((err) => {
-            // Log error but don't revert - cookie is source of truth
             // eslint-disable-next-line no-console
             console.warn('Failed to save location to server:', err);
             notificationService.showWarning(
