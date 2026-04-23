@@ -1,8 +1,0 @@
-export const HOME_CONFIG_URL =
-  '/bahmni_config/openmrs/apps/home/v2/extension.json';
-
-export const ERROR_MESSAGES = {
-  FETCH_FAILED: 'HOME_CONFIG_ERROR_FETCH_FAILED',
-  PARSE_FAILED: 'HOME_CONFIG_ERROR_PARSE_FAILED',
-  INVALID_CONFIG: 'HOME_CONFIG_ERROR_INVALID_CONFIG',
-};
