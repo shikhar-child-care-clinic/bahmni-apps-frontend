@@ -73,8 +73,6 @@
 .rangeInfo {
   @include type-style("body-compact-01");
   color: $text-secondary;
-  font-weight: normal;
-  margin-inline-start: $spacing-02;
 }
 
 .nestedGroup {
@@ -86,7 +84,6 @@
 
 .nestedGroupLabel {
   @include type-style("body-compact-01");
-  color: $text-primary;
   font-weight: 600;
 }
 
@@ -98,4 +95,16 @@
 
 .fullWidth {
   width: 100%;
+}
+
+.commentSection {
+  margin-block-start: $spacing-04;
+  padding-block-start: $spacing-04;
+  border-block-start: 1px solid $border-subtle-01;
+}
+
+.commentText {
+  @include type-style("body-compact-01");
+  color: $text-secondary;
+  font-style: italic;
 }

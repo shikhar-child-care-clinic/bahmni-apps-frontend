@@ -169,6 +169,7 @@ export {
   getPatientRadiologyInvestigations,
   getPatientRadiologyInvestigationBundle,
   getPatientRadiologyInvestigationBundleWithImagingStudy,
+  fetchQualityAssessment,
 } from './radiologyInvestigationService';
 export { getLabInvestigationsBundle } from './labInvestigationService';
 export {
