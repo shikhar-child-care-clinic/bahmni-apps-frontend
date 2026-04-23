@@ -591,7 +591,7 @@ describe('RadiologyInvestigationTable', () => {
     });
 
     expect(
-      screen.queryByTestId('investigation-1-view-qc-link-test-id'),
+      screen.queryByTestId('investigation-1-view-qa-link-test-id'),
     ).not.toBeInTheDocument();
   });
 
@@ -644,10 +644,10 @@ describe('RadiologyInvestigationTable', () => {
       ).toBeInTheDocument();
     });
 
-    const viewQCLink = screen.getByTestId(
-      'investigation-1-view-qc-link-test-id',
+    const viewQALink = screen.getByTestId(
+      'investigation-1-view-qa-link-test-id',
     );
-    await userEvent.click(viewQCLink);
+    await userEvent.click(viewQALink);
 
     await waitFor(() => {
       expect(
