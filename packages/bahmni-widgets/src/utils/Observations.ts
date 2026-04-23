@@ -29,6 +29,57 @@ export function isAbnormalInterpretation(observation: Observation): boolean {
   );
 }
 
+function extractReferenceRange(
+  referenceRange: Observation['referenceRange'],
+): ObservationValue['referenceRange'] {
+  if (!referenceRange || referenceRange.length === 0) {
+    return undefined;
+  }
+
+  const normalRange = referenceRange.find((range) =>
+    range.type?.coding?.some(
+      (coding) =>
+        coding.system === REFERENCE_RANGE_SYSTEM &&
+        coding.code === NORMAL_REFERENCE_RANGE_CODE,
+    ),
+  );
+
+  if (!normalRange || (!normalRange.low && !normalRange.high)) {
+    return undefined;
+  }
+
+  return {
+    low: normalRange.low
+      ? {
+          value: normalRange.low.value!,
+          unit: normalRange.low.unit,
+        }
+      : undefined,
+    high: normalRange.high
+      ? {
+          value: normalRange.high.value!,
+          unit: normalRange.high.unit,
+        }
+      : undefined,
+  };
+}
+
+function createObservationValue(
+  value: string | number | boolean,
+  type: ObservationValue['type'],
+  isAbnormal: boolean,
+  unit?: string,
+  referenceRange?: ObservationValue['referenceRange'],
+): ObservationValue {
+  return {
+    value,
+    type,
+    isAbnormal,
+    ...(unit && { unit }),
+    ...(referenceRange && { referenceRange }),
+  };
+}
+
 export function extractObservationValue(
   observation: Observation,
 ): ObservationValue | undefined {
@@ -46,90 +97,41 @@ export function extractObservationValue(
   const isAbnormal = isAbnormalInterpretation(observation);
 
   if (valueQuantity) {
-    const observationValue: ObservationValue = {
-      value: valueQuantity.value ?? '',
-      unit: valueQuantity.unit,
-      type: 'quantity',
+    return createObservationValue(
+      valueQuantity.value ?? '',
+      'quantity',
       isAbnormal,
-    };
-
-    if (referenceRange && referenceRange.length > 0) {
-      const normalRange = referenceRange.find((range) =>
-        range.type?.coding?.some(
-          (coding) =>
-            coding.system === REFERENCE_RANGE_SYSTEM &&
-            coding.code === NORMAL_REFERENCE_RANGE_CODE,
-        ),
-      );
-
-      if (normalRange && (normalRange.low || normalRange.high)) {
-        observationValue.referenceRange = {
-          low: normalRange.low
-            ? {
-                value: normalRange.low.value!,
-                unit: normalRange.low.unit,
-              }
-            : undefined,
-          high: normalRange.high
-            ? {
-                value: normalRange.high.value!,
-                unit: normalRange.high.unit,
-              }
-            : undefined,
-        };
-      }
-    }
-
-    return observationValue;
+      valueQuantity.unit,
+      extractReferenceRange(referenceRange),
+    );
   }
 
   if (valueCodeableConcept) {
-    return {
-      value:
-        valueCodeableConcept.text ?? valueCodeableConcept.coding![0].display!,
-      type: 'codeable',
+    return createObservationValue(
+      valueCodeableConcept.text ?? valueCodeableConcept.coding![0].display!,
+      'codeable',
       isAbnormal,
-    };
+    );
   }
 
   if (valueString) {
-    return {
-      value: valueString,
-      type: 'string',
-      isAbnormal,
-    };
+    return createObservationValue(valueString, 'string', isAbnormal);
   }
 
   if (valueDateTime) {
-    return {
-      value: valueDateTime,
-      type: 'dateTime',
-      isAbnormal,
-    };
+    return createObservationValue(valueDateTime, 'dateTime', isAbnormal);
   }
 
   if (valueTime) {
-    return {
-      value: valueTime,
-      type: 'time',
-      isAbnormal,
-    };
+    return createObservationValue(valueTime, 'time', isAbnormal);
   }
 
   if (valueBoolean !== undefined) {
-    return {
-      value: valueBoolean,
-      type: 'boolean',
-      isAbnormal,
-    };
+    return createObservationValue(valueBoolean, 'boolean', isAbnormal);
   }
 
   if (valueInteger !== undefined) {
-    return {
-      value: valueInteger,
-      type: 'integer',
-      isAbnormal,
-    };
+    return createObservationValue(valueInteger, 'integer', isAbnormal);
   }
 
   return undefined;
