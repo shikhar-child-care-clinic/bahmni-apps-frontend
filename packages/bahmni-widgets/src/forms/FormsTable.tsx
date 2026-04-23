@@ -168,8 +168,8 @@ const FormsTable: React.FC<WidgetProps> = ({
 
   const headers = useMemo(
     () => [
-      { key: 'recordedOn', header: t('FORM_RECORDED_ON') },
-      { key: 'recordedBy', header: t('FORM_RECORDED_BY') },
+      { key: 'recordedOn', header: t('RECORDED_ON') },
+      { key: 'recordedBy', header: t('RECORDED_BY') },
     ],
     [t],
   );

@@ -230,8 +230,8 @@ describe('FormsTable', () => {
     mockUseTranslation.mockReturnValue({
       t: (key: string) => {
         const translations: Record<string, string> = {
-          FORM_RECORDED_ON: 'Recorded On',
-          FORM_RECORDED_BY: 'Recorded By',
+          RECORDED_ON: 'Recorded On',
+          RECORDED_BY: 'Recorded By',
           FORMS_HEADING: 'Forms',
           FORMS_UNAVAILABLE: 'No forms available',
           ERROR_FETCHING_FORM_METADATA: 'Error fetching form metadata',

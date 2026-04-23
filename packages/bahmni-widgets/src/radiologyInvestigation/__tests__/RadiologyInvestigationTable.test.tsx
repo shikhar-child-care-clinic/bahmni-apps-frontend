@@ -158,7 +158,7 @@ describe('RadiologyInvestigationTable', () => {
           RADIOLOGY_PRIORITY_URGENT: 'Urgent',
           RADIOLOGY_VIEW_IMAGES: 'View Images',
           RADIOLOGY_VIEW_REPORT: 'View Report',
-          RADIOLOGY_VIEW_QC: 'View Quality Assessment',
+          RADIOLOGY_VIEW_QA: 'View Quality Assessment',
           RADIOLOGY_QUALITY_ASSESSMENT: 'Quality Assessment',
           IN_PROGRESS_STATUS: 'In Progress',
           COMPLETED_STATUS: 'Completed',
@@ -554,7 +554,7 @@ describe('RadiologyInvestigationTable', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByTestId('investigation-1-view-qc-link-test-id'),
+        screen.getByTestId('investigation-1-view-qa-link-test-id'),
       ).toBeInTheDocument();
       expect(screen.getByText('View Quality Assessment')).toBeInTheDocument();
     });
@@ -640,7 +640,7 @@ describe('RadiologyInvestigationTable', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByTestId('investigation-1-view-qc-link-test-id'),
+        screen.getByTestId('investigation-1-view-qa-link-test-id'),
       ).toBeInTheDocument();
     });
 

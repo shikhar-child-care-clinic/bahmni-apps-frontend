@@ -302,14 +302,14 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
           )}
           {hasImagingStudyId && hasViewReportLink && (
             <Link
-              id={`${investigation.id}-view-qc-link`}
-              testId={`${investigation.id}-view-qc-link-test-id`}
+              id={`${investigation.id}-view-qa-link`}
+              testId={`${investigation.id}-view-qa-link-test-id`}
               onClick={() => {
                 setSelectedInvestigation(investigation);
                 setModalType(ModalType.QA);
               }}
             >
-              {t('RADIOLOGY_VIEW_QC')}
+              {t('RADIOLOGY_VIEW_QA')}
             </Link>
           )}
         </div>
@@ -416,9 +416,14 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     );
   }
 
-  const reportedOn =
+  const reportedOnDate =
     selectedInvestigation?.reportedDate &&
     formatDateTime(selectedInvestigation.reportedDate, t, true).formattedResult;
+
+  const qaRecordedOnDate =
+    qaRecordedDate && formatDateTime(qaRecordedDate, t, true).formattedResult;
+
+  const reportedBy = selectedInvestigation?.reportedBy;
 
   return (
     <div
@@ -475,7 +480,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
             setModalType(null);
           }}
           passiveModal
-          modalLabel={`Recorded On : ${reportedOn}  | Recorded By: ${selectedInvestigation.reportedBy}`}
+          modalLabel={`${t('RECORDED_ON')} : ${reportedOnDate}  | ${t('RECORDED_BY')}: ${reportedBy}`}
           modalHeading={selectedInvestigation.testName}
           testId="diagnostic-report-modal"
           size="lg"
@@ -501,8 +506,8 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
           passiveModal
           modalLabel={
             qaRecordedDate
-              ? `Recorded On : ${formatDateTime(qaRecordedDate, t, true).formattedResult} | Recorded By: ${selectedInvestigation.reportedBy}`
-              : `Recorded By: ${selectedInvestigation.reportedBy}`
+              ? `${t('RECORDED_ON')} : ${qaRecordedOnDate} | ${t('RECORDED_BY')}: ${reportedBy}`
+              : `${t('RECORDED_BY')}: ${reportedBy}`
           }
           modalHeading={t('RADIOLOGY_QUALITY_ASSESSMENT')}
           testId="quality-assessment-modal"
