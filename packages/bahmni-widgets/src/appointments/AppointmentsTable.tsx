@@ -6,7 +6,11 @@ import {
   TabPanels,
   Tabs,
 } from '@bahmni/design-system';
-import { formatDateTime, useTranslation } from '@bahmni/services';
+import {
+  DEFAULT_TIME_FORMAT,
+  formatDateTime,
+  useTranslation,
+} from '@bahmni/services';
 import React, { useCallback, useMemo, useState } from 'react';
 import { usePatientUUID } from '../hooks/usePatientUUID';
 import { WidgetProps } from '../registry/model';
@@ -28,9 +32,7 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
 
   const configuredFields =
     (config?.fields as string[] | undefined) ?? DEFAULT_FIELDS;
-  const numberOfPastAppointments = config?.numberOfPastAppointments as
-    | number
-    | undefined;
+  const configPageSize = Number(config?.pageSize) || 5;
 
   const headers = useMemo(
     () =>
@@ -84,16 +86,30 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
           return reasonVal ?? '-';
         }
         case 'appointmentDate': {
-          const dateVal = formatDateTime(
-            row.appointmentDate?.trim(),
-            t,
-            true,
-          ).formattedResult;
-          return dateVal ?? '-';
+          if (!row.appointmentDate || row.appointmentDate === '-') {
+            return '-';
+          }
+          return formatDateTime(row.appointmentDate, t, false).formattedResult;
         }
         case 'appointmentSlot': {
-          const timeVal = row.appointmentSlot?.trim();
-          return timeVal ?? '-';
+          if (!row.appointmentStartTime || row.appointmentStartTime === '-') {
+            return '-';
+          }
+          const startTime = formatDateTime(
+            row.appointmentStartTime,
+            t,
+            false,
+            DEFAULT_TIME_FORMAT,
+          ).formattedResult;
+          const endTime = row.appointmentEndTime
+            ? formatDateTime(
+                row.appointmentEndTime,
+                t,
+                false,
+                DEFAULT_TIME_FORMAT,
+              ).formattedResult
+            : startTime;
+          return `${startTime} - ${endTime}`;
         }
         case 'status':
           return (
@@ -142,6 +158,7 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
           <TabPanel className={styles.appointmentTabs}>
             <UpcomingAppointments
               patientUUID={patientUUID}
+              pageSize={configPageSize}
               headers={headers}
               sortable={sortable}
               renderCell={renderCell}
@@ -151,7 +168,7 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
           <TabPanel className={styles.appointmentTabs}>
             <PastAppointments
               patientUUID={patientUUID}
-              numberOfPastAppointments={numberOfPastAppointments}
+              pageSize={configPageSize}
               headers={headers}
               sortable={sortable}
               renderCell={renderCell}

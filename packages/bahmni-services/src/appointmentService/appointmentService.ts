@@ -1,14 +1,17 @@
 import type { Appointment, Bundle } from 'fhir/r4';
-import { get, post } from '../api';
+import { del, get, post } from '../api';
 import {
   ALL_APPOINTMENT_SERVICES_URL,
   APPOINTMENTS_SEARCH_URL,
   getAppointmentByIdUrl,
+  getDeleteAppointmentServiceUrl,
   updateAppointmentStatusUrl,
   UPCOMING_APPOINTMENTS_URL,
   PAST_APPOINTMENTS_URL,
+  getUpcomingAppointmentsPageUrl,
+  getPastAppointmentsPageUrl,
 } from './constants';
-import { AppointmentService } from './models';
+import { AppointmentPage, AppointmentService } from './models';
 
 /**
  * Search for appointments by specified attributes.
@@ -93,3 +96,51 @@ export const getAllAppointmentServices = async (): Promise<
 > => {
   return await get<AppointmentService[]>(ALL_APPOINTMENT_SERVICES_URL);
 };
+
+/**
+ * Deletes an appointment service definition by UUID.
+ *
+ * @param uuid - UUID of the appointment service to delete
+ * @throws Error if the API request fails
+ */
+export const deleteAppointmentService = async (uuid: string): Promise<void> => {
+  await del(getDeleteAppointmentServiceUrl(uuid));
+};
+
+/**
+ * Fetches a single page of upcoming appointments using offset-based pagination.
+ * @param patientUuid - The UUID of the patient
+ * @param count - Number of items per page (default 10)
+ * @param page - 1-based page number (default 1)
+ * @returns Promise resolving to an AppointmentPage with bundle and total count
+ */
+export async function getUpcomingAppointmentsPage(
+  patientUuid: string,
+  count: number = 10,
+  page: number = 1,
+): Promise<AppointmentPage> {
+  const offset = (page - 1) * count;
+  const bundle = await get<Bundle<Appointment>>(
+    getUpcomingAppointmentsPageUrl(patientUuid, count, offset),
+  );
+  return { bundle, total: bundle.total ?? bundle.entry?.length ?? 0 };
+}
+
+/**
+ * Fetches a single page of past appointments using offset-based pagination.
+ * @param patientUuid - The UUID of the patient
+ * @param count - Number of items per page (default 10)
+ * @param page - 1-based page number (default 1)
+ * @returns Promise resolving to an AppointmentPage with bundle and total count
+ */
+export async function getPastAppointmentsPage(
+  patientUuid: string,
+  count: number = 10,
+  page: number = 1,
+): Promise<AppointmentPage> {
+  const offset = (page - 1) * count;
+  const bundle = await get<Bundle<Appointment>>(
+    getPastAppointmentsPageUrl(patientUuid, count, offset),
+  );
+  return { bundle, total: bundle.total ?? bundle.entry?.length ?? 0 };
+}

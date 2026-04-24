@@ -28,6 +28,7 @@ export const getAppointmentsUrl = (
   patientUUID: string,
   type: 'upcoming' | 'past',
   count?: number,
+  offset?: number,
 ): string => {
   const isUpcoming = type === 'upcoming';
   const dateOperator = isUpcoming ? 'ge' : 'le';
@@ -41,6 +42,10 @@ export const getAppointmentsUrl = (
 
   if (count !== undefined && count > 0) {
     url += `&_count=${count}`;
+  }
+
+  if (offset !== undefined && offset > 0) {
+    url += `&_getpagesoffset=${offset}`;
   }
 
   return url;
@@ -59,3 +64,18 @@ export const updateAppointmentStatusUrl = (appointmentUuid: string): string =>
 
 export const ALL_APPOINTMENT_SERVICES_URL =
   OPENMRS_REST_V1 + '/appointmentService/all/full';
+
+export const getDeleteAppointmentServiceUrl = (uuid: string): string =>
+  `${OPENMRS_REST_V1}/appointmentService?uuid=${uuid}`;
+
+export const getUpcomingAppointmentsPageUrl = (
+  patientUUID: string,
+  count: number = 10,
+  offset: number = 0,
+): string => getAppointmentsUrl(patientUUID, 'upcoming', count, offset);
+
+export const getPastAppointmentsPageUrl = (
+  patientUUID: string,
+  count: number = 10,
+  offset: number = 0,
+): string => getAppointmentsUrl(patientUUID, 'past', count, offset);

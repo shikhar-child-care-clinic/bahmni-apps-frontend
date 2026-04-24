@@ -49,6 +49,7 @@ jest.mock('react-router-dom', () => ({
 
 jest.mock('../../../hooks/useCreatePatient');
 jest.mock('../../../hooks/useUpdatePatient');
+jest.mock('../../../hooks/useRelationshipValidation');
 jest.mock('../../../providers/registrationConfig');
 jest.mock('../../../hooks/useAdditionalIdentifiers');
 jest.mock('../../../hooks/usePatientDetails');
@@ -57,7 +58,8 @@ jest.mock('../patientFormService');
 
 // Mock child components
 jest.mock('../../../components/forms/profile/Profile', () => ({
-  Profile: ({ ref }: { ref?: React.Ref<unknown> }) => {
+  __esModule: true,
+  default: ({ ref }: { ref?: React.Ref<unknown> }) => {
     // Expose imperative methods via ref
     if (ref && typeof ref === 'object' && 'current' in ref) {
       ref.current = {
@@ -74,11 +76,14 @@ jest.mock('../../../components/forms/profile/Profile', () => ({
   },
 }));
 
+const mockAddressValidate = jest.fn(() => true);
+const mockContactValidate = jest.fn(() => true);
+
 jest.mock('../../../components/forms/addressInfo/AddressInfo', () => ({
   AddressInfo: ({ ref }: { ref?: React.Ref<unknown> }) => {
     if (ref && typeof ref === 'object' && 'current' in ref) {
       ref.current = {
-        validate: jest.fn(() => true),
+        validate: mockAddressValidate,
         getData: jest.fn(() => ({
           address1: '123 Main St',
           cityVillage: 'New York',
@@ -93,7 +98,7 @@ jest.mock('../../../components/forms/contactInfo/ContactInfo', () => ({
   ContactInfo: ({ ref }: { ref?: React.Ref<unknown> }) => {
     if (ref && typeof ref === 'object' && 'current' in ref) {
       ref.current = {
-        validate: jest.fn(() => true),
+        validate: mockContactValidate,
         getData: jest.fn(() => ({
           phoneNumber: '1234567890',
         })),
@@ -140,6 +145,53 @@ jest.mock(
     },
   }),
 );
+
+jest.mock(
+  '../../../components/forms/patientRelationships/PatientRelationships',
+  () => ({
+    PatientRelationships: ({ ref }: { ref?: React.Ref<unknown> }) => {
+      if (ref && typeof ref === 'object' && 'current' in ref) {
+        ref.current = {
+          validate: jest.fn(() => true),
+          getData: jest.fn(() => []),
+          removeDeletedRelationships: jest.fn(),
+        };
+      }
+      return (
+        <div data-testid="patient-relationships">Patient Relationships</div>
+      );
+    },
+  }),
+);
+
+jest.mock('@bahmni/design-system', () => ({
+  ...jest.requireActual('@bahmni/design-system'),
+  Accordion: ({ children }: any) => <div>{children}</div>,
+  AccordionItem: ({
+    title,
+    open,
+    onHeadingClick,
+    children,
+    'data-testid': testId,
+  }: any) => (
+    <div data-testid={testId}>
+      <button
+        onClick={onHeadingClick}
+        aria-expanded={open}
+        data-testid="accordion-button"
+        type="button"
+      >
+        {title}
+      </button>
+      <div>{children}</div>
+    </div>
+  ),
+  Tile: ({ children, className, 'data-testid': testId }: any) => (
+    <div data-testid={testId ?? 'section-header-tile'} className={className}>
+      {children}
+    </div>
+  ),
+}));
 
 jest.mock('../visitTypeSelector', () => ({
   VisitTypeSelector: ({
@@ -264,21 +316,80 @@ describe('PatientRegister', () => {
     });
 
     (usePatientPhoto as jest.Mock).mockReturnValue({
-      photo: undefined,
+      patientPhoto: undefined,
       isLoading: false,
+    });
+
+    // Mock useRegistrationConfig to return default config
+    const { useRegistrationConfig } = jest.requireMock(
+      '../../../providers/registrationConfig',
+    );
+    useRegistrationConfig.mockReturnValue({
+      registrationConfig: {
+        registrationForm: {
+          sections: [
+            {
+              name: 'Address Details',
+              controls: [
+                {
+                  type: 'address',
+                  titleTranslationKey: 'REGISTRATION_SECTION_ADDRESS_DETAILS',
+                },
+              ],
+            },
+            {
+              name: 'Contact Information',
+              controls: [
+                {
+                  type: 'contactInfo',
+                  titleTranslationKey: 'REGISTRATION_SECTION_CONTACT_DETAILS',
+                },
+              ],
+            },
+            {
+              name: 'Additional Information',
+              translationKey: 'REGISTRATION_SECTION_ADDITIONAL_INFO',
+              controls: [{ type: 'additionalInfo' }],
+            },
+            {
+              name: 'Identifiers',
+              translationKey: 'REGISTRATION_SECTION_IDENTIFIERS',
+              controls: [{ type: 'additionalIdentifiers' }],
+            },
+            {
+              name: 'Relationships',
+              translationKey: 'REGISTRATION_SECTION_RELATIONSHIPS',
+              controls: [{ type: 'relationships' }],
+            },
+          ],
+        },
+      },
+    });
+
+    // Mock useRelationshipValidation
+    const { useRelationshipValidation } = jest.requireMock(
+      '../../../hooks/useRelationshipValidation',
+    );
+    useRelationshipValidation.mockReturnValue({
+      relationshipTypes: [
+        { uuid: 'spouse', name: 'Spouse', aIsToB: 'is spouse of' },
+        { uuid: 'child', name: 'Child', aIsToB: 'is child of' },
+      ],
     });
 
     // Mock useAdditionalIdentifiers to show additional identifiers by default
     (useAdditionalIdentifiers as jest.Mock).mockReturnValue({
       shouldShowAdditionalIdentifiers: true,
       hasAdditionalIdentifiers: true,
-      isConfigEnabled: true,
       identifierTypes: [
         { uuid: 'primary-id', name: 'Primary ID', primary: true },
         { uuid: 'national-id', name: 'National ID', primary: false },
       ],
       isLoading: false,
     });
+
+    mockAddressValidate.mockReturnValue(true);
+    mockContactValidate.mockReturnValue(true);
 
     (validateAllSections as jest.Mock).mockReturnValue(true);
     (collectFormData as jest.Mock).mockReturnValue({
@@ -312,10 +423,7 @@ describe('PatientRegister', () => {
       expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
       expect(screen.getByTestId('patient-address')).toBeInTheDocument();
       expect(screen.getByTestId('patient-contact')).toBeInTheDocument();
-      // Component renders AdditionalInfo twice, so use getAllByTestId
-      expect(
-        screen.getAllByTestId('patient-additional')[0],
-      ).toBeInTheDocument();
+      expect(screen.getByTestId('patient-additional')).toBeInTheDocument();
     });
 
     it('should render the page title', () => {
@@ -635,10 +743,7 @@ describe('PatientRegister', () => {
       expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
       expect(screen.getByTestId('patient-address')).toBeInTheDocument();
       expect(screen.getByTestId('patient-contact')).toBeInTheDocument();
-      // Component renders AdditionalInfo twice due to duplicate
-      expect(
-        screen.getAllByTestId('patient-additional')[0],
-      ).toBeInTheDocument();
+      expect(screen.getByTestId('patient-additional')).toBeInTheDocument();
     });
 
     it('should pass refs to form section components', () => {
@@ -648,10 +753,7 @@ describe('PatientRegister', () => {
       expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
       expect(screen.getByTestId('patient-address')).toBeInTheDocument();
       expect(screen.getByTestId('patient-contact')).toBeInTheDocument();
-      // Component renders AdditionalInfo twice due to duplicate
-      expect(
-        screen.getAllByTestId('patient-additional')[0],
-      ).toBeInTheDocument();
+      expect(screen.getByTestId('patient-additional')).toBeInTheDocument();
     });
   });
 
@@ -798,7 +900,6 @@ describe('PatientRegister', () => {
       (useAdditionalIdentifiers as jest.Mock).mockReturnValue({
         shouldShowAdditionalIdentifiers: false,
         hasAdditionalIdentifiers: false,
-        isConfigEnabled: true,
         identifierTypes: [
           { uuid: 'primary-id', name: 'Primary ID', primary: true },
         ],
@@ -819,7 +920,6 @@ describe('PatientRegister', () => {
       (useAdditionalIdentifiers as jest.Mock).mockReturnValue({
         shouldShowAdditionalIdentifiers: false,
         hasAdditionalIdentifiers: true,
-        isConfigEnabled: false,
         identifierTypes: [
           { uuid: 'primary-id', name: 'Primary ID', primary: true },
           { uuid: 'national-id', name: 'National ID', primary: false },
@@ -838,7 +938,6 @@ describe('PatientRegister', () => {
       (useAdditionalIdentifiers as jest.Mock).mockReturnValue({
         shouldShowAdditionalIdentifiers: false,
         hasAdditionalIdentifiers: false,
-        isConfigEnabled: true,
         identifierTypes: [
           { uuid: 'primary-id', name: 'Primary ID', primary: true },
         ],
@@ -850,6 +949,405 @@ describe('PatientRegister', () => {
       expect(
         screen.queryByTestId('patient-additional-identifiers'),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Config-driven Form Sections', () => {
+    it('should render sections from config when provided', () => {
+      const { useRegistrationConfig } = jest.requireMock(
+        '../../../providers/registrationConfig',
+      );
+      useRegistrationConfig.mockReturnValue({
+        registrationConfig: {
+          registrationForm: {
+            sections: [
+              {
+                name: 'Address Details',
+                controls: [{ type: 'address' }],
+              },
+              {
+                name: 'Contact Information',
+                controls: [{ type: 'contactInfo' }],
+              },
+              {
+                name: 'Additional Information',
+                translationKey: 'REGISTRATION_SECTION_ADDITIONAL_INFO',
+                controls: [{ type: 'additionalInfo' }],
+              },
+            ],
+          },
+        },
+      });
+
+      renderComponent();
+
+      expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
+      expect(screen.getByTestId('patient-address')).toBeInTheDocument();
+      expect(screen.getByTestId('patient-contact')).toBeInTheDocument();
+      expect(screen.getByTestId('patient-additional')).toBeInTheDocument();
+    });
+
+    it('should render default Basic Information even when config is absent', () => {
+      const { useRegistrationConfig } = jest.requireMock(
+        '../../../providers/registrationConfig',
+      );
+      useRegistrationConfig.mockReturnValue({
+        registrationConfig: null,
+      });
+
+      renderComponent();
+
+      // Basic Information should always be rendered (from fallback default)
+      expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
+      // Optional sections should not be rendered
+      expect(screen.queryByTestId('patient-address')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('patient-contact')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('patient-additional'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('should render custom section order from config', () => {
+      const { useRegistrationConfig } = jest.requireMock(
+        '../../../providers/registrationConfig',
+      );
+      // Reverse the typical order: additionalInfo first, then basic details
+      useRegistrationConfig.mockReturnValue({
+        registrationConfig: {
+          registrationForm: {
+            sections: [
+              {
+                name: 'Additional Information',
+                translationKey: 'REGISTRATION_SECTION_ADDITIONAL_INFO',
+                controls: [{ type: 'additionalInfo' }],
+              },
+              {
+                name: 'Address Details',
+                controls: [{ type: 'address' }],
+              },
+              {
+                name: 'Contact Information',
+                controls: [{ type: 'contactInfo' }],
+              },
+            ],
+          },
+        },
+      });
+
+      renderComponent();
+
+      // All components should still be rendered (order determined by config)
+      expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
+      expect(screen.getByTestId('patient-address')).toBeInTheDocument();
+      expect(screen.getByTestId('patient-contact')).toBeInTheDocument();
+      expect(screen.getByTestId('patient-additional')).toBeInTheDocument();
+    });
+
+    it('should hide additionalIdentifiers even if in config when hasAdditionalIdentifiers is false', () => {
+      (useAdditionalIdentifiers as jest.Mock).mockReturnValue({
+        shouldShowAdditionalIdentifiers: false,
+        hasAdditionalIdentifiers: false,
+        identifierTypes: [
+          { uuid: 'primary-id', name: 'Primary ID', primary: true },
+        ],
+        isLoading: false,
+      });
+
+      const { useRegistrationConfig } = jest.requireMock(
+        '../../../providers/registrationConfig',
+      );
+      useRegistrationConfig.mockReturnValue({
+        registrationConfig: {
+          registrationForm: {
+            sections: [
+              {
+                name: 'Identifiers',
+                translationKey: 'REGISTRATION_SECTION_IDENTIFIERS',
+                controls: [{ type: 'additionalIdentifiers' }],
+              },
+            ],
+          },
+        },
+      });
+
+      renderComponent();
+
+      expect(
+        screen.queryByTestId('patient-additional-identifiers'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('should hide relationships even if in config when relationshipTypes is empty', () => {
+      const { useRelationshipValidation } = jest.requireMock(
+        '../../../hooks/useRelationshipValidation',
+      );
+      useRelationshipValidation.mockReturnValue({
+        relationshipTypes: [],
+      });
+
+      const { useRegistrationConfig } = jest.requireMock(
+        '../../../providers/registrationConfig',
+      );
+      useRegistrationConfig.mockReturnValue({
+        registrationConfig: {
+          registrationForm: {
+            sections: [
+              {
+                name: 'Relationships',
+                translationKey: 'REGISTRATION_SECTION_RELATIONSHIPS',
+                controls: [{ type: 'relationships' }],
+              },
+            ],
+          },
+        },
+      });
+
+      renderComponent();
+
+      // PatientRelationships component should not render when no relationship types
+      expect(
+        screen.queryByTestId('patient-relationships'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('should skip unknown control types while rendering valid ones', () => {
+      const { useRegistrationConfig } = jest.requireMock(
+        '../../../providers/registrationConfig',
+      );
+      useRegistrationConfig.mockReturnValue({
+        registrationConfig: {
+          registrationForm: {
+            sections: [
+              {
+                name: 'Address Details',
+                controls: [{ type: 'address' }],
+              },
+            ],
+          },
+        },
+      });
+
+      renderComponent();
+
+      // Valid controls should render, unknown types should be skipped
+      expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
+      expect(screen.getByTestId('patient-address')).toBeInTheDocument();
+
+      // Unknown type should not cause errors
+      expect(screen.queryByTestId('patient-unknown')).not.toBeInTheDocument();
+    });
+
+    it('should always render Basic Information even when sections array is empty', () => {
+      const { useRegistrationConfig } = jest.requireMock(
+        '../../../providers/registrationConfig',
+      );
+      useRegistrationConfig.mockReturnValue({
+        registrationConfig: {
+          registrationForm: {
+            sections: [],
+          },
+        },
+      });
+
+      renderComponent();
+
+      // Basic Information should always be rendered
+      expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
+      // Optional sections should not be rendered
+      expect(screen.queryByTestId('patient-address')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('patient-contact')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('patient-additional'),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Section Collapsibility (BAH-4590)', () => {
+    it('should render collapsible sections using Accordion and non-collapsible section using Tile', () => {
+      renderComponent();
+
+      // Non-collapsible first section (Basic Information) uses Tile
+      expect(screen.getByTestId('section-header-tile')).toBeInTheDocument();
+
+      // Collapsible sections use AccordionItem with accordion-button
+      const accordionButtons = screen.getAllByTestId('accordion-button');
+      expect(accordionButtons.length).toBeGreaterThan(0);
+    });
+
+    it('should start with all collapsible sections collapsed on page load', () => {
+      renderComponent();
+
+      // All config-driven sections are collapsible by default (none have collapsible: false)
+      // Every accordion button must start in collapsed state
+      const accordionButtons = screen.getAllByTestId('accordion-button');
+      expect(accordionButtons.length).toBeGreaterThan(0);
+      accordionButtons.forEach((button) => {
+        expect(button).toHaveAttribute('aria-expanded', 'false');
+      });
+    });
+
+    it('should toggle section expanded state when clicking accordion heading', async () => {
+      renderComponent();
+
+      // Collapsible sections start collapsed (aria-expanded=false)
+      const accordionButtons = screen.getAllByTestId('accordion-button');
+      const firstAccordionButton = accordionButtons[0];
+
+      expect(firstAccordionButton).toHaveAttribute('aria-expanded', 'false');
+
+      // Click to expand
+      fireEvent.click(firstAccordionButton);
+
+      await waitFor(() => {
+        expect(firstAccordionButton).toHaveAttribute('aria-expanded', 'true');
+      });
+    });
+
+    it('should allow multiple sections to be open simultaneously', async () => {
+      renderComponent();
+
+      const accordionButtons = screen.getAllByTestId('accordion-button');
+
+      // Expand first two collapsible sections
+      fireEvent.click(accordionButtons[0]);
+      fireEvent.click(accordionButtons[1]);
+
+      await waitFor(() => {
+        // Both should be expanded (aria-expanded=true)
+        expect(accordionButtons[0]).toHaveAttribute('aria-expanded', 'true');
+        expect(accordionButtons[1]).toHaveAttribute('aria-expanded', 'true');
+      });
+    });
+
+    it('should collapse a section without affecting other expanded sections', async () => {
+      renderComponent();
+
+      const accordionButtons = screen.getAllByTestId('accordion-button');
+
+      // Expand first two sections
+      fireEvent.click(accordionButtons[0]);
+      fireEvent.click(accordionButtons[1]);
+
+      // Collapse the first section
+      fireEvent.click(accordionButtons[0]);
+
+      await waitFor(() => {
+        // First section collapsed, second still expanded
+        expect(accordionButtons[0]).toHaveAttribute('aria-expanded', 'false');
+        expect(accordionButtons[1]).toHaveAttribute('aria-expanded', 'true');
+      });
+    });
+
+    it('should auto-expand sections with validation errors on save', async () => {
+      (validateAllSections as jest.Mock).mockReturnValue(false);
+      // Address section validator fails — triggers auto-expand for that section
+      mockAddressValidate.mockReturnValue(false);
+
+      renderComponent();
+
+      const accordionButtons = screen.getAllByTestId('accordion-button');
+      // Address Details is index 0 — starts collapsed
+      expect(accordionButtons[0]).toHaveAttribute('aria-expanded', 'false');
+      // Contact Information is index 1 — starts collapsed
+      expect(accordionButtons[1]).toHaveAttribute('aria-expanded', 'false');
+
+      fireEvent.click(screen.getByText('CREATE_PATIENT_SAVE'));
+
+      await waitFor(() => {
+        expect(validateAllSections).toHaveBeenCalled();
+        // Address Details should be auto-expanded (it has errors)
+        expect(accordionButtons[0]).toHaveAttribute('aria-expanded', 'true');
+        // Contact Information should remain collapsed (no errors)
+        expect(accordionButtons[1]).toHaveAttribute('aria-expanded', 'false');
+      });
+    });
+
+    it('should auto-expand multiple sections with validation errors', async () => {
+      (validateAllSections as jest.Mock).mockReturnValue(false);
+      // Both address and contact validators fail — both sections should expand
+      mockAddressValidate.mockReturnValue(false);
+      mockContactValidate.mockReturnValue(false);
+
+      renderComponent();
+
+      const accordionButtons = screen.getAllByTestId('accordion-button');
+      expect(accordionButtons[0]).toHaveAttribute('aria-expanded', 'false');
+      expect(accordionButtons[1]).toHaveAttribute('aria-expanded', 'false');
+
+      fireEvent.click(screen.getByText('CREATE_PATIENT_SAVE'));
+
+      await waitFor(() => {
+        expect(validateAllSections).toHaveBeenCalled();
+        // Both Address Details and Contact Information should be auto-expanded
+        expect(accordionButtons[0]).toHaveAttribute('aria-expanded', 'true');
+        expect(accordionButtons[1]).toHaveAttribute('aria-expanded', 'true');
+        // Additional Information (index 2) has no errors — stays collapsed
+        expect(accordionButtons[2]).toHaveAttribute('aria-expanded', 'false');
+      });
+    });
+
+    it('should have collapsible headers for all config sections except those explicitly non-collapsible', () => {
+      const { useRegistrationConfig } = jest.requireMock(
+        '../../../providers/registrationConfig',
+      );
+      useRegistrationConfig.mockReturnValue({
+        registrationConfig: {
+          registrationForm: {
+            sections: [
+              {
+                name: 'Address Details',
+                translationKey: 'ADDRESS_HEADER',
+                controls: [{ type: 'address' }],
+                // collapsible not set, should default to true
+              },
+              {
+                name: 'Contact Information',
+                translationKey: 'CONTACT_HEADER',
+                controls: [{ type: 'contactInfo' }],
+                collapsible: true, // explicitly collapsible
+              },
+              {
+                name: 'Non-Collapsible Section',
+                translationKey: 'NON_COLLAPSIBLE_HEADER',
+                controls: [{ type: 'additionalInfo' }],
+                collapsible: false, // explicitly non-collapsible
+              },
+            ],
+          },
+        },
+      });
+
+      renderComponent();
+
+      // Non-collapsible section (explicitly collapsible: false) uses Tile header
+      expect(
+        screen.getAllByTestId('section-header-tile').length,
+      ).toBeGreaterThanOrEqual(1);
+
+      // Collapsible sections (collapsible: true / not set) use Accordion buttons
+      const accordionButtons = screen.queryAllByTestId('accordion-button');
+      // At least 2 (Address and Contact are collapsible by default/explicitly)
+      expect(accordionButtons.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should preserve section expanded state during re-renders', async () => {
+      renderComponent();
+
+      const accordionButtons = screen.getAllByTestId('accordion-button');
+
+      // Expand a collapsible section
+      fireEvent.click(accordionButtons[0]);
+
+      // Trigger a re-render by clicking save (which validates but doesn't change sections)
+      (validateAllSections as jest.Mock).mockReturnValue(true);
+      const saveButton = screen.getByText('CREATE_PATIENT_SAVE');
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        // Section should still be expanded (aria-expanded=true) after re-render
+        expect(accordionButtons[0]).toHaveAttribute('aria-expanded', 'true');
+        expect(screen.getByTestId('patient-profile')).toBeInTheDocument();
+      });
     });
   });
 });

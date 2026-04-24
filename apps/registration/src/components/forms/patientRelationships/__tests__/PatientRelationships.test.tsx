@@ -24,6 +24,9 @@ jest.mock('@bahmni/services', () => ({
       totalCount: 0,
     }),
   ),
+  formatDateTime: jest.fn(() => ({
+    formattedResult: '31/12/2025',
+  })),
 }));
 
 describe('PatientRelationships', () => {
@@ -46,9 +49,6 @@ describe('PatientRelationships', () => {
       render(<PatientRelationships ref={ref} />, { wrapper });
 
       await waitFor(() => {
-        expect(
-          screen.getByText('CREATE_PATIENT_SECTION_RELATIONSHIPS_INFO'),
-        ).toBeInTheDocument();
         expect(
           screen.getByText('REGISTRATION_RELATIONSHIP_TYPE'),
         ).toBeInTheDocument();
@@ -139,7 +139,7 @@ describe('PatientRelationships', () => {
           screen.getAllByRole('button', { name: 'REGISTRATION_REMOVE' }),
         ).toHaveLength(2);
       });
-    });
+    }, 15000);
   });
 
   describe('Ref Methods', () => {

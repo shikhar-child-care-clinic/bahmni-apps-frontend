@@ -75,7 +75,11 @@ export {
   getAppointmentById,
   getUpcomingAppointments,
   getPastAppointments,
+  getUpcomingAppointmentsPage,
+  getPastAppointmentsPage,
+  type AppointmentPage,
   getAllAppointmentServices,
+  deleteAppointmentService,
   APPOINTMENT_STATUSES,
   APPOINTMENT_IDENTIFIER_SYSTEM,
   type AppointmentService,
@@ -84,6 +88,7 @@ export { getFormattedError } from './errorHandling';
 export {
   capitalize,
   generateId,
+  generateUUID,
   getCookieByName,
   deleteCookie,
   setCookie,
@@ -107,6 +112,7 @@ export {
   sortByDate,
   DEFAULT_DATE_FORMAT,
   DEFAULT_DATE_FORMAT_STORAGE_KEY,
+  DEFAULT_TIME_FORMAT,
   getTodayDate,
   getFormattedAge,
   DURATION_UNIT_TO_DAYS,
@@ -124,9 +130,16 @@ export {
   fetchAndFormatAllergenConcepts,
   fetchReactionConcepts,
 } from './allergyService';
-export { getConditions, type ConditionInputEntry } from './conditionService';
+export {
+  getConditions,
+  getConditionPage,
+  type ConditionPage,
+  type ConditionInputEntry,
+} from './conditionService';
 export {
   getPatientDiagnoses,
+  getDiagnosesPage,
+  type DiagnosisPage,
   type Diagnosis,
   type DiagnosisInputEntry,
   type DiagnosesByDate,
@@ -158,6 +171,7 @@ export {
   getPatientRadiologyInvestigations,
   getPatientRadiologyInvestigationBundle,
   getPatientRadiologyInvestigationBundleWithImagingStudy,
+  fetchQualityAssessment,
 } from './radiologyInvestigationService';
 export { getLabInvestigationsBundle } from './labInvestigationService';
 export {
@@ -287,10 +301,12 @@ export {
 export { getServiceRequests } from './orderRequestService';
 export {
   getPatientPrograms,
+  getPatientProgramsPage,
   getProgramByUUID,
   getCurrentStateName,
   extractAttributes,
   updateProgramState,
+  type ProgramPage,
   type ProgramEnrollment,
   type PatientProgramsResponse,
 } from './programService';
@@ -305,6 +321,14 @@ export {
 export {
   getDocumentReferences,
   getFormattedDocumentReferences,
+  getDocumentReferencePage,
+  type DocumentReferencePage,
   type DocumentViewModel,
   type DocumentReference,
 } from './documentReferenceService';
+
+export { uploadDocument } from './documentUploadService';
+export type {
+  DocumentUploadResponse,
+  ProcessedFileData,
+} from './documentUploadService';

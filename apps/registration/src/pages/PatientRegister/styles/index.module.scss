@@ -4,7 +4,7 @@
 
 .form {
   margin: 0 auto;
-  margin-top:$spacing-08;
+  margin-top: $spacing-08;
   max-width: $spacing-13 * 9 + $spacing-05 + $spacing-02;
   width: calc(100% - ($spacing-13 + $spacing-05));
   box-shadow: 0 $spacing-01 $spacing-03 $shadow;
@@ -13,9 +13,10 @@
 
 // Patient Details Header
 .patientDetailsHeader {
-   display: flex;
-    align-content: center;
-  }
+  display: flex;
+  align-content: center;
+  padding-inline-start: $spacing-06;
+}
 
 .sectionTitle {
   @include type-style("heading-compact-02");
@@ -48,15 +49,33 @@
   margin-left: auto;
 }
 
+.headerTile {
+  height: $spacing-08 + $spacing-05;
+  display: flex;
+  align-content: center;
+}
+
+.controlTitle {
+  height: $spacing-08 + $spacing-05;
+  display: flex;
+  align-content: center;
+  padding-left: $spacing-06;
+}
+
 // Form Container
 .formContainer {
-  padding: $spacing-06;
-    background: #fff;
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-09;
+  margin: 0 auto;
+  margin-bottom: $spacing-08;
+  width: calc(100% - ($spacing-13 + $spacing-05));
+  max-width: $spacing-13 * 9 + $spacing-05 + $spacing-02;
+  box-shadow: 0 $spacing-01 $spacing-03 $shadow;
+  background: $background;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 
   .formSection {
+    padding: 0 $spacing-06 $spacing-05;
     display: flex;
     flex-direction: column;
     gap: $spacing-05;
@@ -77,8 +96,10 @@
   .registerDate {
     font-size: $spacing-04 !important;
   }
+
   .formSectionTitle {
     @include type-style("body-compact-02");
+    padding-top: $spacing-06;
   }
 
   .patientUuid {
@@ -90,7 +111,7 @@
   .nameFields,
   .demographicsFields,
   .birthInfoFields {
-    > * {
+    >* {
       position: relative;
 
       div[class*="cds--form-requirement"] {
@@ -120,7 +141,7 @@
     margin-top: $spacing-05;
     padding-bottom: $spacing-03 + $spacing-01;
 
-    > * {
+    >* {
       flex: 1 1 0;
       min-width: 0;
     }
@@ -140,6 +161,7 @@
     width: $spacing-13 + $spacing-09 + $spacing-04;
     margin-bottom: -$spacing-01;
   }
+
   .checkboxField {
     margin-top: $spacing-03;
   }
@@ -158,6 +180,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+
   .actionButtons {
     display: flex;
     gap: $spacing-05;
@@ -245,3 +268,61 @@
   color: #da1e28;
   margin-left: $spacing-01;
 }
+
+.sectionContent {
+  padding: $spacing-02 $spacing-06 $spacing-05 $spacing-06;
+}
+
+.profileSectionContainer {
+  padding-bottom: $spacing-05;
+}
+
+// Accordion styling to match headerTile appearance
+// Carbon renders: <button class="cds--accordion__heading"> containing arrow + title
+.accordionWrapper {
+  :global(.cds--accordion__heading) {
+    background-color: $layer;
+    min-block-size: 4rem;
+    padding-block: $spacing-05;
+    padding-inline-start: $spacing-02;
+    padding-inline-end: $spacing-06;
+    border: none;
+
+    &:hover {
+      background-color: $layer-hover;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--cds-focus, #0f62fe);
+      outline-offset: -2px;
+    }
+  }
+
+  // Match font size, weight and color of the first section's .sectionTitle
+  :global(.cds--accordion__title) {
+    @include type-style("heading-compact-02");
+    padding-inline-start: $spacing-03;
+    color: $text-primary;
+  }
+
+  // Remove Carbon's wrapper padding — sectionContent handles spacing
+  :global(.cds--accordion__item--active > .cds--accordion__wrapper) {
+    padding-block: 0 !important;
+    padding-block-end: 0 !important;
+    padding-inline: 0 !important;
+  }
+
+  // Remove Carbon's default horizontal padding from content area
+  :global(.cds--accordion__content) {
+    padding-inline: 0 !important;
+    padding-inline-end: 0 !important;
+    padding-inline-start: 0 !important;
+  }
+
+  // Remove Carbon's align="start" left margin on accordion content
+  :global(.cds--accordion--start .cds--accordion__content) {
+    margin-inline-start: 0 !important;
+  }
+
+}
+
