@@ -90,6 +90,8 @@ export {
   generateId,
   generateUUID,
   getCookieByName,
+  deleteCookie,
+  setCookie,
   isStringEmpty,
   getPriorityByOrder,
   groupByDate,
@@ -197,7 +199,10 @@ export { getConfig } from './configService';
 export {
   getCurrentUser,
   getUserLoginLocation,
+  getAvailableLocations,
   getDefaultDateFormat,
+  logout,
+  saveUserLocation,
   type User,
 } from './userService';
 export { USER_PINNED_PREFERENCE_URL } from './observationFormsService/constants';
