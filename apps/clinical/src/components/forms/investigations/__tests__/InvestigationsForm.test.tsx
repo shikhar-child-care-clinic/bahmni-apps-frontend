@@ -13,6 +13,7 @@ expect.extend(toHaveNoViolations);
 
 Element.prototype.scrollIntoView = jest.fn();
 
+
 jest.mock('../../../../hooks/useInvestigationsSearch');
 jest.mock('../../../../stores/serviceRequestStore');
 
