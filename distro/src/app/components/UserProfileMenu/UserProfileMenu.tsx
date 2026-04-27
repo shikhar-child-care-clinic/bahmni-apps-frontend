@@ -45,7 +45,7 @@ export const UserProfileMenu: React.FC = () => {
     <div className={styles.profileContainer}>
       <OverflowMenu
         renderIcon={UserAvatar}
-        size="sm"
+        size="lg"
         flipped
         iconDescription={t('HOME_USER_MENU')}
         className={styles.overflowMenu}
