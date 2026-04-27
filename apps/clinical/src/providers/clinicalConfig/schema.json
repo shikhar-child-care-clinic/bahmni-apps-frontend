@@ -54,12 +54,12 @@
           "description": "Form attributes configuration",
           "items": {
             "type": "object",
-            "required": ["key", "required"],
+            "required": ["name", "required"],
             "additionalProperties": false,
             "properties": {
-              "key": {
+              "name": {
                 "type": "string",
-                "description": "Attribute key"
+                "description": "Attribute name"
               },
               "required": {
                 "type": "boolean",
@@ -141,7 +141,7 @@
       "type": "object",
       "description": "Configuration for consultation pad forms",
       "required": ["allergyConceptMap", "encounterDetails"],
-      "additionalProperties": false,
+      "additionalProperties": true,
       "properties": {
         "allergyConceptMap": {
           "type": "object",
@@ -152,7 +152,7 @@
             "environmentalAllergenUuid",
             "allergyReactionUuid"
           ],
-          "additionalProperties": true,
+          "additionalProperties": false,
           "properties": {
             "medicationAllergenUuid": {
               "type": "string",
@@ -171,10 +171,6 @@
               "description": "UUID for allergy reaction concept"
             }
           }
-        },
-        "statDurationInHours": {
-          "type": "number",
-          "description": "Duration in hours for which a STAT order is valid"
         },
         "statDurationInMilliseconds": {
           "type": "number",
@@ -207,6 +203,10 @@
         "conditionsAndDiagnoses": {
           "$ref": "#/definitions/inputControl",
           "description": "Configuration for the conditions and diagnoses form"
+        },
+        "immunizationHistory": {
+          "$ref": "#/definitions/inputControl",
+          "description": "Configuration for the immunization history form"
         }
       }
     }

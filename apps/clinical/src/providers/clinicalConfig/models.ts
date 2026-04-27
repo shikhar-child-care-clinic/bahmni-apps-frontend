@@ -5,36 +5,31 @@ export interface AllergyConceptMap {
   allergyReactionUuid: string;
 }
 
-interface InputControlAttributes {
-  key: string;
+export interface InputControlAttributes {
+  name: string;
   required: boolean;
 }
 
-export interface InputControl {
-  metadata: Record<string, unknown>;
+export interface InputControl<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> {
+  metadata: T;
   encounterTypes: string[];
   privileges: string[];
   attributes: InputControlAttributes[];
 }
 
-export interface EncounterDetailsMetadata {
-  defaultEncounterType?: string;
-}
-
-export interface EncounterDetailsControl extends InputControl {
-  metadata: EncounterDetailsMetadata;
-}
-
 export interface ConsultationPad {
   allergyConceptMap: AllergyConceptMap;
   statDurationInMilliseconds?: number;
-  encounterDetails: EncounterDetailsControl;
+  encounterDetails: InputControl;
   allergies?: InputControl;
   investigations?: InputControl;
   medications?: InputControl;
   observationForms?: InputControl;
   vaccinations?: InputControl;
   conditionsAndDiagnoses?: InputControl;
+  immunizationHistory?: InputControl;
 }
 
 export interface Dashboard {

@@ -102,6 +102,7 @@ export {
   getValueType,
   camelToScreamingSnakeCase,
   convertToSentenceCase,
+  resolveComboBoxItems,
 } from './utils';
 export {
   type FormatDateResult,
@@ -327,6 +328,11 @@ export {
   type DocumentReference,
 } from './documentReferenceService';
 
+export {
+  getLocationByTag,
+  type Location,
+  type ChildLocation,
+} from './locationService';
 export { getPatientImmunizations } from './immunizationService';
 export type { ImmunizationStatus } from './immunizationService';
 export { uploadDocument } from './documentUploadService';
