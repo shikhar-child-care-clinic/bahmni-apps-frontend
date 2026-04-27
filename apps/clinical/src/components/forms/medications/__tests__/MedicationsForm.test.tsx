@@ -186,6 +186,7 @@ describe('MedicationsForm', () => {
     jest.clearAllMocks();
     jest.spyOn(console, 'error').mockImplementation(() => {});
     window.HTMLElement.prototype.scrollIntoView = jest.fn();
+    localStorage.setItem('default_dateFormat', 'dd/MM/yyyy');
 
     jest.spyOn(Intl, 'DateTimeFormat').mockImplementation(
       () =>
@@ -230,6 +231,7 @@ describe('MedicationsForm', () => {
   });
 
   afterEach(() => {
+    localStorage.clear();
     jest.restoreAllMocks();
   });
 

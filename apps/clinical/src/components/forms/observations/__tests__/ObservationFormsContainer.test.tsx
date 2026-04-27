@@ -58,9 +58,23 @@ jest.mock('@bahmni/form2-controls', () => {
   };
 });
 
-// Mock the usePatientUUID hook
+// Mock the form2-controls CSS
+jest.mock('@bahmni/form2-controls/dist/bundle.css', () => ({}));
+jest.mock('../styles/form2-controls-fixes.scss', () => ({}));
+
+// Mock the usePatientUUID and useActivePractitioner hooks
 jest.mock('@bahmni/widgets', () => ({
   usePatientUUID: jest.fn(() => 'test-patient-uuid'),
+  useActivePractitioner: jest.fn(() => ({
+    user: { uuid: 'test-user-uuid' },
+    practitioner: { uuid: 'test-practitioner-uuid' },
+  })),
+}));
+
+jest.mock('../../../../hooks/useClinicalAppData', () => ({
+  useClinicalAppData: jest.fn(() => ({
+    episodeOfCare: [],
+  })),
 }));
 
 // Mock the constants
@@ -154,6 +168,18 @@ jest.mock('@bahmni/design-system', () => ({
   },
 }));
 
+// Mock styles
+jest.mock('../styles/ObservationFormsContainer.module.scss', () => ({
+  formView: 'formView',
+  formContent: 'formContent',
+  formViewActionArea: 'formViewActionArea',
+  formTitleContainer: 'formTitleContainer',
+  pinIconContainer: 'pinIconContainer',
+  pinned: 'pinned',
+  unpinned: 'unpinned',
+  errorNotificationWrapper: 'errorNotificationWrapper',
+}));
+
 describe('ObservationFormsContainer', () => {
   const mockForm: ObservationForm = {
     name: 'Test Form',
@@ -166,8 +192,6 @@ describe('ObservationFormsContainer', () => {
     onViewingFormChange: jest.fn(),
     viewingForm: null,
     onRemoveForm: jest.fn(),
-    pinnedForms: [],
-    updatePinnedForms: jest.fn(),
   };
 
   beforeEach(() => {
@@ -466,17 +490,26 @@ describe('ObservationFormsContainer', () => {
     };
 
     it('should show pinned state when form is in pinnedForms array', () => {
+      const mockUsePinnedObservationForms = jest.requireMock(
+        '../../../../hooks/usePinnedObservationForms',
+      ).usePinnedObservationForms;
+      mockUsePinnedObservationForms.mockReturnValue({
+        pinnedForms: [nonDefaultForm],
+        updatePinnedForms: jest.fn(),
+        isLoading: false,
+      });
+
       render(
         <ObservationFormsContainer
           {...defaultProps}
           viewingForm={nonDefaultForm}
-          pinnedForms={[nonDefaultForm]}
         />,
       );
 
       const pinIcon = screen.getByTestId('icon-pin-icon');
       const pinContainer = pinIcon.parentElement;
 
+      expect(pinContainer).toHaveClass('pinned');
       expect(pinContainer).toHaveAttribute('title', 'Unpin form');
     });
 
@@ -485,25 +518,31 @@ describe('ObservationFormsContainer', () => {
         <ObservationFormsContainer
           {...defaultProps}
           viewingForm={nonDefaultForm}
-          pinnedForms={[]}
         />,
       );
 
       const pinIcon = screen.getByTestId('icon-pin-icon');
       const pinContainer = pinIcon.parentElement;
 
+      expect(pinContainer).toHaveClass('unpinned');
       expect(pinContainer).toHaveAttribute('title', 'Pin form');
     });
 
     it('should call updatePinnedForms when pin icon is clicked', () => {
       const mockUpdatePinnedForms = jest.fn();
+      const mockUsePinnedObservationForms = jest.requireMock(
+        '../../../../hooks/usePinnedObservationForms',
+      ).usePinnedObservationForms;
+      mockUsePinnedObservationForms.mockReturnValue({
+        pinnedForms: [nonDefaultForm],
+        updatePinnedForms: mockUpdatePinnedForms,
+        isLoading: false,
+      });
 
       render(
         <ObservationFormsContainer
           {...defaultProps}
           viewingForm={nonDefaultForm}
-          pinnedForms={[nonDefaultForm]}
-          updatePinnedForms={mockUpdatePinnedForms}
         />,
       );
 
