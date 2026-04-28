@@ -4,6 +4,8 @@ export {
   getAppointmentById,
   getUpcomingAppointments,
   getPastAppointments,
+  getUpcomingAppointmentsPage,
+  getPastAppointmentsPage,
   getAllAppointmentServices,
   deleteAppointmentService,
   createAppointmentService,
@@ -18,6 +20,8 @@ export {
   type AppointmentSpeciality,
   type CreateAppointmentServiceRequest,
   type CreateServiceWeeklyAvailability,
+  type AppointmentPage,
+  type AppointmentService
 } from './models';
 export {
   APPOINTMENT_STATUSES,

@@ -2,6 +2,7 @@ import { QueryClient } from '@tanstack/react-query';
 import {
   capitalize,
   generateId,
+  generateUUID,
   getCookieByName,
   isStringEmpty,
   getPriorityByOrder,
@@ -92,11 +93,8 @@ describe('common utility functions', () => {
   });
 
   describe('isStringEmpty', () => {
-    it('should return true for undefined input', () => {
+    it('should return true for null or undefined input', () => {
       expect(isStringEmpty(undefined)).toBe(true);
-    });
-
-    it('should return true for null input', () => {
       // @ts-expect-error - Testing null case even though type is string | undefined
       expect(isStringEmpty(null)).toBe(true);
     });
@@ -1127,6 +1125,98 @@ describe('common utility functions', () => {
     });
   });
 
+  describe('generateUUID', () => {
+    // UUID v4 regex pattern: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+    const uuidV4Regex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+    it('should generate a valid UUID v4 string', () => {
+      const uuid = generateUUID();
+      expect(typeof uuid).toBe('string');
+      expect(uuid).toMatch(uuidV4Regex);
+    });
+
+    it('should generate UUIDs with correct format (8-4-4-4-12 hex pattern)', () => {
+      const uuid = generateUUID();
+      // Check for UUID format: 8-4-4-4-12 hex digits with hyphens
+      expect(uuid).toHaveLength(36);
+      const parts = uuid.split('-');
+      expect(parts).toHaveLength(5);
+      expect(parts[0]).toHaveLength(8);
+      expect(parts[1]).toHaveLength(4);
+      expect(parts[2]).toHaveLength(4);
+      expect(parts[3]).toHaveLength(4);
+      expect(parts[4]).toHaveLength(12);
+    });
+
+    it('should generate different UUIDs on multiple calls', () => {
+      const uuid1 = generateUUID();
+      const uuid2 = generateUUID();
+      const uuid3 = generateUUID();
+
+      expect(uuid1).not.toBe(uuid2);
+      expect(uuid2).not.toBe(uuid3);
+      expect(uuid1).not.toBe(uuid3);
+    });
+
+    it('should use version 4 (random) UUID format', () => {
+      const uuid = generateUUID();
+      const parts = uuid.split('-');
+      const versionNibble = parts[2].charAt(0);
+      // Version 4 means the first character should be '4'
+      expect(versionNibble).toBe('4');
+    });
+
+    it('should follow RFC 4122 variant specification', () => {
+      const uuid = generateUUID();
+      const parts = uuid.split('-');
+      const variantNibble = parts[3].charAt(0).toLowerCase();
+      // Variant should be 8, 9, a, or b for RFC 4122
+      expect(['8', '9', 'a', 'b']).toContain(variantNibble);
+    });
+
+    it('should always contain hyphens at correct positions', () => {
+      const uuid = generateUUID();
+      expect(uuid[8]).toBe('-');
+      expect(uuid[13]).toBe('-');
+      expect(uuid[18]).toBe('-');
+      expect(uuid[23]).toBe('-');
+    });
+
+    it('should only contain hexadecimal characters and hyphens', () => {
+      const uuid = generateUUID();
+      const hexWithHyphens = /^[0-9a-f-]+$/i;
+      expect(uuid).toMatch(hexWithHyphens);
+    });
+
+    it('should generate UUIDs with unique values in bulk', () => {
+      // Generate multiple UUIDs and verify they are mostly unique
+      // (crypto.randomUUID should generate all unique, getRandomValues should generate all unique)
+      const uuids = Array.from({ length: 50 }, () => generateUUID());
+      const uniqueUUIDs = new Set(uuids);
+
+      // Should have high uniqueness (allowing for extremely rare collisions)
+      expect(uniqueUUIDs.size).toBeGreaterThan(48);
+    });
+
+    it('should generate valid v4 UUIDs consistently', () => {
+      // Generate multiple UUIDs and verify all are valid v4 format
+      for (let i = 0; i < 20; i++) {
+        const uuid = generateUUID();
+        expect(uuid).toMatch(uuidV4Regex);
+      }
+    });
+
+    it('should never return empty or null string', () => {
+      for (let i = 0; i < 10; i++) {
+        const uuid = generateUUID();
+        expect(uuid).not.toBe('');
+        expect(uuid).not.toBeNull();
+        expect(uuid).toBeDefined();
+      }
+    });
+  });
+
   describe('resolveComboBoxItems', () => {
     const items = [
       { uuid: 'uuid-1', name: 'General Medicine' },
@@ -1144,6 +1234,7 @@ describe('common utility functions', () => {
         scenario: 'isLoading is true',
         isLoading: true,
         isError: false,
+        testItems: items,
         expectedMessage: 'Loading...',
       },
       {
@@ -1152,13 +1243,20 @@ describe('common utility functions', () => {
         isError: true,
         expectedMessage: 'Failed to load',
       },
+      {
+        scenario: 'items is empty',
+        isLoading: false,
+        isError: false,
+        testItems: [],
+        expectedMessage: 'No items found',
+      },
     ])(
       'should return a single disabled sentinel item when $scenario',
-      ({ isLoading, isError, expectedMessage }) => {
+      ({ isLoading, isError, testItems, expectedMessage }) => {
         const result = resolveComboBoxItems(
           isLoading,
           isError,
-          items,
+          testItems,
           toSentinel,
           messages,
         );

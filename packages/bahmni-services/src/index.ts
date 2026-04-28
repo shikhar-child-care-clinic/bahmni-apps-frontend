@@ -75,6 +75,9 @@ export {
   getAppointmentById,
   getUpcomingAppointments,
   getPastAppointments,
+  getUpcomingAppointmentsPage,
+  getPastAppointmentsPage,
+  type AppointmentPage,
   getAllAppointmentServices,
   deleteAppointmentService,
   createAppointmentService,
@@ -94,7 +97,10 @@ export { getFormattedError } from './errorHandling';
 export {
   capitalize,
   generateId,
+  generateUUID,
   getCookieByName,
+  deleteCookie,
+  setCookie,
   isStringEmpty,
   getPriorityByOrder,
   groupByDate,
@@ -136,9 +142,16 @@ export {
   fetchAndFormatAllergenConcepts,
   fetchReactionConcepts,
 } from './allergyService';
-export { getConditions, type ConditionInputEntry } from './conditionService';
+export {
+  getConditions,
+  getConditionPage,
+  type ConditionPage,
+  type ConditionInputEntry,
+} from './conditionService';
 export {
   getPatientDiagnoses,
+  getDiagnosesPage,
+  type DiagnosisPage,
   type Diagnosis,
   type DiagnosisInputEntry,
   type DiagnosesByDate,
@@ -170,6 +183,7 @@ export {
   getPatientRadiologyInvestigations,
   getPatientRadiologyInvestigationBundle,
   getPatientRadiologyInvestigationBundleWithImagingStudy,
+  fetchQualityAssessment,
 } from './radiologyInvestigationService';
 export { getLabInvestigationsBundle } from './labInvestigationService';
 export {
@@ -197,7 +211,10 @@ export { getConfig } from './configService';
 export {
   getCurrentUser,
   getUserLoginLocation,
+  getAvailableLocations,
   getDefaultDateFormat,
+  logout,
+  saveUserLocation,
   type User,
 } from './userService';
 export { USER_PINNED_PREFERENCE_URL } from './observationFormsService/constants';
@@ -296,10 +313,12 @@ export {
 export { getServiceRequests } from './orderRequestService';
 export {
   getPatientPrograms,
+  getPatientProgramsPage,
   getProgramByUUID,
   getCurrentStateName,
   extractAttributes,
   updateProgramState,
+  type ProgramPage,
   type ProgramEnrollment,
   type PatientProgramsResponse,
 } from './programService';
@@ -314,6 +333,21 @@ export {
 export {
   getDocumentReferences,
   getFormattedDocumentReferences,
+  getDocumentReferencePage,
+  type DocumentReferencePage,
   type DocumentViewModel,
   type DocumentReference,
 } from './documentReferenceService';
+
+export {
+  getLocationByTag,
+  type Location,
+  type ChildLocation,
+} from './locationService';
+export { getPatientImmunizations } from './immunizationService';
+export type { ImmunizationStatus } from './immunizationService';
+export { uploadDocument } from './documentUploadService';
+export type {
+  DocumentUploadResponse,
+  ProcessedFileData,
+} from './documentUploadService';

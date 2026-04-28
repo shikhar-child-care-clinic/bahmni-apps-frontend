@@ -1,7 +1,10 @@
 export {
   capitalize,
   generateId,
+  generateUUID,
   getCookieByName,
+  deleteCookie,
+  setCookie,
   isStringEmpty,
   getPriorityByOrder,
   groupByDate,

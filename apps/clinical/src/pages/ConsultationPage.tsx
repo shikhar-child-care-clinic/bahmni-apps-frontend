@@ -18,12 +18,20 @@ import {
   useUserPrivilege,
 } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
-import React, { Suspense, useEffect, useMemo, useState } from 'react';
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useSearchParams } from 'react-router-dom';
-import ConsultationPad from '../components/consultationPad/ConsultationPad';
+import ConsultationPad from '../components/consultationPad/';
 import DashboardContainer from '../components/dashboardContainer/DashboardContainer';
 import PatientHeader from '../components/patientHeader/PatientHeader';
+import PatientSearch from '../components/patientSearch/PatientSearch';
 import { BAHMNI_CLINICAL_PATH } from '../constants/app';
+import { useSubscribeConsultationStart } from '../events/startConsultation';
 import { ClinicalAppProvider } from '../providers/ClinicalAppProvider';
 import { useClinicalConfig } from '../providers/clinicalConfig';
 import { useObservationFormsStore } from '../stores/observationFormsStore';
@@ -52,29 +60,6 @@ const addSectionIds = (config: DashboardConfig): DashboardConfig => {
   };
 };
 
-const globalActions = [
-  {
-    id: 'search',
-    label: 'Search',
-    renderIcon: <Icon id="search-icon" name="fa-search" size={ICON_SIZE.LG} />,
-    onClick: () => {},
-  },
-  {
-    id: 'notifications',
-    label: 'Notifications',
-    renderIcon: (
-      <Icon id="notifications-icon" name="fa-bell" size={ICON_SIZE.LG} />
-    ),
-    onClick: () => {},
-  },
-  {
-    id: 'user',
-    label: 'User',
-    renderIcon: <Icon id="user-icon" name="fa-user" size={ICON_SIZE.LG} />,
-    onClick: () => {},
-  },
-];
-
 /**
  * ConsultationPage
  *
@@ -91,7 +76,47 @@ const ConsultationPage: React.FC = () => {
   const { userPrivileges } = useUserPrivilege();
   const { addNotification } = useNotification();
   const [isActionAreaVisible, setIsActionAreaVisible] = useState(false);
+  const [encounterType, setEncounterType] = useState('');
+
+  useSubscribeConsultationStart(
+    useCallback(({ encounterType: type }) => {
+      setEncounterType(type);
+      setIsActionAreaVisible(true);
+    }, []),
+  );
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchParams] = useSearchParams();
+
+  const handleSearchOpen = useCallback(() => setIsSearchOpen(true), []);
+  const handleSearchClose = useCallback(() => setIsSearchOpen(false), []);
+
+  const globalActions = useMemo(
+    () => [
+      {
+        id: 'search',
+        label: t('GLOBAL_ACTION_SEARCH'),
+        renderIcon: (
+          <Icon id="search-icon" name="fa-search" size={ICON_SIZE.LG} />
+        ),
+        onClick: handleSearchOpen,
+      },
+      {
+        id: 'notifications',
+        label: t('GLOBAL_ACTION_NOTIFICATIONS'),
+        renderIcon: (
+          <Icon id="notifications-icon" name="fa-bell" size={ICON_SIZE.LG} />
+        ),
+        onClick: () => {},
+      },
+      {
+        id: 'user',
+        label: t('GLOBAL_ACTION_USER'),
+        renderIcon: <Icon id="user-icon" name="fa-user" size={ICON_SIZE.LG} />,
+        onClick: () => {},
+      },
+    ],
+    [handleSearchOpen, t],
+  );
   const viewingForm = useObservationFormsStore((state) => state.viewingForm);
 
   const breadcrumbItems = [
@@ -230,6 +255,9 @@ const ConsultationPage: React.FC = () => {
 
   return (
     <ClinicalAppProvider episodeUuids={episodeUuids}>
+      {/* Rendered outside ActionAreaLayout: uses position:fixed to overlay the header area.
+          Placed here (inside ClinicalAppProvider) so it has access to clinical context. */}
+      <PatientSearch isOpen={isSearchOpen} onClose={handleSearchClose} />
       <ActionAreaLayout
         headerWSideNav={
           <Header
@@ -260,10 +288,7 @@ const ConsultationPage: React.FC = () => {
               aria-label={t('PATIENT_HEADER_SECTION')}
               className={styles.stickySection}
             >
-              <PatientHeader
-                isActionAreaVisible={isActionAreaVisible}
-                setIsActionAreaVisible={setIsActionAreaVisible}
-              />
+              <PatientHeader isActionAreaVisible={isActionAreaVisible} />
               {renderContextInformation()}
             </div>
             <DashboardContainer
@@ -276,6 +301,7 @@ const ConsultationPage: React.FC = () => {
         layoutVariant={viewingForm ? 'extended' : 'default'}
         actionArea={
           <ConsultationPad
+            encounterType={encounterType}
             onClose={() => setIsActionAreaVisible((prev) => !prev)}
           />
         }

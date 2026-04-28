@@ -12,6 +12,8 @@ import {
   updateAppointmentStatusUrl,
   UPCOMING_APPOINTMENTS_URL,
   PAST_APPOINTMENTS_URL,
+  getUpcomingAppointmentsPageUrl,
+  getPastAppointmentsPageUrl,
 } from './constants';
 import {
   AppointmentLocation,
@@ -19,6 +21,8 @@ import {
   AppointmentServiceAttributeType,
   AppointmentSpeciality,
   CreateAppointmentServiceRequest,
+  AppointmentPage,
+  AppointmentService
 } from './models';
 
 /**
@@ -170,3 +174,39 @@ export const getAppointmentSpecialities = async (): Promise<
 > => {
   return await get<AppointmentSpeciality[]>(APPOINTMENT_SPECIALITIES_URL);
 };
+ * Fetches a single page of upcoming appointments using offset-based pagination.
+ * @param patientUuid - The UUID of the patient
+ * @param count - Number of items per page (default 10)
+ * @param page - 1-based page number (default 1)
+ * @returns Promise resolving to an AppointmentPage with bundle and total count
+ */
+export async function getUpcomingAppointmentsPage(
+  patientUuid: string,
+  count: number = 10,
+  page: number = 1,
+): Promise<AppointmentPage> {
+  const offset = (page - 1) * count;
+  const bundle = await get<Bundle<Appointment>>(
+    getUpcomingAppointmentsPageUrl(patientUuid, count, offset),
+  );
+  return { bundle, total: bundle.total ?? bundle.entry?.length ?? 0 };
+}
+
+/**
+ * Fetches a single page of past appointments using offset-based pagination.
+ * @param patientUuid - The UUID of the patient
+ * @param count - Number of items per page (default 10)
+ * @param page - 1-based page number (default 1)
+ * @returns Promise resolving to an AppointmentPage with bundle and total count
+ */
+export async function getPastAppointmentsPage(
+  patientUuid: string,
+  count: number = 10,
+  page: number = 1,
+): Promise<AppointmentPage> {
+  const offset = (page - 1) * count;
+  const bundle = await get<Bundle<Appointment>>(
+    getPastAppointmentsPageUrl(patientUuid, count, offset),
+  );
+  return { bundle, total: bundle.total ?? bundle.entry?.length ?? 0 };
+}
