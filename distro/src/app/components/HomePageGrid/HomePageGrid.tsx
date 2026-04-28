@@ -8,13 +8,21 @@ import styles from './styles/HomePageGrid.module.scss';
 
 export const HomePageGrid: React.FC = () => {
   const { t } = useTranslation();
-  const { userPrivileges } = useUserPrivilege();
+  const {
+    userPrivileges,
+    isLoading: privilegesLoading,
+    error: privilegeError,
+  } = useUserPrivilege();
   const [modules, setModules] = useState<Module[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadModules = useCallback(async () => {
-    if (userPrivileges === null) return;
+    if (privilegesLoading) return;
+    if (privilegeError || userPrivileges === null) {
+      setError(t('HOME_ERROR_FETCH_CONFIG'));
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -34,13 +42,13 @@ export const HomePageGrid: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [userPrivileges]);
+  }, [userPrivileges, privilegesLoading, privilegeError, t]);
 
   useEffect(() => {
     loadModules();
   }, [loadModules]);
 
-  if (loading) {
+  if (privilegesLoading || loading) {
     return (
       <div
         className={styles.container}

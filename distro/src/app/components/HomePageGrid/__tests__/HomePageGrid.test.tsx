@@ -3,7 +3,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { getVisibleModules } from '../../../../services/moduleService';
 import { HomePageGrid } from '../HomePageGrid';
-import { mockModules, mockEmptyModules } from './__mocks__/homePageGridMocks';
+import {
+  mockModules,
+  mockEmptyModules,
+  mockPublicModule,
+} from './__mocks__/homePageGridMocks';
 
 expect.extend(toHaveNoViolations);
 
@@ -183,5 +187,108 @@ describe('HomePageGrid', () => {
     });
 
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it('does not render tiles excluded by privilege filtering', async () => {
+    mockGetVisibleModules.mockResolvedValue([mockModules[1]]);
+
+    render(<HomePageGrid />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('app-tile-registration')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId('app-tile-clinical')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('app-tile-inpatient')).not.toBeInTheDocument();
+  });
+
+  it('uses module label when translationKey is absent', async () => {
+    mockGetVisibleModules.mockResolvedValue([mockPublicModule]);
+
+    render(<HomePageGrid />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('app-tile-reports')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Reports')).toBeInTheDocument();
+  });
+
+  it('shows error when privilege fetch fails', async () => {
+    mockUseUserPrivilege.mockReturnValue({
+      userPrivileges: null,
+      setUserPrivileges: jest.fn(),
+      isLoading: false,
+      setIsLoading: jest.fn(),
+      error: 'Privilege fetch failed',
+      setError: jest.fn(),
+    });
+
+    render(<HomePageGrid />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('home-error')).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+  });
+
+  describe('Snapshots', () => {
+    it('matches snapshot in loading state', () => {
+      mockUseUserPrivilege.mockReturnValue({
+        userPrivileges: null,
+        setUserPrivileges: jest.fn(),
+        isLoading: true,
+        setIsLoading: jest.fn(),
+        error: null,
+        setError: jest.fn(),
+      });
+
+      const { container } = render(<HomePageGrid />);
+
+      expect(container).toMatchSnapshot();
+    });
+
+    it('matches snapshot in error state', async () => {
+      const consoleErrorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      mockGetVisibleModules.mockRejectedValue(new Error('Network error'));
+
+      const { container } = render(<HomePageGrid />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('home-error')).toBeInTheDocument();
+      });
+
+      expect(container).toMatchSnapshot();
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('matches snapshot in empty state', async () => {
+      mockGetVisibleModules.mockResolvedValue(mockEmptyModules);
+
+      const { container } = render(<HomePageGrid />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('status')).toHaveTextContent(
+          'No modules available',
+        );
+      });
+
+      expect(container).toMatchSnapshot();
+    });
+
+    it('matches snapshot with modules', async () => {
+      mockGetVisibleModules.mockResolvedValue(mockModules);
+
+      const { container } = render(<HomePageGrid />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('app-tile-clinical')).toBeInTheDocument();
+      });
+
+      expect(container).toMatchSnapshot();
+    });
   });
 });
