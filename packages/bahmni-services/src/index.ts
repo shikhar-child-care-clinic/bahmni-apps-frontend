@@ -204,6 +204,7 @@ export {
   getDefaultDateFormat,
   logout,
   saveUserLocation,
+  updateSessionLocation,
   type User,
 } from './userService';
 export { USER_PINNED_PREFERENCE_URL } from './observationFormsService/constants';

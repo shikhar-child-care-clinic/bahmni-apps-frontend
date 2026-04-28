@@ -3,6 +3,7 @@ import {
   getAvailableLocations,
   getCurrentUser,
   saveUserLocation,
+  updateSessionLocation,
   setCookie,
   notificationService,
 } from '@bahmni/services';
@@ -63,6 +64,15 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
           BAHMNI_USER_LOCATION_COOKIE,
           encodeURIComponent(JSON.stringify(newLocation)),
         );
+
+        updateSessionLocation(newLocation.uuid).catch((err) => {
+          // eslint-disable-next-line no-console
+          console.warn('Failed to update session location:', err);
+          notificationService.showWarning(
+            i18next.t('HOME_ERROR_LOCATION_SYNC_FAILED_TITLE'),
+            i18next.t('HOME_ERROR_LOCATION_SYNC_FAILED'),
+          );
+        });
 
         if (userUuid) {
           saveUserLocation(userUuid, newLocation).catch((err) => {

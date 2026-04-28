@@ -12,6 +12,7 @@ import {
   ERROR_MESSAGES,
   AVAILABLE_LOCATIONS_URL,
   SAVE_USER_LOCATION_URL,
+  UPDATE_SESSION_LOCATION_URL,
 } from './constants';
 import {
   UserResponse,
@@ -123,4 +124,16 @@ export const saveUserLocation = async (
   await post(SAVE_USER_LOCATION_URL(userUuid), {
     userProperties: { loginLocation: location.uuid },
   });
+};
+
+/**
+ * Updates the OpenMRS server-side session with the selected location.
+ * This ensures encounters and observations are attributed to the correct location.
+ * @param locationUuid - The UUID of the location to set on the session
+ * @throws Error when the API call fails
+ */
+export const updateSessionLocation = async (
+  locationUuid: string,
+): Promise<void> => {
+  await post(UPDATE_SESSION_LOCATION_URL, { sessionLocation: locationUuid });
 };
