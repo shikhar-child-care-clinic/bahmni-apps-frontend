@@ -3,7 +3,6 @@ import {
   CodeSnippetSkeleton,
   ComboBox,
   SelectedItem,
-  Tile,
 } from '@bahmni/design-system';
 import {
   getLocationByTag,
@@ -198,10 +197,10 @@ const ImmunizationHistoryForm = () => {
     );
 
   return (
-    <Tile
+    <div
       id="immunization-history-form"
-      data-testid="immunization-history-form-tile-test-id"
-      className={styles.tile}
+      data-testid="immunization-history-form-test-id"
+      className={styles.form}
     >
       <div
         id="immunization-history-form-title"
@@ -274,7 +273,7 @@ const ImmunizationHistoryForm = () => {
           ))}
         </BoxWHeader>
       )}
-    </Tile>
+    </div>
   );
 };
 

@@ -3,8 +3,9 @@
 @use "@carbon/react/scss/type" as *;
 @use "@carbon/react/scss/theme" as *;
 
-.tile {
+.form {
   margin: $spacing-03;
+  padding: $spacing-05;
   background-color: $background
 }
 
@@ -42,6 +43,11 @@
   @include type-style("heading-compact-02");
   margin-bottom: $spacing-04;
   margin-left: 0;
+}
+
+.textArea {
+  margin-block-start: -1rem;
+  margin-inline-start: 0;
 }
 
 .column {
