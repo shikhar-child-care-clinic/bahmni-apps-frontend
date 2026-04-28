@@ -17,12 +17,11 @@ import {
 } from './constants';
 import {
   AppointmentLocation,
-  AppointmentService,
   AppointmentServiceAttributeType,
   AppointmentSpeciality,
   CreateAppointmentServiceRequest,
   AppointmentPage,
-  AppointmentService
+  AppointmentService,
 } from './models';
 
 /**
@@ -174,6 +173,8 @@ export const getAppointmentSpecialities = async (): Promise<
 > => {
   return await get<AppointmentSpeciality[]>(APPOINTMENT_SPECIALITIES_URL);
 };
+
+/**
  * Fetches a single page of upcoming appointments using offset-based pagination.
  * @param patientUuid - The UUID of the patient
  * @param count - Number of items per page (default 10)

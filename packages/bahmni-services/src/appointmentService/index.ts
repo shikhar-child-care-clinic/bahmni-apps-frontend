@@ -21,7 +21,7 @@ export {
   type CreateAppointmentServiceRequest,
   type CreateServiceWeeklyAvailability,
   type AppointmentPage,
-  type AppointmentService
+  type AppointmentService,
 } from './models';
 export {
   APPOINTMENT_STATUSES,
