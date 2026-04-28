@@ -1,3 +1,4 @@
+import { useUserPrivilege } from '@bahmni/widgets';
 import { render, screen, waitFor } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { getVisibleModules } from '../../../../services/moduleService';
@@ -18,22 +19,46 @@ jest.mock('../../../../services/moduleService', () => ({
   getVisibleModules: jest.fn(),
 }));
 
+jest.mock('@bahmni/widgets', () => ({
+  useUserPrivilege: jest.fn(),
+}));
+
 const mockGetVisibleModules = getVisibleModules as jest.MockedFunction<
   typeof getVisibleModules
 >;
 
+const mockUseUserPrivilege = useUserPrivilege as jest.MockedFunction<
+  typeof useUserPrivilege
+>;
+
+const mockPrivileges = [
+  { uuid: 'priv-1', name: 'View Clinical Module' },
+  { uuid: 'priv-2', name: 'View Registration Module' },
+  { uuid: 'priv-3', name: 'View Inpatient Module' },
+];
+
 describe('HomePageGrid', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseUserPrivilege.mockReturnValue({
+      userPrivileges: mockPrivileges,
+      setUserPrivileges: jest.fn(),
+      isLoading: false,
+      setIsLoading: jest.fn(),
+      error: null,
+      setError: jest.fn(),
+    });
   });
 
-  it('renders loading skeleton on mount', () => {
-    mockGetVisibleModules.mockImplementation(
-      () =>
-        new Promise(() => {
-          /* never resolves */
-        }),
-    );
+  it('renders loading skeleton while privileges are loading', () => {
+    mockUseUserPrivilege.mockReturnValue({
+      userPrivileges: null,
+      setUserPrivileges: jest.fn(),
+      isLoading: true,
+      setIsLoading: jest.fn(),
+      error: null,
+      setError: jest.fn(),
+    });
 
     const { container } = render(<HomePageGrid />);
 
@@ -78,13 +103,32 @@ describe('HomePageGrid', () => {
     });
   });
 
+  it('calls getVisibleModules with mapped privilege names', async () => {
+    mockGetVisibleModules.mockResolvedValue(mockModules);
+
+    render(<HomePageGrid />);
+
+    await waitFor(() => {
+      expect(mockGetVisibleModules).toHaveBeenCalledWith(
+        'org.bahmni.home.dashboard',
+        [
+          'View Clinical Module',
+          'View Registration Module',
+          'View Inpatient Module',
+        ],
+      );
+    });
+  });
+
   it('loading state has role="status" and aria-busy="true"', () => {
-    mockGetVisibleModules.mockImplementation(
-      () =>
-        new Promise(() => {
-          /* never resolves */
-        }),
-    );
+    mockUseUserPrivilege.mockReturnValue({
+      userPrivileges: null,
+      setUserPrivileges: jest.fn(),
+      isLoading: true,
+      setIsLoading: jest.fn(),
+      error: null,
+      setError: jest.fn(),
+    });
 
     render(<HomePageGrid />);
 

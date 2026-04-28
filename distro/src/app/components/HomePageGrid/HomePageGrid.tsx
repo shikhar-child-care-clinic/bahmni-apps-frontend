@@ -1,5 +1,6 @@
 import { InlineNotification, Grid, Column } from '@bahmni/design-system';
 import { useTranslation } from '@bahmni/services';
+import { useUserPrivilege } from '@bahmni/widgets';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Module, getVisibleModules } from '../../../services/moduleService';
 import { AppTile } from '../AppTile';
@@ -7,17 +8,21 @@ import styles from './styles/HomePageGrid.module.scss';
 
 export const HomePageGrid: React.FC = () => {
   const { t } = useTranslation();
+  const { userPrivileges } = useUserPrivilege();
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadModules = useCallback(async () => {
+    if (userPrivileges === null) return;
     try {
       setLoading(true);
       setError(null);
 
+      const privilegeNames = userPrivileges.map((p) => p.name);
       const visibleModules = await getVisibleModules(
         'org.bahmni.home.dashboard',
+        privilegeNames,
       );
 
       setModules(visibleModules);
@@ -29,7 +34,7 @@ export const HomePageGrid: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userPrivileges]);
 
   useEffect(() => {
     loadModules();
@@ -102,11 +107,6 @@ export const HomePageGrid: React.FC = () => {
               label={module.translationKey ?? module.label}
               icon={module.icon}
               url={module.url}
-              privileges={
-                module.requiredPrivilege
-                  ? [module.requiredPrivilege]
-                  : undefined
-              }
             />
           </Column>
         ))}
