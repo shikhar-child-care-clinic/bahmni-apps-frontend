@@ -254,10 +254,11 @@ describe('useImmunizationHistoryStore', () => {
       expect(isValid).toBe(true);
     });
 
-    it('always validates drug as required regardless of attributes', () => {
+    it('validates drug as required when drug attribute has required: true', () => {
       const { result } = renderHook(() => useImmunizationHistoryStore());
 
       act(() => {
+        result.current.setAttributes([{ name: 'drug', required: true }]);
         result.current.addImmunization(mockVaccineCode);
       });
       let isValid = true;
@@ -270,6 +271,25 @@ describe('useImmunizationHistoryStore', () => {
       expect(result.current.selectedImmunizations[0].errors.drug).toBe(
         'IMMUNIZATION_HISTORY_DRUG_CODE_REQUIRED',
       );
+    });
+
+    it('skips drug validation when drug attribute is absent', () => {
+      const { result } = renderHook(() => useImmunizationHistoryStore());
+
+      act(() => {
+        result.current.setAttributes([]);
+        result.current.addImmunization(mockVaccineCode);
+      });
+      let isValid = true;
+
+      act(() => {
+        isValid = result.current.validateAll();
+      });
+
+      expect(isValid).toBe(true);
+      expect(
+        result.current.selectedImmunizations[0].errors.drug,
+      ).toBeUndefined();
     });
 
     it('sets errors for all required fields and marks each entry as validated, treating whitespace-only values as empty', () => {
@@ -382,6 +402,7 @@ describe('useImmunizationHistoryStore', () => {
       const { result } = renderHook(() => useImmunizationHistoryStore());
 
       act(() => {
+        result.current.setAttributes([{ name: 'drug', required: true }]);
         result.current.addImmunization(mockVaccineCode);
         result.current.addImmunization(secondVaccineCode);
       });
@@ -403,6 +424,34 @@ describe('useImmunizationHistoryStore', () => {
       expect(
         result.current.selectedImmunizations[1].errors.drug,
       ).toBeUndefined();
+    });
+  });
+
+  describe('updateNote', () => {
+    it('updates note on the target entry without touching other entries, and is a no-op for a non-existent id', () => {
+      const { result } = renderHook(() => useImmunizationHistoryStore());
+
+      act(() => {
+        result.current.addImmunization(mockVaccineCode);
+        result.current.addImmunization(secondVaccineCode);
+      });
+      const targetId = result.current.selectedImmunizations[0].id;
+      const otherEntryBefore = result.current.selectedImmunizations[1];
+
+      act(() => {
+        result.current.updateNote(targetId, 'Some note text');
+      });
+
+      expect(result.current.selectedImmunizations[0].note).toBe(
+        'Some note text',
+      );
+      expect(result.current.selectedImmunizations[1]).toEqual(otherEntryBefore);
+
+      const before = [...result.current.selectedImmunizations];
+      act(() => {
+        result.current.updateNote('non-existent-id', 'Another note');
+      });
+      expect(result.current.selectedImmunizations).toEqual(before);
     });
   });
 

@@ -161,6 +161,14 @@ export const useImmunizationHistoryStore = create<ImmunizationHistoryState>(
       }));
     },
 
+    updateNote: (id: string, value: string) => {
+      set((state) => ({
+        selectedImmunizations: state.selectedImmunizations.map((entry) =>
+          entry.id === id ? { ...entry, note: value } : entry,
+        ),
+      }));
+    },
+
     validateAll: () => {
       let isValid = true;
       const { attributes } = get();
@@ -183,12 +191,13 @@ export const useImmunizationHistoryStore = create<ImmunizationHistoryState>(
         selectedImmunizations: state.selectedImmunizations.map((entry) => {
           const errors = { ...entry.errors };
 
-          checkField(
-            errors,
-            'drug',
-            !entry.drug,
-            'IMMUNIZATION_HISTORY_DRUG_CODE_REQUIRED',
-          );
+          if (findAttr('drug', attributes)?.required)
+            checkField(
+              errors,
+              'drug',
+              !entry.drug,
+              'IMMUNIZATION_HISTORY_DRUG_CODE_REQUIRED',
+            );
 
           if (findAttr('administeredOn', attributes)?.required)
             checkField(
