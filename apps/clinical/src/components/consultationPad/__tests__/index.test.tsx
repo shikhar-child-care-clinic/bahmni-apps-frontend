@@ -69,6 +69,23 @@ jest.mock('@bahmni/widgets', () => ({
 jest.mock('../../../stores/encounterDetailsStore');
 jest.mock('../../../stores/observationFormsStore');
 jest.mock('../../../hooks/useClinicalAppData');
+jest.mock('../../../hooks/useDocumentTemplates', () => ({
+  useDocumentTemplatesForContext: jest
+    .fn()
+    .mockReturnValue({ templates: [], isLoading: false }),
+}));
+jest.mock('../../../hooks/usePrintDocument', () => ({
+  usePrintDocument: jest.fn().mockReturnValue({
+    isModalOpen: false,
+    openModal: jest.fn(),
+    closeModal: jest.fn(),
+    htmlContent: null,
+    isLoadingHtml: false,
+    htmlError: null,
+    isDownloadingPdf: false,
+    downloadPdf: jest.fn(),
+  }),
+}));
 jest.mock('../../../hooks/useEncounterConcepts');
 jest.mock('../../../hooks/useEncounterSession');
 jest.mock('../../../providers/clinicalConfig');
