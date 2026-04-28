@@ -361,6 +361,7 @@ describe('createImmunizationBundleEntries', () => {
     expect(resource.manufacturer).toBeUndefined();
     expect(resource.lotNumber).toBeUndefined();
     expect(resource.extension).toBeUndefined();
+    expect(resource.note).toBeUndefined();
   });
 
   it('includes all optional fields when set on a complete entry', () => {
@@ -384,6 +385,15 @@ describe('createImmunizationBundleEntries', () => {
         valueReference: {
           reference: 'Medication/covid-drug-uuid',
           display: 'COVID-19 Drug',
+        },
+      },
+    ]);
+    expect(resource.note).toEqual([
+      {
+        text: 'Third dose completed successfully.',
+        authorReference: {
+          reference: 'Practitioner/practitioner-uuid',
+          type: 'Practitioner',
         },
       },
     ]);
