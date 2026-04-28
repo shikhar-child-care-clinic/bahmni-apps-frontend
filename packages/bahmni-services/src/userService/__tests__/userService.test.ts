@@ -9,6 +9,7 @@ import {
   AVAILABLE_LOCATIONS_URL,
   APP_SETTINGS_URL,
   SAVE_USER_LOCATION_URL,
+  UPDATE_SESSION_LOCATION_URL,
 } from '../constants';
 import {
   getCurrentUser,
@@ -17,6 +18,7 @@ import {
   getDefaultDateFormat,
   getAvailableLocations,
   saveUserLocation,
+  updateSessionLocation,
 } from '../userService';
 
 jest.mock('../../api');
@@ -417,5 +419,30 @@ describe('saveUserLocation', () => {
     expect(post).toHaveBeenCalledWith(SAVE_USER_LOCATION_URL('user-uuid-123'), {
       userProperties: { loginLocation: 'loc-uuid-456' },
     });
+  });
+});
+
+describe('updateSessionLocation', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (post as jest.Mock).mockReset();
+  });
+
+  it('should post sessionLocation to the session URL', async () => {
+    (post as jest.Mock).mockResolvedValue({});
+
+    await updateSessionLocation('loc-uuid-456');
+
+    expect(post).toHaveBeenCalledWith(UPDATE_SESSION_LOCATION_URL, {
+      sessionLocation: 'loc-uuid-456',
+    });
+  });
+
+  it('should throw when the API call fails', async () => {
+    (post as jest.Mock).mockRejectedValue(new Error('Network error'));
+
+    await expect(updateSessionLocation('loc-uuid-456')).rejects.toThrow(
+      'Network error',
+    );
   });
 });

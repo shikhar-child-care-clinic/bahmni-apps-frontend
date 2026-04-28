@@ -4,6 +4,7 @@ import {
   getCurrentUser,
   saveUserLocation,
   updateSessionLocation,
+  notificationService,
   setCookie,
 } from '@bahmni/services';
 import { renderHook, act } from '@testing-library/react';
@@ -264,5 +265,65 @@ describe('LocationProvider - Persistence', () => {
     expect(result.current.error).toBe('Failed to update location');
 
     consoleErrorSpy.mockRestore();
+  });
+
+  it('calls updateSessionLocation with the new location uuid', async () => {
+    const wrapper = ({ children }: any) => (
+      <LocationProvider>{children}</LocationProvider>
+    );
+    const { result } = renderHook(() => useLocation(), { wrapper });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    act(() => {
+      result.current.setLocation(newLocation);
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
+    expect(mockUpdateSessionLocation).toHaveBeenCalledWith(newLocation.uuid);
+  });
+
+  it('shows warning and preserves location when updateSessionLocation fails', async () => {
+    mockUpdateSessionLocation.mockRejectedValue(
+      new Error('Session sync failed'),
+    );
+    const consoleWarnSpy = jest
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
+    const showWarningSpy = notificationService.showWarning as jest.Mock;
+    showWarningSpy.mockClear();
+
+    const wrapper = ({ children }: any) => (
+      <LocationProvider>{children}</LocationProvider>
+    );
+    const { result } = renderHook(() => useLocation(), { wrapper });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    act(() => {
+      result.current.setLocation(newLocation);
+    });
+
+    // Location updates immediately (non-blocking)
+    expect(result.current.location).toEqual(newLocation);
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      'Failed to update session location:',
+      expect.any(Error),
+    );
+    expect(showWarningSpy).toHaveBeenCalled();
+
+    consoleWarnSpy.mockRestore();
   });
 });
