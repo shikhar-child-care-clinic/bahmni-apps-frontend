@@ -53,7 +53,7 @@ export const filterByPrivilege = (
   extensions: Module[],
   userPrivileges?: string[],
 ): Module[] => {
-  if (!userPrivileges || userPrivileges.length === 0) {
+  if (userPrivileges === undefined) {
     return extensions;
   }
 

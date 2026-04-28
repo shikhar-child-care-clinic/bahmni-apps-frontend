@@ -120,6 +120,27 @@ describe('HomePageGrid', () => {
     });
   });
 
+  it('calls getVisibleModules with empty array when user has no privileges', async () => {
+    mockUseUserPrivilege.mockReturnValue({
+      userPrivileges: [],
+      setUserPrivileges: jest.fn(),
+      isLoading: false,
+      setIsLoading: jest.fn(),
+      error: null,
+      setError: jest.fn(),
+    });
+    mockGetVisibleModules.mockResolvedValue([]);
+
+    render(<HomePageGrid />);
+
+    await waitFor(() => {
+      expect(mockGetVisibleModules).toHaveBeenCalledWith(
+        'org.bahmni.home.dashboard',
+        [],
+      );
+    });
+  });
+
   it('loading state has role="status" and aria-busy="true"', () => {
     mockUseUserPrivilege.mockReturnValue({
       userPrivileges: null,
