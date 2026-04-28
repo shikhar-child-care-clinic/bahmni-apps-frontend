@@ -398,6 +398,72 @@ describe('useImmunizationHistoryStore', () => {
       expect(result.current.selectedImmunizations[0].errors).toEqual({});
     });
 
+    it.each([
+      [
+        'before',
+        '2025-01-01',
+        '2024-06-01',
+        false,
+        'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON',
+      ],
+      ['same as', '2025-01-01', '2025-01-01', true, undefined],
+      ['after', '2025-01-01', '2026-01-01', true, undefined],
+    ])(
+      'returns %s result when expiryDate is %s administeredOn',
+      (
+        _label,
+        administeredOnStr,
+        expiryDateStr,
+        expectedValid,
+        expectedError,
+      ) => {
+        const { result } = renderHook(() => useImmunizationHistoryStore());
+
+        act(() => {
+          result.current.setAttributes([]);
+          result.current.addImmunization(mockVaccineCode);
+        });
+        const id = result.current.selectedImmunizations[0].id;
+        act(() => {
+          result.current.updateAdministeredOn(id, new Date(administeredOnStr));
+          result.current.updateExpiryDate(id, new Date(expiryDateStr));
+        });
+        let isValid: boolean;
+
+        act(() => {
+          isValid = result.current.validateAll();
+        });
+
+        expect(isValid).toBe(expectedValid);
+        expect(result.current.selectedImmunizations[0].errors.expiryDate).toBe(
+          expectedError,
+        );
+      },
+    );
+
+    it('does not set cross-field expiryDate error when administeredOn is absent', () => {
+      const { result } = renderHook(() => useImmunizationHistoryStore());
+
+      act(() => {
+        result.current.setAttributes([]);
+        result.current.addImmunization(mockVaccineCode);
+      });
+      const id = result.current.selectedImmunizations[0].id;
+      act(() => {
+        result.current.updateExpiryDate(id, new Date('2024-01-01'));
+      });
+      let isValid: boolean;
+
+      act(() => {
+        isValid = result.current.validateAll();
+      });
+
+      expect(isValid).toBe(true);
+      expect(
+        result.current.selectedImmunizations[0].errors.expiryDate,
+      ).toBeUndefined();
+    });
+
     it('returns false when at least one entry has a validation error', () => {
       const { result } = renderHook(() => useImmunizationHistoryStore());
 
@@ -425,6 +491,68 @@ describe('useImmunizationHistoryStore', () => {
         result.current.selectedImmunizations[1].errors.drug,
       ).toBeUndefined();
     });
+  });
+
+  describe('cross-field expiryDate validation (inline, post-validateAll)', () => {
+    it.each([
+      [
+        'before',
+        new Date('2025-01-01'),
+        'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON',
+      ],
+      ['on', new Date('2025-06-01'), undefined],
+      ['after', new Date('2026-01-01'), undefined],
+    ])(
+      'updateExpiryDate: sets expiryDate error when new value is %s administeredOn',
+      (_label, newExpiryDate, expectedError) => {
+        const { result } = renderHook(() => useImmunizationHistoryStore());
+
+        act(() => {
+          result.current.setAttributes([]);
+          result.current.addImmunization(mockVaccineCode);
+        });
+        const id = result.current.selectedImmunizations[0].id;
+        act(() => {
+          result.current.updateAdministeredOn(id, new Date('2025-06-01'));
+          result.current.validateAll();
+          result.current.updateExpiryDate(id, newExpiryDate);
+        });
+
+        expect(result.current.selectedImmunizations[0].errors.expiryDate).toBe(
+          expectedError,
+        );
+      },
+    );
+
+    it.each([
+      [
+        'after expiryDate',
+        new Date('2025-06-01'),
+        'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON',
+      ],
+      ['before expiryDate', new Date('2024-12-01'), undefined],
+      ['null', null, undefined],
+    ])(
+      'updateAdministeredOn: sets expiryDate error when new administeredOn is %s',
+      (_label, newAdministeredOn, expectedError) => {
+        const { result } = renderHook(() => useImmunizationHistoryStore());
+
+        act(() => {
+          result.current.setAttributes([]);
+          result.current.addImmunization(mockVaccineCode);
+        });
+        const id = result.current.selectedImmunizations[0].id;
+        act(() => {
+          result.current.updateExpiryDate(id, new Date('2025-01-01'));
+          result.current.validateAll();
+          result.current.updateAdministeredOn(id, newAdministeredOn);
+        });
+
+        expect(result.current.selectedImmunizations[0].errors.expiryDate).toBe(
+          expectedError,
+        );
+      },
+    );
   });
 
   describe('updateNote', () => {
