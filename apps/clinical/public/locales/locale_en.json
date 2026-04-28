@@ -193,6 +193,7 @@
   "IMMUNIZATION_HISTORY_BATCH_NUMBER_REQUIRED": "Please enter a batch number",
   "IMMUNIZATION_HISTORY_DRUG_CODE_REQUIRED": "Please select a drug name",
   "IMMUNIZATION_HISTORY_EXPIRY_DATE": "Expiry Date",
+  "IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON": "Expiry date cannot be before the administered date",
   "IMMUNIZATION_HISTORY_EXPIRY_DATE_REQUIRED": "Please select an expiry date",
   "IMMUNIZATION_HISTORY_FORM_TITLE": "Immunization History",
   "IMMUNIZATION_HISTORY_MANUFACTURER": "Manufacturer",
