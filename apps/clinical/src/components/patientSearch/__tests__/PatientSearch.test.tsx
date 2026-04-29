@@ -238,6 +238,190 @@ describe('PatientSearch Component', () => {
     });
   });
 
+  describe('Empty, loading, and error states', () => {
+    test('shows "No matching records" when search returns 0 results', async () => {
+      mockedUsePatientSearch.mockReturnValue({
+        results: [],
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      render(<PatientSearch {...defaultProps} />);
+      const combobox = screen.getByRole('combobox');
+      await userEvent.type(combobox, 'UNKNOWN');
+      fireEvent.keyDown(screen.getByTestId('patient-search-container'), {
+        key: 'Enter',
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('No matching records')).toBeInTheDocument();
+      });
+    });
+
+    test('shows loading text while search is in progress', async () => {
+      mockedUsePatientSearch.mockReturnValue({
+        results: [],
+        isLoading: true,
+        isError: false,
+        error: null,
+      });
+
+      render(<PatientSearch {...defaultProps} />);
+      const combobox = screen.getByRole('combobox');
+      await userEvent.type(combobox, 'GAN');
+      fireEvent.keyDown(screen.getByTestId('patient-search-container'), {
+        key: 'Enter',
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('SEARCHING')).toBeInTheDocument();
+      });
+    });
+
+    test('shows error notification when search fails', async () => {
+      mockedUsePatientSearch.mockReturnValue({
+        results: [],
+        isLoading: false,
+        isError: true,
+        error: new Error('Network error'),
+      });
+
+      render(<PatientSearch {...defaultProps} />);
+      const combobox = screen.getByRole('combobox');
+      await userEvent.type(combobox, 'GAN');
+      fireEvent.keyDown(screen.getByTestId('patient-search-container'), {
+        key: 'Enter',
+      });
+
+      await waitFor(() => {
+        expect(mockAddNotification).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'error',
+            message: 'Network error',
+          }),
+        );
+      });
+    });
+
+    test('shows error message in dropdown when search fails', async () => {
+      mockedUsePatientSearch.mockReturnValue({
+        results: [],
+        isLoading: false,
+        isError: true,
+        error: new Error('Network error'),
+      });
+
+      render(<PatientSearch {...defaultProps} />);
+      const combobox = screen.getByRole('combobox');
+      await userEvent.type(combobox, 'GAN');
+      fireEvent.keyDown(screen.getByTestId('patient-search-container'), {
+        key: 'Enter',
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Network error')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Re-search and state management', () => {
+    test('allows re-searching after editing the input', async () => {
+      const secondPatient = {
+        ...mockPatient,
+        uuid: 'patient-uuid-2',
+        givenName: 'Jane',
+        familyName: 'Smith',
+        identifier: 'GAN789',
+      };
+
+      mockedUsePatientSearch.mockReturnValue({
+        results: [mockPatient],
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      render(<PatientSearch {...defaultProps} />);
+      const combobox = screen.getByRole('combobox');
+      const container = screen.getByTestId('patient-search-container');
+
+      await userEvent.type(combobox, 'GAN123456');
+      fireEvent.keyDown(container, { key: 'Enter' });
+
+      await waitFor(() => {
+        expect(screen.getByText('John Doe')).toBeInTheDocument();
+      });
+
+      mockedUsePatientSearch.mockReturnValue({
+        results: [secondPatient],
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      await userEvent.clear(combobox);
+      await userEvent.type(combobox, 'GAN789');
+      fireEvent.keyDown(container, { key: 'Enter' });
+
+      await waitFor(() => {
+        expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+      });
+    });
+
+    test('resets state when isOpen changes to false', async () => {
+      mockedUsePatientSearch.mockReturnValue({
+        results: [mockPatient],
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      const { rerender } = render(<PatientSearch {...defaultProps} />);
+      const combobox = screen.getByRole('combobox');
+      await userEvent.type(combobox, 'GAN123456');
+      fireEvent.keyDown(screen.getByTestId('patient-search-container'), {
+        key: 'Enter',
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('John Doe')).toBeInTheDocument();
+      });
+
+      rerender(<PatientSearch isOpen={false} onClose={defaultProps.onClose} />);
+      expect(
+        screen.queryByTestId('patient-search-container'),
+      ).not.toBeInTheDocument();
+
+      rerender(<PatientSearch isOpen onClose={defaultProps.onClose} />);
+      expect(screen.getByRole('combobox')).toHaveValue('');
+    });
+
+    test('does not navigate when selecting a disabled item', async () => {
+      mockedUsePatientSearch.mockReturnValue({
+        results: [],
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      render(<PatientSearch {...defaultProps} />);
+      const combobox = screen.getByRole('combobox');
+      await userEvent.type(combobox, 'UNKNOWN');
+      fireEvent.keyDown(screen.getByTestId('patient-search-container'), {
+        key: 'Enter',
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('No matching records')).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByText('No matching records'));
+
+      expect(mockNavigate).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Configurable display fields', () => {
     test('uses default display fields when config is not provided', async () => {
       mockedUsePatientSearch.mockReturnValue({
