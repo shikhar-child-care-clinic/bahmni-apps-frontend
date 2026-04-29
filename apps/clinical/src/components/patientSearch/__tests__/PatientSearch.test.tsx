@@ -150,7 +150,9 @@ describe('PatientSearch Component', () => {
       render(<PatientSearch {...defaultProps} />);
       const combobox = screen.getByRole('combobox');
       await userEvent.type(combobox, 'GAN123456');
-      fireEvent.keyDown(document, { key: 'Enter' });
+      fireEvent.keyDown(screen.getByTestId('patient-search-container'), {
+        key: 'Enter',
+      });
 
       await waitFor(() => {
         expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -170,7 +172,9 @@ describe('PatientSearch Component', () => {
       render(<PatientSearch isOpen onClose={onClose} />);
       const combobox = screen.getByRole('combobox');
       await userEvent.type(combobox, 'GAN123456');
-      fireEvent.keyDown(document, { key: 'Enter' });
+      fireEvent.keyDown(screen.getByTestId('patient-search-container'), {
+        key: 'Enter',
+      });
 
       await waitFor(() => {
         expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -193,7 +197,9 @@ describe('PatientSearch Component', () => {
       render(<PatientSearch {...defaultProps} />);
       const combobox = screen.getByRole('combobox');
       await userEvent.type(combobox, 'GAN123456');
-      fireEvent.keyDown(document, { key: 'Enter' });
+      fireEvent.keyDown(screen.getByTestId('patient-search-container'), {
+        key: 'Enter',
+      });
 
       await waitFor(() => {
         expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -210,7 +216,9 @@ describe('PatientSearch Component', () => {
       const onClose = jest.fn();
       render(<PatientSearch isOpen onClose={onClose} />);
 
-      fireEvent.keyDown(document, { key: 'Escape' });
+      fireEvent.keyDown(screen.getByTestId('patient-search-container'), {
+        key: 'Escape',
+      });
 
       expect(onClose).toHaveBeenCalledTimes(1);
     });
@@ -242,7 +250,9 @@ describe('PatientSearch Component', () => {
       render(<PatientSearch {...defaultProps} />);
       const combobox = screen.getByRole('combobox');
       await userEvent.type(combobox, 'GAN123456');
-      fireEvent.keyDown(document, { key: 'Enter' });
+      fireEvent.keyDown(screen.getByTestId('patient-search-container'), {
+        key: 'Enter',
+      });
 
       await waitFor(() => {
         expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -276,7 +286,9 @@ describe('PatientSearch Component', () => {
       render(<PatientSearch {...defaultProps} />);
       const combobox = screen.getByRole('combobox');
       await userEvent.type(combobox, 'GAN123456');
-      fireEvent.keyDown(document, { key: 'Enter' });
+      fireEvent.keyDown(screen.getByTestId('patient-search-container'), {
+        key: 'Enter',
+      });
 
       await waitFor(() => {
         expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -311,7 +323,9 @@ describe('PatientSearch Component', () => {
       render(<PatientSearch {...defaultProps} />);
       const combobox = screen.getByRole('combobox');
       await userEvent.type(combobox, 'GAN123456');
-      fireEvent.keyDown(document, { key: 'Enter' });
+      fireEvent.keyDown(screen.getByTestId('patient-search-container'), {
+        key: 'Enter',
+      });
 
       await waitFor(() => {
         expect(combobox).toHaveAttribute('aria-expanded', 'true');

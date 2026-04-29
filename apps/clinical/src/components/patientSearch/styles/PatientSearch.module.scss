@@ -18,15 +18,15 @@ $header-actions-offset: 6rem; // 3 action buttons × 2rem each — offset to cle
 .searchInput {
   width: 100%;
 
-  :global(.cds--list-box__menu-item) {
+  li[role="option"] {
     height: auto;
-  }
 
-  :global(.cds--list-box__menu-item__option) {
-    height: auto;
-    white-space: normal;
-    overflow-wrap: break-word;
-    padding-block: $spacing-03;
+    > div {
+      height: auto;
+      white-space: normal;
+      overflow-wrap: break-word;
+      padding-block: $spacing-03;
+    }
   }
 }
 
@@ -38,7 +38,6 @@ $header-actions-offset: 6rem; // 3 action buttons × 2rem each — offset to cle
 
 .resultFieldBold {
   @include type-style('heading-compact-01');
-  color: $text-primary;
 }
 
 .resultField {

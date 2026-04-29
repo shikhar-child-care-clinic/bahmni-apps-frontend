@@ -13,6 +13,10 @@ interface PatientSearchProps {
   onClose: () => void;
 }
 
+type PatientSearchItem =
+  | PatientSearchResult
+  | { display: string; disabled: true };
+
 const DEFAULT_DISPLAY_FIELDS: PatientSearchDisplayField[] = [
   { field: 'name', bold: true },
   { field: 'identifier' },
@@ -25,7 +29,7 @@ const formatPatientName = (patient: PatientSearchResult): string =>
 
 const getFieldValue = (
   patient: PatientSearchResult,
-  field: string,
+  field: PatientSearchDisplayField['field'],
 ): string | null => {
   switch (field) {
     case 'name':
@@ -41,6 +45,10 @@ const getFieldValue = (
   }
 };
 
+const isPatientResult = (
+  item: PatientSearchItem,
+): item is PatientSearchResult => 'uuid' in item;
+
 const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -49,8 +57,6 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState('');
   const [submittedTerm, setSubmittedTerm] = useState('');
-  const [selectedPatient, setSelectedPatient] =
-    useState<PatientSearchResult | null>(null);
 
   const displayFields =
     clinicalConfig?.patientSearch?.displayFields ?? DEFAULT_DISPLAY_FIELDS;
@@ -58,15 +64,35 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
   const { results, isLoading, isError, error } =
     usePatientSearch(submittedTerm);
 
-  const showResults =
-    submittedTerm.trim().length > 0 &&
-    inputValue === submittedTerm &&
-    !isLoading &&
-    !isError;
+  const comboBoxItems: PatientSearchItem[] = useMemo(() => {
+    if (!submittedTerm.trim()) return [];
+
+    if (isLoading) {
+      return [{ display: t('SEARCHING'), disabled: true as const }];
+    }
+
+    if (isError) {
+      return [
+        {
+          display: error?.message ?? t('ERROR_DEFAULT_TITLE'),
+          disabled: true as const,
+        },
+      ];
+    }
+
+    if (results.length === 0) {
+      return [{ display: t('NO_MATCHING_RECORDS'), disabled: true as const }];
+    }
+
+    return results;
+  }, [submittedTerm, isLoading, isError, error, results, t]);
 
   const renderDropdownItem = useMemo(
     () =>
-      function PatientSearchItem(item: PatientSearchResult) {
+      function PatientSearchItem(item: PatientSearchItem) {
+        if (!isPatientResult(item)) {
+          return <span className={styles.resultField}>{item.display}</span>;
+        }
         return (
           <div className={styles.resultItem}>
             {displayFields.map(({ field, bold }) => {
@@ -87,13 +113,15 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
     [displayFields],
   );
 
-  // Reset state when the search panel is closed
+  // Reset state when closed; auto-focus input when opened
   useEffect(() => {
     if (!isOpen) {
       setInputValue('');
       setSubmittedTerm('');
-      setSelectedPatient(null);
+      return;
     }
+    const input = containerRef.current?.querySelector('input');
+    if (input) input.focus();
   }, [isOpen]);
 
   // Click-outside handler to close the search panel
@@ -124,15 +152,20 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
         onClose();
         return;
       }
-      if (event.key === 'Enter' && inputValue.trim() && !submittedTerm) {
+      if (
+        event.key === 'Enter' &&
+        inputValue.trim() &&
+        inputValue.trim() !== submittedTerm
+      ) {
         setSubmittedTerm(inputValue.trim());
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
+    const container = containerRef.current;
+    if (!container) return;
+
+    container.addEventListener('keydown', handleKeyDown);
+    return () => container.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose, inputValue, submittedTerm]);
 
   useEffect(() => {
@@ -147,12 +180,9 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  const handleChange = (
-    selectedItem: PatientSearchResult | null | undefined,
-  ) => {
-    if (!selectedItem?.uuid) return;
+  const handleChange = (selectedItem: PatientSearchItem | null | undefined) => {
+    if (!selectedItem || !isPatientResult(selectedItem)) return;
     navigate(`../${selectedItem.uuid}`);
-    setSelectedPatient(selectedItem);
     onClose();
   };
 
@@ -166,21 +196,23 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
         id="patient-search-combobox"
         data-testid="patient-search-combobox"
         placeholder={t('SEARCH_PATIENT_ID_PLACEHOLDER')}
-        items={showResults ? results : []}
-        itemToString={(item) =>
-          item ? `${formatPatientName(item)} (${item.identifier})` : ''
-        }
+        items={comboBoxItems}
+        itemToString={(item) => {
+          if (!item) return '';
+          return isPatientResult(item)
+            ? `${formatPatientName(item)} (${item.identifier})`
+            : item.display;
+        }}
         itemToElement={renderDropdownItem}
         onChange={({ selectedItem }) => handleChange(selectedItem)}
         onInputChange={(input) => {
           setInputValue(input);
-          if (!input.trim()) {
+          if (input.trim() !== submittedTerm) {
             setSubmittedTerm('');
           }
         }}
-        selectedItem={selectedPatient}
-        clearSelectedOnChange
-        shouldFilterItem={() => true}
+        selectedItem={null}
+        shouldFilterItem={() => true} // Server-side search; disable client-side filtering
         autoAlign
         aria-label={t('SEARCH_PATIENT_ID_PLACEHOLDER')}
         size="md"

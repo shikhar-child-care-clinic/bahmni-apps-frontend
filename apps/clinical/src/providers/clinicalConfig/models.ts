@@ -27,7 +27,7 @@ export interface ContextInformation {
 }
 
 export interface PatientSearchDisplayField {
-  field: string;
+  field: 'name' | 'identifier' | 'gender' | 'age';
   bold?: boolean;
 }
 

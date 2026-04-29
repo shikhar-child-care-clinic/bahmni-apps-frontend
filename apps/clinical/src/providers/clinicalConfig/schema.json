@@ -53,7 +53,8 @@
             "properties": {
               "field": {
                 "type": "string",
-                "description": "Field name from PatientSearchResult (e.g. 'name', 'identifier', 'gender', 'age')"
+                "enum": ["name", "identifier", "gender", "age"],
+                "description": "Field name from PatientSearchResult"
               },
               "bold": {
                 "type": "boolean",
