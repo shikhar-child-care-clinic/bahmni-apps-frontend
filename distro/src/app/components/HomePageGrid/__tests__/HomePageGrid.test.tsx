@@ -70,6 +70,22 @@ describe('HomePageGrid', () => {
     expect(skeletons.length).toBeGreaterThan(0);
   });
 
+  it('renders loading skeleton in provider initial state (not loading, null privileges, no error)', () => {
+    mockUseUserPrivilege.mockReturnValue({
+      userPrivileges: null,
+      setUserPrivileges: jest.fn(),
+      isLoading: false,
+      setIsLoading: jest.fn(),
+      error: null,
+      setError: jest.fn(),
+    });
+
+    const { container } = render(<HomePageGrid />);
+
+    const skeletons = container.querySelectorAll('.skeletonTile');
+    expect(skeletons.length).toBeGreaterThan(0);
+  });
+
   it('renders grid with tiles for each module', async () => {
     mockGetVisibleModules.mockResolvedValue(mockModules);
 
@@ -220,7 +236,7 @@ describe('HomePageGrid', () => {
       setUserPrivileges: jest.fn(),
       isLoading: false,
       setIsLoading: jest.fn(),
-      error: 'Privilege fetch failed',
+      error: new Error('Privilege fetch failed'),
       setError: jest.fn(),
     });
 

@@ -18,8 +18,9 @@ export const HomePageGrid: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const loadModules = useCallback(async () => {
-    if (privilegesLoading) return;
-    if (privilegeError || userPrivileges === null) {
+    if (privilegesLoading || (userPrivileges === null && !privilegeError))
+      return;
+    if (privilegeError) {
       setError(t('HOME_ERROR_FETCH_CONFIG'));
       return;
     }
@@ -48,7 +49,11 @@ export const HomePageGrid: React.FC = () => {
     loadModules();
   }, [loadModules]);
 
-  if (privilegesLoading || loading) {
+  if (
+    privilegesLoading ||
+    loading ||
+    (userPrivileges === null && !privilegeError)
+  ) {
     return (
       <div
         className={styles.container}
@@ -85,7 +90,7 @@ export const HomePageGrid: React.FC = () => {
           lowContrast
           subtitle={error}
           hideCloseButton={false}
-          onClose={() => setError(null)}
+          onClose={() => void loadModules()}
         />
       </div>
     );
