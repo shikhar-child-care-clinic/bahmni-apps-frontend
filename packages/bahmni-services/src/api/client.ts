@@ -4,6 +4,7 @@ import { LOGIN_PATH } from './constants';
 import {
   decodeHtmlEntities,
   isOpenMRSWebServiceApi,
+  isTemplateServiceApi,
   getResponseUrl,
 } from './utils';
 
@@ -37,7 +38,10 @@ client.interceptors.response.use(
   },
   function (error) {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
-      window.location.href = LOGIN_PATH;
+      const url = getResponseUrl(error.config ?? {});
+      if (!isTemplateServiceApi(url)) {
+        window.location.href = LOGIN_PATH;
+      }
       return Promise.reject(error);
     }
     const { title, message } = getFormattedError(error);

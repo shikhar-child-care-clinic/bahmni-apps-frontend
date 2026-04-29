@@ -32,6 +32,13 @@ module.exports = (env, argv) => {
       },
       proxy: [
         {
+          context: ['/template-service'],
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+          logLevel: 'debug',
+        },
+        {
           context: (pathname) => !pathname.startsWith(publicPath),
           target: 'https://localhost/',
           changeOrigin: true,
