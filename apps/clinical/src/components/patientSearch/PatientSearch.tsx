@@ -160,20 +160,20 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
         inputValue.trim() &&
         inputValue.trim() !== submittedTerm
       ) {
-        // Only trigger search if no dropdown item is highlighted (aria-activedescendant absent).
-        // When a user presses Enter on a highlighted item, Carbon handles selection internally.
-        const input = containerRef.current?.querySelector('input');
-        if (!input?.getAttribute('aria-activedescendant')) {
-          setSubmittedTerm(inputValue.trim());
-        }
+        // Stop Carbon's ComboBox from processing this Enter (which would
+        // trigger auto-selection via indexToHighlight when results arrive).
+        event.stopPropagation();
+        setSubmittedTerm(inputValue.trim());
       }
     };
 
     const container = containerRef.current;
     if (!container) return;
 
-    container.addEventListener('keydown', handleKeyDown);
-    return () => container.removeEventListener('keydown', handleKeyDown);
+    // Use capture phase so our handler fires before Carbon's internal handler
+    // can stop propagation on Enter/Escape.
+    container.addEventListener('keydown', handleKeyDown, true);
+    return () => container.removeEventListener('keydown', handleKeyDown, true);
   }, [isOpen, onClose, inputValue, submittedTerm]);
 
   useEffect(() => {
@@ -215,12 +215,11 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
         onChange={({ selectedItem }) => handleChange(selectedItem)}
         onInputChange={(input) => {
           setInputValue(input);
-          if (input.trim() !== submittedTerm) {
+          if (!input.trim()) {
             setSubmittedTerm('');
           }
         }}
         selectedItem={null}
-        allowCustomValue
         shouldFilterItem={alwaysTrue}
         autoAlign
         aria-label={t('SEARCH_PATIENT_ID_PLACEHOLDER')}
