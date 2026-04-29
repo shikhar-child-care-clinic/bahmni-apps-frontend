@@ -49,6 +49,9 @@ const isPatientResult = (
   item: PatientSearchItem,
 ): item is PatientSearchResult => 'uuid' in item;
 
+// Server-side search; disable client-side filtering
+const alwaysTrue = () => true;
+
 const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -157,7 +160,12 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
         inputValue.trim() &&
         inputValue.trim() !== submittedTerm
       ) {
-        setSubmittedTerm(inputValue.trim());
+        // Only trigger search if no dropdown item is highlighted (aria-activedescendant absent).
+        // When a user presses Enter on a highlighted item, Carbon handles selection internally.
+        const input = containerRef.current?.querySelector('input');
+        if (!input?.getAttribute('aria-activedescendant')) {
+          setSubmittedTerm(inputValue.trim());
+        }
       }
     };
 
@@ -212,7 +220,8 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
           }
         }}
         selectedItem={null}
-        shouldFilterItem={() => true} // Server-side search; disable client-side filtering
+        allowCustomValue
+        shouldFilterItem={alwaysTrue}
         autoAlign
         aria-label={t('SEARCH_PATIENT_ID_PLACEHOLDER')}
         size="md"
