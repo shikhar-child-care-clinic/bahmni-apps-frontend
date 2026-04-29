@@ -223,6 +223,36 @@ describe('PatientSearch Component', () => {
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
+    test('first Escape clears results, second Escape closes panel', async () => {
+      mockedUsePatientSearch.mockReturnValue({
+        results: [mockPatient],
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      const onClose = jest.fn();
+      render(<PatientSearch isOpen onClose={onClose} />);
+      const combobox = screen.getByRole('combobox');
+      const container = screen.getByTestId('patient-search-container');
+
+      await userEvent.type(combobox, 'GAN123456');
+      fireEvent.keyDown(container, { key: 'Enter' });
+
+      await waitFor(() => {
+        expect(screen.getByText('John Doe')).toBeInTheDocument();
+      });
+
+      // First Escape: dismisses dropdown, keeps input, does NOT close panel
+      fireEvent.keyDown(container, { key: 'Escape' });
+      expect(onClose).not.toHaveBeenCalled();
+      expect(screen.queryByText('John Doe')).not.toBeInTheDocument();
+
+      // Second Escape: closes the panel
+      fireEvent.keyDown(container, { key: 'Escape' });
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
     test('calls onClose when clicking outside the component', () => {
       const onClose = jest.fn();
       render(

@@ -152,7 +152,19 @@ const PatientSearch: React.FC<PatientSearchProps> = ({ isOpen, onClose }) => {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onClose();
+        if (submittedTerm) {
+          // First Escape: dismiss dropdown, keep input text, refocus
+          event.stopPropagation();
+          setSubmittedTerm('');
+          const input =
+            containerRef.current?.querySelector<HTMLInputElement>('input');
+          if (input) {
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+          }
+        } else {
+          onClose();
+        }
         return;
       }
       if (
