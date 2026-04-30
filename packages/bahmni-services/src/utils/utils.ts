@@ -107,6 +107,23 @@ export function getCookieByName(name: string): string {
   return '';
 }
 
+/**
+ * Deletes a cookie by name
+ * @param name The name of the cookie to delete
+ */
+export function deleteCookie(name: string): void {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+}
+
+/**
+ * Sets a cookie with the given name and value
+ * @param name The name of the cookie to set
+ * @param value The value of the cookie
+ */
+export function setCookie(name: string, value: string): void {
+  document.cookie = `${name}=${value}; path=/;`;
+}
+
 export const isStringEmpty = (input?: string): boolean => {
   return !input || input.trim().length === 0;
 };
@@ -341,6 +358,33 @@ export function camelToScreamingSnakeCase(str: string): string {
     .replace(/([a-z])([A-Z])/g, '$1_$2')
     .replace(/([A-Z])([A-Z][a-z])/g, '$1_$2')
     .toUpperCase();
+}
+
+/**
+ * Resolves ComboBox items based on loading, error, and empty states
+ * Returns a single disabled sentinel item for loading/error/empty states, or the actual items
+ *
+ * @param isLoading - Whether the data is currently loading
+ * @param isError - Whether an error occurred
+ * @param items - The actual items to display
+ * @param toSentinel - Factory function that builds a shape-compatible placeholder from a message
+ * @param messages - The translated message strings for each state
+ */
+export function resolveComboBoxItems<T extends object>(
+  isLoading: boolean,
+  isError: boolean,
+  items: T[],
+  toSentinel: (message: string) => T,
+  messages: { loading: string; error: string; empty: string },
+): (T & { disabled?: boolean })[] {
+  const withDisabled = (msg: string): T & { disabled: true } => ({
+    ...toSentinel(msg),
+    disabled: true,
+  });
+  if (isLoading) return [withDisabled(messages.loading)];
+  if (isError) return [withDisabled(messages.error)];
+  if (!items.length) return [withDisabled(messages.empty)];
+  return items;
 }
 
 export function convertToSentenceCase(str: string): string {

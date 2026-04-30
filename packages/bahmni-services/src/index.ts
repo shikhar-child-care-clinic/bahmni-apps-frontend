@@ -90,6 +90,8 @@ export {
   generateId,
   generateUUID,
   getCookieByName,
+  deleteCookie,
+  setCookie,
   isStringEmpty,
   getPriorityByOrder,
   groupByDate,
@@ -100,6 +102,7 @@ export {
   getValueType,
   camelToScreamingSnakeCase,
   convertToSentenceCase,
+  resolveComboBoxItems,
 } from './utils';
 export {
   type FormatDateResult,
@@ -169,6 +172,7 @@ export {
   getPatientRadiologyInvestigations,
   getPatientRadiologyInvestigationBundle,
   getPatientRadiologyInvestigationBundleWithImagingStudy,
+  fetchQualityAssessment,
 } from './radiologyInvestigationService';
 export { getLabInvestigationsBundle } from './labInvestigationService';
 export {
@@ -196,7 +200,10 @@ export { getConfig } from './configService';
 export {
   getCurrentUser,
   getUserLoginLocation,
+  getAvailableLocations,
   getDefaultDateFormat,
+  logout,
+  saveUserLocation,
   type User,
 } from './userService';
 export { USER_PINNED_PREFERENCE_URL } from './observationFormsService/constants';
@@ -321,6 +328,13 @@ export {
   type DocumentReference,
 } from './documentReferenceService';
 
+export {
+  getLocationByTag,
+  type Location,
+  type ChildLocation,
+} from './locationService';
+export { getPatientImmunizations } from './immunizationService';
+export type { ImmunizationStatus } from './immunizationService';
 export { uploadDocument } from './documentUploadService';
 export type {
   DocumentUploadResponse,

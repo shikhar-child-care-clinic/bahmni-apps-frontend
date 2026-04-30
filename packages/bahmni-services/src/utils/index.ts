@@ -3,6 +3,8 @@ export {
   generateId,
   generateUUID,
   getCookieByName,
+  deleteCookie,
+  setCookie,
   isStringEmpty,
   getPriorityByOrder,
   groupByDate,
@@ -14,4 +16,5 @@ export {
   getValueType,
   camelToScreamingSnakeCase,
   convertToSentenceCase,
+  resolveComboBoxItems,
 } from './utils';
