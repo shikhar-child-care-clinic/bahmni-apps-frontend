@@ -6,19 +6,19 @@
  * e.g. Figma "Button/button-primary" → "--cds-button-primary"
  */
 export interface BahmniThemeConfig {
-  'background-brand'?:       string;
-  'button-primary'?:         string;
-  'button-primary-hover'?:   string;
-  'button-primary-active'?:  string;
-  'button-tertiary'?:        string;
-  'button-tertiary-hover'?:  string;
+  'background-brand'?: string;
+  'button-primary'?: string;
+  'button-primary-hover'?: string;
+  'button-primary-active'?: string;
+  'button-tertiary'?: string;
+  'button-tertiary-hover'?: string;
   'button-tertiary-active'?: string;
-  'interactive'?:            string;
-  'focus'?:                  string;
-  'border-interactive'?:     string;
-  'link-primary'?:           string;
-  'link-primary-hover'?:     string;
-  'layer-01'?:               string;
+  interactive?: string;
+  focus?: string;
+  'border-interactive'?: string;
+  'link-primary'?: string;
+  'link-primary-hover'?: string;
+  'layer-01'?: string;
 }
 
 /**
@@ -29,19 +29,19 @@ export interface BahmniThemeConfig {
  * a .cds--white ancestor would revert to Carbon blue (#0f62fe).
  */
 export const BAHMNI_DEFAULT_THEME: Required<BahmniThemeConfig> = {
-  'background-brand':       '#007d79',
-  'button-primary':         '#007d79',
-  'button-primary-hover':   '#006b68',
-  'button-primary-active':  '#004144',
-  'button-tertiary':        '#007d79',
-  'button-tertiary-hover':  '#006b68',
+  'background-brand': '#007d79',
+  'button-primary': '#007d79',
+  'button-primary-hover': '#006b68',
+  'button-primary-active': '#004144',
+  'button-tertiary': '#007d79',
+  'button-tertiary-hover': '#006b68',
   'button-tertiary-active': '#007d79',
-  'interactive':            '#007d79',
-  'focus':                  '#007d79',
-  'border-interactive':     '#007d79',
-  'link-primary':           '#007d79',
-  'link-primary-hover':     '#005d5d',
-  'layer-01':               '#f4f4f4',
+  interactive: '#007d79',
+  focus: '#007d79',
+  'border-interactive': '#007d79',
+  'link-primary': '#007d79',
+  'link-primary-hover': '#005d5d',
+  'layer-01': '#f4f4f4',
 };
 
 /**

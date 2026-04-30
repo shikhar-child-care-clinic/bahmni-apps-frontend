@@ -4,17 +4,17 @@
 // TypeScript structural typing ensures this type is compatible with the one
 // exported from @bahmni/design-system — same shape, same keys.
 export interface BahmniThemeConfig {
-  'background-brand'?:       string;
-  'button-primary'?:         string;
-  'button-primary-hover'?:   string;
-  'button-primary-active'?:  string;
-  'button-tertiary'?:        string;
-  'button-tertiary-hover'?:  string;
+  'background-brand'?: string;
+  'button-primary'?: string;
+  'button-primary-hover'?: string;
+  'button-primary-active'?: string;
+  'button-tertiary'?: string;
+  'button-tertiary-hover'?: string;
   'button-tertiary-active'?: string;
-  'interactive'?:            string;
-  'focus'?:                  string;
-  'border-interactive'?:     string;
-  'layer-01'?:               string;
+  interactive?: string;
+  focus?: string;
+  'border-interactive'?: string;
+  'layer-01'?: string;
 }
 
 // Follows standard-config convention — files under
