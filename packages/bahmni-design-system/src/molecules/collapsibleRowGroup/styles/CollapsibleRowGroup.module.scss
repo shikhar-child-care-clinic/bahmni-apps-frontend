@@ -4,7 +4,7 @@
 
 .container {
   width: 100%;
-  :global(html:has([data-separator]) #main-display-area) & {
+  :global([data-split-view] #main-display-area) & {
     overflow-x: auto;
     scroll-behavior: smooth;
     scroll-padding-bottom: $spacing-05;
@@ -47,7 +47,7 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  :global(html:has([data-separator]) #main-display-area) & {
+  :global([data-split-view] #main-display-area) & {
     min-width: 40rem;
     padding-block-end: $spacing-05;
   }
