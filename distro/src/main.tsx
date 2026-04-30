@@ -26,13 +26,21 @@ window.ReactDOM = ReactDOMModule;
 
 // Initialize i18n and FontAwesome before rendering the app
 initFontAwesome();
-initAppI18n('home').then(() => {
-  const root = createRoot(document.getElementById('root') as HTMLElement);
-  root.render(
-    <StrictMode>
-      <BrowserRouter basename={PUBLIC_PATH ?? '/'}>
-        <App />
-      </BrowserRouter>
-    </StrictMode>,
-  );
-});
+initAppI18n('home')
+  .catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error(
+      'Failed to initialize i18n, rendering with fallback strings:',
+      err,
+    );
+  })
+  .finally(() => {
+    const root = createRoot(document.getElementById('root') as HTMLElement);
+    root.render(
+      <StrictMode>
+        <BrowserRouter basename={PUBLIC_PATH ?? '/'}>
+          <App />
+        </BrowserRouter>
+      </StrictMode>,
+    );
+  });

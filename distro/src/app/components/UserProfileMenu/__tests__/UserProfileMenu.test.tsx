@@ -177,7 +177,7 @@ describe('UserProfileMenu', () => {
 
     render(<UserProfileMenu />);
 
-    expect(screen.getByText('LOADING')).toBeInTheDocument();
+    expect(screen.getByText('Loading')).toBeInTheDocument();
   });
 
   it('returns null when user data is not available', () => {
