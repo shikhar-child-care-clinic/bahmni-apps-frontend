@@ -84,14 +84,8 @@ export const getDefaultDateFormat = async (): Promise<string | null> => {
  * @throws Error when API call fails
  */
 export const getAvailableLocations = async (): Promise<UserLocation[]> => {
-  try {
-    const response = await get<LocationsResponse>(AVAILABLE_LOCATIONS_URL);
-    return response.results ?? [];
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Failed to fetch available locations:', error);
-    return [];
-  }
+  const response = await get<LocationsResponse>(AVAILABLE_LOCATIONS_URL);
+  return response.results ?? [];
 };
 
 /**

@@ -385,20 +385,10 @@ describe('getAvailableLocations', () => {
     expect(result).toEqual([]);
   });
 
-  it('should return empty array on API failure', async () => {
-    const consoleErrorSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
+  it('should throw on API failure', async () => {
     (get as jest.Mock).mockRejectedValue(new Error('Network error'));
 
-    const result = await getAvailableLocations();
-
-    expect(result).toEqual([]);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Failed to fetch available locations:',
-      expect.any(Error),
-    );
-    consoleErrorSpy.mockRestore();
+    await expect(getAvailableLocations()).rejects.toThrow('Network error');
   });
 });
 
