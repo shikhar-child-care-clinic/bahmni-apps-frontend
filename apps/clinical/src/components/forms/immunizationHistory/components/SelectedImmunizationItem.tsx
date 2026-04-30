@@ -4,6 +4,8 @@ import {
   DatePicker,
   DatePickerInput,
   Grid,
+  Link,
+  TextAreaWClose,
   TextInput,
 } from '@bahmni/design-system';
 import { useTranslation, Location } from '@bahmni/services';
@@ -47,8 +49,10 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
     updateExpiryDate,
     updateManufacturer,
     updateBatchNumber,
+    updateNote,
   } = useImmunizationHistoryStore();
   const { id } = immunization;
+  const [hasNote, setHasNote] = useState(!!immunization.note);
   const [drugSearchTerm, setDrugSearchTerm] = useState('');
   const [routeSearchTerm, setRouteSearchTerm] = useState('');
   const [siteSearchTerm, setSiteSearchTerm] = useState('');
@@ -122,35 +126,40 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
         id={`selected-immunization-item-grid-${id}`}
         data-testid={`selected-immunization-item-grid-${id}-test-id`}
       >
-        <Column sm={4} md={8} lg={16} className={styles.column}>
-          <ComboBox
-            id={`immunization-drug-name-combobox-${id}`}
-            data-testid={`immunization-drug-name-combobox-${id}-test-id`}
-            placeholder={t('IMMUNIZATION_HISTORY_SEARCH_DRUG_NAME_PLACEHOLDER')}
-            autoAlign
-            items={vaccineDrugComboBoxItems}
-            itemToString={(item) => item?.display ?? ''}
-            onChange={({ selectedItem, inputValue }) => {
-              if (selectedItem?.code) {
-                updateVaccineDrug(id, {
-                  code: selectedItem.code,
-                  display: selectedItem.display,
-                });
-              } else if (inputValue?.trim()) {
-                updateVaccineDrug(id, { display: inputValue.trim() });
-              } else {
-                updateVaccineDrug(id, null);
+        {findAttr('drug', attributes) && (
+          <Column sm={4} md={8} lg={16} className={styles.column}>
+            <ComboBox
+              id={`immunization-drug-name-combobox-${id}`}
+              data-testid={`immunization-drug-name-combobox-${id}-test-id`}
+              placeholder={t(
+                'IMMUNIZATION_HISTORY_SEARCH_DRUG_NAME_PLACEHOLDER',
+              )}
+              autoAlign
+              items={vaccineDrugComboBoxItems}
+              itemToString={(item) => item?.display ?? ''}
+              onChange={({ selectedItem, inputValue }) => {
+                if (selectedItem?.code) {
+                  updateVaccineDrug(id, {
+                    code: selectedItem.code,
+                    display: selectedItem.display,
+                  });
+                } else if (inputValue?.trim()) {
+                  updateVaccineDrug(id, { display: inputValue.trim() });
+                } else {
+                  updateVaccineDrug(id, null);
+                }
+              }}
+              allowCustomValue
+              onInputChange={(value: string) => setDrugSearchTerm(value)}
+              size="md"
+              required={findAttr('drug', attributes)?.required}
+              invalid={!!immunization.errors.drug}
+              invalidText={
+                immunization.errors.drug ? t(immunization.errors.drug) : ''
               }
-            }}
-            allowCustomValue
-            onInputChange={(value: string) => setDrugSearchTerm(value)}
-            size="md"
-            invalid={!!immunization.errors.drug}
-            invalidText={
-              immunization.errors.drug ? t(immunization.errors.drug) : ''
-            }
-          />
-        </Column>
+            />
+          </Column>
+        )}
 
         {findAttr('administeredOn', attributes) && (
           <Column sm={4} md={2} lg={5} className={styles.column}>
@@ -345,6 +354,40 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
                 }
               />
             </DatePicker>
+          </Column>
+        )}
+
+        {findAttr('note', attributes) && (
+          <Column sm={4} md={8} lg={16} className={styles.column}>
+            {!hasNote && (
+              <Link
+                href="#"
+                data-testid={`immunization-add-note-link-${id}-test-id`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setHasNote(true);
+                }}
+              >
+                {t('IMMUNIZATION_HISTORY_ADD_NOTE')}
+              </Link>
+            )}
+            {hasNote && (
+              <TextAreaWClose
+                id={`immunization-note-${id}`}
+                data-testid={`immunization-note-${id}-test-id`}
+                labelText={t('IMMUNIZATION_HISTORY_ADD_NOTE')}
+                placeholder={t('IMMUNIZATION_HISTORY_ADD_NOTE_PLACEHOLDER')}
+                value={immunization.note ?? ''}
+                onChange={(e) => updateNote(id, e.target.value)}
+                onClose={() => {
+                  setHasNote(false);
+                  updateNote(id, '');
+                }}
+                enableCounter
+                maxCount={1024}
+                className={styles.textArea}
+              />
+            )}
           </Column>
         )}
       </Grid>
