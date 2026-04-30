@@ -84,4 +84,11 @@
   right: $spacing-09;
   padding-inline: $spacing-05 !important;
   z-index: 9999;
+
+  // Scope button-primary tokens to this element only — Carbon reads these
+  // via var(--cds-button-primary) internally so no !important needed.
+  // #24a148 = Carbon $green-50, hover/active follow the green scale.
+  --cds-button-primary:        #24a148;
+  --cds-button-primary-hover:  #198038;
+  --cds-button-primary-active: #0e6027;
 }

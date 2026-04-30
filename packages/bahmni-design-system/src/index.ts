@@ -1,4 +1,12 @@
 import '@carbon/styles/css/styles.css';
+import './styles/bahmni-tokens.scss';
+import './styles/bahmni-header.scss';
+
+export {
+  applyBahmniTheme,
+  BAHMNI_DEFAULT_THEME,
+  type BahmniThemeConfig,
+} from './utils/applyTheme';
 
 export { Close, TrashCan } from '@carbon/icons-react';
 

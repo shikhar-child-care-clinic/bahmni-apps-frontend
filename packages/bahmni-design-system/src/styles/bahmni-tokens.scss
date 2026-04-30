@@ -1,0 +1,72 @@
+// Bahmni CSS custom property overrides for Carbon v11
+//
+// Strategy: CSS custom properties on :root override Carbon's white theme defaults.
+// Carbon components use var(--cds-*) internally — no component-level changes needed.
+//
+// Chosen over SCSS token override because:
+//   - Design system agnostic: only variable names couple to Carbon, not the build API
+//   - Future-proof: switching design systems = rename variables, not rebuild pipeline
+//   - Compatible with runtime theming: applyBahmniTheme() can override further via inline styles
+//
+// Figma → Carbon mapping rule: strip "Category/" prefix, prepend "--cds-"
+//   e.g. Figma "Button/button-primary" → "--cds-button-primary"
+//
+// NOT overridden (confirmed same as Carbon white defaults — do not add here):
+//   button-secondary-*, button-danger-*, focus-inset, background,
+//   text-*, icon-*, skeleton-*
+
+@use 'palette' as *;
+
+:root {
+  // ── Header / brand ──────────────────────────────────────────────────────
+  // Figma: Background/background-brand → #007d79
+  --cds-background-brand:        #{$bahmni-brand};
+
+  // ── Primary buttons ─────────────────────────────────────────────────────
+  // Figma: Button/button-primary → #007d79
+  //        Button/button-primary-hover → #006b68
+  //        Button/button-primary-active → #004144
+  --cds-button-primary:          #{$bahmni-teal};
+  --cds-button-primary-hover:    #{$bahmni-teal-hover};
+  --cds-button-primary-active:   #{$bahmni-teal-active};
+
+  // ── Tertiary buttons ────────────────────────────────────────────────────
+  // Figma: Button/button-tertiary → #007d79
+  //        Button/button-tertiary-hover → #006b68
+  //        Button/button-tertiary-active → #007d79
+  --cds-button-tertiary:         #{$bahmni-teal};
+  --cds-button-tertiary-hover:   #{$bahmni-teal-hover};
+  --cds-button-tertiary-active:  #{$bahmni-teal};
+
+  // ── Links ───────────────────────────────────────────────────────────────
+  // Figma: Link/link-primary → Default/Teal/60 (#007d79)
+  //        Link/link-primary-hover → Default/Teal/70 (#005d5d)
+  --cds-link-primary:            #{$bahmni-teal};
+  --cds-link-primary-hover:      #{$bahmni-teal-70};
+  --cds-link-secondary:          #{$bahmni-teal-70};
+  --cds-link-visited:            #{$bahmni-purple-60};
+  --cds-link-inverse-visited:    #{$bahmni-purple-40};
+
+  // ── Interactive / focus / border ─────────────────────────────────────────
+  // Figma: Miscellaneous/interactive → #007d79
+  //        Focus/focus → #007d79
+  //        Border/border-interactive → #007d79
+  --cds-interactive:             #{$bahmni-teal};
+  --cds-focus:                   #{$bahmni-teal};
+  --cds-border-interactive:      #{$bahmni-teal};
+}
+
+// Page background — grey so white tiles/cards have visual contrast.
+//
+// Why html body (specificity 0-0-2) instead of body (0-0-1):
+//   Carbon's body { background-color: #ffffff } is in @carbon/styles/css/styles.css.
+//   distro/styles.scss is a webpack styles entry loaded as a <link> tag which
+//   executes before the JS bundle, so any body rule there loses to Carbon.
+//   This rule is inside the design-system bundle (after Carbon), and html body
+//   beats body on specificity so it wins regardless of load order.
+//
+// var(--cds-layer-01, #f4f4f4): #f4f4f4 fallback works even if --cds-layer-01
+// is not on :root (Carbon defines it on yarn dev, not :root).
+// html body {
+//   background-color: var(--cds-layer-01, #f4f4f4);
+// }

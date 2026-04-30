@@ -1,0 +1,112 @@
+// Bahmni header component-level overrides
+//
+// Carbon's <Header> uses --cds-background (#ffffff) for its background — NOT
+// --cds-background-brand. We cannot fix this via :root token overrides alone
+// because changing --cds-background globally would make all layers teal.
+//
+// These rules are scoped inside .cds--header so nothing outside the header
+// is affected. They are loaded from index.ts (not from the component's CSS
+// module) so they are always present in the bundle, before any component renders.
+//
+// IMPORTANT: Carbon v11 defines icon-inverse and text-inverse on class selectors
+// (.cds--white, .cds--g100, etc.), NOT on :root. The <header class="cds--header">
+// has no theme class, so var(--cds-icon-inverse) resolves to nothing without a
+// fallback. Every var() here must include an explicit #ffffff fallback.
+
+// 1. Header background — Bahmni teal via background-brand token
+.cds--header {
+  background-color: var(--cds-background-brand);
+  border-block-end-color: var(--cds-background-brand);
+}
+
+// 2. Header name ("Home" link) — white on teal
+//
+// Carbon sets color: var(--cds-text-primary, #161616) on .cds--header__name,
+// overriding whatever the header background is. Must be explicit here.
+.cds--header .cds--header__name,
+.cds--header a.cds--header__name:hover {
+  color: var(--cds-text-inverse, #ffffff);
+}
+
+// 3. Header global bar — white base color for all children
+//
+// Covers custom elements inside HeaderGlobalBar that are not HeaderGlobalActions
+// (e.g. the "Hi, superman" greeting span which uses color: inherit, or any
+// other text placed directly in the global bar area).
+.cds--header .cds--header__global {
+  color: var(--cds-text-inverse, #ffffff);
+}
+
+// 4. OverflowMenu icon in header — white on teal
+//
+// HomePageHeader uses OverflowMenu (not HeaderGlobalAction) for the user avatar.
+// OverflowMenu has no Carbon rule making its icon white on a dark background,
+// so we target it explicitly. Same fill+color pattern as global action icons.
+.cds--header .cds--overflow-menu svg {
+  fill: var(--cds-icon-inverse, #ffffff);
+  color: var(--cds-icon-inverse, #ffffff);
+}
+
+.cds--header .cds--overflow-menu:hover {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+// 5. Global action icons (search, bell, user) — white on teal
+//
+// Both FontAwesome and @carbon/icons-react use fill="currentColor" on paths,
+// so the icon colour is controlled by the CSS `color` property.
+// Carbon's ghost button sets color: var(--cds-link-primary, #0f62fe) (blue) on
+// the button. Setting color on the button with specificity 0,3,0 (> ghost's
+// 0,1,0) overrides the blue so currentColor resolves to white on all icon paths.
+.cds--header .cds--header__global .cds--header__action,
+.cds--header .cds--header__global .cds--header__action:hover,
+.cds--header .cds--header__global .cds--header__action:active {
+  color: var(--cds-icon-inverse, #ffffff);
+}
+
+.cds--header .cds--header__action svg {
+  fill: var(--cds-icon-inverse, #ffffff);
+}
+
+.cds--header .cds--header__action:hover {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+.cds--header .cds--header__action:hover svg,
+.cds--header .cds--header__action--active svg {
+  fill: var(--cds-icon-inverse, #ffffff);
+}
+
+.cds--header .cds--header__action:focus {
+  border-color: var(--cds-icon-inverse, #ffffff);
+}
+
+// 6. Breadcrumb links — white on teal (scoped inside .cds--header only)
+//
+// Carbon BreadcrumbItem renders two ways depending on whether href is provided:
+//   - With href:    <a class="cds--link"> (Carbon Link component)
+//   - Without href: <Text class="cds--link"> (non-anchor, e.g. current page)
+//
+// The .cds--breadcrumb rule sets a base color so all breadcrumb text inherits
+// white. The .cds--link rules explicitly override Carbon's link styles on <a>.
+.cds--header .cds--breadcrumb {
+  color: var(--cds-text-inverse, #ffffff);
+}
+
+.cds--header .cds--breadcrumb-item .cds--link,
+.cds--header .cds--breadcrumb-item .cds--link:visited {
+  color: var(--cds-text-inverse, #ffffff);
+}
+
+.cds--header .cds--breadcrumb-item .cds--link:hover,
+.cds--header .cds--breadcrumb-item .cds--link:visited:hover {
+  color: var(--cds-text-inverse, #ffffff);
+}
+
+// 7. Breadcrumb separator "/" and current-page text — white on teal
+.cds--header .cds--breadcrumb-item::after,
+.cds--header .cds--breadcrumb-item [aria-current="page"],
+.cds--header .cds--breadcrumb-item.cds--breadcrumb-item--current .cds--link {
+  color: var(--cds-text-inverse, #ffffff);
+  font-weight: 600;
+}
