@@ -1,41 +1,24 @@
 import { InlineNotification, Grid, Column } from '@bahmni/design-system';
-import { useTranslation } from '@bahmni/services';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Module, getVisibleModules } from '../../../services/moduleService';
+import { Module, getVisibleModules, useTranslation } from '@bahmni/services';
+import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
 import { AppTile } from '../AppTile';
 import styles from './styles/HomePageGrid.module.scss';
 
 export const HomePageGrid: React.FC = () => {
   const { t } = useTranslation();
-  const [modules, setModules] = useState<Module[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [errorDismissed, setErrorDismissed] = useState(false);
 
-  const loadModules = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const {
+    data: modules = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['home-modules'],
+    queryFn: () => getVisibleModules('org.bahmni.home.dashboard'),
+  });
 
-      const visibleModules = await getVisibleModules(
-        'org.bahmni.home.dashboard',
-      );
-
-      setModules(visibleModules);
-    } catch (err) {
-      const message = t('HOME_ERROR_FETCH_CONFIG');
-      setError(message);
-      // eslint-disable-next-line no-console
-      console.error('Error loading modules:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadModules();
-  }, [loadModules]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div
         className={styles.container}
@@ -60,7 +43,7 @@ export const HomePageGrid: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (isError && !errorDismissed) {
     return (
       <div
         className={styles.errorContainer}
@@ -70,9 +53,9 @@ export const HomePageGrid: React.FC = () => {
         <InlineNotification
           kind="error"
           lowContrast
-          subtitle={error}
+          subtitle={t('HOME_ERROR_FETCH_CONFIG')}
           hideCloseButton={false}
-          onClose={() => setError(null)}
+          onClose={() => setErrorDismissed(true)}
         />
       </div>
     );
@@ -89,7 +72,7 @@ export const HomePageGrid: React.FC = () => {
   return (
     <div className={styles.container}>
       <Grid>
-        {modules.map((module) => (
+        {modules.map((module: Module) => (
           <Column
             key={module.id}
             lg={5}

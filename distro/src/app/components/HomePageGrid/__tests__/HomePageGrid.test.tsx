@@ -1,6 +1,8 @@
+import { getVisibleModules } from '@bahmni/services';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { getVisibleModules } from '../../../../services/moduleService';
+import React from 'react';
 import { HomePageGrid } from '../HomePageGrid';
 import { mockModules, mockEmptyModules } from './__mocks__/homePageGridMocks';
 
@@ -14,13 +16,23 @@ jest.mock('../../AppTile', () => ({
   ),
 }));
 
-jest.mock('../../../../services/moduleService', () => ({
+jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
   getVisibleModules: jest.fn(),
 }));
 
 const mockGetVisibleModules = getVisibleModules as jest.MockedFunction<
   typeof getVisibleModules
 >;
+
+const renderWithQueryClient = (ui: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+  );
+};
 
 describe('HomePageGrid', () => {
   beforeEach(() => {
@@ -35,7 +47,7 @@ describe('HomePageGrid', () => {
         }),
     );
 
-    const { container } = render(<HomePageGrid />);
+    const { container } = renderWithQueryClient(<HomePageGrid />);
 
     const skeletons = container.querySelectorAll('.skeletonTile');
     expect(skeletons.length).toBeGreaterThan(0);
@@ -44,7 +56,7 @@ describe('HomePageGrid', () => {
   it('renders grid with tiles for each module', async () => {
     mockGetVisibleModules.mockResolvedValue(mockModules);
 
-    render(<HomePageGrid />);
+    renderWithQueryClient(<HomePageGrid />);
 
     await waitFor(() => {
       expect(screen.getByTestId('app-tile-clinical')).toBeInTheDocument();
@@ -57,7 +69,7 @@ describe('HomePageGrid', () => {
   it('renders empty state when no modules available', async () => {
     mockGetVisibleModules.mockResolvedValue(mockEmptyModules);
 
-    render(<HomePageGrid />);
+    renderWithQueryClient(<HomePageGrid />);
 
     await waitFor(() => {
       const statusEl = screen.getByRole('status');
@@ -69,7 +81,7 @@ describe('HomePageGrid', () => {
   it('passes module data to AppTile components', async () => {
     mockGetVisibleModules.mockResolvedValue(mockModules);
 
-    render(<HomePageGrid />);
+    renderWithQueryClient(<HomePageGrid />);
 
     await waitFor(() => {
       mockModules.forEach((module) => {
@@ -86,7 +98,7 @@ describe('HomePageGrid', () => {
         }),
     );
 
-    render(<HomePageGrid />);
+    renderWithQueryClient(<HomePageGrid />);
 
     const statusEl = screen.getByRole('status');
     expect(statusEl).toHaveAttribute('aria-busy', 'true');
@@ -96,7 +108,7 @@ describe('HomePageGrid', () => {
   it('shows error notification when module loading fails', async () => {
     mockGetVisibleModules.mockRejectedValue(new Error('Network error'));
 
-    render(<HomePageGrid />);
+    renderWithQueryClient(<HomePageGrid />);
 
     await waitFor(() => {
       expect(screen.getByTestId('home-error')).toBeInTheDocument();
@@ -111,7 +123,7 @@ describe('HomePageGrid', () => {
   it('has no accessibility violations in normal state', async () => {
     mockGetVisibleModules.mockResolvedValue(mockModules);
 
-    const { container } = render(<HomePageGrid />);
+    const { container } = renderWithQueryClient(<HomePageGrid />);
 
     await waitFor(() => {
       expect(screen.getByTestId('app-tile-clinical')).toBeInTheDocument();
