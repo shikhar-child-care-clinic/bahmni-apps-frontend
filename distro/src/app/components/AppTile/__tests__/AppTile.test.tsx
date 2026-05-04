@@ -11,7 +11,7 @@ jest.mock('react-router-dom', () => ({
 }));
 
 jest.mock('@bahmni/design-system', () => ({
-  Tile: ({ children, onClick, className, ...props }: any) => (
+  ClickableTile: ({ children, onClick, className, ...props }: any) => (
     <div onClick={onClick} className={className} data-testid="tile" {...props}>
       {children}
     </div>
@@ -91,41 +91,6 @@ describe('AppTile', () => {
     fireEvent.click(tile);
 
     expect(window.location.href).toBe(url);
-    expect(mockNavigate).not.toHaveBeenCalled();
-  });
-
-  it.each([
-    ['Enter', { key: 'Enter' }],
-    ['Space', { key: ' ' }],
-  ])('activates on %s key', (_label, keyEvent) => {
-    render(
-      <AppTile
-        {...defaultProps}
-        url="/bahmni/registration/index.html#/patient/search"
-      />,
-    );
-
-    const tile = screen.getByTestId('app-tile-registration');
-    fireEvent.keyDown(tile, keyEvent);
-
-    expect(window.location.href).toBe(
-      '/bahmni/registration/index.html#/patient/search',
-    );
-    expect(mockNavigate).not.toHaveBeenCalled();
-  });
-
-  it('does not activate on non-activating keys', () => {
-    render(
-      <AppTile
-        {...defaultProps}
-        url="/bahmni/registration/index.html#/patient/search"
-      />,
-    );
-
-    const tile = screen.getByTestId('app-tile-registration');
-    fireEvent.keyDown(tile, { key: 'Tab' });
-
-    expect(window.location.href).toBe('');
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 

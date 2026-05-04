@@ -1,4 +1,4 @@
-import { Tile, Icon, ICON_SIZE } from '@bahmni/design-system';
+import { ClickableTile, Icon, ICON_SIZE } from '@bahmni/design-system';
 import { useTranslation } from '@bahmni/services';
 import { ArrowRight } from '@carbon/icons-react';
 import React from 'react';
@@ -24,23 +24,13 @@ export const AppTile: React.FC<AppTileProps> = ({ id, label, icon, url }) => {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      handleClick();
-    }
-  };
-
   const translatedLabel = t(label);
 
   return (
-    <Tile
+    <ClickableTile
       className={styles.tile}
-      role="button"
-      tabIndex={0}
       aria-label={translatedLabel}
       onClick={handleClick}
-      onKeyDown={handleKeyDown}
       data-testid={`app-tile-${id}`}
     >
       <p className={styles.label} aria-hidden="true">
@@ -50,6 +40,6 @@ export const AppTile: React.FC<AppTileProps> = ({ id, label, icon, url }) => {
         <Icon name={icon} id={id} size={ICON_SIZE.X2} aria-hidden="true" />
         <ArrowRight size={20} className={styles.arrow} aria-hidden="true" />
       </div>
-    </Tile>
+    </ClickableTile>
   );
 };

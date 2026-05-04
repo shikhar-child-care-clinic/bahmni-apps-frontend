@@ -6,6 +6,7 @@ export { Button, type ButtonProps } from './atoms/button';
 export { IconButton, type IconButtonProps } from './atoms/iconButton';
 export { Breadcrumb, type BreadcrumbProps } from './atoms/breadcrumb';
 export { Tile, type TileProps } from './atoms/tile';
+export { ClickableTile, type ClickableTileProps } from './atoms/clickableTile';
 export { Tag, type TagProps } from './atoms/tag';
 export { SelectableTag, type SelectableTagProps } from './atoms/selectableTag';
 export {
