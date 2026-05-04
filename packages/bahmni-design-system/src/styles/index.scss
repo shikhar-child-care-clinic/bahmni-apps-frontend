@@ -1,5 +1,0 @@
-// SCSS entry point for consumers that bypass the Vite build (e.g. Storybook).
-// Forwards both the token overrides and the header component overrides
-// so Storybook renders with complete Bahmni styling.
-@forward './bahmni-tokens';
-@forward './bahmni-header';

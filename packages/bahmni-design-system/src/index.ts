@@ -1,6 +1,4 @@
 import '@carbon/styles/css/styles.css';
-import './styles/bahmni-tokens.scss';
-import './styles/bahmni-header.scss';
 
 export {
   applyBahmniTheme,

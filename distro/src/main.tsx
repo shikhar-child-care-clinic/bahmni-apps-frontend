@@ -13,7 +13,6 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './app/app';
 import { PUBLIC_PATH } from './constants/app';
 
-// Extend Window interface for global React and ReactDOM
 declare global {
   interface Window {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -23,19 +22,15 @@ declare global {
   }
 }
 
-// Expose React and ReactDOM globally (needed by form2-controls helpers.js)
-// This must be synchronous to avoid race conditions
+// Required by form2-controls helpers.js — must be synchronous
 window.React = React;
 window.ReactDOM = ReactDOMModule;
 
-// Apply Bahmni defaults synchronously before render to prevent Carbon blue flash,
-// then fetch optional operator overrides from bahmni-theme.json on top.
 applyBahmniTheme(BAHMNI_DEFAULT_THEME);
 fetchThemeConfig()
   .then(applyBahmniTheme)
   .catch(() => {});
 
-// ── App render ───────────────────────────────────────────────────────────────
 initFontAwesome();
 initAppI18n('home').then(() => {
   const root = createRoot(document.getElementById('root') as HTMLElement);

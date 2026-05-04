@@ -37,7 +37,12 @@ describe('applyBahmniTheme', () => {
     applyBahmniTheme(BAHMNI_DEFAULT_THEME);
     const tag = document.getElementById('bahmni-theme') as HTMLStyleElement;
     expect(tag.textContent).toContain('--cds-background-brand: #007d79;');
+    expect(tag.textContent).toContain('--cds-text-inverse: #ffffff;');
+    expect(tag.textContent).toContain('--cds-icon-inverse: #ffffff;');
     expect(tag.textContent).toContain('--cds-button-primary: #007d79;');
     expect(tag.textContent).toContain('--cds-link-primary: #007d79;');
+    expect(tag.textContent).toContain('--cds-link-secondary: #005d5d;');
+    expect(tag.textContent).toContain('--cds-link-visited: #8A3FFC;');
+    expect(tag.textContent).toContain('--cds-link-inverse-visited: #BE95FF;');
   });
 });

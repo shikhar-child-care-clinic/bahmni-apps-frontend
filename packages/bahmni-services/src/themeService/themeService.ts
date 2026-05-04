@@ -5,6 +5,8 @@
 // exported from @bahmni/design-system — same shape, same keys.
 export interface BahmniThemeConfig {
   'background-brand'?: string;
+  'text-inverse'?: string;
+  'icon-inverse'?: string;
   'button-primary'?: string;
   'button-primary-hover'?: string;
   'button-primary-active'?: string;
@@ -14,13 +16,14 @@ export interface BahmniThemeConfig {
   interactive?: string;
   focus?: string;
   'border-interactive'?: string;
+  'link-primary'?: string;
+  'link-primary-hover'?: string;
+  'link-secondary'?: string;
+  'link-visited'?: string;
+  'link-inverse-visited'?: string;
   'layer-01'?: string;
 }
 
-// Follows standard-config convention — files under
-// standard-config/openmrs/apps/home/ are served at /bahmni_config/openmrs/apps/home/
-// Same pattern as whiteLabel.json. An operator creates this file in standard-config
-// to change the entire UI theme without any code change or redeploy.
 const THEME_CONFIG_URL = '/bahmni_config/openmrs/apps/home/bahmni-theme.json';
 
 export async function fetchThemeConfig(): Promise<Partial<BahmniThemeConfig>> {
