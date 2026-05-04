@@ -1,6 +1,7 @@
 import {
   Accordion,
   AccordionItem,
+  ExpandableDataTable,
   Link,
   Modal,
   SortableDataTable,
@@ -36,6 +37,7 @@ import {
   extractDiagnosticReportsFromBundle,
   updateInvestigationsWithReportInfo,
 } from '../utils/Investigations';
+import { ExpandedContentForPrimaryOrder } from './ExpandedContentForPrimaryOrder';
 import { RadiologyInvestigationViewModel } from './models';
 import { QualityAssessment } from './QualityAssessment';
 import styles from './styles/RadiologyInvestigationTable.module.scss';
@@ -43,6 +45,7 @@ import {
   createRadiologyInvestigationViewModels,
   filterRadiologyInvestionsReplacementEntries,
   getAvailableImagingStudies,
+  groupInvestigationsByPrimaryOrder,
   sortRadiologyInvestigationsByPriority,
 } from './utils';
 
@@ -84,6 +87,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
   const categoryName = config?.orderType as string;
   const numberOfVisits = config?.numberOfVisits as number;
   const pacsViewerUrl = config?.pacsViewerUrl as string;
+  const viewReportsCombined = config?.viewReportsCombined as boolean;
   const [openAccordionIndices, setOpenAccordionIndices] = useState<Set<number>>(
     new Set([0]),
   );
@@ -133,25 +137,40 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     [patientUUID, categoryName],
   );
 
-  const headers = useMemo(
-    () => [
+  const headers = useMemo(() => {
+    const baseHeaders = [
       { key: 'testName', header: t('RADIOLOGY_INVESTIGATION_NAME') },
       { key: 'results', header: t('RADIOLOGY_RESULTS') },
       { key: 'orderedBy', header: t('RADIOLOGY_ORDERED_BY') },
-      { key: 'status', header: t('SERVICE_REQUEST_ORDERED_STATUS') },
-    ],
-    [t],
-  );
+    ];
 
-  const sortable = useMemo(
-    () => [
+    if (viewReportsCombined) {
+      baseHeaders.push({ key: 'orderedOn', header: t('RADIOLOGY_ORDERED_ON') });
+    }
+
+    baseHeaders.push({
+      key: 'status',
+      header: t('SERVICE_REQUEST_ORDERED_STATUS'),
+    });
+
+    return baseHeaders;
+  }, [t, viewReportsCombined]);
+
+  const sortable = useMemo(() => {
+    const baseSortable = [
       { key: 'testName', sortable: true },
       { key: 'results', sortable: true },
       { key: 'orderedBy', sortable: true },
-      { key: 'status', sortable: true },
-    ],
-    [],
-  );
+    ];
+
+    if (viewReportsCombined) {
+      baseSortable.push({ key: 'orderedOn', sortable: true });
+    }
+
+    baseSortable.push({ key: 'status', sortable: true });
+
+    return baseSortable;
+  }, [viewReportsCombined]);
 
   const loading = isLoading || isLoadingOrderTypes;
   const errorMessage =
@@ -176,7 +195,11 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       data ?? [],
     );
 
-    const grouped = groupByDate(filteredInvestigations, (investigation) => {
+    const investigationsToGroup = viewReportsCombined
+      ? groupInvestigationsByPrimaryOrder(filteredInvestigations)
+      : filteredInvestigations;
+
+    const grouped = groupByDate(investigationsToGroup, (investigation) => {
       const result = formatDateTime(investigation.orderedDate, t);
       return result.formattedResult;
     });
@@ -192,7 +215,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
         investigationsByDate.investigations,
       ),
     }));
-  }, [data, t]);
+  }, [data, t, viewReportsCombined]);
 
   // Fetch reports independent of the other accordion
   const diagnosticReportQueries = useQueries({
@@ -250,18 +273,26 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
 
   const renderResultsCell = (
     investigation: RadiologyInvestigationViewModel,
+    primaryInvestigation?: RadiologyInvestigationViewModel,
   ) => {
     const availableStudies = getAvailableImagingStudies(
       investigation.imagingStudies,
     );
     const hasViewImagesLink = availableStudies.length > 0 && pacsViewerUrl;
-    const hasViewReportLink = !!investigation.reportId;
+    const showViewReportLink = !!investigation.reportId && !viewReportsCombined;
     const hasImagingStudyId =
       investigation.imagingStudies &&
       investigation.imagingStudies.length > 0 &&
       investigation.imagingStudies[0]?.id;
 
-    if (hasViewImagesLink || hasViewReportLink || hasImagingStudyId) {
+    // For linked orders, check if primary order has report
+    const reportExists = primaryInvestigation
+      ? !!primaryInvestigation.reportId
+      : !!investigation.reportId;
+
+    const showQALink = reportExists && hasImagingStudyId;
+
+    if (hasViewImagesLink || showViewReportLink || showQALink) {
       return (
         <div
           id={`${investigation.id}-results`}
@@ -288,7 +319,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
                 </Link>
               );
             })}
-          {hasViewReportLink && (
+          {showViewReportLink && (
             <Link
               id={`${investigation.id}-view-report-link`}
               testId={`${investigation.id}-view-report-link-test-id`}
@@ -300,7 +331,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
               {t('RADIOLOGY_VIEW_REPORT')}
             </Link>
           )}
-          {hasImagingStudyId && hasViewReportLink && (
+          {showQALink && (
             <Link
               id={`${investigation.id}-view-qa-link`}
               testId={`${investigation.id}-view-qa-link-test-id`}
@@ -329,6 +360,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
   const renderCell = (
     investigation: RadiologyInvestigationViewModel,
     cellId: string,
+    primaryInvestigation?: RadiologyInvestigationViewModel,
   ) => {
     switch (cellId) {
       case 'testName':
@@ -359,7 +391,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
           </div>
         );
       case 'results':
-        return renderResultsCell(investigation);
+        return renderResultsCell(investigation, primaryInvestigation);
       case 'orderedBy':
         return (
           <span
@@ -367,6 +399,15 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
             data-testid={`${investigation.id}-ordered-by-test-id`}
           >
             {investigation.orderedBy}
+          </span>
+        );
+      case 'orderedOn':
+        return (
+          <span
+            id={`${investigation.id}-ordered-on`}
+            data-testid={`${investigation.id}-ordered-on-test-id`}
+          >
+            {formatDateTime(investigation.orderedDate, t, true).formattedResult}
           </span>
         );
       case 'status':
@@ -425,6 +466,27 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
 
   const reportedBy = selectedInvestigation?.reportedBy;
 
+  const renderExpandedContent = (
+    investigation: RadiologyInvestigationViewModel,
+  ) => {
+    const hasLinkedOrders =
+      investigation.linkedOrders && investigation.linkedOrders.length > 0;
+    const isCompleted = investigation.status === 'completed';
+    const hasReport = !!investigation.reportId;
+
+    if (!hasLinkedOrders && (!isCompleted || !hasReport)) {
+      return null;
+    }
+
+    return (
+      <ExpandedContentForPrimaryOrder
+        investigation={investigation}
+        headers={headers}
+        renderCell={renderCell}
+      />
+    );
+  };
+
   return (
     <div
       id="radiology-investigations-table"
@@ -455,18 +517,34 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
                 });
               }}
             >
-              <SortableDataTable
-                headers={headers}
-                ariaLabel={t('RADIOLOGY_INVESTIGATION_HEADING')}
-                rows={investigations}
-                loading={isLoading}
-                errorStateMessage={''}
-                sortable={sortable}
-                emptyStateMessage={t('NO_RADIOLOGY_INVESTIGATIONS')}
-                renderCell={renderCell}
-                className={styles.radiologyInvestigationTableBody}
-                dataTestId={`radiology-investigations-table-${date}`}
-              />
+              {viewReportsCombined ? (
+                <ExpandableDataTable
+                  headers={headers}
+                  ariaLabel={t('RADIOLOGY_INVESTIGATION_HEADING')}
+                  rows={investigations}
+                  loading={isLoading}
+                  errorStateMessage={''}
+                  sortable={sortable}
+                  emptyStateMessage={t('NO_RADIOLOGY_INVESTIGATIONS')}
+                  renderCell={renderCell}
+                  renderExpandedContent={renderExpandedContent}
+                  className={styles.radiologyInvestigationTableBody}
+                  dataTestId={`radiology-investigations-table-${date}`}
+                />
+              ) : (
+                <SortableDataTable
+                  headers={headers}
+                  ariaLabel={t('RADIOLOGY_INVESTIGATION_HEADING')}
+                  rows={investigations}
+                  loading={isLoading}
+                  errorStateMessage={''}
+                  sortable={sortable}
+                  emptyStateMessage={t('NO_RADIOLOGY_INVESTIGATIONS')}
+                  renderCell={renderCell}
+                  className={styles.radiologyInvestigationTableBody}
+                  dataTestId={`radiology-investigations-table-${date}`}
+                />
+              )}
             </AccordionItem>
           );
         })}
