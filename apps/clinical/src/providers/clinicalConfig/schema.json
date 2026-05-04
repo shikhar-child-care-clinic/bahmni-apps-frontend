@@ -10,6 +10,67 @@
     "consultationPad"
   ],
   "additionalProperties": false,
+  "definitions": {
+    "encounterDetailsControl": {
+      "allOf": [{ "$ref": "#/definitions/inputControl" }],
+      "properties": {
+        "metadata": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "defaultEncounterType": {
+              "type": "string",
+              "description": "Encounter type name to use when none is specified by the caller"
+            }
+          }
+        }
+      }
+    },
+    "inputControl": {
+      "type": "object",
+      "required": ["metadata", "encounterTypes", "privileges", "attributes"],
+      "additionalProperties": false,
+      "properties": {
+        "metadata": {
+          "type": "object",
+          "description": "Additional metadata for the input control"
+        },
+        "encounterTypes": {
+          "type": "array",
+          "description": "Encounter types for which this control is shown",
+          "items": {
+            "type": "string"
+          }
+        },
+        "privileges": {
+          "type": "array",
+          "description": "Privileges required to view this control",
+          "items": {
+            "type": "string"
+          }
+        },
+        "attributes": {
+          "type": "array",
+          "description": "Form attributes configuration",
+          "items": {
+            "type": "object",
+            "required": ["name", "required"],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Attribute name"
+              },
+              "required": {
+                "type": "boolean",
+                "description": "Whether this attribute is required"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
   "properties": {
     "patientInformation": {
       "type": "object",
@@ -32,6 +93,33 @@
               "description": "List of fields to display in program details",
               "items": {
                 "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "patientSearch": {
+      "type": "object",
+      "description": "Configuration for patient search dropdown display",
+      "additionalProperties": false,
+      "properties": {
+        "displayFields": {
+          "type": "array",
+          "description": "Fields to display in patient search dropdown results. Each entry maps to a PatientSearchResult field.",
+          "items": {
+            "type": "object",
+            "required": ["field"],
+            "additionalProperties": false,
+            "properties": {
+              "field": {
+                "type": "string",
+                "enum": ["name", "identifier", "gender", "age"],
+                "description": "Field name from PatientSearchResult"
+              },
+              "bold": {
+                "type": "boolean",
+                "description": "Whether to render this field in bold"
               }
             }
           }
@@ -79,7 +167,7 @@
     "consultationPad": {
       "type": "object",
       "description": "Configuration for consultation pad forms",
-      "required": ["allergyConceptMap"],
+      "required": ["allergyConceptMap", "encounterDetails"],
       "additionalProperties": true,
       "properties": {
         "allergyConceptMap": {
@@ -91,7 +179,7 @@
             "environmentalAllergenUuid",
             "allergyReactionUuid"
           ],
-          "additionalProperties": true,
+          "additionalProperties": false,
           "properties": {
             "medicationAllergenUuid": {
               "type": "string",
@@ -111,9 +199,41 @@
             }
           }
         },
-        "statDurationInHours": {
+        "statDurationInMilliseconds": {
           "type": "number",
-          "description": "Duration in hours for which a STAT order is valid"
+          "description": "Duration in milliseconds for which a STAT order is valid"
+        },
+        "encounterDetails": {
+          "$ref": "#/definitions/encounterDetailsControl",
+          "description": "Configuration for the encounter details form"
+        },
+        "allergies": {
+          "$ref": "#/definitions/inputControl",
+          "description": "Configuration for the allergies form"
+        },
+        "investigations": {
+          "$ref": "#/definitions/inputControl",
+          "description": "Configuration for the investigations form"
+        },
+        "medications": {
+          "$ref": "#/definitions/inputControl",
+          "description": "Configuration for the medications form"
+        },
+        "observationForms": {
+          "$ref": "#/definitions/inputControl",
+          "description": "Configuration for the observation forms panel"
+        },
+        "vaccinations": {
+          "$ref": "#/definitions/inputControl",
+          "description": "Configuration for the vaccinations form"
+        },
+        "conditionsAndDiagnoses": {
+          "$ref": "#/definitions/inputControl",
+          "description": "Configuration for the conditions and diagnoses form"
+        },
+        "immunizationHistory": {
+          "$ref": "#/definitions/inputControl",
+          "description": "Configuration for the immunization history form"
         }
       }
     }
