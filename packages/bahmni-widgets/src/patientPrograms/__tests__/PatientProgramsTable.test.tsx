@@ -41,7 +41,7 @@ describe('PatientProgramsTable', () => {
 
   afterEach(() => {
     queryClient.clear();
-    localStorage.clear();
+    localStorage.removeItem(DEFAULT_DATE_FORMAT_STORAGE_KEY);
   });
 
   const wrapper = (
