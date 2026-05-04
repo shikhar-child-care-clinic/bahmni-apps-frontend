@@ -1,24 +1,44 @@
 import { InlineNotification, Grid, Column } from '@bahmni/design-system';
-import { Module, getVisibleModules, useTranslation } from '@bahmni/services';
+import {
+  type Module,
+  getVisibleModules,
+  useTranslation,
+} from '@bahmni/services';
+import { useUserPrivilege } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
-import React, { useState } from 'react';
+import React from 'react';
 import { AppTile } from '../AppTile';
 import styles from './styles/HomePageGrid.module.scss';
 
 export const HomePageGrid: React.FC = () => {
   const { t } = useTranslation();
-  const [errorDismissed, setErrorDismissed] = useState(false);
+  const {
+    userPrivileges,
+    isLoading: privilegesLoading,
+    error: privilegeError,
+  } = useUserPrivilege();
+
+  // null = provider hasn't settled yet; [] = user has no privileges
+  const privilegeNames = userPrivileges?.map((p) => p.name) ?? null;
 
   const {
     data: modules = [],
-    isLoading,
+    isLoading: modulesLoading,
     isError,
+    refetch,
   } = useQuery({
-    queryKey: ['home-modules'],
-    queryFn: () => getVisibleModules('org.bahmni.home.dashboard'),
+    queryKey: ['home-modules', privilegeNames],
+    queryFn: () =>
+      getVisibleModules('org.bahmni.home.dashboard', privilegeNames!),
+    enabled:
+      !privilegesLoading && privilegeError === null && privilegeNames !== null,
   });
 
-  if (isLoading) {
+  if (
+    privilegesLoading ||
+    modulesLoading ||
+    (privilegeNames === null && !privilegeError)
+  ) {
     return (
       <div
         className={styles.container}
@@ -43,7 +63,7 @@ export const HomePageGrid: React.FC = () => {
     );
   }
 
-  if (isError && !errorDismissed) {
+  if (privilegeError || isError) {
     return (
       <div
         className={styles.errorContainer}
@@ -55,7 +75,7 @@ export const HomePageGrid: React.FC = () => {
           lowContrast
           subtitle={t('HOME_ERROR_FETCH_CONFIG')}
           hideCloseButton={false}
-          onClose={() => setErrorDismissed(true)}
+          onClose={() => void refetch()}
         />
       </div>
     );
@@ -85,11 +105,6 @@ export const HomePageGrid: React.FC = () => {
               label={module.translationKey ?? module.label}
               icon={module.icon}
               url={module.url}
-              privileges={
-                module.requiredPrivilege
-                  ? [module.requiredPrivilege]
-                  : undefined
-              }
             />
           </Column>
         ))}
