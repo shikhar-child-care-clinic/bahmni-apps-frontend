@@ -87,8 +87,7 @@
 
   // Scope button-primary tokens to this element only — Carbon reads these
   // via var(--cds-button-primary) internally so no !important needed.
-  // #24a148 = Carbon $green-50, hover/active follow the green scale.
-  --cds-button-primary:        #24a148;
-  --cds-button-primary-hover:  #198038;
-  --cds-button-primary-active: #0e6027;
+  --cds-button-primary:        #{$green-50};
+  --cds-button-primary-hover:  #{$green-60};
+  --cds-button-primary-active: #{$green-70};
 }

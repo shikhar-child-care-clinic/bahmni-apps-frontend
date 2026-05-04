@@ -56,17 +56,3 @@
   --cds-border-interactive:      #{$bahmni-teal};
 }
 
-// Page background — grey so white tiles/cards have visual contrast.
-//
-// Why html body (specificity 0-0-2) instead of body (0-0-1):
-//   Carbon's body { background-color: #ffffff } is in @carbon/styles/css/styles.css.
-//   distro/styles.scss is a webpack styles entry loaded as a <link> tag which
-//   executes before the JS bundle, so any body rule there loses to Carbon.
-//   This rule is inside the design-system bundle (after Carbon), and html body
-//   beats body on specificity so it wins regardless of load order.
-//
-// var(--cds-layer-01, #f4f4f4): #f4f4f4 fallback works even if --cds-layer-01
-// is not on :root (Carbon defines it on yarn dev, not :root).
-// html body {
-//   background-color: var(--cds-layer-01, #f4f4f4);
-// }
