@@ -34,6 +34,7 @@ import { BAHMNI_CLINICAL_PATH } from '../constants/app';
 import { useSubscribeConsultationStart } from '../events/startConsultation';
 import { ClinicalAppProvider } from '../providers/ClinicalAppProvider';
 import { useClinicalConfig } from '../providers/clinicalConfig';
+import { useConsultationEventStore } from '../stores';
 import { useObservationFormsStore } from '../stores/observationFormsStore';
 import {
   DASHBOARD_CONFIG_URL,
@@ -79,9 +80,10 @@ const ConsultationPage: React.FC = () => {
   const [encounterType, setEncounterType] = useState('');
 
   useSubscribeConsultationStart(
-    useCallback(({ encounterType: type }) => {
+    useCallback(({ encounterType: type, resource }) => {
       setEncounterType(type);
       setIsActionAreaVisible(true);
+      useConsultationEventStore.getState().setFhirResource(resource);
     }, []),
   );
   const [isSearchOpen, setIsSearchOpen] = useState(false);
