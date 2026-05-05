@@ -1,7 +1,7 @@
 @use "@carbon/react/scss/type" as *;
 @use "@carbon/react/scss/spacing" as *;
 @use "@carbon/react/scss/theme" as *;
-
+@use "@carbon/react/scss/components/notification/tokens" as *;
 
   .vitalFlowSheetDataTable {
    th {
@@ -9,9 +9,7 @@
     }
     table th:nth-child(2) * ,
     table td:nth-child(2) {
-      // Figma "Default/Green/10" (#defbe6). $notification-background-success was
-      // removed in Carbon v11; use the CSS custom property with a direct hex fallback.
-      background-color: var(--cds-notification-background-success, #defbe6) !important;
+      background-color: $notification-background-success !important;
     }
   }
 
