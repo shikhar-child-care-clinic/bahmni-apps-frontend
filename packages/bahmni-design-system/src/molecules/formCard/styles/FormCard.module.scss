@@ -1,6 +1,7 @@
 @use "@carbon/react/scss/spacing" as *;
 @use "@carbon/react/scss/type" as *;
 @use "@carbon/react/scss/theme" as *;
+@use "@carbon/react/scss/colors" as *;
 
 .formCard {
   background-color: $layer-01;
@@ -46,7 +47,7 @@
 
   &.error {
     border: $spacing-01 solid $support-error;
-    background-color: var(--cds-notification-background-error, #fff1f1);
+    background-color: $red-10;
 
     &:hover:not(.disabled) {
       border: $spacing-01 solid $support-error;
