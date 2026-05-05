@@ -301,7 +301,7 @@ const MedicationsTable: React.FC<WidgetProps> = ({
           />
         );
       case 'actions':
-        return <Actions actions={actions} />;
+        return <Actions actions={actions} medication={row.fhirResource} />;
       default:
         return null;
     }

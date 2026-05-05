@@ -1,6 +1,7 @@
 import { Button } from '@bahmni/design-system';
 import { hasPrivilege, useTranslation } from '@bahmni/services';
 import { OverflowMenu, OverflowMenuItem } from '@carbon/react';
+import { MedicationRequest } from 'fhir/r4';
 import React from 'react';
 import { useUserPrivilege } from '../../userPrivileges/useUserPrivilege';
 import { MedicationAction } from '../models';
@@ -8,9 +9,10 @@ import { handleAction } from './actionHandlers';
 
 type ActionsProps = {
   actions: MedicationAction[];
+  medication: MedicationRequest;
 };
 
-const Actions: React.FC<ActionsProps> = ({ actions }) => {
+const Actions: React.FC<ActionsProps> = ({ actions, medication }) => {
   const { t } = useTranslation();
   const { userPrivileges } = useUserPrivilege();
 
@@ -23,7 +25,7 @@ const Actions: React.FC<ActionsProps> = ({ actions }) => {
         aria-label={t(action.label)}
         kind="ghost"
         disabled={!hasPrivilege(userPrivileges, action.requiredPrivilege)}
-        onClick={() => handleAction(action)}
+        onClick={() => handleAction(action, medication)}
       >
         {t(action.label)}
       </Button>
@@ -45,7 +47,7 @@ const Actions: React.FC<ActionsProps> = ({ actions }) => {
           key={action.type}
           itemText={t(action.label)}
           disabled={!hasPrivilege(userPrivileges, action.requiredPrivilege)}
-          onClick={() => handleAction(action)}
+          onClick={() => handleAction(action, medication)}
         />
       ))}
     </OverflowMenu>

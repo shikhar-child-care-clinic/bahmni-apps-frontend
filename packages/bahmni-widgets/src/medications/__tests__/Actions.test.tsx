@@ -8,6 +8,7 @@ import {
   multipleActionsMock,
   singleActionMock,
 } from './__mocks__/actionsMocks';
+import { fhirMedicationRequestMock } from './__mocks__/medicationMocks';
 
 expect.extend(toHaveNoViolations);
 
@@ -24,7 +25,12 @@ describe('Actions', () => {
   });
 
   it('renders a ghost button when there is a single action', () => {
-    render(<Actions actions={singleActionMock} />);
+    render(
+      <Actions
+        actions={singleActionMock}
+        medication={fhirMedicationRequestMock}
+      />,
+    );
 
     const button = screen.getByTestId('medication-action-administer-button');
     expect(button).toHaveClass('cds--btn--ghost');
@@ -32,7 +38,12 @@ describe('Actions', () => {
   });
 
   it('renders an overflow menu when there are multiple actions', () => {
-    render(<Actions actions={multipleActionsMock} />);
+    render(
+      <Actions
+        actions={multipleActionsMock}
+        medication={fhirMedicationRequestMock}
+      />,
+    );
 
     expect(
       screen.getByTestId('medication-actions-overflow-menu'),
@@ -58,31 +69,63 @@ describe('Actions', () => {
   ])('$label', ({ privileges, expectDisabled }) => {
     mockUseUserPrivilege.mockReturnValue({ userPrivileges: privileges } as any);
 
-    render(<Actions actions={singleActionMock} />);
+    render(
+      <Actions
+        actions={singleActionMock}
+        medication={fhirMedicationRequestMock}
+      />,
+    );
 
     const button = screen.getByTestId('medication-action-administer-button');
     expect(button).toHaveProperty('disabled', expectDisabled);
   });
 
-  it('calls handleAction with the action when the single action button is clicked', async () => {
-    mockUseUserPrivilege.mockReturnValue({
-      userPrivileges: [{ uuid: 'u1', name: 'privilege1' }],
-    } as any);
-    const handleActionSpy = jest.spyOn(actionHandlers, 'handleAction');
+  it.each([
+    {
+      label: 'single action button',
+      actions: singleActionMock,
+      getTarget: async () =>
+        screen.getByTestId('medication-action-administer-button'),
+      expectedAction: singleActionMock[0],
+    },
+    {
+      label: 'overflow menu item',
+      actions: multipleActionsMock,
+      getTarget: async () => {
+        await userEvent.click(
+          screen.getByTestId('medication-actions-overflow-menu'),
+        );
+        return screen.getByTestId('medication-action-administer-item');
+      },
+      expectedAction: multipleActionsMock[0],
+    },
+  ])(
+    'calls handleAction with the action when $label is clicked',
+    async ({ actions, getTarget, expectedAction }) => {
+      mockUseUserPrivilege.mockReturnValue({
+        userPrivileges: [{ uuid: 'u1', name: 'privilege1' }],
+      } as any);
+      const handleActionSpy = jest.spyOn(actionHandlers, 'handleAction');
 
-    render(<Actions actions={singleActionMock} />);
-    await userEvent.click(
-      screen.getByTestId('medication-action-administer-button'),
-    );
+      render(
+        <Actions actions={actions} medication={fhirMedicationRequestMock} />,
+      );
+      await userEvent.click(await getTarget());
 
-    expect(handleActionSpy).toHaveBeenCalledWith(singleActionMock[0]);
-  });
+      expect(handleActionSpy).toHaveBeenCalledWith(
+        expectedAction,
+        fhirMedicationRequestMock,
+      );
+    },
+  );
 
   it.each([
     { label: 'single action', actions: singleActionMock },
     { label: 'multiple actions', actions: multipleActionsMock },
   ])('matches snapshot for $label', ({ actions }) => {
-    const { container } = render(<Actions actions={actions} />);
+    const { container } = render(
+      <Actions actions={actions} medication={fhirMedicationRequestMock} />,
+    );
     expect(container).toMatchSnapshot();
   });
 
@@ -90,7 +133,9 @@ describe('Actions', () => {
     { label: 'single action', actions: singleActionMock },
     { label: 'multiple actions', actions: multipleActionsMock },
   ])('has no accessibility violations for $label', async ({ actions }) => {
-    const { container } = render(<Actions actions={actions} />);
+    const { container } = render(
+      <Actions actions={actions} medication={fhirMedicationRequestMock} />,
+    );
     expect(await axe(container)).toHaveNoViolations();
   });
 });

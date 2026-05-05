@@ -14,7 +14,7 @@ exports[`Actions matches snapshot for multiple actions 1`] = `
         <button
           aria-expanded="false"
           aria-haspopup="true"
-          aria-labelledby="tooltip-_r_a_"
+          aria-labelledby="tooltip-_r_e_"
           class="cds--overflow-menu cds--overflow-menu--md cds--btn cds--btn--md cds--layout--size-md cds--btn--ghost cds--btn--icon-only"
           data-testid="medication-actions-overflow-menu"
           id="medication-actions-overflow-menu"
@@ -53,7 +53,7 @@ exports[`Actions matches snapshot for multiple actions 1`] = `
       <span
         aria-hidden="true"
         class="cds--popover"
-        id="tooltip-_r_a_"
+        id="tooltip-_r_e_"
         role="tooltip"
       >
         <span

@@ -3,6 +3,7 @@ import {
   multipleActionsMock,
   singleActionMock,
 } from './__mocks__/actionsMocks';
+import { fhirMedicationRequestMock } from './__mocks__/medicationMocks';
 
 describe('handleAction', () => {
   let dispatchSpy: jest.SpyInstance;
@@ -15,19 +16,22 @@ describe('handleAction', () => {
     dispatchSpy.mockRestore();
   });
 
-  it('dispatches startConsultation with encounterType for administer action', () => {
-    handleAction(singleActionMock[0]);
+  it('dispatches startConsultation with encounterType and basedOn for administer action', () => {
+    handleAction(singleActionMock[0], fhirMedicationRequestMock);
 
     expect(dispatchSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'startConsultation',
-        detail: { encounterType: singleActionMock[0].encounterType },
+        detail: {
+          encounterType: singleActionMock[0].encounterType,
+          resource: fhirMedicationRequestMock,
+        },
       }),
     );
   });
 
   it('does not dispatch any event for unknown action types', () => {
-    handleAction(multipleActionsMock[1]);
+    handleAction(multipleActionsMock[1], undefined);
     expect(dispatchSpy).not.toHaveBeenCalled();
   });
 });
