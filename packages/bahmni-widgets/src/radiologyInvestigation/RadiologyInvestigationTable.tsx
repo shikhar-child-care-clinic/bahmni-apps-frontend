@@ -204,7 +204,11 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       return result.formattedResult;
     });
 
-    const groupedData = grouped.map((group) => ({
+    const sortedGroups = grouped.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+
+    const groupedData = sortedGroups.map((group) => ({
       date: group.date,
       investigations: group.items,
     }));
@@ -532,7 +536,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
                     investigations.length > 0 ? [investigations[0].id] : []
                   }
                   className={styles.radiologyInvestigationTableBody}
-                  dataTestId={`radiology-investigations-table-${date}`}
+                  dataTestId={`radiology-investigations-expandable-table-${date}`}
                 />
               ) : (
                 <SortableDataTable
