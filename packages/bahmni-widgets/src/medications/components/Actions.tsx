@@ -4,6 +4,7 @@ import { OverflowMenu, OverflowMenuItem } from '@carbon/react';
 import React from 'react';
 import { useUserPrivilege } from '../../userPrivileges/useUserPrivilege';
 import { MedicationAction } from '../models';
+import { handleAction } from './actionHandlers';
 
 type ActionsProps = {
   actions: MedicationAction[];
@@ -22,6 +23,7 @@ const Actions: React.FC<ActionsProps> = ({ actions }) => {
         aria-label={t(action.label)}
         kind="ghost"
         disabled={!hasPrivilege(userPrivileges, action.requiredPrivilege)}
+        onClick={() => handleAction(action)}
       >
         {t(action.label)}
       </Button>
@@ -43,6 +45,7 @@ const Actions: React.FC<ActionsProps> = ({ actions }) => {
           key={action.type}
           itemText={t(action.label)}
           disabled={!hasPrivilege(userPrivileges, action.requiredPrivilege)}
+          onClick={() => handleAction(action)}
         />
       ))}
     </OverflowMenu>

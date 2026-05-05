@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { useUserPrivilege } from '../../userPrivileges/useUserPrivilege';
+import * as actionHandlers from '../components/actionHandlers';
 import Actions from '../components/Actions';
 import {
   multipleActionsMock,
@@ -60,6 +62,20 @@ describe('Actions', () => {
 
     const button = screen.getByTestId('medication-action-administer-button');
     expect(button).toHaveProperty('disabled', expectDisabled);
+  });
+
+  it('calls handleAction with the action when the single action button is clicked', async () => {
+    mockUseUserPrivilege.mockReturnValue({
+      userPrivileges: [{ uuid: 'u1', name: 'privilege1' }],
+    } as any);
+    const handleActionSpy = jest.spyOn(actionHandlers, 'handleAction');
+
+    render(<Actions actions={singleActionMock} />);
+    await userEvent.click(
+      screen.getByTestId('medication-action-administer-button'),
+    );
+
+    expect(handleActionSpy).toHaveBeenCalledWith(singleActionMock[0]);
   });
 
   it.each([
