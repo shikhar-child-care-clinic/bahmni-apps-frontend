@@ -40,10 +40,6 @@ export const BAHMNI_DEFAULT_THEME: Required<BahmniThemeConfig> = {
   'layer-01': '#f4f4f4',
 };
 
-// A <style> tag is used instead of document.documentElement.style.setProperty
-// because Carbon v11 defines tokens on .cds--white / .cds--g10 class selectors,
-// not just :root. Inline styles on :root cannot override class-level values.
-// Appending a <style> tag after Carbon's CSS wins via last-definition cascade.
 export function applyBahmniTheme(config: Partial<BahmniThemeConfig>): void {
   if (Object.keys(config).length === 0) return;
 

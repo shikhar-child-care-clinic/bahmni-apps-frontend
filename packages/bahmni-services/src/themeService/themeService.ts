@@ -1,8 +1,3 @@
-// BahmniThemeConfig is defined here independently to avoid a circular dependency:
-// bahmni-design-system already depends on @bahmni/services, so importing
-// BahmniThemeConfig from @bahmni/design-system would create a cycle.
-// TypeScript structural typing ensures this type is compatible with the one
-// exported from @bahmni/design-system — same shape, same keys.
 export interface BahmniThemeConfig {
   'background-brand'?: string;
   'text-inverse'?: string;
