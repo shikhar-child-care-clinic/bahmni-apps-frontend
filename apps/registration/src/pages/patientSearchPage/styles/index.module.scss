@@ -84,7 +84,13 @@
   right: $spacing-09;
   padding-inline: $spacing-05 !important;
   z-index: 9999;
-  --cds-button-primary:        #{$support-success};
-  --cds-button-primary-hover:  #{$green-60};
-  --cds-button-primary-active: #{$green-70};
+  background-color: $support-success;
+
+  &:hover {
+    background-color: $green-60;
+  }
+
+  &:active {
+    background-color: $green-70;
+  }
 }
