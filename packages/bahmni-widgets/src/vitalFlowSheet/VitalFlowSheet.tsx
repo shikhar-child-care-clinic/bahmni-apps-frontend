@@ -292,6 +292,7 @@ const VitalFlowSheet: React.FC<VitalFlowSheetProps> = ({
       renderCell={renderCell}
       className={styles.vitalFlowSheetDataTable}
       dataTestId="vital-flow-sheet-table"
+      sortable={[]}
     />
   );
 };
