@@ -162,7 +162,7 @@ export const groupInvestigationsByPrimaryOrder = (
   });
 
   return Array.from(primaryOrdersMap.values()).map((primaryOrder) => {
-    const linkedOrders = primaryToLinkedMap.get(primaryOrder.id) || [];
+    const linkedOrders = primaryToLinkedMap.get(primaryOrder.id) ?? [];
     return {
       ...primaryOrder,
       ...(linkedOrders.length > 0 && { linkedOrders }),

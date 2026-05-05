@@ -528,6 +528,9 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
                   emptyStateMessage={t('NO_RADIOLOGY_INVESTIGATIONS')}
                   renderCell={renderCell}
                   renderExpandedContent={renderExpandedContent}
+                  initialExpandedRows={
+                    investigations.length > 0 ? [investigations[0].id] : []
+                  }
                   className={styles.radiologyInvestigationTableBody}
                   dataTestId={`radiology-investigations-table-${date}`}
                 />
