@@ -35,6 +35,36 @@ export const useImmunizationHistoryStore = create<ImmunizationHistoryState>(
       }));
     },
 
+    addImmunizationWithDefaults: (
+      vaccineCode: { code: string; display: string },
+      defaults: {
+        basedOnReference?: string | null;
+        drug: ImmunizationDrug | null;
+        administeredOn: Date | null;
+        administeredLocation: ImmunizationLocation | null;
+      },
+    ) => {
+      const newEntry: ImmunizationInputEntry = {
+        id: generateUUID(),
+        drug: defaults.drug,
+        vaccineCode,
+        administeredOn: defaults.administeredOn,
+        administeredLocation: defaults.administeredLocation,
+        route: null,
+        site: null,
+        expiryDate: null,
+        manufacturer: null,
+        batchNumber: null,
+        doseSequence: null,
+        basedOnReference: defaults.basedOnReference,
+        errors: {},
+        hasBeenValidated: false,
+      };
+      set((state) => ({
+        selectedImmunizations: [newEntry, ...state.selectedImmunizations],
+      }));
+    },
+
     removeImmunization: (id: string) => {
       set((state) => ({
         selectedImmunizations: state.selectedImmunizations.filter(

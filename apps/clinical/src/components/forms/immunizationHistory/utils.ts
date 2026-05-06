@@ -1,11 +1,12 @@
 import { generateUUID, resolveComboBoxItems, Location } from '@bahmni/services';
 import {
+  BundleEntry,
   Extension,
+  Immunization,
   Medication,
+  MedicationRequest,
   ValueSet,
   ValueSetExpansionContains,
-  BundleEntry,
-  Immunization,
 } from 'fhir/r4';
 import { InputControlAttributes } from '../../../providers/clinicalConfig/models';
 import { getMedicationDisplay } from '../../../services/medicationService';
@@ -131,6 +132,42 @@ export function getComboBoxItems(
     (message) => ({ display: message }),
     messages,
   );
+}
+
+export function buildBasedOnImmunizationEntry(
+  basedOn: MedicationRequest,
+  basedOnMedication: Medication,
+  vaccineMedications: Medication[],
+  loginLocation: { uuid?: string; display?: string; name: string },
+) {
+  const vaccineCode = {
+    code: basedOnMedication.code?.coding?.[0]?.code,
+    display: basedOn.medicationReference?.display,
+  };
+
+  const matchedDrug = vaccineMedications.find(
+    (med) => getMedicationDisplay(med) === basedOn.medicationReference?.display,
+  );
+
+  const medicationDisplay = basedOn.medicationReference?.display;
+  const drug = medicationDisplay
+    ? { code: matchedDrug?.id, display: medicationDisplay }
+    : null;
+
+  const administeredLocation = {
+    uuid: loginLocation.uuid,
+    display: loginLocation.display ?? loginLocation.name,
+  };
+
+  return {
+    vaccineCode,
+    defaults: {
+      drug,
+      administeredOn: new Date(),
+      administeredLocation,
+      basedOnReference: basedOn.id,
+    },
+  };
 }
 
 export function createImmunizationBundleEntries({

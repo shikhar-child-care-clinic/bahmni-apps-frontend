@@ -30,7 +30,7 @@ exports[`SelectedImmunizationItem Snapshots matches snapshot with all form field
               <input
                 aria-activedescendant=""
                 aria-autocomplete="list"
-                aria-controls="downshift-_r_c1_-menu"
+                aria-controls="downshift-_r_eq_-menu"
                 aria-expanded="false"
                 aria-haspopup="listbox"
                 aria-label="Choose an item"
@@ -47,11 +47,11 @@ exports[`SelectedImmunizationItem Snapshots matches snapshot with all form field
                 value=""
               />
               <button
-                aria-controls="downshift-_r_c1_-menu"
+                aria-controls="downshift-_r_eq_-menu"
                 aria-expanded="false"
                 aria-label="Open"
                 class="cds--list-box__menu-icon"
-                id="downshift-_r_c1_-toggle-button"
+                id="downshift-_r_eq_-toggle-button"
                 tabindex="-1"
                 title="Open"
                 type="button"
@@ -73,9 +73,9 @@ exports[`SelectedImmunizationItem Snapshots matches snapshot with all form field
               </button>
             </div>
             <ul
-              aria-labelledby="downshift-_r_c1_-label"
+              aria-labelledby="downshift-_r_eq_-label"
               class="cds--list-box__menu"
-              id="downshift-_r_c1_-menu"
+              id="downshift-_r_eq_-menu"
               role="listbox"
               style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
             />
@@ -150,7 +150,7 @@ exports[`SelectedImmunizationItem Snapshots matches snapshot with all form field
               <input
                 aria-activedescendant=""
                 aria-autocomplete="list"
-                aria-controls="downshift-_r_c5_-menu"
+                aria-controls="downshift-_r_eu_-menu"
                 aria-expanded="false"
                 aria-haspopup="listbox"
                 aria-label="Choose an item"
@@ -166,11 +166,11 @@ exports[`SelectedImmunizationItem Snapshots matches snapshot with all form field
                 value=""
               />
               <button
-                aria-controls="downshift-_r_c5_-menu"
+                aria-controls="downshift-_r_eu_-menu"
                 aria-expanded="false"
                 aria-label="Open"
                 class="cds--list-box__menu-icon"
-                id="downshift-_r_c5_-toggle-button"
+                id="downshift-_r_eu_-toggle-button"
                 tabindex="-1"
                 title="Open"
                 type="button"
@@ -192,9 +192,9 @@ exports[`SelectedImmunizationItem Snapshots matches snapshot with all form field
               </button>
             </div>
             <ul
-              aria-labelledby="downshift-_r_c5_-label"
+              aria-labelledby="downshift-_r_eu_-label"
               class="cds--list-box__menu"
-              id="downshift-_r_c5_-menu"
+              id="downshift-_r_eu_-menu"
               role="listbox"
               style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
             />
@@ -216,7 +216,7 @@ exports[`SelectedImmunizationItem Snapshots matches snapshot with all form field
               <input
                 aria-activedescendant=""
                 aria-autocomplete="list"
-                aria-controls="downshift-_r_c8_-menu"
+                aria-controls="downshift-_r_f1_-menu"
                 aria-expanded="false"
                 aria-haspopup="listbox"
                 aria-label="Choose an item"
@@ -232,11 +232,11 @@ exports[`SelectedImmunizationItem Snapshots matches snapshot with all form field
                 value=""
               />
               <button
-                aria-controls="downshift-_r_c8_-menu"
+                aria-controls="downshift-_r_f1_-menu"
                 aria-expanded="false"
                 aria-label="Open"
                 class="cds--list-box__menu-icon"
-                id="downshift-_r_c8_-toggle-button"
+                id="downshift-_r_f1_-toggle-button"
                 tabindex="-1"
                 title="Open"
                 type="button"
@@ -258,9 +258,9 @@ exports[`SelectedImmunizationItem Snapshots matches snapshot with all form field
               </button>
             </div>
             <ul
-              aria-labelledby="downshift-_r_c8_-label"
+              aria-labelledby="downshift-_r_f1_-label"
               class="cds--list-box__menu"
-              id="downshift-_r_c8_-menu"
+              id="downshift-_r_f1_-menu"
               role="listbox"
               style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
             />
@@ -282,7 +282,7 @@ exports[`SelectedImmunizationItem Snapshots matches snapshot with all form field
               <input
                 aria-activedescendant=""
                 aria-autocomplete="list"
-                aria-controls="downshift-_r_cb_-menu"
+                aria-controls="downshift-_r_f4_-menu"
                 aria-expanded="false"
                 aria-haspopup="listbox"
                 aria-label="Choose an item"
@@ -298,11 +298,11 @@ exports[`SelectedImmunizationItem Snapshots matches snapshot with all form field
                 value=""
               />
               <button
-                aria-controls="downshift-_r_cb_-menu"
+                aria-controls="downshift-_r_f4_-menu"
                 aria-expanded="false"
                 aria-label="Open"
                 class="cds--list-box__menu-icon"
-                id="downshift-_r_cb_-toggle-button"
+                id="downshift-_r_f4_-toggle-button"
                 tabindex="-1"
                 title="Open"
                 type="button"
@@ -324,9 +324,9 @@ exports[`SelectedImmunizationItem Snapshots matches snapshot with all form field
               </button>
             </div>
             <ul
-              aria-labelledby="downshift-_r_cb_-label"
+              aria-labelledby="downshift-_r_f4_-label"
               class="cds--list-box__menu"
-              id="downshift-_r_cb_-menu"
+              id="downshift-_r_f4_-menu"
               role="listbox"
               style="position: fixed; left: 0px; top: 0px; visibility: visible; transform: translate(0px, 0px);"
             />

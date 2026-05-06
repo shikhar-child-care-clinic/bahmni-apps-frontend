@@ -7,6 +7,8 @@ import {
   mockCovid19VaccineDrugs,
   mockFullAttributes,
   mockImmunizationEntry,
+  mockImmunizationEntryWithBasedOn,
+  mockImmunizationEntryWithBasedOnAndNullFields,
   mockImmunizationEntryWithDate,
   mockImmunizationEntryWithErrors,
   mockLocations,
@@ -162,6 +164,60 @@ describe('SelectedImmunizationItem', () => {
       );
       expect(screen.getByText(errorText)).toBeInTheDocument();
     });
+  });
+
+  describe('Disabled state', () => {
+    it.each([
+      ['drug', () => screen.getByPlaceholderText('Search drug name')],
+      [
+        'administeredOn',
+        () =>
+          screen.getByTestId(
+            `immunization-administered-on-input-${id}-test-id`,
+          ),
+      ],
+      [
+        'administeredLocation',
+        () => screen.getByPlaceholderText('Select administered location'),
+      ],
+    ])(
+      '%s field is disabled when basedOnReference is set and field has a value',
+      (_, getElement) => {
+        render(
+          <SelectedImmunizationItem
+            {...defaultProps}
+            immunization={mockImmunizationEntryWithBasedOn}
+          />,
+        );
+        expect(getElement()).toBeDisabled();
+      },
+    );
+
+    it.each([
+      ['drug', () => screen.getByPlaceholderText('Search drug name')],
+      [
+        'administeredOn',
+        () =>
+          screen.getByTestId(
+            `immunization-administered-on-input-${id}-test-id`,
+          ),
+      ],
+      [
+        'administeredLocation',
+        () => screen.getByPlaceholderText('Select administered location'),
+      ],
+    ])(
+      '%s field is not disabled when basedOnReference is set but field value is null',
+      (_, getElement) => {
+        render(
+          <SelectedImmunizationItem
+            {...defaultProps}
+            immunization={mockImmunizationEntryWithBasedOnAndNullFields}
+          />,
+        );
+        expect(getElement()).not.toBeDisabled();
+      },
+    );
   });
 
   describe('Store interactions', () => {
@@ -373,6 +429,22 @@ describe('SelectedImmunizationItem', () => {
   });
 
   describe('Note field interactions', () => {
+    it('shows textarea directly when immunization already has a note', () => {
+      render(
+        <SelectedImmunizationItem
+          {...defaultProps}
+          attributes={[{ name: 'note', required: false }]}
+          immunization={{ ...mockImmunizationEntry, note: 'Pre-existing note' }}
+        />,
+      );
+      expect(
+        screen.queryByTestId(`immunization-add-note-link-${id}-test-id`),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByTestId(`immunization-note-${id}-test-id`),
+      ).toBeInTheDocument();
+    });
+
     it('opens textarea on link click, calls updateNote on input, and clears on close', async () => {
       const user = userEvent.setup();
       render(

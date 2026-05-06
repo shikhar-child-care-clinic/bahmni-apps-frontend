@@ -1,5 +1,7 @@
 import {
   getLocationByTag,
+  getMedication,
+  getUserLoginLocation,
   getVaccinations,
   searchFHIRConcepts,
 } from '@bahmni/services';
@@ -16,7 +18,9 @@ import {
   mockClinicalConfigContext,
   mockCovid19VaccineDrug,
   mockEncounterSubject,
+  mockFetchedMedication,
   mockLocations,
+  mockMedicationRequest,
   mockRoutesValueSet,
   mockSitesValueSet,
   mockVaccineValueSet,
@@ -25,6 +29,8 @@ import {
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   getLocationByTag: jest.fn(),
+  getMedication: jest.fn(),
+  getUserLoginLocation: jest.fn(),
   getVaccinations: jest.fn(),
   searchFHIRConcepts: jest.fn(),
 }));
@@ -68,12 +74,20 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
       return Promise.resolve(undefined);
     });
     (getLocationByTag as jest.Mock).mockResolvedValue(mockLocations);
+    (getMedication as jest.Mock).mockResolvedValue(mockFetchedMedication);
     (getVaccinations as jest.Mock).mockResolvedValue(mockVaccinationBundle);
+    (getUserLoginLocation as jest.Mock).mockReturnValue({
+      uuid: 'loc-uuid',
+      display: 'Login Location',
+      name: 'Login Location',
+    });
   });
 
   it('creates valid bundle entries when all required fields are filled', async () => {
     const user = userEvent.setup();
-    render(<ImmunizationHistoryForm />, { wrapper: createWrapper() });
+    render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />, {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
       expect(
@@ -167,7 +181,9 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
 
   it('shows required field validation errors when fields are left empty after vaccine selection', async () => {
     const user = userEvent.setup();
-    render(<ImmunizationHistoryForm />, { wrapper: createWrapper() });
+    render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />, {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
       expect(
@@ -213,7 +229,9 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
       clinicalConfig: { consultationPad: {} },
     });
 
-    render(<ImmunizationHistoryForm />, { wrapper: createWrapper() });
+    render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />, {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
       expect(
@@ -230,7 +248,9 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
       new Error('Network error'),
     );
 
-    render(<ImmunizationHistoryForm />, { wrapper: createWrapper() });
+    render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />, {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
       expect(
@@ -251,5 +271,25 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
       practitionerUUID: 'practitioner-uuid',
     });
     expect(bundleEntries).toHaveLength(0);
+  });
+
+  it('shows error state when getMedication call fails', async () => {
+    (getMedication as jest.Mock).mockRejectedValue(new Error('Network error'));
+
+    render(
+      <ImmunizationHistoryForm
+        consultationStartEventPayload={{ basedOn: mockMedicationRequest }}
+      />,
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId('immunization-history-error-test-id'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('Error loading immunization details'),
+      ).toBeInTheDocument();
+    });
   });
 });

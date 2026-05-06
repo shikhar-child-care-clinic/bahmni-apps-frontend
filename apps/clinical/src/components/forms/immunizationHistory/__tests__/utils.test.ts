@@ -1,22 +1,26 @@
-import { Immunization, Medication } from 'fhir/r4';
+import { Immunization, Medication, MedicationRequest } from 'fhir/r4';
 import { getMedicationDisplay } from '../../../../services/medicationService';
 import { ADMINISTERED_PRODUCT_EXTENSION_URL } from '../constants';
 import {
-  findAttr,
-  getValueSetComboBoxItems,
-  getMedicationComboBoxItems,
-  getLocationComboBoxItems,
-  getComboBoxItems,
+  buildBasedOnImmunizationEntry,
   createImmunizationBundleEntries,
+  findAttr,
+  getComboBoxItems,
+  getLocationComboBoxItems,
+  getMedicationComboBoxItems,
+  getValueSetComboBoxItems,
 } from '../utils';
 import {
-  mockVaccineValueSet,
-  mockLocations,
-  mockLocationsWithChildren,
-  mockVaccineDrugs,
+  mockCovid19VaccineDrug,
+  mockEncounterSubject,
+  mockFetchedMedication,
   mockImmunizationEntry,
   mockImmunizationEntryComplete,
-  mockEncounterSubject,
+  mockLocations,
+  mockLocationsWithChildren,
+  mockMedicationRequest,
+  mockVaccineDrugs,
+  mockVaccineValueSet,
   mockValueSetWithPartialItem,
   mockValueSetWithoutContains,
 } from './__mocks__/immunizationHistoryMocks';
@@ -470,5 +474,115 @@ describe('createImmunizationBundleEntries', () => {
       selectedImmunizations: [mockImmunizationEntry],
     });
     expect(result[0].request?.method).toBe('POST');
+  });
+});
+
+describe('buildBasedOnImmunizationEntry', () => {
+  const mockLoginLocation = {
+    uuid: 'loc-uuid',
+    display: 'Main Clinic',
+    name: 'Main Clinic',
+  };
+
+  it('extracts vaccineCode from basedOnMedication coding and medicationReference display', () => {
+    const { vaccineCode } = buildBasedOnImmunizationEntry(
+      mockMedicationRequest,
+      mockFetchedMedication,
+      [],
+      mockLoginLocation,
+    );
+    expect(vaccineCode).toEqual({ code: 'covid-19', display: 'COVID-19 Drug' });
+  });
+
+  it.each([
+    [
+      'matched drug found',
+      [mockCovid19VaccineDrug],
+      'COVID-19 Drug',
+      { code: 'covid-drug-uuid', display: 'COVID-19 Drug' },
+    ],
+    [
+      'no match in vaccineMedications',
+      [],
+      'COVID-19 Drug',
+      { code: undefined, display: 'COVID-19 Drug' },
+    ],
+  ])(
+    'sets drug correctly when %s',
+    (_label, vaccineMedications, displayReturn, expectedDrug) => {
+      (getMedicationDisplay as jest.Mock).mockReturnValue(displayReturn);
+      const { defaults } = buildBasedOnImmunizationEntry(
+        mockMedicationRequest,
+        mockFetchedMedication,
+        vaccineMedications as Medication[],
+        mockLoginLocation,
+      );
+      expect(defaults.drug).toEqual(expectedDrug);
+    },
+  );
+
+  it('sets drug to null when medicationReference has no display', () => {
+    const basedOnNoDisplay = {
+      ...mockMedicationRequest,
+      medicationReference: { reference: 'Medication/covid-drug-uuid' },
+    } as MedicationRequest;
+    const { defaults } = buildBasedOnImmunizationEntry(
+      basedOnNoDisplay,
+      mockFetchedMedication,
+      [],
+      mockLoginLocation,
+    );
+    expect(defaults.drug).toBeNull();
+  });
+
+  it.each([
+    [
+      'display is set',
+      { uuid: 'loc-uuid', display: 'Main Clinic', name: 'Fallback' },
+      'Main Clinic',
+    ],
+    [
+      'display is absent',
+      { uuid: 'loc-uuid', name: 'Fallback Name' },
+      'Fallback Name',
+    ],
+  ])(
+    'uses loginLocation.%s for administeredLocation.display',
+    (_label, loginLocation, expectedDisplay) => {
+      const { defaults } = buildBasedOnImmunizationEntry(
+        mockMedicationRequest,
+        mockFetchedMedication,
+        [],
+        loginLocation,
+      );
+      expect(defaults.administeredLocation).toMatchObject({
+        uuid: loginLocation.uuid,
+        display: expectedDisplay,
+      });
+    },
+  );
+
+  it('sets basedOnReference to basedOn.id', () => {
+    const { defaults } = buildBasedOnImmunizationEntry(
+      mockMedicationRequest,
+      mockFetchedMedication,
+      [],
+      mockLoginLocation,
+    );
+    expect(defaults.basedOnReference).toBe('med-request-uuid');
+  });
+
+  it('sets administeredOn to a current Date instance', () => {
+    const before = new Date();
+    const { defaults } = buildBasedOnImmunizationEntry(
+      mockMedicationRequest,
+      mockFetchedMedication,
+      [],
+      mockLoginLocation,
+    );
+    expect(defaults.administeredOn).toBeInstanceOf(Date);
+    expect(defaults.administeredOn.getTime()).toBeGreaterThanOrEqual(
+      before.getTime(),
+    );
   });
 });

@@ -98,6 +98,51 @@ describe('useImmunizationHistoryStore', () => {
     });
   });
 
+  describe('addImmunizationWithDefaults', () => {
+    const defaults = {
+      basedOnReference: 'med-request-uuid',
+      drug: { code: 'covid-drug-uuid', display: 'COVID-19 Drug' },
+      administeredOn: new Date('2025-06-01'),
+      administeredLocation: { uuid: 'loc-uuid', display: 'Main Clinic' },
+    };
+
+    it('adds an entry with the correct shape from defaults', () => {
+      store().addImmunizationWithDefaults(mockVaccineCode, defaults);
+
+      expect(store().selectedImmunizations).toHaveLength(1);
+      const entry = store().selectedImmunizations[0];
+      expect(entry.id).toBeTruthy();
+      expect(entry).toMatchObject({
+        vaccineCode: mockVaccineCode,
+        drug: defaults.drug,
+        administeredOn: defaults.administeredOn,
+        administeredLocation: defaults.administeredLocation,
+        basedOnReference: defaults.basedOnReference,
+        route: null,
+        site: null,
+        expiryDate: null,
+        manufacturer: null,
+        batchNumber: null,
+        doseSequence: null,
+        errors: {},
+        hasBeenValidated: false,
+      });
+    });
+
+    it('prepends the new entry and generates a unique id per entry', () => {
+      store().addImmunization(mockVaccineCode);
+      store().addImmunizationWithDefaults(secondVaccineCode, defaults);
+
+      expect(store().selectedImmunizations).toHaveLength(2);
+      expect(store().selectedImmunizations[0].vaccineCode).toEqual(
+        secondVaccineCode,
+      );
+      expect(store().selectedImmunizations[0].id).not.toBe(
+        store().selectedImmunizations[1].id,
+      );
+    });
+  });
+
   describe('removeImmunization', () => {
     it('removes only the specified entry, leaving others intact', () => {
       store().addImmunization(mockVaccineCode);

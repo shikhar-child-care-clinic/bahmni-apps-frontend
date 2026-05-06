@@ -6,28 +6,60 @@ import {
 } from '@bahmni/design-system';
 import {
   getLocationByTag,
+  getMedication,
+  getUserLoginLocation,
   getVaccinations,
   searchFHIRConcepts,
   useTranslation,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
-import { Medication } from 'fhir/r4';
+import { Medication, MedicationRequest } from 'fhir/r4';
 import { useEffect, useMemo, useState } from 'react';
+import type { ConsultationStartEventPayload } from '../../../events/startConsultation';
 import { useClinicalConfig } from '../../../providers/clinicalConfig';
 import SelectedImmunizationItem from './components/SelectedImmunizationItem';
 import { useImmunizationHistoryStore } from './stores';
 import styles from './styles/ImmunizationHistoryForm.module.scss';
-import { findAttr, getComboBoxItems } from './utils';
+import {
+  buildBasedOnImmunizationEntry,
+  findAttr,
+  getComboBoxItems,
+} from './utils';
 
-const ImmunizationHistoryForm = () => {
+const ImmunizationHistoryForm = ({
+  consultationStartEventPayload,
+}: {
+  consultationStartEventPayload: ConsultationStartEventPayload;
+}) => {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const {
     addImmunization,
+    addImmunizationWithDefaults,
     removeImmunization,
     selectedImmunizations,
     setAttributes,
   } = useImmunizationHistoryStore();
+
+  const basedOn = consultationStartEventPayload.basedOn as
+    | MedicationRequest
+    | undefined;
+
+  const basedOnReference = basedOn?.id;
+  const medicationUuid = basedOn?.medicationReference?.reference
+    ?.split('/')
+    .pop();
+
+  const {
+    data: basedOnMedication,
+    isLoading: basedOnMedicationLoading,
+    isError: basedOnMedicationError,
+  } = useQuery({
+    queryKey: ['medication', medicationUuid],
+    queryFn: () => getMedication(medicationUuid!),
+    enabled: !!basedOn && !!medicationUuid,
+    staleTime: Infinity,
+  });
 
   const {
     clinicalConfig,
@@ -37,6 +69,7 @@ const ImmunizationHistoryForm = () => {
 
   const immunizationHistory =
     clinicalConfig?.consultationPad?.immunizationHistory;
+  const loginLocation = getUserLoginLocation();
   const { metadata, attributes } = immunizationHistory ?? {};
   const vaccineConceptSetUuid = metadata?.vaccineConceptSetUuid as
     | string
@@ -117,7 +150,27 @@ const ImmunizationHistoryForm = () => {
   } = useQuery({
     queryKey: ['vaccinations'],
     queryFn: getVaccinations,
+    staleTime: Infinity,
   });
+
+  const vaccineMedications = useMemo(
+    () =>
+      vaccinationDrugs?.entry
+        ?.filter((e) => e.resource?.resourceType === 'Medication')
+        .map((e) => e.resource as Medication) ?? [],
+    [vaccinationDrugs],
+  );
+
+  useEffect(() => {
+    if (!basedOn || !basedOnMedication || !vaccinationDrugs) return;
+    const { vaccineCode, defaults } = buildBasedOnImmunizationEntry(
+      basedOn,
+      basedOnMedication,
+      vaccineMedications,
+      loginLocation,
+    );
+    addImmunizationWithDefaults(vaccineCode, defaults);
+  }, [basedOn, basedOnMedication, vaccinationDrugs, basedOnReference]);
 
   const vaccineCodeComboBoxItems = useMemo(
     () =>
@@ -153,7 +206,8 @@ const ImmunizationHistoryForm = () => {
         routesConceptSetLoading ||
         sitesConceptSetLoading ||
         administeredLocationTagLoading ||
-        vaccinationDrugsLoading) &&
+        vaccinationDrugsLoading ||
+        basedOnMedicationLoading) &&
       selectedImmunizations.length > 0
     );
   }, [
@@ -163,6 +217,7 @@ const ImmunizationHistoryForm = () => {
     sitesConceptSetLoading,
     administeredLocationTagLoading,
     vaccinationDrugsLoading,
+    basedOnMedicationLoading,
   ]);
 
   const isDataError = useMemo(() => {
@@ -171,7 +226,8 @@ const ImmunizationHistoryForm = () => {
       !!routesConceptSetError ||
       !!sitesConceptSetError ||
       !!administeredLocationTagError ||
-      !!vaccinationDrugsError
+      !!vaccinationDrugsError ||
+      !!basedOnMedicationError
     );
   }, [
     vaccineCodeConceptSetError,
@@ -179,6 +235,7 @@ const ImmunizationHistoryForm = () => {
     sitesConceptSetError,
     administeredLocationTagError,
     vaccinationDrugsError,
+    basedOnMedicationError,
   ]);
 
   const showSelectedImmunizations =
@@ -263,11 +320,7 @@ const ImmunizationHistoryForm = () => {
                 sites={sitesConceptSet}
                 attributes={attributes}
                 administeredLocationTag={administeredLocationTagData}
-                vaccineDrugs={vaccinationDrugs?.entry
-                  ?.filter(
-                    (entry) => entry.resource?.resourceType === 'Medication',
-                  )
-                  .map((entry) => entry.resource as Medication)}
+                vaccineDrugs={vaccineMedications}
               />
             </SelectedItem>
           ))}

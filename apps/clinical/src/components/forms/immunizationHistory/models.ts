@@ -27,6 +27,7 @@ export interface ImmunizationInputEntry {
   batchNumber: string | null;
   doseSequence: number | null;
   note?: string;
+  basedOnReference?: string | null;
   errors: {
     drug?: string;
     administeredOn?: string;
@@ -63,6 +64,15 @@ export interface ImmunizationHistoryState {
   selectedImmunizations: ImmunizationInputEntry[];
   attributes: InputControlAttributes[] | undefined;
   addImmunization: (vaccineCode: { code: string; display: string }) => void;
+  addImmunizationWithDefaults: (
+    vaccineCode: { code: string; display: string },
+    defaults: {
+      basedOnReference?: string | null;
+      drug: ImmunizationDrug | null;
+      administeredOn: Date | null;
+      administeredLocation: ImmunizationLocation | null;
+    },
+  ) => void;
   removeImmunization: (id: string) => void;
   setAttributes: (attrs: InputControlAttributes[]) => void;
   updateAdministeredOn: (id: string, value: Date | null) => void;

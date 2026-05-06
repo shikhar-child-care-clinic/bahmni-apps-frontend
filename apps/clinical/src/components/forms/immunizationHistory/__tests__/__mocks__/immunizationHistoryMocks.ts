@@ -1,5 +1,5 @@
 import { Location } from '@bahmni/services';
-import { Medication, Reference } from 'fhir/r4';
+import { Medication, MedicationRequest, Reference } from 'fhir/r4';
 import { InputControlAttributes } from '../../../../../providers/clinicalConfig/models';
 import { ImmunizationInputEntry } from '../../models';
 
@@ -261,10 +261,49 @@ export const mockImmunizationEntryComplete: ImmunizationInputEntry = {
   note: 'Third dose completed successfully.',
 };
 
+export const mockImmunizationEntryWithBasedOn: ImmunizationInputEntry = {
+  ...mockImmunizationEntry,
+  basedOnReference: 'med-request-uuid',
+  drug: { code: 'covid-drug-uuid', display: 'COVID-19 Drug' },
+  administeredOn: new Date('2025-01-01'),
+  administeredLocation: { uuid: 'location-uuid-1', display: 'Main Clinic' },
+};
+
+export const mockImmunizationEntryWithBasedOnAndNullFields: ImmunizationInputEntry =
+  {
+    ...mockImmunizationEntry,
+    basedOnReference: 'med-request-uuid',
+  };
+
+export const mockMedicationRequest: MedicationRequest = {
+  resourceType: 'MedicationRequest',
+  id: 'med-request-uuid',
+  status: 'active',
+  intent: 'order',
+  subject: { reference: 'Patient/patient-uuid' },
+  medicationReference: {
+    reference: 'Medication/covid-drug-uuid',
+    display: 'COVID-19 Drug',
+  },
+};
+
+export const mockFetchedMedication: Medication = {
+  resourceType: 'Medication',
+  id: 'covid-drug-uuid',
+  code: { coding: [{ code: 'covid-19', display: 'COVID-19 Vaccine' }] },
+};
+
+export const mockVaccinationBundleWithCovid = {
+  resourceType: 'Bundle',
+  type: 'searchset',
+  entry: [{ resource: mockCovid19VaccineDrug }],
+};
+
 export const mockStore = {
   selectedImmunizations: [],
   attributes: undefined,
   addImmunization: jest.fn(),
+  addImmunizationWithDefaults: jest.fn(),
   removeImmunization: jest.fn(),
   setAttributes: jest.fn(),
   updateAdministeredOn: jest.fn(),

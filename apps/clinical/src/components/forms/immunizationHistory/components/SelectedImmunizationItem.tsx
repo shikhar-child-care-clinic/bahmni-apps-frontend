@@ -139,6 +139,14 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
               autoAlign
               items={vaccineDrugComboBoxItems}
               itemToString={(item) => item?.display ?? ''}
+              selectedItem={
+                immunization.drug
+                  ? {
+                      code: immunization.drug.code ?? '',
+                      display: immunization.drug.display,
+                    }
+                  : null
+              }
               onChange={({ selectedItem, inputValue }) => {
                 if (selectedItem?.code) {
                   updateVaccineDrug(id, {
@@ -154,6 +162,7 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
               allowCustomValue
               onInputChange={(value: string) => setDrugSearchTerm(value)}
               size="md"
+              disabled={!!(immunization.basedOnReference && immunization.drug)}
               required={findAttr('drug', attributes)?.required}
               invalid={!!immunization.errors.drug}
               invalidText={
@@ -179,6 +188,11 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
                 placeholder={t('IMMUNIZATION_HISTORY_ADMINISTERED_ON')}
                 size="md"
                 hideLabel
+                disabled={
+                  !!(
+                    immunization.basedOnReference && immunization.administeredOn
+                  )
+                }
                 invalid={!!immunization.errors.administeredOn}
                 invalidText={
                   immunization.errors.administeredOn
@@ -202,6 +216,14 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
               allowCustomValue
               items={administeredLocationTagComboBoxItems}
               itemToString={(item) => item?.display ?? ''}
+              selectedItem={
+                immunization.administeredLocation
+                  ? {
+                      uuid: immunization.administeredLocation.uuid ?? '',
+                      display: immunization.administeredLocation.display,
+                    }
+                  : null
+              }
               onChange={({ selectedItem, inputValue }) => {
                 if (selectedItem?.uuid) {
                   updateAdministeredLocation(id, {
@@ -220,6 +242,12 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
                 handleAdministeredLocationTagInputChange(searchQuery)
               }
               size="md"
+              disabled={
+                !!(
+                  immunization.basedOnReference &&
+                  immunization.administeredLocation
+                )
+              }
               invalid={!!immunization.errors.administeredLocation}
               invalidText={
                 immunization.errors.administeredLocation
