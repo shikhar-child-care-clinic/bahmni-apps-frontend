@@ -340,5 +340,3 @@ export type {
   DocumentUploadResponse,
   ProcessedFileData,
 } from './documentUploadService';
-
-export { fetchThemeConfig } from './themeService';
