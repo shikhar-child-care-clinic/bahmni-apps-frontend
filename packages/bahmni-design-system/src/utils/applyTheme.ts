@@ -8,8 +8,8 @@ export interface BahmniThemeConfig {
   'button-tertiary'?: string;
   'button-tertiary-hover'?: string;
   'button-tertiary-active'?: string;
-  'interactive'?: string;
-  'focus'?: string;
+  interactive?: string;
+  focus?: string;
   'border-interactive'?: string;
   'link-primary'?: string;
   'link-primary-hover'?: string;
@@ -29,8 +29,8 @@ export const BAHMNI_DEFAULT_THEME: Required<BahmniThemeConfig> = {
   'button-tertiary': '#007d79',
   'button-tertiary-hover': '#006b68',
   'button-tertiary-active': '#007d79',
-  'interactive': '#007d79',
-  'focus': '#007d79',
+  interactive: '#007d79',
+  focus: '#007d79',
   'border-interactive': '#007d79',
   'link-primary': '#007d79',
   'link-primary-hover': '#005d5d',
