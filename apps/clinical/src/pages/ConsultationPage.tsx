@@ -92,7 +92,6 @@ const ConsultationPage: React.FC = () => {
     }, []),
   );
 
-  // --- Encounter match decision (resolved at page level via backend API, passed down to widgets) ---
   const patientUUID = usePatientUUID();
   const { practitioner } = useActivePractitioner();
   const selectedLocation = useEncounterDetailsStore(
@@ -105,20 +104,16 @@ const ConsultationPage: React.FC = () => {
     (state) => state.setSelectedLocation,
   );
 
-  // Fetch locations on page load
   const { locations } = useLocations();
 
-  // Set default location if not already set
   useEffect(() => {
     if (locations.length > 0 && !selectedLocation) {
       setSelectedLocation(locations[0]);
     }
   }, [locations, selectedLocation, setSelectedLocation]);
 
-  // Fetch active visit on page load
   const { activeVisit: fetchedActiveVisit } = useActiveVisit(patientUUID);
 
-  // Store active visit in global store
   useEffect(() => {
     setActiveVisit(fetchedActiveVisit ?? null);
   }, [fetchedActiveVisit, setActiveVisit]);

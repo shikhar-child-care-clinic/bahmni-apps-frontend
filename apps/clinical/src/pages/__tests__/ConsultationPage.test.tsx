@@ -11,9 +11,9 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import React, { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { useClinicalConfig } from '../../providers/clinicalConfig';
 import { useActiveVisit } from '../../hooks/useActiveVisit';
 import { useLocations } from '../../hooks/useLocations';
+import { useClinicalConfig } from '../../providers/clinicalConfig';
 import ConsultationPage from '../ConsultationPage';
 
 expect.extend(toHaveNoViolations);
