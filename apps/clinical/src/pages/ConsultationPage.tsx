@@ -194,7 +194,8 @@ const ConsultationPage: React.FC = () => {
     return getSidebarItems(filteredDashboardConfig, t);
   }, [filteredDashboardConfig, t]);
 
-  const { activeItemId, handleItemClick } = useSidebarNavigation(sidebarItems);
+  const { activeItemId, handleItemClick, scrollVersion } =
+    useSidebarNavigation(sidebarItems);
 
   if (clinicalConfigLoading) {
     return (
@@ -294,6 +295,7 @@ const ConsultationPage: React.FC = () => {
             <DashboardContainer
               sections={filteredDashboardConfig!.sections}
               activeItemId={activeItemId}
+              scrollVersion={scrollVersion}
             />
           </Suspense>
         }

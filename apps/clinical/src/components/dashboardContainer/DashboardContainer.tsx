@@ -16,6 +16,7 @@ import styles from './styles/DashboardContainer.module.scss';
 export interface DashboardContainerProps {
   sections: DashboardSectionConfig[];
   activeItemId?: string | null;
+  scrollVersion?: number;
 }
 
 /**
@@ -27,6 +28,7 @@ export interface DashboardContainerProps {
 const DashboardContainer: React.FC<DashboardContainerProps> = ({
   sections,
   activeItemId,
+  scrollVersion,
 }) => {
   const { t } = useTranslation();
   const patientUuid = usePatientUUID();
@@ -87,7 +89,7 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
         });
       }
     }
-  }, [activeItemId, sections]);
+  }, [activeItemId, sections, scrollVersion]);
 
   // If no sections, show a message
   if (!sections.length) {
