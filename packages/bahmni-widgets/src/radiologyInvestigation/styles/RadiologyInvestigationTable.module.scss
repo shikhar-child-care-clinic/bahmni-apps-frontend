@@ -5,7 +5,6 @@
 
 .investigationName {
   @include type-style("heading-compact-01");
-  color: $text-primary;
   display: flex;
   align-items: center;
   gap: $spacing-02;
@@ -51,6 +50,12 @@
   @include type-style("body-compact-01");
 }
 
+.linkedOrderRow {
+  .investigationName {
+    @include type-style("body-compact-01");
+  }
+}
+
 .expandableContentSpacer {
   border: none !important;
 }
@@ -65,4 +70,8 @@
     @include type-style("body-compact-01");
     margin: $spacing-05 0;
   }
+}
+
+.reportTile {
+  padding: 1rem 3.5rem 2rem 3.5rem !important;
 }

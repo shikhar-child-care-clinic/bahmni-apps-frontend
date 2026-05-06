@@ -1009,89 +1009,78 @@ describe('RadiologyInvestigationTable', () => {
     });
   });
 
-  describe('viewReportsCombined feature', () => {
-    it('should use ExpandableDataTable with "Ordered On" column when viewReportsCombined is true', async () => {
-      mockGetCategoryUuidFromOrderTypes.mockResolvedValue(mockCategoryUuid);
-      mockGetPatientRadiologyInvestigationBundleWithImagingStudy.mockResolvedValue(
-        mockBundleWithMultipleInvestigations,
-      );
+  describe('Configuration Scenarios', () => {
+    it.each([
+      { groupOrdersByPrimaryOrder: true, showInlineReport: true },
+      { groupOrdersByPrimaryOrder: true, showInlineReport: false },
+      { groupOrdersByPrimaryOrder: false, showInlineReport: true },
+      { groupOrdersByPrimaryOrder: false, showInlineReport: false },
+    ])(
+      'groupOrdersByPrimaryOrder=$groupOrdersByPrimaryOrder, showInlineReport=$showInlineReport',
+      async ({ groupOrdersByPrimaryOrder, showInlineReport }) => {
+        const isExpandable = groupOrdersByPrimaryOrder || showInlineReport;
+        const hasOrderedOnColumn = groupOrdersByPrimaryOrder;
+        const hasViewReportLink = !showInlineReport;
+        const investigationId =
+          groupOrdersByPrimaryOrder && !showInlineReport
+            ? 'primary-order'
+            : 'investigation-1';
 
-      render(
-        renderRadiologyInvestigationTable({
-          orderType: 'Radiology Order',
-          viewReportsCombined: true,
-        }),
-      );
+        const mockBundleWithReport =
+          createMockBundleWithServiceRequestAndImagingStudy(
+            createMockServiceRequest({
+              id: investigationId,
+              code: { text: 'Chest X-Ray' },
+              status: 'completed',
+              requester: { display: 'Dr. Smith' },
+              occurrencePeriod: { start: '2023-12-01T10:30:00.000Z' },
+            }),
+            [],
+          );
 
-      await waitFor(() => {
-        expect(screen.getByText('Chest X-Ray')).toBeInTheDocument();
-        expect(
-          screen.getByTestId(
-            'radiology-investigations-expandable-table-12/01/2023',
-          ),
-        ).toBeInTheDocument();
-        expect(screen.getByText('Ordered On')).toBeInTheDocument();
-      });
-    });
+        mockGetPatientRadiologyInvestigationBundleWithImagingStudy.mockResolvedValue(
+          mockBundleWithReport,
+        );
+        mockGetDiagnosticReports.mockResolvedValue({
+          resourceType: 'Bundle',
+          type: 'searchset',
+          entry: [
+            {
+              resource: {
+                resourceType: 'DiagnosticReport',
+                id: 'report-123',
+                status: 'final',
+                code: { text: 'Chest X-Ray' },
+                basedOn: [{ reference: `ServiceRequest/${investigationId}` }],
+                resultsInterpreter: [{ display: 'Dr. Radiologist' }],
+                issued: '2023-12-02T14:30:00.000Z',
+              } as any,
+            },
+          ],
+        });
 
-    it('should use SortableDataTable without "Ordered On" column when viewReportsCombined is false', async () => {
-      mockGetCategoryUuidFromOrderTypes.mockResolvedValue(mockCategoryUuid);
-      mockGetPatientRadiologyInvestigationBundleWithImagingStudy.mockResolvedValue(
-        mockBundleWithMultipleInvestigations,
-      );
-
-      render(
-        renderRadiologyInvestigationTable({
-          orderType: 'Radiology Order',
-          viewReportsCombined: false,
-        }),
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('Chest X-Ray')).toBeInTheDocument();
-        expect(
-          screen.getByTestId(/radiology-investigations-table-12\/01\/2023/),
-        ).toBeInTheDocument();
-        expect(screen.queryByText('Ordered On')).not.toBeInTheDocument();
-      });
-    });
-
-    it('should expand first row by default when viewReportsCombined is true', async () => {
-      const mockBundleWithCompletedInvestigation =
-        createMockBundleWithServiceRequestAndImagingStudy(
-          createMockServiceRequest({
-            id: 'investigation-1',
-            code: { text: 'Chest X-Ray' },
-            priority: 'stat',
-            status: 'completed',
-            requester: { display: 'Dr. Smith' },
-            occurrencePeriod: { start: '2023-12-01T10:30:00.000Z' },
+        render(
+          renderRadiologyInvestigationTable({
+            orderType: 'Radiology Order',
+            groupOrdersByPrimaryOrder,
+            showInlineReport,
           }),
-          [],
         );
 
-      mockGetCategoryUuidFromOrderTypes.mockResolvedValue(mockCategoryUuid);
-      mockGetPatientRadiologyInvestigationBundleWithImagingStudy.mockResolvedValue(
-        mockBundleWithCompletedInvestigation,
-      );
+        await waitFor(() => {
+          expect(!!screen.queryByText('Ordered On')).toBe(hasOrderedOnColumn);
 
-      render(
-        renderRadiologyInvestigationTable({
-          orderType: 'Radiology Order',
-          viewReportsCombined: true,
-        }),
-      );
+          const tableTestId = isExpandable
+            ? 'radiology-investigations-expandable-table-12/01/2023'
+            : 'radiology-investigations-table-12/01/2023';
+          expect(screen.getByTestId(tableTestId)).toBeInTheDocument();
 
-      await waitFor(() => {
-        expect(screen.getByText('Chest X-Ray')).toBeInTheDocument();
-      });
-
-      await waitFor(() => {
-        expect(mockGetDiagnosticReports).toHaveBeenCalledWith(
-          'test-patient-uuid',
-          ['investigation-1'],
-        );
-      });
-    });
+          const viewReportLinkTestId = `${investigationId}-view-report-link-test-id`;
+          expect(!!screen.queryByTestId(viewReportLinkTestId)).toBe(
+            hasViewReportLink,
+          );
+        });
+      },
+    );
   });
 });

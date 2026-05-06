@@ -29,14 +29,25 @@ describe('ExpandedContentForPrimaryOrder', () => {
     jest.clearAllMocks();
   });
 
-  it('should return null when no linked orders and investigation status is not completed', () => {
+  it('should return null when both showLinkedOrders and showReport are false', () => {
     const investigation: RadiologyInvestigationViewModel = {
       id: 'primary-1',
       testName: 'X-Ray',
       priority: 'routine',
       orderedBy: 'Dr. Smith',
       orderedDate: '2023-12-01T10:30:00.000Z',
-      status: 'active',
+      status: 'completed',
+      reportId: 'report-123',
+      linkedOrders: [
+        {
+          id: 'linked-1',
+          testName: 'Follow-up',
+          priority: 'routine',
+          orderedBy: 'Dr. Johnson',
+          orderedDate: '2023-12-02T10:30:00.000Z',
+          status: 'active',
+        },
+      ],
     };
 
     const { container } = render(
@@ -46,12 +57,95 @@ describe('ExpandedContentForPrimaryOrder', () => {
             investigation={investigation}
             headers={mockHeaders}
             renderCell={mockRenderCell}
+            showLinkedOrders={false}
+            showReport={false}
           />
         </tbody>
       </table>,
     );
 
     expect(container.querySelector('tr')).toBeNull();
+  });
+
+  it('should render only linked orders when showLinkedOrders is true and showReport is false', () => {
+    const investigation: RadiologyInvestigationViewModel = {
+      id: 'primary-1',
+      testName: 'X-Ray',
+      priority: 'routine',
+      orderedBy: 'Dr. Smith',
+      orderedDate: '2023-12-01T10:30:00.000Z',
+      status: 'completed',
+      reportId: 'report-123',
+      linkedOrders: [
+        {
+          id: 'linked-1',
+          testName: 'Follow-up X-Ray',
+          priority: 'routine',
+          orderedBy: 'Dr. Johnson',
+          orderedDate: '2023-12-02T10:30:00.000Z',
+          status: 'active',
+        },
+      ],
+    };
+
+    render(
+      <table>
+        <tbody>
+          <ExpandedContentForPrimaryOrder
+            investigation={investigation}
+            headers={mockHeaders}
+            renderCell={mockRenderCell}
+            showLinkedOrders
+            showReport={false}
+          />
+        </tbody>
+      </table>,
+    );
+
+    expect(screen.getByTestId('table-row-linked-1')).toBeInTheDocument();
+    expect(screen.queryByText('RADIOLOGY_REPORT')).not.toBeInTheDocument();
+  });
+
+  it('should render only report when showLinkedOrders is false and showReport is true', () => {
+    const investigation: RadiologyInvestigationViewModel = {
+      id: 'primary-1',
+      testName: 'X-Ray',
+      priority: 'routine',
+      orderedBy: 'Dr. Smith',
+      orderedDate: '2023-12-01T10:30:00.000Z',
+      status: 'completed',
+      reportId: 'report-123',
+      reportedBy: 'Dr. Radiologist',
+      reportedDate: '2023-12-02T14:30:00.000Z',
+      linkedOrders: [
+        {
+          id: 'linked-1',
+          testName: 'Follow-up',
+          priority: 'routine',
+          orderedBy: 'Dr. Johnson',
+          orderedDate: '2023-12-02T10:30:00.000Z',
+          status: 'active',
+        },
+      ],
+    };
+
+    render(
+      <table>
+        <tbody>
+          <ExpandedContentForPrimaryOrder
+            investigation={investigation}
+            headers={mockHeaders}
+            renderCell={mockRenderCell}
+            showLinkedOrders={false}
+            showReport
+          />
+        </tbody>
+      </table>,
+    );
+
+    expect(screen.queryByTestId('table-row-linked-1')).not.toBeInTheDocument();
+    expect(screen.getByText('RADIOLOGY_REPORT')).toBeInTheDocument();
+    expect(screen.getByTestId('radiology-report')).toBeInTheDocument();
   });
 
   it('should render linked orders when they exist', () => {
@@ -81,6 +175,8 @@ describe('ExpandedContentForPrimaryOrder', () => {
             investigation={investigation}
             headers={mockHeaders}
             renderCell={mockRenderCell}
+            showLinkedOrders
+            showReport
           />
         </tbody>
       </table>,
@@ -115,6 +211,8 @@ describe('ExpandedContentForPrimaryOrder', () => {
             investigation={investigation}
             headers={mockHeaders}
             renderCell={mockRenderCell}
+            showLinkedOrders
+            showReport
           />
         </tbody>
       </table>,
@@ -154,6 +252,8 @@ describe('ExpandedContentForPrimaryOrder', () => {
             investigation={investigation}
             headers={mockHeaders}
             renderCell={mockRenderCell}
+            showLinkedOrders
+            showReport
           />
         </tbody>
       </table>,

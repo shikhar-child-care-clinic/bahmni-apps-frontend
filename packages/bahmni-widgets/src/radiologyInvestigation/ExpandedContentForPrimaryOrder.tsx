@@ -14,24 +14,28 @@ export interface ExpandedContentForPrimaryOrderProps {
     cellId: string,
     primaryInvestigation?: RadiologyInvestigationViewModel,
   ) => React.ReactNode;
+  showLinkedOrders: boolean;
+  showReport: boolean;
 }
 
 export const ExpandedContentForPrimaryOrder: React.FC<
   ExpandedContentForPrimaryOrderProps
-> = ({ investigation, headers, renderCell }) => {
+> = ({ investigation, headers, renderCell, showLinkedOrders, showReport }) => {
   const { t } = useTranslation();
-  const hasLinkedOrders =
-    investigation.linkedOrders && investigation.linkedOrders.length > 0;
   const isCompleted = investigation.status === 'completed';
   const hasReport = !!investigation.reportId;
 
-  if (!hasLinkedOrders && (!isCompleted || !hasReport)) {
+  if (!showLinkedOrders && !showReport) {
     return null;
   }
 
   const renderLinkedOrderRow = (order: RadiologyInvestigationViewModel) => {
     return (
-      <tr key={order.id} data-testid={`table-row-${order.id}`}>
+      <tr
+        key={order.id}
+        data-testid={`table-row-${order.id}`}
+        className={styles.linkedOrderRow}
+      >
         <td className={styles.expandableContentSpacer} />
         {headers.map((header) => (
           <td
@@ -53,15 +57,14 @@ export const ExpandedContentForPrimaryOrder: React.FC<
 
   return (
     <>
-      {hasLinkedOrders &&
-        investigation.linkedOrders.map((linkedOrder) =>
+      {showLinkedOrders &&
+        investigation.linkedOrders?.map((linkedOrder) =>
           renderLinkedOrderRow(linkedOrder),
         )}
-      {isCompleted && hasReport && (
+      {showReport && isCompleted && hasReport && (
         <tr>
-          <td className={styles.expandableContentSpacer} />
-          <td colSpan={headers.length} className={styles.reportSection}>
-            <Tile>
+          <td colSpan={headers.length + 1} className={styles.reportSection}>
+            <Tile className={styles.reportTile}>
               <p className={styles.reportTitle}>{t('RADIOLOGY_REPORT')}</p>
               {reportedOnDate && reportedBy && (
                 <p className={styles.reportDetails}>

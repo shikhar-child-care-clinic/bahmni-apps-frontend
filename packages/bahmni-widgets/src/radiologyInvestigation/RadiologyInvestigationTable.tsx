@@ -87,7 +87,9 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
   const categoryName = config?.orderType as string;
   const numberOfVisits = config?.numberOfVisits as number;
   const pacsViewerUrl = config?.pacsViewerUrl as string;
-  const viewReportsCombined = config?.viewReportsCombined as boolean;
+  const groupOrdersByPrimaryOrder =
+    config?.groupOrdersByPrimaryOrder as boolean;
+  const showInlineReport = config?.showInlineReport as boolean;
   const [openAccordionIndices, setOpenAccordionIndices] = useState<Set<number>>(
     new Set([0]),
   );
@@ -144,7 +146,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       { key: 'orderedBy', header: t('RADIOLOGY_ORDERED_BY') },
     ];
 
-    if (viewReportsCombined) {
+    if (groupOrdersByPrimaryOrder) {
       baseHeaders.push({ key: 'orderedOn', header: t('RADIOLOGY_ORDERED_ON') });
     }
 
@@ -154,7 +156,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
     });
 
     return baseHeaders;
-  }, [t, viewReportsCombined]);
+  }, [t, groupOrdersByPrimaryOrder]);
 
   const sortable = useMemo(() => {
     const baseSortable = [
@@ -163,14 +165,14 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       { key: 'orderedBy', sortable: true },
     ];
 
-    if (viewReportsCombined) {
+    if (groupOrdersByPrimaryOrder) {
       baseSortable.push({ key: 'orderedOn', sortable: true });
     }
 
     baseSortable.push({ key: 'status', sortable: true });
 
     return baseSortable;
-  }, [viewReportsCombined]);
+  }, [groupOrdersByPrimaryOrder]);
 
   const loading = isLoading || isLoadingOrderTypes;
   const errorMessage =
@@ -195,7 +197,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       data ?? [],
     );
 
-    const investigationsToGroup = viewReportsCombined
+    const investigationsToGroup = groupOrdersByPrimaryOrder
       ? groupInvestigationsByPrimaryOrder(filteredInvestigations)
       : filteredInvestigations;
 
@@ -219,7 +221,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
         investigationsByDate.investigations,
       ),
     }));
-  }, [data, t, viewReportsCombined]);
+  }, [data, t, groupOrdersByPrimaryOrder]);
 
   // Fetch reports independent of the other accordion
   const diagnosticReportQueries = useQueries({
@@ -283,13 +285,21 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       investigation.imagingStudies,
     );
     const hasViewImagesLink = availableStudies.length > 0 && pacsViewerUrl;
-    const showViewReportLink = !!investigation.reportId && !viewReportsCombined;
+
+    const isPrimaryOrder = !primaryInvestigation;
+    let showViewReportLink = false;
+
+    if (groupOrdersByPrimaryOrder && !showInlineReport) {
+      showViewReportLink = !!investigation.reportId && isPrimaryOrder;
+    } else if (!showInlineReport) {
+      showViewReportLink = !!investigation.reportId;
+    }
+
     const hasImagingStudyId =
       investigation.imagingStudies &&
       investigation.imagingStudies.length > 0 &&
       investigation.imagingStudies[0]?.id;
 
-    // For linked orders, check if primary order has report
     const reportExists = primaryInvestigation
       ? !!primaryInvestigation.reportId
       : !!investigation.reportId;
@@ -477,8 +487,10 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
       investigation.linkedOrders && investigation.linkedOrders.length > 0;
     const isCompleted = investigation.status === 'completed';
     const hasReport = !!investigation.reportId;
+    const showLinkedOrders = groupOrdersByPrimaryOrder && hasLinkedOrders;
+    const showReport = showInlineReport && isCompleted && hasReport;
 
-    if (!hasLinkedOrders && (!isCompleted || !hasReport)) {
+    if (!showLinkedOrders && !showReport) {
       return null;
     }
 
@@ -487,6 +499,8 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
         investigation={investigation}
         headers={headers}
         renderCell={renderCell}
+        showLinkedOrders={showLinkedOrders!}
+        showReport={showReport}
       />
     );
   };
@@ -521,7 +535,7 @@ const RadiologyInvestigationTable: React.FC<WidgetProps> = ({
                 });
               }}
             >
-              {viewReportsCombined ? (
+              {groupOrdersByPrimaryOrder || showInlineReport ? (
                 <ExpandableDataTable
                   headers={headers}
                   ariaLabel={t('RADIOLOGY_INVESTIGATION_HEADING')}
