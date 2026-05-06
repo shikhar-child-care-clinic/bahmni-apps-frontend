@@ -12,21 +12,6 @@ jest.mock('../../../providers/ClinicalAppProvider', () => ({
   ),
 }));
 
-jest.mock('../../../events/startConsultation', () => ({
-  dispatchConsultationStart: jest.fn(),
-}));
-
-jest.mock('../../../stores/encounterDetailsStore', () => ({
-  useEncounterDetailsStore: jest.fn(
-    (selector: (state: Record<string, unknown>) => unknown) =>
-      selector({
-        activeVisit: null,
-        selectedEncounterType: null,
-        selectedLocation: null,
-      }),
-  ),
-}));
-
 jest.mock('../../../hooks/useClinicalAppData', () => ({
   useClinicalAppData: () => ({
     episodeOfCare: [],
@@ -79,21 +64,6 @@ jest.mock('@bahmni/widgets', () => {
         { name: 'View Observations' },
         { name: 'Get Observations' },
       ],
-    })),
-    usePatientUUID: jest.fn(() => 'test-patient-uuid'),
-    useActivePractitioner: jest.fn(() => ({
-      practitioner: { uuid: 'test-practitioner-uuid' },
-    })),
-    useEncounterMatchDecision: jest.fn(() => ({
-      status: null,
-      encounterUuid: null,
-      reason: null,
-      canResume: false,
-      showEditButton: false,
-      shouldShowButton: false,
-      isLoading: false,
-      error: null,
-      refetch: jest.fn(),
     })),
   };
 });

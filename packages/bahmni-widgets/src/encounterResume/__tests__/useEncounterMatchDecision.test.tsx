@@ -222,7 +222,10 @@ describe('useEncounterMatchDecision', () => {
   });
 
   it('calls post with correct payload including optional providerUuid', async () => {
-    mockedPost.mockResolvedValue({ status: 'match_found', encounterUuid: ENCOUNTER_UUID });
+    mockedPost.mockResolvedValue({
+      status: 'match_found',
+      encounterUuid: ENCOUNTER_UUID,
+    });
 
     const { result } = renderHook(
       () => useEncounterMatchDecision(defaultParams),
@@ -243,7 +246,10 @@ describe('useEncounterMatchDecision', () => {
   });
 
   it('calls post without providerUuid when it is not provided', async () => {
-    mockedPost.mockResolvedValue({ status: 'no_match', reason: 'session_expired' });
+    mockedPost.mockResolvedValue({
+      status: 'no_match',
+      reason: 'session_expired',
+    });
 
     const { result } = renderHook(
       () =>
@@ -267,7 +273,10 @@ describe('useEncounterMatchDecision', () => {
   });
 
   it('exposes a refetch function that re-calls the API', async () => {
-    mockedPost.mockResolvedValue({ status: 'match_found', encounterUuid: ENCOUNTER_UUID });
+    mockedPost.mockResolvedValue({
+      status: 'match_found',
+      encounterUuid: ENCOUNTER_UUID,
+    });
 
     const { result } = renderHook(
       () => useEncounterMatchDecision(defaultParams),

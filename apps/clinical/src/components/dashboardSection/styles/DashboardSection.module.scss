@@ -37,18 +37,6 @@ $table-cell-min-width: 6.875rem;
   }
 }
 
-.sectionNameWithButton {
-  display: flex !important;
-  justify-content: space-between;
-  align-items: center;
-  gap: $spacing-05;
-}
-
-.sectionEditButton {
-  flex-shrink: 0;
-  padding: 0 !important;
-}
-
 .divider {
   display: none;
 }

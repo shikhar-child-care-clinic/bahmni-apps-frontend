@@ -39,23 +39,9 @@ const getSeverityClassName = (severity: string): string | undefined => {
 
 // TODO: Take UUID As A Prop
 /**
- * Component to display patient allergies using SortableDataTable.
- *
- * Edit button wiring: accepts optional `onEdit` callback and `canResume` flag.
- * The Edit button is shown only when both `onEdit` is provided AND `canResume` is true.
- * `canResume` is resolved at page level via `useEncounterMatchDecision`.
- * When `onEdit` is omitted the button is not rendered, preserving backward
- * compatibility for non-clinical uses of this widget.
+ * Component to display patient allergies using SortableDataTable
  */
-interface AllergiesTableProps {
-  onEdit?: () => void;
-  canResume?: boolean;
-}
-
-const AllergiesTable: React.FC<AllergiesTableProps> = ({
-  onEdit,
-  canResume,
-}) => {
+const AllergiesTable: React.FC = () => {
   const [allergies, setAllergies] = useState<FormattedAllergy[]>([]);
   const patientUUID = usePatientUUID();
   const { t } = useTranslation();

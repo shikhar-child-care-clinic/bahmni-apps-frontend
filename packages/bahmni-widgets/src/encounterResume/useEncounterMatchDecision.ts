@@ -79,30 +79,32 @@ export function useEncounterMatchDecision(
 
   const isEnabled = !!(patientUuid && locationUuid);
 
-  const { data, isLoading, error, refetch } =
-    useQuery<EncounterMatchDecisionResponse | null, Error>({
-      queryKey: [
-        'encounterMatchDecision',
+  const { data, isLoading, error, refetch } = useQuery<
+    EncounterMatchDecisionResponse | null,
+    Error
+  >({
+    queryKey: [
+      'encounterMatchDecision',
+      patientUuid,
+      visitUuid,
+      providerUuid,
+      locationUuid,
+    ],
+    enabled: isEnabled,
+    queryFn: () => {
+      if (!patientUuid || !locationUuid) {
+        return Promise.reject(
+          new Error('patientUuid and locationUuid are required'),
+        );
+      }
+      return fetchEncounterMatchDecision({
         patientUuid,
-        visitUuid,
-        providerUuid,
+        visitUuid: visitUuid ?? undefined,
         locationUuid,
-      ],
-      enabled: isEnabled,
-      queryFn: () => {
-        if (!patientUuid || !locationUuid) {
-          return Promise.reject(
-            new Error('patientUuid and locationUuid are required'),
-          );
-        }
-        return fetchEncounterMatchDecision({
-          patientUuid,
-          visitUuid: visitUuid || undefined,
-          locationUuid,
-          ...(providerUuid ? { providerUuid } : {}),
-        });
-      },
-    });
+        ...(providerUuid ? { providerUuid } : {}),
+      });
+    },
+  });
 
   if (!isEnabled) {
     return {

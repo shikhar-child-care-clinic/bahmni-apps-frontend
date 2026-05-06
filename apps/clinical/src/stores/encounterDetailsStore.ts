@@ -18,8 +18,6 @@ export interface EncounterDetailsState {
   patientUUID: string | null;
   isEncounterDetailsFormReady: boolean;
   isError: boolean;
-  canResume: boolean;
-  showEditButton: boolean;
   setSelectedLocation: (location: OpenMRSLocation | null) => void;
   setSelectedEncounterType: (encounterType: Concept | null) => void;
   setSelectedVisitType: (visitType: Concept | null) => void;
@@ -33,8 +31,6 @@ export interface EncounterDetailsState {
   setPatientUUID: (patientUUID: string | null) => void;
   setIsError: (hasError: boolean) => void;
   setRequestedEncounterType: (encounterType: string | null) => void;
-  setCanResume: (canResume: boolean) => void;
-  setShowEditButton: (showEditButton: boolean) => void;
   reset: () => void;
   getState: () => EncounterDetailsState;
 }
@@ -54,8 +50,6 @@ export const useEncounterDetailsStore = create<EncounterDetailsState>(
     user: null,
     patientUUID: null,
     isError: false,
-    canResume: false,
-    showEditButton: false,
 
     setSelectedLocation: (location) => set({ selectedLocation: location }),
     setSelectedEncounterType: (encounterType) =>
@@ -75,8 +69,6 @@ export const useEncounterDetailsStore = create<EncounterDetailsState>(
     setIsError: (hasError: boolean) => set({ isError: hasError }),
     setRequestedEncounterType: (encounterType) =>
       set({ requestedEncounterType: encounterType }),
-    setCanResume: (canResume) => set({ canResume }),
-    setShowEditButton: (showEditButton) => set({ showEditButton }),
 
     reset: () =>
       set({
@@ -93,8 +85,6 @@ export const useEncounterDetailsStore = create<EncounterDetailsState>(
         user: null,
         patientUUID: null,
         isError: false,
-        canResume: false,
-        showEditButton: false,
       }),
 
     getState: () => get(),

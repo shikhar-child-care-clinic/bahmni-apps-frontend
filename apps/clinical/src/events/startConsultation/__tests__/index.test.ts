@@ -11,22 +11,6 @@ describe('startConsultation', () => {
     it.each<[ConsultationStartEvent, ConsultationStartEvent]>([
       [{ encounterType: 'OPD' }, { encounterType: 'OPD' }],
       [{}, {}],
-      [
-        {
-          encounterType: 'OPD',
-          mode: 'edit',
-          existingEncounterId: 'enc-uuid-1',
-        },
-        {
-          encounterType: 'OPD',
-          mode: 'edit',
-          existingEncounterId: 'enc-uuid-1',
-        },
-      ],
-      [
-        { encounterType: 'OPD', mode: 'new' },
-        { encounterType: 'OPD', mode: 'new' },
-      ],
     ])('should dispatch event with payload %o', (payload, expected) => {
       const eventListener = jest.fn();
       globalThis.addEventListener(CONSULTATION_START_EVENT, eventListener);

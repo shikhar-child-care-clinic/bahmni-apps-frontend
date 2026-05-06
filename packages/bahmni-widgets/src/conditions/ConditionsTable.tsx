@@ -142,7 +142,7 @@ const ConditionsTable: React.FC<WidgetProps> = ({ config }) => {
 
   return (
     <>
-            {/* Recent and all Tabs will come inplace of Tile */}
+      {/* Recent and all Tabs will come inplace of Tile */}
       <Tile
         title={t('CONDITION_LIST_DISPLAY_CONTROL_TITLE')}
         data-testid="conditions-title"

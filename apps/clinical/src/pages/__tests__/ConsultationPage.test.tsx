@@ -3,6 +3,8 @@ import {
   useHasPrivilege,
   useNotification,
   useUserPrivilege,
+  useActivePractitioner,
+  usePatientUUID,
 } from '@bahmni/widgets';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
@@ -10,6 +12,8 @@ import { axe, toHaveNoViolations } from 'jest-axe';
 import React, { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { useClinicalConfig } from '../../providers/clinicalConfig';
+import { useActiveVisit } from '../../hooks/useActiveVisit';
+import { useLocations } from '../../hooks/useLocations';
 import ConsultationPage from '../ConsultationPage';
 
 expect.extend(toHaveNoViolations);
@@ -17,6 +21,14 @@ expect.extend(toHaveNoViolations);
 jest.mock('../../providers/clinicalConfig', () => ({
   ...jest.requireActual('../../providers/clinicalConfig'),
   useClinicalConfig: jest.fn(),
+}));
+
+jest.mock('../../hooks/useActiveVisit', () => ({
+  useActiveVisit: jest.fn(),
+}));
+
+jest.mock('../../hooks/useLocations', () => ({
+  useLocations: jest.fn(),
 }));
 
 jest.mock('../../providers/ClinicalAppProvider', () => ({
@@ -45,27 +57,6 @@ jest.mock('../../stores/observationFormsStore', () => ({
   useObservationFormsStore: jest.fn((selector) =>
     selector({ viewingForm: null }),
   ),
-}));
-
-jest.mock('../../stores/encounterDetailsStore', () => ({
-  useEncounterDetailsStore: jest.fn(
-    (selector: (state: Record<string, unknown>) => unknown) =>
-      selector({
-        selectedEncounterType: null,
-        selectedLocation: null,
-        activeVisit: null,
-        setActiveVisit: jest.fn(),
-      }),
-  ),
-}));
-
-jest.mock('../../hooks/useActiveVisit', () => ({
-  useActiveVisit: jest.fn(() => ({
-    activeVisit: null,
-    loading: false,
-    error: null,
-    refetch: jest.fn(),
-  })),
 }));
 
 jest.mock('../../components/patientHeader/PatientHeader', () => ({
@@ -170,21 +161,8 @@ jest.mock('@bahmni/widgets', () => ({
   useUserPrivilege: jest.fn(),
   useHasPrivilege: jest.fn(),
   useNotification: jest.fn(),
-  usePatientUUID: jest.fn(() => 'test-patient-uuid'),
-  useActivePractitioner: jest.fn(() => ({
-    practitioner: { uuid: 'test-practitioner-uuid' },
-  })),
-  useEncounterMatchDecision: jest.fn(() => ({
-    status: null,
-    encounterUuid: null,
-    reason: null,
-    canResume: false,
-    showEditButton: false,
-    shouldShowButton: false,
-    isLoading: false,
-    error: null,
-    refetch: jest.fn(),
-  })),
+  useActivePractitioner: jest.fn(),
+  usePatientUUID: jest.fn(),
 }));
 
 jest.mock('@bahmni/services', () => ({
@@ -267,6 +245,20 @@ describe('ConsultationPage', () => {
       notifications: [],
       removeNotification: jest.fn(),
       clearAllNotifications: jest.fn(),
+    });
+
+    (useActivePractitioner as jest.Mock).mockReturnValue({
+      practitioner: { uuid: 'provider-uuid', name: 'Dr. John' },
+    });
+
+    (usePatientUUID as jest.Mock).mockReturnValue('patient-uuid');
+
+    (useActiveVisit as jest.Mock).mockReturnValue({
+      activeVisit: { id: 'visit-uuid' },
+    });
+
+    (useLocations as jest.Mock).mockReturnValue({
+      locations: [{ uuid: 'location-uuid', name: 'Location 1' }],
     });
 
     (getConfig as jest.Mock).mockResolvedValue(mockDashboardConfig);

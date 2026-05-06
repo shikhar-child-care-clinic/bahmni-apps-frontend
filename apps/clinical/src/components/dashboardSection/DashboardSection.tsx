@@ -1,18 +1,9 @@
-import { Tile, IconButton, Edit } from '@bahmni/design-system';
+import { Tile } from '@bahmni/design-system';
 import { useTranslation } from '@bahmni/services';
 import { getWidget } from '@bahmni/widgets';
-import React, { Suspense, useCallback } from 'react';
-import { dispatchConsultationStart } from '../../events/startConsultation';
+import React, { Suspense } from 'react';
 import { ControlConfig, DashboardSectionConfig } from '../../pages/models';
-import { useEncounterDetailsStore } from '../../stores/encounterDetailsStore';
 import styles from './styles/DashboardSection.module.scss';
-
-/** Widget types that support the Edit button (encounter resume flow). */
-const EDIT_SUPPORTED_WIDGET_TYPES = new Set([
-  'allergies',
-  'diagnoses',
-  'treatment',
-]);
 
 export interface DashboardSectionProps {
   section: DashboardSectionConfig;
@@ -20,10 +11,6 @@ export interface DashboardSectionProps {
   episodeOfCareUuids: string[];
   encounterUuids: string[];
   visitUuids: string[];
-  /** Whether the current encounter can be resumed (resolved at ConsultationPage level). */
-  canResume?: boolean;
-  /** Whether the Edit button should be shown at all (true for match_found or no_match). */
-  showEditButton?: boolean;
 }
 
 /**
@@ -38,35 +25,8 @@ const DashboardSection: React.FC<DashboardSectionProps> = ({
   episodeOfCareUuids,
   encounterUuids,
   visitUuids,
-  canResume: propsCanResume,
-  showEditButton: propsShowEditButton,
 }) => {
   const { t } = useTranslation();
-
-  const selectedEncounterType = useEncounterDetailsStore(
-    (state) => state.selectedEncounterType,
-  );
-
-  // Fallback to store values if props are not provided
-  const storeCanResume = useEncounterDetailsStore((state) => state.canResume);
-  const storeShowEditButton = useEncounterDetailsStore(
-    (state) => state.showEditButton,
-  );
-
-  const canResume = propsCanResume ?? storeCanResume;
-  const showEditButton = propsShowEditButton ?? storeShowEditButton;
-
-  /**
-   * Handler passed to edit-capable widgets. Only rendered when the backend
-   * match-decision API returns match_found or no_match (showEditButton=true).
-   * Dispatches consultation-start; mode is determined by canResume prop.
-   */
-  const handleWidgetEdit = useCallback(() => {
-    dispatchConsultationStart({
-      encounterType: selectedEncounterType?.name,
-      mode: canResume ? 'edit' : 'new',
-    });
-  }, [canResume, selectedEncounterType]);
 
   const renderControl = (
     control: ControlConfig,
@@ -84,12 +44,6 @@ const DashboardSection: React.FC<DashboardSectionProps> = ({
     }
 
     const showDivider = index < totalControls - 1;
-
-    // Provide onEdit and canResume to widgets that support the encounter resume flow.
-    // The Edit button is only shown when the backend API indicates match_found or no_match.
-    const supportsEdit = EDIT_SUPPORTED_WIDGET_TYPES.has(control.type);
-    const onEdit = supportsEdit && showEditButton ? handleWidgetEdit : undefined;
-
     return (
       <React.Fragment key={`${control.type}-${index}`}>
         <Suspense
@@ -104,8 +58,6 @@ const DashboardSection: React.FC<DashboardSectionProps> = ({
             episodeOfCareUuids={episodeOfCareUuids}
             encounterUuids={encounterUuids}
             visitUuids={visitUuids}
-            onEdit={onEdit}
-            canResume={canResume}
           />
         </Suspense>
         {showDivider && <div className={styles.divider} />}
@@ -129,13 +81,6 @@ const DashboardSection: React.FC<DashboardSectionProps> = ({
     );
   };
 
-  // Check if any control in this section supports Edit
-  const sectionHasEditableControls = section.controls?.some((control) =>
-    EDIT_SUPPORTED_WIDGET_TYPES.has(control.type),
-  );
-  const showSectionEditButton =
-    sectionHasEditableControls && showEditButton;
-
   return (
     <div
       id={`section-${section.id}`}
@@ -145,23 +90,10 @@ const DashboardSection: React.FC<DashboardSectionProps> = ({
     >
       <Tile
         id={`section-${section.id}`}
-        className={`${styles.sectionName}${showSectionEditButton ? ` ${styles.sectionNameWithButton}` : ''}`}
+        className={styles.sectionName}
         data-testid={`dashboard-section-tile-${section.name}`}
       >
         <p>{t(section.translationKey ?? section.name)}</p>
-        {showSectionEditButton && (
-          <IconButton
-            testId="edit-section-widget"
-            autoAlign
-            size="md"
-            kind="ghost"
-            label={t('EDIT_SECTION_LABEL')}
-            onClick={handleWidgetEdit}
-            className={styles.sectionEditButton}
-          >
-            <Edit />
-          </IconButton>
-        )}
       </Tile>
       {renderSectionContent(section)}
     </div>

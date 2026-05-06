@@ -9,7 +9,6 @@ import { useQuery } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import React from 'react';
 import { usePatientUUID } from '../../hooks/usePatientUUID';
 import { useNotification } from '../../notification';
 import MedicationsTable from '../MedicationsTable';
@@ -19,27 +18,6 @@ import {
   sortMedicationsByPriority,
   sortMedicationsByStatus,
 } from '../utils';
-
-jest.mock('@bahmni/design-system', () => ({
-  ...jest.requireActual('@bahmni/design-system'),
-  IconButton: ({
-    children,
-    onClick,
-    testId,
-    label,
-  }: {
-    children?: React.ReactNode;
-    onClick?: () => void;
-    testId?: string;
-    label?: string;
-  }) => (
-    <button data-testid={testId} aria-label={label} onClick={onClick}>
-      {children}
-    </button>
-  ),
-  Icon: () => <span />,
-  ICON_SIZE: { LG: 'lg' },
-}));
 
 expect.extend(toHaveNoViolations);
 
@@ -763,43 +741,6 @@ describe('MedicationsTable', () => {
 
       expect(screen.getByText('STAT')).toBeInTheDocument();
       expect(screen.getByText('IV Injection | 1 vial')).toBeInTheDocument();
-    });
-  });
-
-  describe('Edit button', () => {
-    beforeEach(() => {
-      mockUseQuery.mockReturnValue({
-        data: [],
-        isLoading: false,
-        isError: false,
-        error: null,
-        refetch: jest.fn(),
-      } as any);
-    });
-
-    it('does not render Edit button when onEdit is not provided', () => {
-      render(<MedicationsTable />);
-      expect(
-        screen.queryByTestId('edit-medications-widget'),
-      ).not.toBeInTheDocument();
-    });
-
-    it('does not render Edit button when onEdit is provided but canResume is false', () => {
-      render(<MedicationsTable onEdit={jest.fn()} canResume={false} />);
-      expect(
-        screen.queryByTestId('edit-medications-widget'),
-      ).not.toBeInTheDocument();
-    });
-
-    it('renders Edit button and calls onEdit when onEdit is provided and canResume is true', () => {
-      const onEdit = jest.fn();
-      render(<MedicationsTable onEdit={onEdit} canResume />);
-
-      const editButton = screen.getByTestId('edit-medications-widget');
-      expect(editButton).toBeInTheDocument();
-
-      editButton.click();
-      expect(onEdit).toHaveBeenCalledTimes(1);
     });
   });
 });
