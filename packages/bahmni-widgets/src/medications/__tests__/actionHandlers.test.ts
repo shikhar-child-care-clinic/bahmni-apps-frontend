@@ -24,7 +24,7 @@ describe('handleAction', () => {
         type: 'startConsultation',
         detail: {
           encounterType: singleActionMock[0].encounterType,
-          resource: fhirMedicationRequestMock,
+          basedOn: fhirMedicationRequestMock,
         },
       }),
     );

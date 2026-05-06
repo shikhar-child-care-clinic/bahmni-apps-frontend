@@ -8,7 +8,7 @@ export const handleAction = (
   if (action.type === 'administer')
     globalThis.dispatchEvent(
       new CustomEvent('startConsultation', {
-        detail: { encounterType: action.encounterType, resource: fhirResource },
+        detail: { encounterType: action.encounterType, basedOn: fhirResource },
       }),
     );
 };
