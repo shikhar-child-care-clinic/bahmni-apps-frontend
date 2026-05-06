@@ -1,4 +1,8 @@
-import { SortableDataTable, Tag, Tile } from '@bahmni/design-system';
+import {
+  SortableDataTable,
+  Tag,
+  Tile,
+} from '@bahmni/design-system';
 import {
   formatDateTime,
   Diagnosis,

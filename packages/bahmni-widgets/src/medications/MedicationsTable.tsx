@@ -77,10 +77,22 @@ const getMedicationStatusKey = (status: string): string => {
   }
 };
 
-const MedicationsTable: React.FC<WidgetProps> = ({
+/**
+ * Edit button wiring: accepts optional `onEdit` callback and `canResume` flag.
+ * The Edit button is shown only when both `onEdit` is provided AND `canResume` is true.
+ * `canResume` is resolved at page level via `useEncounterMatchDecision`.
+ * When `onEdit` is omitted the button is not rendered, preserving backward compatibility.
+ */
+interface MedicationsTableProps extends WidgetProps {
+  onEdit?: () => void;
+}
+
+const MedicationsTable: React.FC<MedicationsTableProps> = ({
   config,
   episodeOfCareUuids,
   encounterUuids,
+  onEdit,
+  canResume,
 }) => {
   const { t } = useTranslation();
   const patientUUID = usePatientUUID();

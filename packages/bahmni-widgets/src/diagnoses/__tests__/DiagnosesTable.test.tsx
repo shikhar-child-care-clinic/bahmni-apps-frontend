@@ -6,11 +6,33 @@ import {
   useSubscribeConsultationSaved,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
+import React from 'react';
 import { usePatientUUID } from '../../hooks/usePatientUUID';
 import { useNotification } from '../../notification';
 import DiagnosesTable from '../DiagnosesTable';
+
+jest.mock('@bahmni/design-system', () => ({
+  ...jest.requireActual('@bahmni/design-system'),
+  IconButton: ({
+    children,
+    onClick,
+    testId,
+    label,
+  }: {
+    children?: React.ReactNode;
+    onClick?: () => void;
+    testId?: string;
+    label?: string;
+  }) => (
+    <button data-testid={testId} aria-label={label} onClick={onClick}>
+      {children}
+    </button>
+  ),
+  Icon: () => <span />,
+  ICON_SIZE: { LG: 'lg' },
+}));
 
 expect.extend(toHaveNoViolations);
 
@@ -390,5 +412,42 @@ describe('DiagnosesTable', () => {
 
     const { container } = render(<DiagnosesTable />);
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  describe('Edit button', () => {
+    beforeEach(() => {
+      mockUseQuery.mockReturnValue({
+        data: { diagnoses: [], total: 0 },
+        isLoading: false,
+        isError: false,
+        error: null,
+        refetch: mockRefetch,
+      } as any);
+    });
+
+    it('does not render Edit button when onEdit is not provided', () => {
+      render(<DiagnosesTable />);
+      expect(
+        screen.queryByTestId('edit-diagnoses-widget'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('does not render Edit button when onEdit is provided but canResume is false', () => {
+      render(<DiagnosesTable onEdit={jest.fn()} canResume={false} />);
+      expect(
+        screen.queryByTestId('edit-diagnoses-widget'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('renders Edit button and calls onEdit when onEdit is provided and canResume is true', () => {
+      const onEdit = jest.fn();
+      render(<DiagnosesTable onEdit={onEdit} canResume />);
+
+      const editButton = screen.getByTestId('edit-diagnoses-widget');
+      expect(editButton).toBeInTheDocument();
+
+      fireEvent.click(editButton);
+      expect(onEdit).toHaveBeenCalledTimes(1);
+    });
   });
 });

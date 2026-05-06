@@ -31,11 +31,21 @@ import { captureUpdatedResources, getActiveEntries } from './utils';
 interface ConsultationPadProps {
   encounterType: string;
   onClose: () => void;
+  /**
+   * Controls whether the pad opens in resume-edit mode or creates a new encounter.
+   * Defaults to 'new' when omitted (backward compatible).
+   *
+   * TODO BAH-4665 follow-up: pre-populate form stores from existing patient
+   * resources when mode === 'edit' (use the existingEncounterId carried on the
+   * startConsultation event payload).
+   */
+  mode?: 'edit' | 'new';
 }
 
 const ConsultationPad: React.FC<ConsultationPadProps> = ({
   encounterType,
   onClose,
+  mode = 'new',
 }) => {
   const { t } = useTranslation();
   const { addNotification } = useNotification();
@@ -101,10 +111,19 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
   }, [resolvedEncounterType]);
 
   const { practitioner } = useActivePractitioner();
-  const { activeEncounter } = useEncounterSession({
+  const { activeEncounter: sessionEncounter } = useEncounterSession({
     practitioner,
     encounterTypeUUID: selectedEncounterType?.uuid,
   });
+
+  // When mode === 'new', always create a new encounter regardless of any existing session.
+  // When mode === 'edit', reuse the encounter found by the session hook (which naturally
+  // resolves to the same encounter the widget decision hook identified, since both filter
+  // by the same patient/practitioner/encounterType).
+  // NOTE: existingEncounterId is carried for intent/documentation; the session hook
+  // resolves to it organically so no extra fetch is needed here.
+  // TODO BAH-4665 follow-up: pre-populate form stores from existing patient resources when mode === 'edit'.
+  const activeEncounter = mode === 'new' ? null : sessionEncounter;
   const { episodeOfCare } = useClinicalAppData();
 
   const episodeOfCareUuids = episodeOfCare.map((eoc) => eoc.uuid);
@@ -232,7 +251,13 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
     <>
       <ActionArea
         data-testid="consultation-pad-action-area"
-        title={hasError ? '' : t('CONSULTATION_ACTION_NEW')}
+        title={
+          hasError
+            ? ''
+            : mode === 'edit'
+              ? t('CONSULTATION_ACTION_EDIT')
+              : t('CONSULTATION_ACTION_NEW')
+        }
         primaryButtonText={t('CONSULTATION_PAD_DONE_BUTTON')}
         onPrimaryButtonClick={handleSubmit}
         isPrimaryButtonDisabled={enablePrimaryButton}

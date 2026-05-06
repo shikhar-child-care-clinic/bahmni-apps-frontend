@@ -11,11 +11,14 @@ import {
   BAHMNI_HOME_PATH,
   getConfig,
   generateId,
+  post,
 } from '@bahmni/services';
 import {
   ProgramDetails,
   useNotification,
   useUserPrivilege,
+  useActivePractitioner,
+  usePatientUUID,
 } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
 import React, {
@@ -23,15 +26,19 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useEncounterDetailsStore } from '../stores/encounterDetailsStore';
 import ConsultationPad from '../components/consultationPad/';
 import DashboardContainer from '../components/dashboardContainer/DashboardContainer';
 import PatientHeader from '../components/patientHeader/PatientHeader';
 import PatientSearch from '../components/patientSearch/PatientSearch';
 import { BAHMNI_CLINICAL_PATH } from '../constants/app';
 import { useSubscribeConsultationStart } from '../events/startConsultation';
+import { useActiveVisit } from '../hooks/useActiveVisit';
+import { useLocations } from '../hooks/useLocations';
 import { ClinicalAppProvider } from '../providers/ClinicalAppProvider';
 import { useClinicalConfig } from '../providers/clinicalConfig';
 import { useObservationFormsStore } from '../stores/observationFormsStore';
@@ -77,13 +84,104 @@ const ConsultationPage: React.FC = () => {
   const { addNotification } = useNotification();
   const [isActionAreaVisible, setIsActionAreaVisible] = useState(false);
   const [encounterType, setEncounterType] = useState('');
+  const [consultationMode, setConsultationMode] = useState<'edit' | 'new'>(
+    'new',
+  );
 
   useSubscribeConsultationStart(
-    useCallback(({ encounterType: type }) => {
+    useCallback(({ encounterType: type, mode }) => {
       setEncounterType(type);
+      setConsultationMode(mode ?? 'new');
       setIsActionAreaVisible(true);
     }, []),
   );
+
+  // --- Encounter match decision (resolved at page level via backend API, passed down to widgets) ---
+  const patientUUID = usePatientUUID();
+  const { practitioner } = useActivePractitioner();
+  const selectedLocation = useEncounterDetailsStore(
+    (state) => state.selectedLocation,
+  );
+  const setActiveVisit = useEncounterDetailsStore(
+    (state) => state.setActiveVisit,
+  );
+  const setSelectedLocation = useEncounterDetailsStore(
+    (state) => state.setSelectedLocation,
+  );
+  const setCanResume = useEncounterDetailsStore((state) => state.setCanResume);
+  const setShowEditButton = useEncounterDetailsStore(
+    (state) => state.setShowEditButton,
+  );
+
+  // Fetch locations on page load
+  const { locations } = useLocations();
+
+  // Set default location if not already set
+  useEffect(() => {
+    if (locations.length > 0 && !selectedLocation) {
+      setSelectedLocation(locations[0]);
+    }
+  }, [locations, selectedLocation, setSelectedLocation]);
+
+  // Fetch active visit on page load
+  const { activeVisit: fetchedActiveVisit } = useActiveVisit(patientUUID);
+
+  // Store active visit in global store
+  useEffect(() => {
+    setActiveVisit(fetchedActiveVisit ?? null);
+  }, [fetchedActiveVisit, setActiveVisit]);
+
+  const activeVisit = useEncounterDetailsStore((state) => state.activeVisit);
+
+  // Call match-decision API on page load - only once per session
+  interface EncounterMatchResponse {
+    status: string;
+    encounterUuid?: string;
+    reason?: string;
+  }
+
+  const [matchDecisionResponse, setMatchDecisionResponse] =
+    useState<EncounterMatchResponse | null>(null);
+  const matchDecisionFetchedRef = useRef(false);
+
+  useEffect(() => {
+    if (
+      !matchDecisionFetchedRef.current &&
+      patientUUID &&
+      activeVisit?.id &&
+      practitioner?.uuid &&
+      selectedLocation?.uuid
+    ) {
+      matchDecisionFetchedRef.current = true;
+      post<EncounterMatchResponse, object>(
+        '/openmrs/ws/rest/v1/bahmnicore/bahmniencounter/match-decision',
+        {
+          patientUuid: patientUUID,
+          visitUuid: activeVisit.id,
+          providerUuid: practitioner.uuid,
+          locationUuid: selectedLocation.uuid,
+        },
+      )
+        .then((response) => {
+          setMatchDecisionResponse(response);
+        })
+        .catch((error) => {
+          console.error('Error fetching match decision:', error);
+        });
+    }
+  }, [patientUUID, activeVisit?.id, practitioner?.uuid, selectedLocation?.uuid]);
+
+  const canResume = matchDecisionResponse?.status === 'match_found';
+  const showEditButton =
+    matchDecisionResponse?.status === 'match_found' ||
+    matchDecisionResponse?.status === 'no_match';
+
+  // Store match-decision results in the store to persist across modal open/close
+  useEffect(() => {
+    setCanResume(canResume);
+    setShowEditButton(showEditButton);
+  }, [canResume, showEditButton, setCanResume, setShowEditButton]);
+
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchParams] = useSearchParams();
 
@@ -294,6 +392,8 @@ const ConsultationPage: React.FC = () => {
             <DashboardContainer
               sections={filteredDashboardConfig!.sections}
               activeItemId={activeItemId}
+              canResume={canResume}
+              showEditButton={showEditButton}
             />
           </Suspense>
         }
@@ -302,6 +402,7 @@ const ConsultationPage: React.FC = () => {
         actionArea={
           <ConsultationPad
             encounterType={encounterType}
+            mode={consultationMode}
             onClose={() => setIsActionAreaVisible((prev) => !prev)}
           />
         }

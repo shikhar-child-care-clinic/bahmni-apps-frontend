@@ -45,6 +45,17 @@ export {
   type ActivePractitionerContextType,
 } from './activePractitioner';
 
+// Encounter Match Decision
+export {
+  useEncounterMatchDecision,
+  type UseEncounterMatchDecisionParams,
+  type UseEncounterMatchDecisionResult,
+  type EncounterMatchStatus,
+  type NoMatchReason,
+  type EncounterMatchDecisionRequest,
+  type EncounterMatchDecisionResponse,
+} from './encounterResume/useEncounterMatchDecision';
+
 // Config Provider Factories
 export { createConfigProvider, createConfigHook } from './configProvider';
 

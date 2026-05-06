@@ -47,6 +47,27 @@ jest.mock('../../stores/observationFormsStore', () => ({
   ),
 }));
 
+jest.mock('../../stores/encounterDetailsStore', () => ({
+  useEncounterDetailsStore: jest.fn(
+    (selector: (state: Record<string, unknown>) => unknown) =>
+      selector({
+        selectedEncounterType: null,
+        selectedLocation: null,
+        activeVisit: null,
+        setActiveVisit: jest.fn(),
+      }),
+  ),
+}));
+
+jest.mock('../../hooks/useActiveVisit', () => ({
+  useActiveVisit: jest.fn(() => ({
+    activeVisit: null,
+    loading: false,
+    error: null,
+    refetch: jest.fn(),
+  })),
+}));
+
 jest.mock('../../components/patientHeader/PatientHeader', () => ({
   __esModule: true,
   default: jest.fn(() => <div data-testid="mocked-patient-header" />),
@@ -149,6 +170,21 @@ jest.mock('@bahmni/widgets', () => ({
   useUserPrivilege: jest.fn(),
   useHasPrivilege: jest.fn(),
   useNotification: jest.fn(),
+  usePatientUUID: jest.fn(() => 'test-patient-uuid'),
+  useActivePractitioner: jest.fn(() => ({
+    practitioner: { uuid: 'test-practitioner-uuid' },
+  })),
+  useEncounterMatchDecision: jest.fn(() => ({
+    status: null,
+    encounterUuid: null,
+    reason: null,
+    canResume: false,
+    showEditButton: false,
+    shouldShowButton: false,
+    isLoading: false,
+    error: null,
+    refetch: jest.fn(),
+  })),
 }));
 
 jest.mock('@bahmni/services', () => ({

@@ -8,8 +8,9 @@ import {
   QueryClientProvider,
   useQuery,
 } from '@tanstack/react-query';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
+import React from 'react';
 import { useNotification } from '../../notification';
 import AllergiesTable from '../AllergiesTable';
 
@@ -42,6 +43,23 @@ jest.mock('@bahmni/design-system', () => ({
       </span>
     </div>
   ),
+  IconButton: ({
+    children,
+    onClick,
+    testId,
+    label,
+  }: {
+    children?: React.ReactNode;
+    onClick?: () => void;
+    testId?: string;
+    label?: string;
+  }) => (
+    <button data-testid={testId} aria-label={label} onClick={onClick}>
+      {children}
+    </button>
+  ),
+  Icon: () => <span />,
+  ICON_SIZE: { LG: 'lg' },
 }));
 
 const mockAddNotification = jest.fn();
@@ -322,6 +340,65 @@ describe('AllergiesTable', () => {
       expect(
         screen.getByText('ALLERGY_TABLE_NOT_AVAILABLE'),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe('Edit button', () => {
+    it('does not render Edit button when onEdit is not provided', () => {
+      (useQuery as jest.Mock).mockReturnValue({
+        data: [],
+        error: null,
+        isError: false,
+        isLoading: false,
+      });
+
+      render(wrapper);
+
+      expect(
+        screen.queryByTestId('edit-allergies-widget'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('does not render Edit button when onEdit is provided but canResume is false', () => {
+      const onEdit = jest.fn();
+      (useQuery as jest.Mock).mockReturnValue({
+        data: [],
+        error: null,
+        isError: false,
+        isLoading: false,
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <AllergiesTable onEdit={onEdit} canResume={false} />
+        </QueryClientProvider>,
+      );
+
+      expect(
+        screen.queryByTestId('edit-allergies-widget'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('renders Edit button and calls onEdit when onEdit is provided and canResume is true', () => {
+      const onEdit = jest.fn();
+      (useQuery as jest.Mock).mockReturnValue({
+        data: [mockAllergy],
+        error: null,
+        isError: false,
+        isLoading: false,
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <AllergiesTable onEdit={onEdit} canResume />
+        </QueryClientProvider>,
+      );
+
+      const editButton = screen.getByTestId('edit-allergies-widget');
+      expect(editButton).toBeInTheDocument();
+
+      fireEvent.click(editButton);
+      expect(onEdit).toHaveBeenCalledTimes(1);
     });
   });
 

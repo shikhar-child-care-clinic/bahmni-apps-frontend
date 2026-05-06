@@ -16,6 +16,10 @@ import styles from './styles/DashboardContainer.module.scss';
 export interface DashboardContainerProps {
   sections: DashboardSectionConfig[];
   activeItemId?: string | null;
+  /** Whether the current encounter can be resumed (resolved at ConsultationPage level). */
+  canResume?: boolean;
+  /** Whether the Edit button should be shown at all (true for match_found or no_match). */
+  showEditButton?: boolean;
 }
 
 /**
@@ -27,6 +31,8 @@ export interface DashboardContainerProps {
 const DashboardContainer: React.FC<DashboardContainerProps> = ({
   sections,
   activeItemId,
+  canResume,
+  showEditButton,
 }) => {
   const { t } = useTranslation();
   const patientUuid = usePatientUUID();
@@ -112,6 +118,8 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
             episodeOfCareUuids={allEpisodeOfCareIds}
             encounterUuids={allEncounterIds}
             visitUuids={allVisitIds}
+            canResume={canResume}
+            showEditButton={showEditButton}
           />
         </article>
       ))}
