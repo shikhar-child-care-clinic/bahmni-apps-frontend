@@ -1011,18 +1011,18 @@ describe('RadiologyInvestigationTable', () => {
 
   describe('Configuration Scenarios', () => {
     it.each([
-      { groupOrdersByPrimaryOrder: true, showInlineReport: true },
-      { groupOrdersByPrimaryOrder: true, showInlineReport: false },
-      { groupOrdersByPrimaryOrder: false, showInlineReport: true },
-      { groupOrdersByPrimaryOrder: false, showInlineReport: false },
+      { groupLinkedOrders: true, showInlineReport: true },
+      { groupLinkedOrders: true, showInlineReport: false },
+      { groupLinkedOrders: false, showInlineReport: true },
+      { groupLinkedOrders: false, showInlineReport: false },
     ])(
-      'groupOrdersByPrimaryOrder=$groupOrdersByPrimaryOrder, showInlineReport=$showInlineReport',
-      async ({ groupOrdersByPrimaryOrder, showInlineReport }) => {
-        const isExpandable = groupOrdersByPrimaryOrder || showInlineReport;
-        const hasOrderedOnColumn = groupOrdersByPrimaryOrder;
+      'groupLinkedOrders=$groupLinkedOrders, showInlineReport=$showInlineReport',
+      async ({ groupLinkedOrders, showInlineReport }) => {
+        const isExpandable = groupLinkedOrders || showInlineReport;
+        const hasOrderedOnColumn = groupLinkedOrders;
         const hasViewReportLink = !showInlineReport;
         const investigationId =
-          groupOrdersByPrimaryOrder && !showInlineReport
+          groupLinkedOrders && !showInlineReport
             ? 'primary-order'
             : 'investigation-1';
 
@@ -1062,7 +1062,7 @@ describe('RadiologyInvestigationTable', () => {
         render(
           renderRadiologyInvestigationTable({
             orderType: 'Radiology Order',
-            groupOrdersByPrimaryOrder,
+            groupLinkedOrders,
             showInlineReport,
           }),
         );
