@@ -1,6 +1,4 @@
 export interface TemplateTrigger {
-  /** e.g. "medications", "patientRegistration", "encounter" */
-  context: string;
   /** Button label shown in the UI, e.g. "Print Prescription" */
   label: string;
   /** Optional keyboard shortcut character, e.g. "p" */
@@ -10,6 +8,8 @@ export interface TemplateTrigger {
 export interface TemplateInfo {
   id: string;
   name: string;
+  /** Groups templates by purpose, e.g. "medications", "patientRegistration" */
+  category: string;
   triggers: TemplateTrigger[];
   outputFormats: Array<'html' | 'pdf'>;
 }

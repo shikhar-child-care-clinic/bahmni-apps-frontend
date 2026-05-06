@@ -1,4 +1,4 @@
-export { getTemplates, renderAsHtml, renderAsPdf } from './templateService';
+export { getTemplates, renderAsHtml } from './templateService';
 export type {
   TemplateInfo,
   TemplateTrigger,

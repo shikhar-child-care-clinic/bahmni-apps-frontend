@@ -40,7 +40,7 @@ export const isOpenMRSWebServiceApi = (url: string): boolean => {
  * @returns True if URL is a template service API call
  */
 export const isTemplateServiceApi = (url: string): boolean => {
-  return url.includes('/template-service/');
+  return url.includes('/bahmnicore/template/');
 };
 
 /**

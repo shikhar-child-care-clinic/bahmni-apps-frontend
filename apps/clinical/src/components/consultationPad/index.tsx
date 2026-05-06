@@ -1,19 +1,13 @@
-import {
-  ActionArea,
-  Button,
-  MenuItem,
-  MenuButton,
-  PrintModal,
-} from '@bahmni/design-system';
+import { ActionArea, Button } from '@bahmni/design-system';
 import {
   AUDIT_LOG_EVENT_DETAILS,
   type AuditEventType,
   dispatchAuditEvent,
   dispatchConsultationSaved,
   useTranslation,
-  type TemplateInfo,
 } from '@bahmni/services';
 import {
+  DocumentPrintButton,
   useActivePractitioner,
   useNotification,
   usePatientUUID,
@@ -27,10 +21,8 @@ import React, {
 } from 'react';
 import { ERROR_TITLES } from '../../constants/errors';
 import { useClinicalAppData } from '../../hooks/useClinicalAppData';
-import { useDocumentTemplatesForContext } from '../../hooks/useDocumentTemplates';
 import { useEncounterConcepts } from '../../hooks/useEncounterConcepts';
 import { useEncounterSession } from '../../hooks/useEncounterSession';
-import { usePrintDocument } from '../../hooks/usePrintDocument';
 import { useClinicalConfig } from '../../providers/clinicalConfig';
 import { useEncounterDetailsStore } from '../../stores/encounterDetailsStore';
 import { useObservationFormsStore } from '../../stores/observationFormsStore';
@@ -120,35 +112,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
   });
   const { episodeOfCare } = useClinicalAppData();
 
-  // ── Print functionality ────────────────────────────────────────────────────
   const patientUUID = usePatientUUID();
-  const { templates: printTemplates } =
-    useDocumentTemplatesForContext('medications');
-  const [activePrintTemplate, setActivePrintTemplate] =
-    useState<TemplateInfo | null>(null);
-
-  const resolvedPrintTemplate =
-    activePrintTemplate ?? printTemplates[0] ?? null;
-
-  const {
-    isModalOpen: isPrintModalOpen,
-    openModal: openPrintModal,
-    closeModal: closePrintModal,
-    htmlContent,
-    isLoadingHtml,
-    htmlError,
-    isDownloadingPdf,
-    downloadPdf,
-  } = usePrintDocument({
-    templateId: resolvedPrintTemplate?.id ?? 'PRESCRIPTION_V1',
-    context: {
-      patientUuid: patientUUID ?? '',
-      encounterUuid: activeEncounter?.id ?? '',
-      visitType:
-        (activeEncounter?.class as { display?: string })?.display ?? '',
-    },
-  });
-  // ──────────────────────────────────────────────────────────────────────────
 
   const episodeOfCareUuids = episodeOfCare.map((eoc) => eoc.uuid);
   const statDurationInMilliseconds =
@@ -271,46 +235,23 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
       !hasConsultationData,
     [hasError, isEncounterDetailsFormReady, isSubmitting, hasConsultationData],
   );
-  const printTriggerLabel = (tmpl: TemplateInfo) =>
-    tmpl.triggers.find((tr) => tr.context === 'medications')?.label ??
-    tmpl.name;
-
   return (
     <>
-      {/* Print button — rendered above the pad, hidden while viewing a form */}
-      {printTemplates.length > 0 && !viewingForm && (
+      {!viewingForm && (
         <div className={styles.printActions}>
-          {printTemplates.length === 1 ? (
-            <Button
-              kind="ghost"
-              size="sm"
-              data-testid="print-prescription-button"
-              onClick={() => {
-                setActivePrintTemplate(printTemplates[0]);
-                openPrintModal();
-              }}
-            >
-              {printTriggerLabel(printTemplates[0])}
-            </Button>
-          ) : (
-            <MenuButton
-              label={t('PRINT')}
-              kind="ghost"
-              size="sm"
-              data-testid="print-prescription-menu"
-            >
-              {printTemplates.map((tmpl) => (
-                <MenuItem
-                  key={tmpl.id}
-                  label={printTriggerLabel(tmpl)}
-                  onClick={() => {
-                    setActivePrintTemplate(tmpl);
-                    openPrintModal();
-                  }}
-                />
-              ))}
-            </MenuButton>
-          )}
+          <DocumentPrintButton
+            category="medications"
+            renderContext={{
+              patientUuid: patientUUID ?? '',
+              encounterUuid: activeEncounter?.id ?? '',
+              visitType:
+                (activeEncounter?.class as { display?: string })?.display ?? '',
+            }}
+            fallbackTemplateId="PRESCRIPTION_V1"
+            defaultLabel={t('PRINT')}
+            size="sm"
+            data-testid="print-prescription"
+          />
         </div>
       )}
 
@@ -336,18 +277,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
         />
       )}
 
-      {isPrintModalOpen && resolvedPrintTemplate && (
-        <PrintModal
-          open={isPrintModalOpen}
-          onClose={closePrintModal}
-          documentName={resolvedPrintTemplate.name}
-          isLoading={isLoadingHtml}
-          error={htmlError}
-          htmlContent={htmlContent}
-          onDownloadPdf={downloadPdf}
-          isDownloadingPdf={isDownloadingPdf}
-        />
-      )}
+
     </>
   );
 };

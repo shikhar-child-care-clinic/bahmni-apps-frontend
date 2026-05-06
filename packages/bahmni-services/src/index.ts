@@ -344,7 +344,6 @@ export type {
 export {
   getTemplates,
   renderAsHtml,
-  renderAsPdf,
   TEMPLATE_SERVICE_BASE,
 } from './templateService';
 export type {

@@ -7,8 +7,8 @@ function useAllTemplates(): { templates: TemplateInfo[]; isLoading: boolean } {
     queryKey: ['documentTemplates'],
     queryFn: () =>
       getTemplates().catch(() => ({ templates: [] as TemplateInfo[] })),
-    staleTime: 5 * 60 * 1000, // 5 minutes — template list changes rarely
-    retry: false, // don't retry if service is down
+    staleTime: 5 * 60 * 1000,
+    retry: false,
   });
 
   return {
@@ -17,23 +17,13 @@ function useAllTemplates(): { templates: TemplateInfo[]; isLoading: boolean } {
   };
 }
 
-/**
- * Returns templates whose triggers include the given context string.
- *
- * If the template service is unavailable, returns an empty array so no
- * print buttons appear — a missing service should not surface errors.
- *
- * Common contexts: "medications", "encounter", "patientRegistration"
- */
-export function useDocumentTemplatesForContext(context: string): {
+export function useDocumentTemplatesForCategory(category: string): {
   templates: TemplateInfo[];
   isLoading: boolean;
 } {
   const { templates, isLoading } = useAllTemplates();
 
-  const filtered = templates.filter((t) =>
-    t.triggers.some((trigger) => trigger.context === context),
-  );
+  const filtered = templates.filter((t) => t.category === category);
 
   return { templates: filtered, isLoading };
 }

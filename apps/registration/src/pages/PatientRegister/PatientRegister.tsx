@@ -1,8 +1,5 @@
 import {
   Button,
-  MenuItem,
-  MenuButton,
-  PrintModal,
   Tile,
   BaseLayout,
   Header,
@@ -16,9 +13,8 @@ import {
   AuditEventType,
   dispatchAuditEvent,
   PatientProfileResponse,
-  type TemplateInfo,
 } from '@bahmni/services';
-import { useNotification } from '@bahmni/widgets';
+import { DocumentPrintButton, useNotification } from '@bahmni/widgets';
 import { useRef, useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AdditionalIdentifiersRef } from '../../components/forms/additionalIdentifiers/AdditionalIdentifiers';
@@ -32,10 +28,8 @@ import { BAHMNI_REGISTRATION_SEARCH, getPatientUrl } from '../../constants/app';
 
 import { useAdditionalIdentifiers } from '../../hooks/useAdditionalIdentifiers';
 import { useCreatePatient } from '../../hooks/useCreatePatient';
-import { useDocumentTemplatesForContext } from '../../hooks/useDocumentTemplates';
 import { usePatientDetails } from '../../hooks/usePatientDetails';
 import { usePatientPhoto } from '../../hooks/usePatientPhoto';
-import { usePrintDocument } from '../../hooks/usePrintDocument';
 import { useRelationshipValidation } from '../../hooks/useRelationshipValidation';
 import { useUpdatePatient } from '../../hooks/useUpdatePatient';
 import { useRegistrationConfig } from '../../providers/registrationConfig';
@@ -242,29 +236,6 @@ const PatientRegister = () => {
 
   const shouldShowActions = metadata?.patientUuid || patientUuidFromUrl == null;
 
-  // ── Print functionality ─────────────────────────────────────────────────
-  const { templates: printTemplates } = useDocumentTemplatesForContext(
-    'patientRegistration',
-  );
-  const [activePrintTemplate, setActivePrintTemplate] =
-    useState<TemplateInfo | null>(null);
-  const resolvedPrintTemplate =
-    activePrintTemplate ?? printTemplates[0] ?? null;
-
-  const {
-    isModalOpen: isPrintModalOpen,
-    openModal: openPrintModal,
-    closeModal: closePrintModal,
-    htmlContent,
-    isLoadingHtml,
-    htmlError,
-    isDownloadingPdf,
-    downloadPdf,
-  } = usePrintDocument({
-    templateId: resolvedPrintTemplate?.id ?? 'REG_CARD_V1',
-    context: { patientUuid: patientUuid ?? '' },
-  });
-  // ────────────────────────────────────────────────────────────────────────
   const refs = useMemo<FormControlRefs>(
     () => ({
       profileRef: patientProfileRef,
@@ -406,42 +377,14 @@ const PatientRegister = () => {
                   {t('CREATE_PATIENT_SAVE')}
                 </Button>
 
-                {/* Print button — only shown after patient is saved */}
-                {patientUuid && printTemplates.length === 1 && (
-                  <Button
-                    kind="ghost"
-                    onClick={() => {
-                      setActivePrintTemplate(printTemplates[0]);
-                      openPrintModal();
-                    }}
-                    data-testid="print-registration-card-button"
-                  >
-                    {printTemplates[0].triggers.find(
-                      (tr) => tr.context === 'patientRegistration',
-                    )?.label ?? t('PRINT_CARD')}
-                  </Button>
-                )}
-                {patientUuid && printTemplates.length > 1 && (
-                  <MenuButton
-                    label={t('PRINT_CARD')}
-                    kind="ghost"
-                    data-testid="print-registration-card-menu"
-                  >
-                    {printTemplates.map((tmpl) => (
-                      <MenuItem
-                        key={tmpl.id}
-                        label={
-                          tmpl.triggers.find(
-                            (tr) => tr.context === 'patientRegistration',
-                          )?.label ?? tmpl.name
-                        }
-                        onClick={() => {
-                          setActivePrintTemplate(tmpl);
-                          openPrintModal();
-                        }}
-                      />
-                    ))}
-                  </MenuButton>
+                {patientUuid && (
+                  <DocumentPrintButton
+                    category="patientRegistration"
+                    renderContext={{ patientUuid: patientUuid ?? '' }}
+                    fallbackTemplateId="REG_CARD_V1"
+                    defaultLabel={t('PRINT_CARD')}
+                    data-testid="print-registration-card"
+                  />
                 )}
 
                 <RegistrationActions
@@ -452,19 +395,7 @@ const PatientRegister = () => {
             </div>
           )}
 
-          {/* Print modal */}
-          {isPrintModalOpen && resolvedPrintTemplate && (
-            <PrintModal
-              open={isPrintModalOpen}
-              onClose={closePrintModal}
-              documentName={resolvedPrintTemplate.name}
-              isLoading={isLoadingHtml}
-              error={htmlError}
-              htmlContent={htmlContent}
-              onDownloadPdf={downloadPdf}
-              isDownloadingPdf={isDownloadingPdf}
-            />
-          )}
+
         </div>
       }
     />

@@ -27,7 +27,7 @@ client.interceptors.response.use(
   function (response) {
     try {
       const url = getResponseUrl(response.config);
-      if (isOpenMRSWebServiceApi(url)) {
+      if (isOpenMRSWebServiceApi(url) && !isTemplateServiceApi(url)) {
         response.data = decodeHtmlEntities(response.data);
       }
       return response;
