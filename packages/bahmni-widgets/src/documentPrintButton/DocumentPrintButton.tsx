@@ -1,6 +1,5 @@
-import { Button, Dropdown, PrintModal } from '@bahmni/design-system';
+import { Button, Dropdown } from '@bahmni/design-system';
 import type { TemplateInfo } from '@bahmni/services';
-import { useTranslation } from '@bahmni/services';
 import { useState } from 'react';
 import styles from './DocumentPrintButton.module.scss';
 import { useDocumentTemplatesForCategory } from './useDocumentTemplates';
@@ -23,11 +22,10 @@ export const DocumentPrintButton = ({
   category,
   renderContext,
   fallbackTemplateId,
-  defaultLabel,
+  defaultLabel: _defaultLabel,
   size,
   'data-testid': dataTestId,
 }: DocumentPrintButtonProps) => {
-  const { t } = useTranslation();
   const { templates } = useDocumentTemplatesForCategory(category);
   const [activeTemplate, setActiveTemplate] = useState<TemplateInfo | null>(
     null,
@@ -35,14 +33,7 @@ export const DocumentPrintButton = ({
 
   const resolvedTemplate = activeTemplate ?? templates[0] ?? null;
 
-  const {
-    isModalOpen,
-    openModal,
-    closeModal,
-    htmlContent,
-    isLoadingHtml,
-    htmlError,
-  } = usePrintDocument({
+  const { triggerPrint } = usePrintDocument({
     templateId: resolvedTemplate?.id ?? fallbackTemplateId,
     context: renderContext,
   });
@@ -52,6 +43,11 @@ export const DocumentPrintButton = ({
   const triggerLabel = (tmpl: TemplateInfo) =>
     tmpl.triggers[0]?.label ?? tmpl.name;
 
+  const handlePrint = (template: TemplateInfo) => {
+    setActiveTemplate(template);
+    triggerPrint();
+  };
+
   return (
     <>
       {templates.length === 1 ? (
@@ -59,10 +55,7 @@ export const DocumentPrintButton = ({
           kind="ghost"
           size={size}
           data-testid={dataTestId}
-          onClick={() => {
-            setActiveTemplate(templates[0]);
-            openModal();
-          }}
+          onClick={() => handlePrint(templates[0])}
         >
           {triggerLabel(templates[0])}
         </Button>
@@ -73,10 +66,7 @@ export const DocumentPrintButton = ({
             size={size}
             className={styles.printButton}
             data-testid={dataTestId}
-            onClick={() => {
-              setActiveTemplate(templates[0]);
-              openModal();
-            }}
+            onClick={() => handlePrint(templates[0])}
           >
             {triggerLabel(templates[0])}
           </Button>
@@ -86,10 +76,7 @@ export const DocumentPrintButton = ({
             items={templates.slice(1)}
             itemToString={(item) => (item ? triggerLabel(item) : '')}
             onChange={({ selectedItem }) => {
-              if (selectedItem) {
-                setActiveTemplate(selectedItem);
-                openModal();
-              }
+              if (selectedItem) handlePrint(selectedItem);
             }}
             label=""
             type="inline"
@@ -98,20 +85,6 @@ export const DocumentPrintButton = ({
             selectedItem={null}
           />
         </div>
-      )}
-
-      {isModalOpen && resolvedTemplate && (
-        <PrintModal
-          open={isModalOpen}
-          onClose={closeModal}
-          documentName={resolvedTemplate.name}
-          isLoading={isLoadingHtml}
-          error={htmlError}
-          htmlContent={htmlContent}
-          cancelLabel={t('PRINT_MODAL_CANCEL')}
-          printLabel={t('PRINT_MODAL_PRINT')}
-          loadingLabel={t('PRINT_MODAL_PREPARING_DOCUMENT')}
-        />
       )}
     </>
   );

@@ -25,9 +25,86 @@ const createWrapper = () => {
   return Wrapper;
 };
 
+let mockPrint: jest.Mock;
+let mockIframe: Record<string, unknown>;
+
+interface MockImg {
+  complete: boolean;
+  addEventListener: jest.Mock;
+  removeEventListener: jest.Mock;
+  _fire: (event: string) => void;
+}
+
+const buildMockImg = (complete: boolean): MockImg => {
+  const handlers: Record<string, Array<() => void>> = {};
+  return {
+    complete,
+    addEventListener: jest.fn((event: string, handler: () => void) => {
+      handlers[event] = handlers[event] ?? [];
+      handlers[event].push(handler);
+    }),
+    removeEventListener: jest.fn((event: string, handler: () => void) => {
+      handlers[event] = (handlers[event] ?? []).filter((h) => h !== handler);
+    }),
+    _fire: (event: string) => handlers[event]?.forEach((h) => h()),
+  };
+};
+
+const buildMockIframe = (mockImages: MockImg[] = []) => {
+  mockPrint = jest.fn();
+
+  const mockContentWindow = { print: mockPrint };
+
+  const mockContentDoc = {
+    open: jest.fn(),
+    write: jest.fn(),
+    close: jest.fn(),
+    querySelectorAll: jest.fn().mockReturnValue(mockImages),
+  };
+
+  return {
+    _isMockIframe: true,
+    style: { cssText: '' },
+    contentDocument: mockContentDoc,
+    contentWindow: mockContentWindow,
+  };
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockGetUserPreferredLocale.mockReturnValue('en');
+
+  mockIframe = buildMockIframe();
+
+  const originalCreateElement = document.createElement.bind(document);
+  jest.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+    if (tag === 'iframe') return mockIframe as unknown as HTMLIFrameElement;
+    return originalCreateElement(tag as any);
+  });
+
+  const originalAppendChild = document.body.appendChild.bind(document.body);
+  jest.spyOn(document.body, 'appendChild').mockImplementation((node: Node) => {
+    if ((node as Record<string, unknown>)._isMockIframe) return node;
+    return originalAppendChild(node);
+  });
+
+  const originalRemoveChild = document.body.removeChild.bind(document.body);
+  jest.spyOn(document.body, 'removeChild').mockImplementation((node: Node) => {
+    if ((node as Record<string, unknown>)._isMockIframe) return node;
+    return originalRemoveChild(node);
+  });
+
+  const originalContains = document.body.contains.bind(document.body);
+  jest
+    .spyOn(document.body, 'contains')
+    .mockImplementation((node: Node | null) => {
+      if ((node as Record<string, unknown> | null)?._isMockIframe) return true;
+      return originalContains(node);
+    });
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 describe('usePrintDocument', () => {
@@ -36,23 +113,22 @@ describe('usePrintDocument', () => {
     context: { patientUuid: 'patient-uuid-123' },
   };
 
-  it('starts with modal closed and no content', () => {
+  it('starts with isPrinting false and no error', () => {
     const { result } = renderHook(() => usePrintDocument(options), {
       wrapper: createWrapper(),
     });
 
-    expect(result.current.isModalOpen).toBe(false);
-    expect(result.current.htmlContent).toBeNull();
-    expect(result.current.isLoadingHtml).toBe(false);
+    expect(result.current.isPrinting).toBe(false);
+    expect(result.current.printError).toBeNull();
   });
 
-  it('does not fetch HTML until modal is opened', () => {
+  it('does not fetch HTML until triggerPrint is called', () => {
     renderHook(() => usePrintDocument(options), { wrapper: createWrapper() });
 
     expect(mockRenderAsHtml).not.toHaveBeenCalled();
   });
 
-  it('fetches HTML when modal is opened', async () => {
+  it('sets isPrinting true and fetches HTML when triggered', async () => {
     const mockHtml = '<html><body>Card</body></html>';
     mockRenderAsHtml.mockResolvedValueOnce(mockHtml);
 
@@ -61,24 +137,133 @@ describe('usePrintDocument', () => {
     });
 
     act(() => {
-      result.current.openModal();
+      result.current.triggerPrint();
     });
 
-    expect(result.current.isModalOpen).toBe(true);
+    expect(result.current.isPrinting).toBe(true);
 
-    await waitFor(() => expect(result.current.isLoadingHtml).toBe(false));
-
-    expect(mockRenderAsHtml).toHaveBeenCalledWith({
-      templateId: 'REG_CARD_V1',
-      format: 'html',
-      locale: 'en',
-      context: { patientUuid: 'patient-uuid-123' },
-    });
-    expect(result.current.htmlContent).toBe(mockHtml);
-    expect(result.current.htmlError).toBeNull();
+    await waitFor(() =>
+      expect(mockRenderAsHtml).toHaveBeenCalledWith({
+        templateId: 'REG_CARD_V1',
+        format: 'html',
+        locale: 'en',
+        context: { patientUuid: 'patient-uuid-123' },
+      }),
+    );
   });
 
-  it('sets htmlError when fetch fails', async () => {
+  it('writes HTML to iframe and prints immediately when there are no images', async () => {
+    const mockHtml = '<html><body>Card</body></html>';
+    mockRenderAsHtml.mockResolvedValueOnce(mockHtml);
+
+    const { result } = renderHook(() => usePrintDocument(options), {
+      wrapper: createWrapper(),
+    });
+
+    act(() => {
+      result.current.triggerPrint();
+    });
+
+    await waitFor(() => expect(mockPrint).toHaveBeenCalled());
+
+    const doc = mockIframe.contentDocument as Record<string, jest.Mock>;
+    expect(doc.open).toHaveBeenCalled();
+    expect(doc.write).toHaveBeenCalledWith(mockHtml);
+    expect(doc.close).toHaveBeenCalled();
+    expect(document.body.removeChild).toHaveBeenCalledWith(mockIframe);
+  });
+
+  it('prints immediately when all images are already complete', async () => {
+    const completeImg = buildMockImg(true);
+    mockIframe = buildMockIframe([completeImg]);
+
+    mockRenderAsHtml.mockResolvedValueOnce(
+      '<html><body><img src="/logo.png"/></body></html>',
+    );
+
+    const { result } = renderHook(() => usePrintDocument(options), {
+      wrapper: createWrapper(),
+    });
+
+    act(() => {
+      result.current.triggerPrint();
+    });
+
+    await waitFor(() => expect(mockPrint).toHaveBeenCalled());
+    expect(completeImg.addEventListener).not.toHaveBeenCalled();
+  });
+
+  it('waits for all pending images to load before printing', async () => {
+    const img1 = buildMockImg(false);
+    const img2 = buildMockImg(false);
+    mockIframe = buildMockIframe([img1, img2]);
+
+    mockRenderAsHtml.mockResolvedValueOnce(
+      '<html><body><img src="/a.png"/><img src="/b.png"/></body></html>',
+    );
+
+    const { result } = renderHook(() => usePrintDocument(options), {
+      wrapper: createWrapper(),
+    });
+
+    act(() => {
+      result.current.triggerPrint();
+    });
+
+    await waitFor(() =>
+      expect(img1.addEventListener).toHaveBeenCalledWith(
+        'load',
+        expect.any(Function),
+        { once: true },
+      ),
+    );
+
+    expect(mockPrint).not.toHaveBeenCalled();
+
+    act(() => {
+      img1._fire('load');
+    });
+    expect(mockPrint).not.toHaveBeenCalled();
+
+    act(() => {
+      img2._fire('load');
+    });
+    expect(mockPrint).toHaveBeenCalled();
+  });
+
+  it('prints after an image fires an error (does not block on failed images)', async () => {
+    const img = buildMockImg(false);
+    mockIframe = buildMockIframe([img]);
+
+    mockRenderAsHtml.mockResolvedValueOnce(
+      '<html><body><img src="/missing.png"/></body></html>',
+    );
+
+    const { result } = renderHook(() => usePrintDocument(options), {
+      wrapper: createWrapper(),
+    });
+
+    act(() => {
+      result.current.triggerPrint();
+    });
+
+    await waitFor(() =>
+      expect(img.addEventListener).toHaveBeenCalledWith(
+        'error',
+        expect.any(Function),
+        { once: true },
+      ),
+    );
+
+    expect(mockPrint).not.toHaveBeenCalled();
+
+    act(() => {
+      img._fire('error');
+    });
+    expect(mockPrint).toHaveBeenCalled();
+  });
+
+  it('sets printError and resets isPrinting when fetch fails', async () => {
     mockRenderAsHtml.mockRejectedValueOnce(new Error('Template not found'));
 
     const { result } = renderHook(() => usePrintDocument(options), {
@@ -86,29 +271,13 @@ describe('usePrintDocument', () => {
     });
 
     act(() => {
-      result.current.openModal();
+      result.current.triggerPrint();
     });
 
-    await waitFor(() => expect(result.current.isLoadingHtml).toBe(false));
+    await waitFor(() => expect(result.current.printError).not.toBeNull());
 
-    expect(result.current.htmlContent).toBeNull();
-    expect(result.current.htmlError).toBe('Error: Template not found');
-  });
-
-  it('closes modal when closeModal is called', () => {
-    const { result } = renderHook(() => usePrintDocument(options), {
-      wrapper: createWrapper(),
-    });
-
-    act(() => {
-      result.current.openModal();
-    });
-    expect(result.current.isModalOpen).toBe(true);
-
-    act(() => {
-      result.current.closeModal();
-    });
-    expect(result.current.isModalOpen).toBe(false);
+    expect(result.current.printError).toBe('Error: Template not found');
+    expect(result.current.isPrinting).toBe(false);
   });
 
   it('uses locale from getUserPreferredLocale', async () => {
@@ -120,10 +289,10 @@ describe('usePrintDocument', () => {
     });
 
     act(() => {
-      result.current.openModal();
+      result.current.triggerPrint();
     });
 
-    await waitFor(() => expect(result.current.isLoadingHtml).toBe(false));
+    await waitFor(() => expect(mockRenderAsHtml).toHaveBeenCalled());
 
     expect(mockRenderAsHtml).toHaveBeenCalledWith(
       expect.objectContaining({ locale: 'es' }),

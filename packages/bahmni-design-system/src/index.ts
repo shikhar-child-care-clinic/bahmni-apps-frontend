@@ -145,4 +145,3 @@ export {
   TableExpandedRow,
   type TableExpandedRowProps,
 } from './atoms/tableExpandedRow';
-export { PrintModal, type PrintModalProps } from './molecules/printModal';
