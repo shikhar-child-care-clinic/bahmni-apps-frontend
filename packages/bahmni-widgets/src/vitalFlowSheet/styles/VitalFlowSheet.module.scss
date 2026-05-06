@@ -1,7 +1,7 @@
 @use "@carbon/react/scss/type" as *;
 @use "@carbon/react/scss/spacing" as *;
 @use "@carbon/react/scss/theme" as *;
-@use "@carbon/react/scss/components/notification/tokens" as *;
+@use "@carbon/react/scss/colors" as *;
 
   .vitalFlowSheetDataTable {
    th {
@@ -9,7 +9,7 @@
     }
     table th:nth-child(2) * ,
     table td:nth-child(2) {
-      background-color: $notification-background-success !important;
+      background-color: $green-10 !important;
     }
   }
 
