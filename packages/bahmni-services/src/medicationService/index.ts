@@ -1,0 +1,1 @@
+export { getMedication } from './medicationService';
