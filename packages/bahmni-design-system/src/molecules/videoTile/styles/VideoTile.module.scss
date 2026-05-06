@@ -56,8 +56,6 @@
   transform: translate(-50%, -50%);
   width: $spacing-08;
   height: $spacing-08;
-  // $overlay = Figma "Transparent/Transparent" scrim — rgba(22, 22, 22, 0.5).
-  // Closest semantic token for a dark overlay/scrim over video content.
   background-color: $overlay;
   border-radius: 50%;
   display: flex;

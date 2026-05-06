@@ -35,11 +35,5 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  // applyBahmniTheme(BAHMNI_DEFAULT_THEME) runs synchronously in main.tsx before
-  // render, injecting a <style> tag that targets .cds--white alongside :root.
-  // This means --cds-interactive is correctly set to Bahmni teal on all elements,
-  // including those inside Carbon's .cds--white ancestor — no fallback needed.
   color: $interactive;
 }
-
-// .arrow inherits color: $interactive from .bottom — no override needed.
