@@ -153,6 +153,34 @@ describe('Header', () => {
       );
     });
 
+    it('applies custom className to header element', () => {
+      render(<Header {...defaultProps} className="custom-header" />);
+
+      expect(screen.getByTestId('header')).toHaveClass('custom-header');
+    });
+
+    it('renders extraContent when provided', () => {
+      render(
+        <Header extraContent={<div data-testid="extra-content">Extra</div>} />,
+      );
+
+      expect(screen.getByTestId('extra-content')).toBeInTheDocument();
+    });
+
+    it('renders extraContent alongside other sections', () => {
+      render(
+        <Header
+          {...defaultProps}
+          extraContent={<div data-testid="extra-content">Extra</div>}
+        />,
+      );
+
+      expect(screen.getByTestId('extra-content')).toBeInTheDocument();
+      expect(screen.getByTestId('breadcrumb')).toBeInTheDocument();
+      expect(screen.getByTestId('header-global-bar')).toBeInTheDocument();
+      expect(screen.getByTestId('side-nav')).toBeInTheDocument();
+    });
+
     it('uses default aria-label when not provided', () => {
       const propsWithoutAriaLabel = { ...defaultProps };
       delete propsWithoutAriaLabel.ariaLabel;
