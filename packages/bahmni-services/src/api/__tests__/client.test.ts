@@ -126,7 +126,9 @@ describe('Axios Client', () => {
       it('should skip HTML entity decoding for template service responses even when URL is under /openmrs/ws', async () => {
         const testData = '<html><body>&lt;Patient&gt;</body></html>';
 
-        getResponseUrl.mockReturnValue('/openmrs/ws/rest/v1/bahmnicore/template/api/render');
+        getResponseUrl.mockReturnValue(
+          '/openmrs/ws/rest/v1/bahmnicore/template/api/render',
+        );
         isOpenMRSWebServiceApi.mockReturnValueOnce(true);
         isTemplateServiceApi.mockReturnValueOnce(true);
 

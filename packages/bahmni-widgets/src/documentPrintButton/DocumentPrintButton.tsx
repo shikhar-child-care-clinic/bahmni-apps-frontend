@@ -1,4 +1,9 @@
-import { Button, MenuItem, MenuButton, PrintModal } from '@bahmni/design-system';
+import {
+  Button,
+  MenuItem,
+  MenuButton,
+  PrintModal,
+} from '@bahmni/design-system';
 import type { TemplateInfo } from '@bahmni/services';
 import { useState } from 'react';
 import { useDocumentTemplatesForCategory } from './useDocumentTemplates';

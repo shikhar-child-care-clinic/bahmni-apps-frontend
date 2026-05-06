@@ -394,8 +394,6 @@ const PatientRegister = () => {
               </div>
             </div>
           )}
-
-
         </div>
       }
     />

@@ -1,7 +1,4 @@
-import {
-  OPENMRS_FHIR_R4,
-  OPENMRS_REST_V1,
-} from '../constants/app';
+import { OPENMRS_FHIR_R4, OPENMRS_REST_V1 } from '../constants/app';
 import { PatientSearchField } from './models';
 
 /**

@@ -1,4 +1,4 @@
-import { ActionArea, Button } from '@bahmni/design-system';
+import { ActionArea } from '@bahmni/design-system';
 import {
   AUDIT_LOG_EVENT_DETAILS,
   type AuditEventType,
@@ -6,12 +6,7 @@ import {
   dispatchConsultationSaved,
   useTranslation,
 } from '@bahmni/services';
-import {
-  DocumentPrintButton,
-  useActivePractitioner,
-  useNotification,
-  usePatientUUID,
-} from '@bahmni/widgets';
+import { useActivePractitioner, useNotification } from '@bahmni/widgets';
 import React, {
   useCallback,
   useEffect,
@@ -111,8 +106,6 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
     encounterTypeUUID: selectedEncounterType?.uuid,
   });
   const { episodeOfCare } = useClinicalAppData();
-
-  const patientUUID = usePatientUUID();
 
   const episodeOfCareUuids = episodeOfCare.map((eoc) => eoc.uuid);
   const statDurationInMilliseconds =
@@ -237,24 +230,6 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
   );
   return (
     <>
-      {!viewingForm && (
-        <div className={styles.printActions}>
-          <DocumentPrintButton
-            category="medications"
-            renderContext={{
-              patientUuid: patientUUID ?? '',
-              encounterUuid: activeEncounter?.id ?? '',
-              visitType:
-                (activeEncounter?.class as { display?: string })?.display ?? '',
-            }}
-            fallbackTemplateId="PRESCRIPTION_V1"
-            defaultLabel={t('PRINT')}
-            size="sm"
-            data-testid="print-prescription"
-          />
-        </div>
-      )}
-
       <ActionArea
         data-testid="consultation-pad-action-area"
         title={hasError ? '' : t('CONSULTATION_ACTION_NEW')}
@@ -266,7 +241,6 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
         onSecondaryButtonClick={handleCancel}
         content={renderPadContent}
       />
-
       {viewingForm && (
         <ObservationFormsContainer
           onViewingFormChange={setViewingForm}
@@ -276,8 +250,6 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
           existingObservations={getFormData(viewingForm.uuid)?.observations}
         />
       )}
-
-
     </>
   );
 };

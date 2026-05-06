@@ -17,9 +17,3 @@
 .formList > div:last-child li[role="separator"] {
   display: none;
 }
-
-.printActions {
-  display: flex;
-  justify-content: flex-end;
-  padding: $spacing-03 $spacing-05;
-}
