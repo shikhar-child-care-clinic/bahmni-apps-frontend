@@ -16,6 +16,7 @@ import {
   mockFetchedMedication,
   mockImmunizationEntry,
   mockImmunizationEntryComplete,
+  mockImmunizationEntryWithBasedOn,
   mockLocations,
   mockLocationsWithChildren,
   mockMedicationRequest,
@@ -475,6 +476,22 @@ describe('createImmunizationBundleEntries', () => {
     });
     expect(result[0].request?.method).toBe('POST');
   });
+
+  it.each([
+    [
+      'basedOnReference is set',
+      mockImmunizationEntryWithBasedOn,
+      [{ reference: 'MedicationRequest/med-request-uuid' }],
+    ],
+    ['basedOnReference is absent', mockImmunizationEntry, undefined],
+  ])('sets basedOn correctly when %s', (_, entry, expectedBasedOn) => {
+    const result = createImmunizationBundleEntries({
+      ...BASE_BUNDLE_PARAMS,
+      selectedImmunizations: [entry],
+    });
+    const resource = result[0].resource as Immunization;
+    expect(resource.basedOn).toEqual(expectedBasedOn);
+  });
 });
 
 describe('buildBasedOnImmunizationEntry', () => {
@@ -509,7 +526,7 @@ describe('buildBasedOnImmunizationEntry', () => {
     ],
   ])(
     'sets drug correctly when %s',
-    (_label, vaccineMedications, displayReturn, expectedDrug) => {
+    (_, vaccineMedications, displayReturn, expectedDrug) => {
       (getMedicationDisplay as jest.Mock).mockReturnValue(displayReturn);
       const { defaults } = buildBasedOnImmunizationEntry(
         mockMedicationRequest,
@@ -548,7 +565,7 @@ describe('buildBasedOnImmunizationEntry', () => {
     ],
   ])(
     'uses loginLocation.%s for administeredLocation.display',
-    (_label, loginLocation, expectedDisplay) => {
+    (_, loginLocation, expectedDisplay) => {
       const { defaults } = buildBasedOnImmunizationEntry(
         mockMedicationRequest,
         mockFetchedMedication,

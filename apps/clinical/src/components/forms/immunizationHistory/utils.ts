@@ -213,6 +213,9 @@ export function createImmunizationBundleEntries({
       extension: entry.drug
         ? resolveAdministeredProductExtension(entry.drug)
         : undefined,
+      basedOn: entry.basedOnReference
+        ? [{ reference: `MedicationRequest/${entry.basedOnReference}` }]
+        : undefined,
       encounter: createEncounterReferenceFromString(encounterReference),
       performer: [
         {
