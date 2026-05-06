@@ -5,4 +5,3 @@ export type {
   RenderRequest,
   TemplateListResponse,
 } from './models';
-export { TEMPLATE_SERVICE_BASE } from './constants';

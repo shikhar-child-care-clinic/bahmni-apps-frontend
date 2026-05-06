@@ -1,11 +1,8 @@
-import {
-  Button,
-  MenuItem,
-  MenuButton,
-  PrintModal,
-} from '@bahmni/design-system';
+import { Button, Dropdown, PrintModal } from '@bahmni/design-system';
 import type { TemplateInfo } from '@bahmni/services';
+import { useTranslation } from '@bahmni/services';
 import { useState } from 'react';
+import styles from './DocumentPrintButton.module.scss';
 import { useDocumentTemplatesForCategory } from './useDocumentTemplates';
 import { usePrintDocument } from './usePrintDocument';
 
@@ -30,6 +27,7 @@ export const DocumentPrintButton = ({
   size,
   'data-testid': dataTestId,
 }: DocumentPrintButtonProps) => {
+  const { t } = useTranslation();
   const { templates } = useDocumentTemplatesForCategory(category);
   const [activeTemplate, setActiveTemplate] = useState<TemplateInfo | null>(
     null,
@@ -69,23 +67,37 @@ export const DocumentPrintButton = ({
           {triggerLabel(templates[0])}
         </Button>
       ) : (
-        <MenuButton
-          label={defaultLabel}
-          kind="ghost"
-          size={size}
-          data-testid={dataTestId}
-        >
-          {templates.map((tmpl) => (
-            <MenuItem
-              key={tmpl.id}
-              label={triggerLabel(tmpl)}
-              onClick={() => {
-                setActiveTemplate(tmpl);
+        <div className={styles.printButtonGroup}>
+          <Button
+            kind="tertiary"
+            size={size}
+            className={styles.printButton}
+            data-testid={dataTestId}
+            onClick={() => {
+              setActiveTemplate(templates[0]);
+              openModal();
+            }}
+          >
+            {triggerLabel(templates[0])}
+          </Button>
+          <Dropdown
+            id={`print-dropdown-${dataTestId ?? 'default'}`}
+            className={styles.printDropdown}
+            items={templates.slice(1)}
+            itemToString={(item) => (item ? triggerLabel(item) : '')}
+            onChange={({ selectedItem }) => {
+              if (selectedItem) {
+                setActiveTemplate(selectedItem);
                 openModal();
-              }}
-            />
-          ))}
-        </MenuButton>
+              }
+            }}
+            label=""
+            type="inline"
+            size={size ?? 'lg'}
+            titleText=""
+            selectedItem={null}
+          />
+        </div>
       )}
 
       {isModalOpen && resolvedTemplate && (
@@ -96,6 +108,9 @@ export const DocumentPrintButton = ({
           isLoading={isLoadingHtml}
           error={htmlError}
           htmlContent={htmlContent}
+          cancelLabel={t('PRINT_MODAL_CANCEL')}
+          printLabel={t('PRINT_MODAL_PRINT')}
+          loadingLabel={t('PRINT_MODAL_PREPARING_DOCUMENT')}
         />
       )}
     </>

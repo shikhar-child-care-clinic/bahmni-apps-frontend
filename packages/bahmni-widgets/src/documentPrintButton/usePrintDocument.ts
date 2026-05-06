@@ -1,11 +1,7 @@
-import { renderAsHtml } from '@bahmni/services';
+import { renderAsHtml, getUserPreferredLocale } from '@bahmni/services';
 import type { RenderRequest } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-
-function getCurrentLocale(): string {
-  return localStorage.getItem('BAHMNI_LOCALE_STORAGE_KEY') ?? 'en';
-}
 
 interface UsePrintDocumentOptions {
   templateId: string;
@@ -27,7 +23,7 @@ export function usePrintDocument({
 }: UsePrintDocumentOptions): UsePrintDocumentResult {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const locale = getCurrentLocale();
+  const locale = getUserPreferredLocale();
 
   const renderRequest: RenderRequest = {
     templateId,

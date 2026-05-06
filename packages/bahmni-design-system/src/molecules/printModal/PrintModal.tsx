@@ -16,6 +16,12 @@ export interface PrintModalProps {
   error?: string | null;
   /** The HTML string returned by the template service */
   htmlContent?: string | null;
+  /** Label for the cancel button */
+  cancelLabel?: string;
+  /** Label for the print button */
+  printLabel?: string;
+  /** Message shown while the document is being prepared */
+  loadingLabel?: string;
 }
 
 const PrintModal: React.FC<PrintModalProps> = ({
@@ -25,6 +31,9 @@ const PrintModal: React.FC<PrintModalProps> = ({
   isLoading = false,
   error = null,
   htmlContent = null,
+  cancelLabel = 'Cancel',
+  printLabel = 'Print',
+  loadingLabel = 'Preparing document…',
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -46,7 +55,7 @@ const PrintModal: React.FC<PrintModalProps> = ({
       {isLoading && (
         <div className={styles.loadingState} role="status" aria-live="polite">
           <div className={styles.spinner} aria-hidden="true" />
-          <p>Preparing document…</p>
+          <p>{loadingLabel}</p>
         </div>
       )}
 
@@ -70,10 +79,10 @@ const PrintModal: React.FC<PrintModalProps> = ({
 
       <div className={styles.footer}>
         <Button kind="ghost" onClick={onClose}>
-          Cancel
+          {cancelLabel}
         </Button>
         <Button disabled={!canPrint} onClick={handlePrint}>
-          Print
+          {printLabel}
         </Button>
       </div>
     </Modal>

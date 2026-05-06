@@ -341,11 +341,7 @@ export type {
   ProcessedFileData,
 } from './documentUploadService';
 
-export {
-  getTemplates,
-  renderAsHtml,
-  TEMPLATE_SERVICE_BASE,
-} from './templateService';
+export { getTemplates, renderAsHtml } from './templateService';
 export type {
   TemplateInfo,
   TemplateTrigger,

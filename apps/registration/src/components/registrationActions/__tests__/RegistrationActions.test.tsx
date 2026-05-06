@@ -133,7 +133,7 @@ describe('RegistrationActions', () => {
       <RegistrationActions extensionPointId="org.bahmni.registration.navigation" />,
     );
 
-    expect(screen.getByText('PRINT_CARD')).toBeInTheDocument();
+    expect(screen.getByText('Print Card')).toBeInTheDocument();
   });
 
   it('should render VisitTypeSelector for startVisit type', () => {

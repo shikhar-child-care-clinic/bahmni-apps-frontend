@@ -1,11 +1,19 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import PrintModal from '../PrintModal';
 
 describe('PrintModal', () => {
   it('shows loading spinner when isLoading is true', () => {
-    render(<PrintModal open isLoading onClose={jest.fn()} />);
+    render(
+      <PrintModal
+        open
+        isLoading
+        loadingLabel="Preparing document…"
+        onClose={jest.fn()}
+      />,
+    );
     expect(screen.getByRole('status')).toBeInTheDocument();
-    expect(screen.getByText(/Preparing document/i)).toBeInTheDocument();
+    expect(screen.getByText('Preparing document…')).toBeInTheDocument();
   });
 
   it('shows error message when error is set', () => {
@@ -28,19 +36,50 @@ describe('PrintModal', () => {
   });
 
   it('disables Print button when there is no content', () => {
-    render(<PrintModal open isLoading onClose={jest.fn()} />);
+    render(
+      <PrintModal open isLoading printLabel="Print" onClose={jest.fn()} />,
+    );
     expect(screen.getByText('Print')).toBeDisabled();
   });
 
   it('enables Print button when htmlContent is present', () => {
-    render(<PrintModal open htmlContent="<html/>" onClose={jest.fn()} />);
+    render(
+      <PrintModal
+        open
+        htmlContent="<html/>"
+        printLabel="Print"
+        onClose={jest.fn()}
+      />,
+    );
     expect(screen.getByText('Print')).not.toBeDisabled();
   });
 
-  it('calls onClose when Cancel is clicked', () => {
+  it('calls onClose when Cancel is clicked', async () => {
+    const user = userEvent.setup();
     const onClose = jest.fn();
-    render(<PrintModal open htmlContent="<html/>" onClose={onClose} />);
-    fireEvent.click(screen.getByText('Cancel'));
+    render(
+      <PrintModal
+        open
+        htmlContent="<html/>"
+        cancelLabel="Cancel"
+        onClose={onClose}
+      />,
+    );
+    await user.click(screen.getByText('Cancel'));
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses custom button labels when provided', () => {
+    render(
+      <PrintModal
+        open
+        htmlContent="<html/>"
+        cancelLabel="Dismiss"
+        printLabel="Send to printer"
+        onClose={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('Dismiss')).toBeInTheDocument();
+    expect(screen.getByText('Send to printer')).toBeInTheDocument();
   });
 });
