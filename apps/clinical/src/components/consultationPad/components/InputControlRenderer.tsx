@@ -1,16 +1,19 @@
 import { MenuItemDivider } from '@bahmni/design-system';
 import { useHasPrivilege } from '@bahmni/widgets';
 import React from 'react';
+import type { ConsultationStartEventPayload } from '../../../events/startConsultation';
 import type { EncounterInputControl } from '../models';
 
 interface InputControlRendererProps {
   entry: EncounterInputControl;
   encounterType: string;
+  consultationStartEventPayload: ConsultationStartEventPayload;
 }
 
 const InputControlRenderer: React.FC<InputControlRendererProps> = ({
   entry,
   encounterType,
+  consultationStartEventPayload,
 }) => {
   const hasPrivilege = useHasPrivilege(entry.privilege);
 
@@ -23,7 +26,9 @@ const InputControlRenderer: React.FC<InputControlRendererProps> = ({
   const Component = entry.component;
   return (
     <div>
-      <Component />
+      <Component
+        consultationStartEventPayload={consultationStartEventPayload}
+      />
       <MenuItemDivider data-testid={`${entry.key}-divider`} />
     </div>
   );

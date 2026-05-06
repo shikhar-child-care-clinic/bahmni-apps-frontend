@@ -31,10 +31,10 @@ import DashboardContainer from '../components/dashboardContainer/DashboardContai
 import PatientHeader from '../components/patientHeader/PatientHeader';
 import PatientSearch from '../components/patientSearch/PatientSearch';
 import { BAHMNI_CLINICAL_PATH } from '../constants/app';
+import type { ConsultationStartEventPayload } from '../events/startConsultation';
 import { useSubscribeConsultationStart } from '../events/startConsultation';
 import { ClinicalAppProvider } from '../providers/ClinicalAppProvider';
 import { useClinicalConfig } from '../providers/clinicalConfig';
-import { useConsultationEventStore } from '../stores';
 import { useObservationFormsStore } from '../stores/observationFormsStore';
 import {
   DASHBOARD_CONFIG_URL,
@@ -77,13 +77,13 @@ const ConsultationPage: React.FC = () => {
   const { userPrivileges } = useUserPrivilege();
   const { addNotification } = useNotification();
   const [isActionAreaVisible, setIsActionAreaVisible] = useState(false);
-  const [encounterType, setEncounterType] = useState('');
+  const [consultationStartEventPayload, setConsultationStartEventPayload] =
+    useState<ConsultationStartEventPayload | null>(null);
 
   useSubscribeConsultationStart(
-    useCallback(({ encounterType: type, resource }) => {
-      setEncounterType(type);
+    useCallback((event) => {
+      setConsultationStartEventPayload(event);
       setIsActionAreaVisible(true);
-      useConsultationEventStore.getState().setFhirResource(resource);
     }, []),
   );
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -302,10 +302,12 @@ const ConsultationPage: React.FC = () => {
         isActionAreaVisible={isActionAreaVisible}
         layoutVariant={viewingForm ? 'extended' : 'default'}
         actionArea={
-          <ConsultationPad
-            encounterType={encounterType}
-            onClose={() => setIsActionAreaVisible((prev) => !prev)}
-          />
+          consultationStartEventPayload && (
+            <ConsultationPad
+              consultationStartEventPayload={consultationStartEventPayload}
+              onClose={() => setIsActionAreaVisible((prev) => !prev)}
+            />
+          )
         }
       />
     </ClinicalAppProvider>

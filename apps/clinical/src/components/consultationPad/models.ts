@@ -1,4 +1,5 @@
 import type { BundleEntry, Reference } from 'fhir/r4';
+import type { ConsultationStartEventPayload } from '../../events/startConsultation';
 
 export type InputControlKey =
   | 'encounterDetails'
@@ -22,7 +23,9 @@ export interface EncounterInputControl {
   key: InputControlKey;
   encounterTypes?: string[];
   privilege?: string[];
-  component: React.ComponentType;
+  component: React.ComponentType<{
+    consultationStartEventPayload?: ConsultationStartEventPayload;
+  }>;
   reset: () => void;
   validate: () => boolean;
   hasData: () => boolean;

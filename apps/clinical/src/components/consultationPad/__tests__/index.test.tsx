@@ -104,7 +104,7 @@ const renderComponent = (
 ) =>
   render(
     <ConsultationPad
-      encounterType="Consultation"
+      consultationStartEventPayload={{ encounterType: 'Consultation' }}
       onClose={jest.fn()}
       {...props}
     />,
@@ -228,7 +228,7 @@ describe('ConsultationPad', () => {
   });
 
   describe('resolvedEncounterType', () => {
-    it('falls back to config defaultEncounterType when encounterType prop is empty', () => {
+    it('falls back to config defaultEncounterType when encounterType is not in event', () => {
       jest.mocked(useClinicalConfig).mockReturnValue({
         clinicalConfig: {
           consultationPad: {
@@ -237,7 +237,7 @@ describe('ConsultationPad', () => {
         },
       } as any);
 
-      renderComponent({ encounterType: '' });
+      renderComponent({ consultationStartEventPayload: {} });
 
       expect(
         defaultEncounterDetailsState.setRequestedEncounterType,
@@ -246,13 +246,15 @@ describe('ConsultationPad', () => {
   });
 
   describe('encounterType prop validation', () => {
-    it('renders error state when encounterType prop is not in the configured list', () => {
-      renderComponent({ encounterType: 'UnknownType' });
+    it('renders error state when encounterType in event is not in the configured list', () => {
+      renderComponent({
+        consultationStartEventPayload: { encounterType: 'UnknownType' },
+      });
 
       expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     });
 
-    it('renders skeleton while encounter concepts are loading and encounterType prop is set', () => {
+    it('renders skeleton while encounter concepts are loading and encounterType is set in event', () => {
       jest.mocked(useEncounterConcepts).mockReturnValue({
         encounterConcepts: null,
         loading: true,
@@ -260,21 +262,25 @@ describe('ConsultationPad', () => {
         refetch: jest.fn(),
       } as any);
 
-      renderComponent({ encounterType: 'Consultation' });
+      renderComponent({
+        consultationStartEventPayload: { encounterType: 'Consultation' },
+      });
 
       expect(screen.queryByTestId('allergies-divider')).not.toBeInTheDocument();
     });
 
-    it('renders normally when encounterType prop is valid', () => {
-      renderComponent({ encounterType: 'Consultation' });
+    it('renders normally when encounterType in event is valid', () => {
+      renderComponent({
+        consultationStartEventPayload: { encounterType: 'Consultation' },
+      });
 
       expect(
         screen.queryByText('Something went wrong'),
       ).not.toBeInTheDocument();
     });
 
-    it('does not validate when encounterType prop is empty', () => {
-      renderComponent({ encounterType: '' });
+    it('does not validate when encounterType is not in event', () => {
+      renderComponent({ consultationStartEventPayload: {} });
 
       expect(
         screen.queryByText('Something went wrong'),
