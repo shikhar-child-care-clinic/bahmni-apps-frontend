@@ -9,6 +9,7 @@ import { useImmunizationHistoryStore } from '../stores';
 import {
   mockClinicalConfigContext,
   mockFetchedMedication,
+  mockFormConfig,
   mockImmunizationEntry,
   mockLocations,
   mockMedicationRequest,
@@ -79,7 +80,12 @@ describe('ImmunizationHistoryForm', () => {
 
   describe('Rendering', () => {
     it('renders form title and search combobox', () => {
-      render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />);
+      render(
+        <ImmunizationHistoryForm
+          consultationStartEventPayload={{}}
+          formConfig={mockFormConfig}
+        />,
+      );
       expect(screen.getByText('Immunization History')).toBeInTheDocument();
       expect(
         screen.getByRole('combobox', { name: /search to add immunization/i }),
@@ -101,7 +107,12 @@ describe('ImmunizationHistoryForm', () => {
           }
           return defaultQueryMock({ queryKey: qk }) as any;
         });
-        render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />);
+        render(
+          <ImmunizationHistoryForm
+            consultationStartEventPayload={{}}
+            formConfig={mockFormConfig}
+          />,
+        );
         expect(
           screen.getByTestId('immunization-history-loading-test-id'),
         ).toBeInTheDocument();
@@ -118,7 +129,12 @@ describe('ImmunizationHistoryForm', () => {
         }
         return defaultQueryMock({ queryKey: qk }) as any;
       });
-      render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />);
+      render(
+        <ImmunizationHistoryForm
+          consultationStartEventPayload={{}}
+          formConfig={mockFormConfig}
+        />,
+      );
       expect(
         screen.queryByTestId('immunization-history-loading-test-id'),
       ).not.toBeInTheDocument();
@@ -143,7 +159,12 @@ describe('ImmunizationHistoryForm', () => {
           }
           return defaultQueryMock({ queryKey: qk }) as any;
         });
-        render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />);
+        render(
+          <ImmunizationHistoryForm
+            consultationStartEventPayload={{}}
+            formConfig={mockFormConfig}
+          />,
+        );
         expect(
           screen.getByTestId('immunization-history-error-test-id'),
         ).toBeInTheDocument();
@@ -186,7 +207,12 @@ describe('ImmunizationHistoryForm', () => {
           if (qk[0] === 'vaccineConceptSetUuid') return queryResult;
           return defaultQueryMock({ queryKey: qk }) as any;
         });
-        render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />);
+        render(
+          <ImmunizationHistoryForm
+            consultationStartEventPayload={{}}
+            formConfig={mockFormConfig}
+          />,
+        );
         await user.type(
           screen.getByRole('combobox', { name: /search to add immunization/i }),
           'test',
@@ -199,7 +225,12 @@ describe('ImmunizationHistoryForm', () => {
 
     it('filters vaccine results by search term', async () => {
       const user = userEvent.setup();
-      render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />);
+      render(
+        <ImmunizationHistoryForm
+          consultationStartEventPayload={{}}
+          formConfig={mockFormConfig}
+        />,
+      );
       await user.type(
         screen.getByRole('combobox', { name: /search to add immunization/i }),
         'covid',
@@ -214,7 +245,12 @@ describe('ImmunizationHistoryForm', () => {
   describe('Adding immunizations', () => {
     it('calls addImmunization with code and display when item selected', async () => {
       const user = userEvent.setup();
-      render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />);
+      render(
+        <ImmunizationHistoryForm
+          consultationStartEventPayload={{}}
+          formConfig={mockFormConfig}
+        />,
+      );
       await user.type(
         screen.getByRole('combobox', { name: /search to add immunization/i }),
         'covid',
@@ -233,7 +269,12 @@ describe('ImmunizationHistoryForm', () => {
 
     it('does not call addImmunization when selection is cleared', async () => {
       const user = userEvent.setup();
-      render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />);
+      render(
+        <ImmunizationHistoryForm
+          consultationStartEventPayload={{}}
+          formConfig={mockFormConfig}
+        />,
+      );
       await user.type(
         screen.getByRole('combobox', { name: /search to add immunization/i }),
         'covid',
@@ -256,7 +297,12 @@ describe('ImmunizationHistoryForm', () => {
         ...mockStore,
         selectedImmunizations: [mockImmunizationEntry],
       });
-      render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />);
+      render(
+        <ImmunizationHistoryForm
+          consultationStartEventPayload={{}}
+          formConfig={mockFormConfig}
+        />,
+      );
       expect(screen.getByText('Added Immunization')).toBeInTheDocument();
       expect(
         screen.getByTestId(
@@ -266,7 +312,12 @@ describe('ImmunizationHistoryForm', () => {
     });
 
     it('does not show BoxWHeader when no immunizations selected', () => {
-      render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />);
+      render(
+        <ImmunizationHistoryForm
+          consultationStartEventPayload={{}}
+          formConfig={mockFormConfig}
+        />,
+      );
       expect(screen.queryByText('Added Immunization')).not.toBeInTheDocument();
     });
 
@@ -285,7 +336,12 @@ describe('ImmunizationHistoryForm', () => {
         if (qk[0] === 'vaccinations') return queryResult;
         return defaultQueryMock({ queryKey: qk }) as any;
       });
-      render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />);
+      render(
+        <ImmunizationHistoryForm
+          consultationStartEventPayload={{}}
+          formConfig={mockFormConfig}
+        />,
+      );
       expect(screen.queryByText('Added Immunization')).not.toBeInTheDocument();
     });
 
@@ -305,7 +361,12 @@ describe('ImmunizationHistoryForm', () => {
         }
         return defaultQueryMock({ queryKey: qk }) as any;
       });
-      render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />);
+      render(
+        <ImmunizationHistoryForm
+          consultationStartEventPayload={{}}
+          formConfig={mockFormConfig}
+        />,
+      );
       const drugCombobox = screen.getByPlaceholderText('Search drug name');
       await user.type(drugCombobox, 'Paracetamol');
       await waitFor(() => {
@@ -324,7 +385,12 @@ describe('ImmunizationHistoryForm', () => {
         ...mockStore,
         selectedImmunizations: [mockImmunizationEntry],
       });
-      render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />);
+      render(
+        <ImmunizationHistoryForm
+          consultationStartEventPayload={{}}
+          formConfig={mockFormConfig}
+        />,
+      );
       await user.click(screen.getByTestId('selected-item-close-button'));
       await waitFor(() => {
         expect(mockStore.removeImmunization).toHaveBeenCalledWith(
@@ -372,7 +438,10 @@ describe('ImmunizationHistoryForm', () => {
       (_, payload, setupMocks) => {
         setupMocks();
         render(
-          <ImmunizationHistoryForm consultationStartEventPayload={payload} />,
+          <ImmunizationHistoryForm
+            consultationStartEventPayload={payload}
+            formConfig={mockFormConfig}
+          />,
         );
         expect(mockStore.addImmunizationWithDefaults).not.toHaveBeenCalled();
       },
@@ -406,6 +475,7 @@ describe('ImmunizationHistoryForm', () => {
         render(
           <ImmunizationHistoryForm
             consultationStartEventPayload={consultationPayloadWithBasedOn}
+            formConfig={mockFormConfig}
           />,
         );
         await waitFor(() => {

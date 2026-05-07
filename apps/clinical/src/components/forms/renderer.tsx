@@ -28,6 +28,7 @@ const InputControlRenderer: React.FC<InputControlRendererProps> = ({
     <div>
       <Component
         consultationStartEventPayload={consultationStartEventPayload}
+        formConfig={entry.formConfig}
       />
       <MenuItemDivider data-testid={`${entry.key}-divider`} />
     </div>

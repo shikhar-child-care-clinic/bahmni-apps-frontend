@@ -44,6 +44,14 @@ export const mockImmunizationHistory = {
   ] as InputControlAttributes[],
 };
 
+export const mockFormConfig = {
+  type: 'immunizationHistory',
+  metadata: mockImmunizationHistory.metadata,
+  encounterTypes: ['Immunization'],
+  privileges: ['app:clinical;addHistory'],
+  attributes: mockImmunizationHistory.attributes,
+};
+
 export const mockClinicalConfigContext = {
   clinicalConfig: {
     consultationPad: {

@@ -21,6 +21,7 @@ export function loadEncounterInputControls(
       return [
         {
           ...entry,
+          formConfig,
           encounterTypes:
             formConfig.type === ENCOUNTER_DETAILS_INPUT_CONTROL_KEY ||
             !formConfig.encounterTypes?.length

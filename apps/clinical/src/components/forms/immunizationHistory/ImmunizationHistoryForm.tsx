@@ -17,8 +17,8 @@ import { Medication, MedicationRequest } from 'fhir/r4';
 import { useEffect, useMemo, useState } from 'react';
 import type { ConsultationStartEventPayload } from '../../../events/startConsultation';
 import { useClinicalConfig } from '../../../providers/clinicalConfig';
+import type { InputControl as ClinicalInputControlConfig } from '../../../providers/clinicalConfig/models';
 import SelectedImmunizationItem from './components/SelectedImmunizationItem';
-import { IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY } from './constants';
 import { useImmunizationHistoryStore } from './stores';
 import styles from './styles/ImmunizationHistoryForm.module.scss';
 import {
@@ -29,8 +29,10 @@ import {
 
 const ImmunizationHistoryForm = ({
   consultationStartEventPayload,
+  formConfig,
 }: {
-  consultationStartEventPayload: ConsultationStartEventPayload;
+  consultationStartEventPayload?: ConsultationStartEventPayload;
+  formConfig?: ClinicalInputControlConfig;
 }) => {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,7 +44,7 @@ const ImmunizationHistoryForm = ({
     setAttributes,
   } = useImmunizationHistoryStore();
 
-  const basedOn = consultationStartEventPayload.basedOn as
+  const basedOn = consultationStartEventPayload?.basedOn as
     | MedicationRequest
     | undefined;
 
@@ -62,18 +64,15 @@ const ImmunizationHistoryForm = ({
     staleTime: Infinity,
   });
 
-  const {
-    clinicalConfig,
-    isLoading: isConfigLoading,
-    error: configError,
-  } = useClinicalConfig();
+  const { isLoading: isConfigLoading, error: configError } =
+    useClinicalConfig();
 
-  const immunizationHistory =
-    clinicalConfig?.consultationPad?.inputControls?.find(
-      (c) => c.type === IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY,
-    );
   const loginLocation = getUserLoginLocation();
-  const { metadata, attributes } = immunizationHistory ?? {};
+  const {
+    metadata,
+    attributes,
+    label = 'IMMUNIZATION_HISTORY_FORM_TITLE',
+  } = formConfig ?? {};
   const vaccineConceptSetUuid = metadata?.vaccineConceptSetUuid as
     | string
     | undefined;
@@ -267,7 +266,7 @@ const ImmunizationHistoryForm = ({
         data-testid="immunization-history-form-title-test-id"
         className={styles.title}
       >
-        {t('IMMUNIZATION_HISTORY_FORM_TITLE')}
+        {t(label)}
       </div>
       <ComboBox
         id="immunization-history-search"

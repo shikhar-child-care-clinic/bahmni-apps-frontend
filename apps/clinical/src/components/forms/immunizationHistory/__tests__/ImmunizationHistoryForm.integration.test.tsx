@@ -19,6 +19,7 @@ import {
   mockCovid19VaccineDrug,
   mockEncounterSubject,
   mockFetchedMedication,
+  mockFormConfig,
   mockLocations,
   mockMedicationRequest,
   mockRoutesValueSet,
@@ -85,9 +86,15 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
 
   it('creates valid bundle entries when all required fields are filled', async () => {
     const user = userEvent.setup();
-    render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />, {
-      wrapper: createWrapper(),
-    });
+    render(
+      <ImmunizationHistoryForm
+        consultationStartEventPayload={{}}
+        formConfig={mockFormConfig}
+      />,
+      {
+        wrapper: createWrapper(),
+      },
+    );
 
     await waitFor(() => {
       expect(
@@ -181,9 +188,15 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
 
   it('shows required field validation errors when fields are left empty after vaccine selection', async () => {
     const user = userEvent.setup();
-    render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />, {
-      wrapper: createWrapper(),
-    });
+    render(
+      <ImmunizationHistoryForm
+        consultationStartEventPayload={{}}
+        formConfig={mockFormConfig}
+      />,
+      {
+        wrapper: createWrapper(),
+      },
+    );
 
     await waitFor(() => {
       expect(
@@ -248,9 +261,15 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
       new Error('Network error'),
     );
 
-    render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />, {
-      wrapper: createWrapper(),
-    });
+    render(
+      <ImmunizationHistoryForm
+        consultationStartEventPayload={{}}
+        formConfig={mockFormConfig}
+      />,
+      {
+        wrapper: createWrapper(),
+      },
+    );
 
     await waitFor(() => {
       expect(
@@ -279,6 +298,7 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
     render(
       <ImmunizationHistoryForm
         consultationStartEventPayload={{ basedOn: mockMedicationRequest }}
+        formConfig={mockFormConfig}
       />,
       { wrapper: createWrapper() },
     );
