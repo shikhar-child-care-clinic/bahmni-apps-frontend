@@ -15,6 +15,7 @@ import ImmunizationHistoryForm from '../ImmunizationHistoryForm';
 import { getImmunizationStore } from '../stores';
 import { createImmunizationBundleEntries } from '../utils';
 import {
+  mockAdministrationFormConfig,
   mockClinicalConfigContext,
   mockCovid19VaccineDrug,
   mockEncounterSubject,
@@ -305,7 +306,7 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
     render(
       <ImmunizationHistoryForm
         consultationStartEventPayload={{ basedOn: mockMedicationRequest }}
-        formConfig={mockFormConfig}
+        formConfig={mockAdministrationFormConfig}
       />,
       { wrapper: createWrapper() },
     );

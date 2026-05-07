@@ -7,6 +7,7 @@ import { useClinicalConfig } from '../../../../providers/clinicalConfig';
 import ImmunizationHistoryForm from '../ImmunizationHistoryForm';
 import { useImmunizationHistoryStore } from '../stores';
 import {
+  mockAdministrationFormConfig,
   mockClinicalConfigContext,
   mockFetchedMedication,
   mockFormConfig,
@@ -440,7 +441,7 @@ describe('ImmunizationHistoryForm', () => {
         render(
           <ImmunizationHistoryForm
             consultationStartEventPayload={payload}
-            formConfig={mockFormConfig}
+            formConfig={mockAdministrationFormConfig}
           />,
         );
         expect(mockStore.addImmunizationWithDefaults).not.toHaveBeenCalled();
@@ -475,7 +476,7 @@ describe('ImmunizationHistoryForm', () => {
         render(
           <ImmunizationHistoryForm
             consultationStartEventPayload={consultationPayloadWithBasedOn}
-            formConfig={mockFormConfig}
+            formConfig={mockAdministrationFormConfig}
           />,
         );
         await waitFor(() => {
@@ -503,6 +504,7 @@ describe('ImmunizationHistoryForm', () => {
       render(
         <ImmunizationHistoryForm
           consultationStartEventPayload={consultationPayloadWithBasedOn}
+          formConfig={mockAdministrationFormConfig}
         />,
       );
       await waitFor(() => {

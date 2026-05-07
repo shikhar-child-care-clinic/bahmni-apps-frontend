@@ -19,7 +19,11 @@ import type { ConsultationStartEventPayload } from '../../../events/startConsult
 import { useClinicalConfig } from '../../../providers/clinicalConfig';
 import type { InputControl as ClinicalInputControlConfig } from '../../../providers/clinicalConfig/models';
 import SelectedImmunizationItem from './components/SelectedImmunizationItem';
-import { IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY } from './constants';
+import {
+  IMMUNIZATION_ADMINISTRATION_INPUT_CONTROL_KEY,
+  IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY,
+} from './constants';
+import { ImmunizationStoreKey } from './models';
 import { useImmunizationHistoryStore } from './stores';
 import styles from './styles/ImmunizationHistoryForm.module.scss';
 import {
@@ -37,8 +41,8 @@ const ImmunizationHistoryForm = ({
 }) => {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
-  const immunizationFormType =
-    formConfig?.type ?? IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY;
+  const immunizationFormType = (formConfig?.type ??
+    IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY) as ImmunizationStoreKey;
   const {
     addImmunization,
     addImmunizationWithDefaults,
@@ -47,9 +51,12 @@ const ImmunizationHistoryForm = ({
     setAttributes,
   } = useImmunizationHistoryStore(immunizationFormType);
 
-  const basedOn = consultationStartEventPayload?.basedOn as
-    | MedicationRequest
-    | undefined;
+  const basedOn =
+    immunizationFormType === IMMUNIZATION_ADMINISTRATION_INPUT_CONTROL_KEY
+      ? (consultationStartEventPayload?.basedOn as
+          | MedicationRequest
+          | undefined)
+      : undefined;
 
   const basedOnReference = basedOn?.id;
   const medicationUuid = basedOn?.medicationReference?.reference
@@ -62,7 +69,7 @@ const ImmunizationHistoryForm = ({
     isError: basedOnMedicationError,
   } = useQuery({
     queryKey: ['medication', medicationUuid],
-    queryFn: () => getMedication(medicationUuid!),
+    queryFn: () => getMedication(medicationUuid),
     enabled: !!basedOn && !!medicationUuid,
     staleTime: Infinity,
   });
