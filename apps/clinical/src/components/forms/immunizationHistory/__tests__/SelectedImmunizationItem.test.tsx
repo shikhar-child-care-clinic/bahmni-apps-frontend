@@ -32,6 +32,7 @@ const defaultProps = {
   administeredLocationTag: mockLocations,
   attributes: mockFullAttributes,
   vaccineDrugs: mockCovid19VaccineDrugs,
+  storeKey: 'immunizationHistory',
 };
 
 describe('SelectedImmunizationItem', () => {

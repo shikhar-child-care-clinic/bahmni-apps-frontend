@@ -1,4 +1,4 @@
-import { useImmunizationHistoryStore } from '../stores';
+import { getImmunizationStore } from '../stores';
 import {
   mockAllRequiredAttributes,
   mockAttributesWithOptionalAdministered,
@@ -8,7 +8,8 @@ import {
 } from './__mocks__/immunizationHistoryMocks';
 
 const secondVaccineCode = { code: 'flu', display: 'Influenza Vaccine' };
-const store = () => useImmunizationHistoryStore.getState();
+const STORE_KEY = 'immunizationHistory';
+const store = () => getImmunizationStore(STORE_KEY).getState();
 
 type FieldUpdateCase = [fieldName: string, actionName: string, value: unknown];
 

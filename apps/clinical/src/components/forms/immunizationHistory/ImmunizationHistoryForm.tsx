@@ -19,6 +19,7 @@ import type { ConsultationStartEventPayload } from '../../../events/startConsult
 import { useClinicalConfig } from '../../../providers/clinicalConfig';
 import type { InputControl as ClinicalInputControlConfig } from '../../../providers/clinicalConfig/models';
 import SelectedImmunizationItem from './components/SelectedImmunizationItem';
+import { IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY } from './constants';
 import { useImmunizationHistoryStore } from './stores';
 import styles from './styles/ImmunizationHistoryForm.module.scss';
 import {
@@ -36,13 +37,15 @@ const ImmunizationHistoryForm = ({
 }) => {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
+  const immunizationFormType =
+    formConfig?.type ?? IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY;
   const {
     addImmunization,
     addImmunizationWithDefaults,
     removeImmunization,
     selectedImmunizations,
     setAttributes,
-  } = useImmunizationHistoryStore();
+  } = useImmunizationHistoryStore(immunizationFormType);
 
   const basedOn = consultationStartEventPayload?.basedOn as
     | MedicationRequest
@@ -323,6 +326,7 @@ const ImmunizationHistoryForm = ({
                 attributes={attributes}
                 administeredLocationTag={administeredLocationTagData}
                 vaccineDrugs={vaccineMedications}
+                storeKey={immunizationFormType}
               />
             </SelectedItem>
           ))}

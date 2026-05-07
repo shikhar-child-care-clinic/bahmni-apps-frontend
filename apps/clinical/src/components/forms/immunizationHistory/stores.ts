@@ -1,16 +1,27 @@
 import { generateUUID } from '@bahmni/services';
-import { create } from 'zustand';
+import { useStore } from 'zustand';
+import { createStore } from 'zustand/vanilla';
 import { InputControlAttributes } from '../../../providers/clinicalConfig/models';
 import {
   ImmunizationDrug,
   ImmunizationHistoryState,
   ImmunizationInputEntry,
   ImmunizationLocation,
+  ImmunizationStoreKey,
 } from './models';
 import { findAttr } from './utils';
 
-export const useImmunizationHistoryStore = create<ImmunizationHistoryState>(
-  (set, get) => ({
+type ImmunizationHistoryStoreApi = ReturnType<
+  typeof createImmunizationHistoryStore
+>;
+
+const storeRegistry = new Map<
+  ImmunizationStoreKey,
+  ImmunizationHistoryStoreApi
+>();
+
+function createImmunizationHistoryStore() {
+  return createStore<ImmunizationHistoryState>((set, get) => ({
     selectedImmunizations: [],
     attributes: undefined,
 
@@ -337,5 +348,20 @@ export const useImmunizationHistoryStore = create<ImmunizationHistoryState>(
     },
 
     getState: () => get(),
-  }),
-);
+  }));
+}
+
+export function getImmunizationStore(
+  key: ImmunizationStoreKey,
+): ImmunizationHistoryStoreApi {
+  if (!storeRegistry.has(key)) {
+    storeRegistry.set(key, createImmunizationHistoryStore());
+  }
+  return storeRegistry.get(key)!;
+}
+
+export function useImmunizationHistoryStore(
+  key: ImmunizationStoreKey,
+): ImmunizationHistoryState {
+  return useStore(getImmunizationStore(key));
+}

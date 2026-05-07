@@ -12,7 +12,7 @@ import { Immunization } from 'fhir/r4';
 import React from 'react';
 import { useClinicalConfig } from '../../../../providers/clinicalConfig';
 import ImmunizationHistoryForm from '../ImmunizationHistoryForm';
-import { useImmunizationHistoryStore } from '../stores';
+import { getImmunizationStore } from '../stores';
 import { createImmunizationBundleEntries } from '../utils';
 import {
   mockClinicalConfigContext,
@@ -62,7 +62,7 @@ const createWrapper = () => {
 describe('ImmunizationHistoryForm Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    useImmunizationHistoryStore.getState().reset();
+    getImmunizationStore('immunizationHistory').getState().reset();
 
     (useClinicalConfig as jest.Mock).mockReturnValue(mockClinicalConfigContext);
     (searchFHIRConcepts as jest.Mock).mockImplementation((uuid: string) => {
@@ -119,8 +119,8 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
       expect(screen.getByText('Added Immunization')).toBeInTheDocument();
     });
 
-    const { id } =
-      useImmunizationHistoryStore.getState().selectedImmunizations[0];
+    const { id } = getImmunizationStore('immunizationHistory').getState()
+      .selectedImmunizations[0];
 
     await user.type(screen.getByPlaceholderText('Search drug name'), 'COVID');
     await waitFor(() => {
@@ -129,7 +129,7 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
     await user.click(screen.getByText('COVID-19 Drug'));
 
     await act(async () => {
-      useImmunizationHistoryStore
+      getImmunizationStore('immunizationHistory')
         .getState()
         .updateAdministeredOn(id, new Date('2025-01-15'));
     });
@@ -145,7 +145,9 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
 
     let isValid = false;
     await act(async () => {
-      isValid = useImmunizationHistoryStore.getState().validateAll();
+      isValid = getImmunizationStore('immunizationHistory')
+        .getState()
+        .validateAll();
     });
     expect(isValid).toBe(true);
 
@@ -161,7 +163,9 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
       ).not.toBeInTheDocument();
     });
 
-    const { selectedImmunizations } = useImmunizationHistoryStore.getState();
+    const { selectedImmunizations } = getImmunizationStore(
+      'immunizationHistory',
+    ).getState();
     const bundleEntries = createImmunizationBundleEntries({
       selectedImmunizations,
       encounterSubject: mockEncounterSubject,
@@ -221,7 +225,9 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
 
     let isValid = true;
     await act(async () => {
-      isValid = useImmunizationHistoryStore.getState().validateAll();
+      isValid = getImmunizationStore('immunizationHistory')
+        .getState()
+        .validateAll();
     });
     expect(isValid).toBe(false);
 
@@ -283,8 +289,9 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
     expect(screen.queryByText('Added Immunization')).not.toBeInTheDocument();
 
     const bundleEntries = createImmunizationBundleEntries({
-      selectedImmunizations:
-        useImmunizationHistoryStore.getState().selectedImmunizations,
+      selectedImmunizations: getImmunizationStore(
+        'immunizationHistory',
+      ).getState().selectedImmunizations,
       encounterSubject: mockEncounterSubject,
       encounterReference: 'Encounter/encounter-uuid',
       practitionerUUID: 'practitioner-uuid',

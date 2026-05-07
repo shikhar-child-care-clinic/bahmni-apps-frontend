@@ -1,5 +1,13 @@
 import { Reference } from 'fhir/r4';
 import { InputControlAttributes } from '../../../providers/clinicalConfig/models';
+import {
+  IMMUNIZATION_ADMINISTRATION_INPUT_CONTROL_KEY,
+  IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY,
+} from './constants';
+
+export type ImmunizationStoreKey =
+  | typeof IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY
+  | typeof IMMUNIZATION_ADMINISTRATION_INPUT_CONTROL_KEY;
 
 export interface ImmunizationDrug {
   code?: string;
