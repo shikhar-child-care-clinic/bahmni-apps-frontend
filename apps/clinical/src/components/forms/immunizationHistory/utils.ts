@@ -4,7 +4,9 @@ import {
   Extension,
   Immunization,
   Medication,
+  MedicationDispense,
   MedicationRequest,
+  Reference,
   ValueSet,
   ValueSetExpansionContains,
 } from 'fhir/r4';
@@ -24,6 +26,7 @@ import {
 import {
   CreateImmunizationBundleEntriesParams,
   ImmunizationDrug,
+  ImmunizationInputEntry,
   ImmunizationLocation,
   LocationComboBoxItem,
   ValueSetComboBoxItem,
@@ -170,13 +173,49 @@ export function buildBasedOnImmunizationEntry(
   };
 }
 
+function createMedicationDispenseBundleEntry(
+  entry: ImmunizationInputEntry,
+  encounterSubject: Reference,
+  encounterReference: string,
+  practitionerUUID: string,
+): BundleEntry {
+  const resource: MedicationDispense = {
+    resourceType: 'MedicationDispense',
+    status: 'completed',
+    authorizingPrescription: [
+      { reference: `MedicationRequest/${entry.basedOnReference}` },
+    ],
+    subject: encounterSubject,
+    context: createEncounterReferenceFromString(encounterReference),
+    performer: [{ actor: createPractitionerReference(practitionerUUID) }],
+    ...(entry.drug?.code
+      ? {
+          medicationReference: {
+            reference: `Medication/${entry.drug.code}`,
+            display: entry.drug.display,
+          },
+        }
+      : {
+          medicationCodeableConcept: {
+            coding: [
+              {
+                code: entry.vaccineCode.code,
+                display: entry.vaccineCode.display,
+              },
+            ],
+          },
+        }),
+  };
+  return createBundleEntry(`urn:uuid:${generateUUID()}`, resource, 'POST');
+}
+
 export function createImmunizationBundleEntries({
   selectedImmunizations,
   encounterSubject,
   encounterReference,
   practitionerUUID,
 }: CreateImmunizationBundleEntriesParams): BundleEntry[] {
-  return selectedImmunizations.map((entry) => {
+  return selectedImmunizations.flatMap((entry) => {
     const resource: Immunization = {
       resourceType: 'Immunization',
       status: 'completed',
@@ -233,6 +272,20 @@ export function createImmunizationBundleEntries({
       ],
     };
 
-    return createBundleEntry(`urn:uuid:${generateUUID()}`, resource, 'POST');
+    const immunizationEntry = createBundleEntry(
+      `urn:uuid:${generateUUID()}`,
+      resource,
+      'POST',
+    );
+    if (!entry.basedOnReference) return [immunizationEntry];
+    return [
+      immunizationEntry,
+      createMedicationDispenseBundleEntry(
+        entry,
+        encounterSubject,
+        encounterReference,
+        practitionerUUID,
+      ),
+    ];
   });
 }
