@@ -381,8 +381,6 @@ const PatientRegister = () => {
                   <DocumentPrintButton
                     category="patientRegistration"
                     renderContext={{ patientUuid }}
-                    fallbackTemplateId="REG_CARD_V1"
-                    defaultLabel={t('PRINT_CARD')}
                     data-testid="print-registration-card"
                   />
                 )}

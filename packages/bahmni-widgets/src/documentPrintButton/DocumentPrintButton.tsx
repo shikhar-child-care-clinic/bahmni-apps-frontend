@@ -10,10 +10,6 @@ interface DocumentPrintButtonProps {
   category: string;
   /** Context object passed to the template render API (patientUuid, encounterUuid, etc.) */
   renderContext: Record<string, string>;
-  /** Fallback template ID used when no template is active yet */
-  fallbackTemplateId: string;
-  /** Button/MenuButton label — used as the MenuButton label when multiple templates exist */
-  defaultLabel: string;
   size?: 'sm' | 'md' | 'lg';
   'data-testid'?: string;
 }
@@ -21,8 +17,6 @@ interface DocumentPrintButtonProps {
 export const DocumentPrintButton = ({
   category,
   renderContext,
-  fallbackTemplateId,
-  defaultLabel: _defaultLabel,
   size,
   'data-testid': dataTestId,
 }: DocumentPrintButtonProps) => {
@@ -34,7 +28,7 @@ export const DocumentPrintButton = ({
   const resolvedTemplate = activeTemplate ?? templates[0] ?? null;
 
   const { triggerPrint } = usePrintDocument({
-    templateId: resolvedTemplate?.id ?? fallbackTemplateId,
+    templateId: resolvedTemplate?.id,
     context: renderContext,
   });
 

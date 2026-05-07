@@ -1,4 +1,8 @@
-import { renderAsHtml, getUserPreferredLocale } from '@bahmni/services';
+import {
+  renderAsHtml,
+  getUserPreferredLocale,
+  notificationService,
+} from '@bahmni/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -8,6 +12,11 @@ jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   renderAsHtml: jest.fn(),
   getUserPreferredLocale: jest.fn(() => 'en'),
+  notificationService: { showError: jest.fn() },
+  getFormattedError: jest.fn((error: unknown) => ({
+    title: 'Error',
+    message: error instanceof Error ? error.message : String(error),
+  })),
 }));
 
 const mockRenderAsHtml = renderAsHtml as jest.MockedFunction<
@@ -15,6 +24,7 @@ const mockRenderAsHtml = renderAsHtml as jest.MockedFunction<
 >;
 const mockGetUserPreferredLocale =
   getUserPreferredLocale as jest.MockedFunction<typeof getUserPreferredLocale>;
+const mockShowError = notificationService.showError as jest.Mock;
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -278,6 +288,7 @@ describe('usePrintDocument', () => {
 
     expect(result.current.printError).toBe('Error: Template not found');
     expect(result.current.isPrinting).toBe(false);
+    expect(mockShowError).toHaveBeenCalledWith('Error', 'Template not found');
   });
 
   it('uses locale from getUserPreferredLocale', async () => {

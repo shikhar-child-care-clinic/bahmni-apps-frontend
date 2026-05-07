@@ -1,4 +1,9 @@
-import { renderAsHtml, getUserPreferredLocale } from '@bahmni/services';
+import {
+  renderAsHtml,
+  getUserPreferredLocale,
+  notificationService,
+  getFormattedError,
+} from '@bahmni/services';
 import type { RenderRequest } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
@@ -107,7 +112,10 @@ export function usePrintDocument({
   }, [triggered, isLoading, htmlContent]);
 
   useEffect(() => {
-    if (queryError) setTriggered(false);
+    if (!queryError) return;
+    const { title, message } = getFormattedError(queryError);
+    notificationService.showError(title, message);
+    setTriggered(false);
   }, [queryError]);
 
   return {
