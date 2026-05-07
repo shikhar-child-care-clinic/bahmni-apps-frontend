@@ -1,26 +1,8 @@
 import type { BundleEntry, Reference } from 'fhir/r4';
 import type { ConsultationStartEventPayload } from '../../events/startConsultation';
 
-export type InputControlKey =
-  | 'encounterDetails'
-  | 'allergies'
-  | 'investigations'
-  | 'conditionsAndDiagnoses'
-  | 'medications'
-  | 'vaccinations'
-  | 'immunizationHistory'
-  | 'observationForms';
-
-export interface EncounterContext {
-  encounterSubject: Reference;
-  encounterReference: string;
-  practitionerUUID: string;
-  consultationDate: Date;
-  statDurationInMilliseconds?: number;
-}
-
-export interface EncounterInputControl {
-  key: InputControlKey;
+export interface InputControl {
+  key: string;
   encounterTypes?: string[];
   privilege?: string[];
   component: React.ComponentType<{
@@ -31,4 +13,12 @@ export interface EncounterInputControl {
   hasData: () => boolean;
   subscribe: (cb: () => void) => () => void;
   createBundleEntries?: (ctx: EncounterContext) => BundleEntry[];
+}
+
+export interface EncounterContext {
+  encounterSubject: Reference;
+  encounterReference: string;
+  practitionerUUID: string;
+  consultationDate: Date;
+  statDurationInMilliseconds?: number;
 }

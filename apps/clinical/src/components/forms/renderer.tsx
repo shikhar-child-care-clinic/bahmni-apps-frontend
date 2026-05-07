@@ -2,10 +2,10 @@ import { MenuItemDivider } from '@bahmni/design-system';
 import { useHasPrivilege } from '@bahmni/widgets';
 import React from 'react';
 import type { ConsultationStartEventPayload } from '../../../events/startConsultation';
-import type { EncounterInputControl } from '../models';
+import type { InputControl } from './models';
 
 interface InputControlRendererProps {
-  entry: EncounterInputControl;
+  entry: InputControl;
   encounterType: string;
   consultationStartEventPayload: ConsultationStartEventPayload;
 }

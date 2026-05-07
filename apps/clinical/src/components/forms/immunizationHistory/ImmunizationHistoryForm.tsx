@@ -18,6 +18,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ConsultationStartEventPayload } from '../../../events/startConsultation';
 import { useClinicalConfig } from '../../../providers/clinicalConfig';
 import SelectedImmunizationItem from './components/SelectedImmunizationItem';
+import { IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY } from './constants';
 import { useImmunizationHistoryStore } from './stores';
 import styles from './styles/ImmunizationHistoryForm.module.scss';
 import {
@@ -68,7 +69,9 @@ const ImmunizationHistoryForm = ({
   } = useClinicalConfig();
 
   const immunizationHistory =
-    clinicalConfig?.consultationPad?.immunizationHistory;
+    clinicalConfig?.consultationPad?.inputControls?.find(
+      (c) => c.type === IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY,
+    );
   const loginLocation = getUserLoginLocation();
   const { metadata, attributes } = immunizationHistory ?? {};
   const vaccineConceptSetUuid = metadata?.vaccineConceptSetUuid as
