@@ -96,6 +96,7 @@ describe('VitalFlowSheet Empty State', () => {
   };
 
   beforeEach(() => {
+    mockCapturedSortable = undefined;
     jest.clearAllMocks();
   });
 
