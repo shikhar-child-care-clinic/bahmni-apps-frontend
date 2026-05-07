@@ -5,7 +5,7 @@ import { useClinicalAppData } from '../../../hooks/useClinicalAppData';
 import useObservationFormsSearch from '../../../hooks/useObservationFormsSearch';
 import { usePinnedObservationForms } from '../../../hooks/usePinnedObservationForms';
 import { useObservationFormsStore } from '../../../stores/observationFormsStore';
-import ObservationForms from './ObservationForms';
+import ObservationForms from '../../forms/observations/ObservationForms';
 
 const ObservationFormsPanel: React.FC = () => {
   const { user } = useActivePractitioner();

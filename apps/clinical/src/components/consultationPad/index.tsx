@@ -21,16 +21,12 @@ import { useEncounterSession } from '../../hooks/useEncounterSession';
 import { useClinicalConfig } from '../../providers/clinicalConfig';
 import { useEncounterDetailsStore } from '../../stores/encounterDetailsStore';
 import { useObservationFormsStore } from '../../stores/observationFormsStore';
-import { InputControlRenderer } from '../forms';
 import ObservationFormsContainer from '../forms/observations/ObservationFormsContainer';
-import { ENCOUNTER_DETAILS_INPUT_CONTROL_KEY } from './constants';
+import InputControlRenderer from './components/InputControlRenderer';
+import { loadEncounterInputControls } from './inputControlRegistry';
 import { submitConsultation } from './services';
 import styles from './styles/index.module.scss';
-import {
-  captureUpdatedResources,
-  getActiveEntries,
-  loadEncounterInputControls,
-} from './utils';
+import { captureUpdatedResources, getActiveEntries } from './utils';
 
 interface ConsultationPadProps {
   encounterType: string;
@@ -67,9 +63,8 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
   const resolvedEncounterType = useMemo(() => {
     return (
       (encounterType ||
-        (clinicalConfig?.consultationPad?.inputControls?.find(
-          (c) => c.type === ENCOUNTER_DETAILS_INPUT_CONTROL_KEY,
-        )?.metadata?.defaultEncounterType as string | undefined)) ??
+        (clinicalConfig?.consultationPad?.encounterDetails?.metadata
+          ?.defaultEncounterType as string | undefined)) ??
       null
     );
   }, [encounterType, clinicalConfig]);
@@ -129,6 +124,8 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
   }, []);
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     const validationResults = activeEntries.map((entry) => ({
       key: entry.key,
       valid: entry.validate(),

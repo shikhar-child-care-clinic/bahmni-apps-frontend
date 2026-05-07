@@ -54,7 +54,6 @@ export const validFullClinicalConfig = {
       environmentalAllergenUuid: '162554AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
       allergyReactionUuid: '162555AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
     },
-    inputControls: [],
   },
 };
 
@@ -105,6 +104,5 @@ export const minimalClinicalConfig = {
       environmentalAllergenUuid: '162554AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
       allergyReactionUuid: '162555AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
     },
-    inputControls: [],
   },
 };

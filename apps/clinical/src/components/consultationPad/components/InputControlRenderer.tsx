@@ -1,10 +1,10 @@
 import { MenuItemDivider } from '@bahmni/design-system';
 import { useHasPrivilege } from '@bahmni/widgets';
 import React from 'react';
-import type { InputControl } from './models';
+import type { EncounterInputControl } from '../models';
 
 interface InputControlRendererProps {
-  entry: InputControl;
+  entry: EncounterInputControl;
   encounterType: string;
 }
 

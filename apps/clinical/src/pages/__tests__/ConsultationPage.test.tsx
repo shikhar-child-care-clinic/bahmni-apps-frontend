@@ -174,7 +174,6 @@ const mockClinicalConfig = {
       environmentalAllergenUuid: 'uuid-3',
       allergyReactionUuid: 'uuid-4',
     },
-    inputControls: [],
   },
 };
 

@@ -13,8 +13,6 @@ export interface InputControlAttributes {
 export interface InputControl<
   T extends Record<string, unknown> = Record<string, unknown>,
 > {
-  type: string;
-  label?: string;
   metadata: T;
   encounterTypes: string[];
   privileges: string[];
@@ -24,7 +22,14 @@ export interface InputControl<
 export interface ConsultationPad {
   allergyConceptMap: AllergyConceptMap;
   statDurationInMilliseconds?: number;
-  inputControls: InputControl[];
+  encounterDetails: InputControl;
+  allergies?: InputControl;
+  investigations?: InputControl;
+  medications?: InputControl;
+  observationForms?: InputControl;
+  vaccinations?: InputControl;
+  conditionsAndDiagnoses?: InputControl;
+  immunizationHistory?: InputControl;
 }
 
 export interface Dashboard {
