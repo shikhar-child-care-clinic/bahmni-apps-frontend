@@ -174,6 +174,10 @@ export {
   type MedicationBundleEntryInput,
 } from './medicationService';
 export {
+  createMedicationDispenseBundleEntry,
+  type MedicationDispenseBundleEntryInput,
+} from './medicationDispenseService';
+export {
   getPatientRadiologyInvestigations,
   getPatientRadiologyInvestigationBundle,
   getPatientRadiologyInvestigationBundleWithImagingStudy,
