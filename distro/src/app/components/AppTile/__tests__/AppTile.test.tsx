@@ -12,9 +12,15 @@ jest.mock('react-router-dom', () => ({
 
 jest.mock('@bahmni/design-system', () => ({
   ClickableTile: ({ children, onClick, className, ...props }: any) => (
-    <div onClick={onClick} className={className} data-testid="tile" {...props}>
+    <button
+      type="button"
+      onClick={onClick}
+      className={className}
+      data-testid="tile"
+      {...props}
+    >
       {children}
-    </div>
+    </button>
   ),
   Icon: ({ name, id, ...props }: any) => (
     <div data-testid={`icon-${id}`} {...props}>

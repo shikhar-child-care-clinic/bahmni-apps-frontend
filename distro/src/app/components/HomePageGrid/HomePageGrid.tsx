@@ -1,4 +1,9 @@
-import { InlineNotification, Grid, Column } from '@bahmni/design-system';
+import {
+  InlineNotification,
+  Grid,
+  Column,
+  SkeletonPlaceholder,
+} from '@bahmni/design-system';
 import {
   type Module,
   getVisibleModules,
@@ -55,7 +60,7 @@ export const HomePageGrid: React.FC = () => {
               sm={4}
               className={styles.tileColumn}
             >
-              <div className={styles.skeletonTile} />
+              <SkeletonPlaceholder className={styles.skeletonTile} />
             </Column>
           ))}
         </Grid>

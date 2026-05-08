@@ -101,42 +101,42 @@ exports[`HomePageGrid Snapshots matches snapshot in loading state 1`] = `
         class="tileColumn cds--sm:col-span-4 cds--md:col-span-4 cds--lg:col-span-5 cds--css-grid-column"
       >
         <div
-          class="skeletonTile"
+          class="cds--skeleton__placeholder skeletonTile"
         />
       </div>
       <div
         class="tileColumn cds--sm:col-span-4 cds--md:col-span-4 cds--lg:col-span-5 cds--css-grid-column"
       >
         <div
-          class="skeletonTile"
+          class="cds--skeleton__placeholder skeletonTile"
         />
       </div>
       <div
         class="tileColumn cds--sm:col-span-4 cds--md:col-span-4 cds--lg:col-span-5 cds--css-grid-column"
       >
         <div
-          class="skeletonTile"
+          class="cds--skeleton__placeholder skeletonTile"
         />
       </div>
       <div
         class="tileColumn cds--sm:col-span-4 cds--md:col-span-4 cds--lg:col-span-5 cds--css-grid-column"
       >
         <div
-          class="skeletonTile"
+          class="cds--skeleton__placeholder skeletonTile"
         />
       </div>
       <div
         class="tileColumn cds--sm:col-span-4 cds--md:col-span-4 cds--lg:col-span-5 cds--css-grid-column"
       >
         <div
-          class="skeletonTile"
+          class="cds--skeleton__placeholder skeletonTile"
         />
       </div>
       <div
         class="tileColumn cds--sm:col-span-4 cds--md:col-span-4 cds--lg:col-span-5 cds--css-grid-column"
       >
         <div
-          class="skeletonTile"
+          class="cds--skeleton__placeholder skeletonTile"
         />
       </div>
     </div>

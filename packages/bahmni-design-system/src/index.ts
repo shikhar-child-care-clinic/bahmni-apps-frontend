@@ -65,6 +65,10 @@ export { TooltipIcon, type TooltipIconProps } from './molecules/tooltipIcon';
 export { StatusTag, type StatusTagProps } from './molecules/statusTag';
 export { SkeletonText, type SkeletonTextProps } from './atoms/skeletonText';
 export {
+  SkeletonPlaceholder,
+  type SkeletonPlaceholderProps,
+} from './atoms/skeletonPlaceholder';
+export {
   DropdownSkeleton,
   type DropdownSkeletonProps,
 } from './atoms/dropdownSkeleton';
