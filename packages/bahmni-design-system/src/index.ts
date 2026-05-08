@@ -8,6 +8,8 @@ export {
 
 export { Close, TrashCan } from '@carbon/icons-react';
 
+export { ArrowRight, type ArrowRightProps } from './atoms/arrowRight';
+
 export { Button, type ButtonProps } from './atoms/button';
 export { IconButton, type IconButtonProps } from './atoms/iconButton';
 export { Breadcrumb, type BreadcrumbProps } from './atoms/breadcrumb';

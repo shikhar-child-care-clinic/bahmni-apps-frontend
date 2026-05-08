@@ -1,6 +1,10 @@
-import { ClickableTile, Icon, ICON_SIZE } from '@bahmni/design-system';
+import {
+  ArrowRight,
+  ClickableTile,
+  Icon,
+  ICON_SIZE,
+} from '@bahmni/design-system';
 import { useTranslation } from '@bahmni/services';
-import { ArrowRight } from '@carbon/icons-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './styles/AppTile.module.scss';

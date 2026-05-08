@@ -28,6 +28,9 @@ jest.mock('@bahmni/design-system', () => ({
     </div>
   ),
   ICON_SIZE: { LG: 'lg', X2: '2x' },
+  ArrowRight: ({ 'data-testid': dataTestId, ...props }: any) => (
+    <svg data-testid={dataTestId} {...props} />
+  ),
 }));
 
 describe('AppTile', () => {
