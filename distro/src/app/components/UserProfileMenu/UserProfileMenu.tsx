@@ -1,3 +1,4 @@
+import { SkeletonPlaceholder } from '@bahmni/design-system';
 import { useTranslation, logout, getFormattedError } from '@bahmni/services';
 import { useActivePractitioner, useNotification } from '@bahmni/widgets';
 import { UserAvatar } from '@carbon/icons-react';
@@ -14,8 +15,8 @@ export const UserProfileMenu: React.FC = () => {
 
   if (loading) {
     return (
-      <div className={styles.loading} role="status">
-        {t('HOME_LOADING')}
+      <div role="status" aria-label={t('HOME_LOADING')}>
+        <SkeletonPlaceholder className={styles.skeleton} />
       </div>
     );
   }

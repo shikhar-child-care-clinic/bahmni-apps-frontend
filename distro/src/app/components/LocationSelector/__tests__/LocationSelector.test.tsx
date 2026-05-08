@@ -19,6 +19,9 @@ jest.mock('@bahmni/design-system', () => ({
       ))}
     </div>
   ),
+  SkeletonPlaceholder: ({ className }: any) => (
+    <div data-testid="skeleton-placeholder" className={className} />
+  ),
 }));
 
 const renderWithContext = (contextOverrides = {}) => {
@@ -52,10 +55,11 @@ describe('LocationSelector', () => {
     );
   });
 
-  it('renders loading state', () => {
+  it('renders skeleton while loading', () => {
     renderWithContext({ loading: true });
 
-    expect(screen.getByRole('status')).toHaveTextContent('Loading');
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.getByTestId('skeleton-placeholder')).toBeInTheDocument();
   });
 
   it('renders error state', () => {
