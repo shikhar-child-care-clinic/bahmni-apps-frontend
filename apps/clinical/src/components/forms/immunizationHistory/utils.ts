@@ -4,9 +4,7 @@ import {
   Extension,
   Immunization,
   Medication,
-  MedicationDispense,
   MedicationRequest,
-  Reference,
   ValueSet,
   ValueSetExpansionContains,
 } from 'fhir/r4';
@@ -26,7 +24,6 @@ import {
 import {
   CreateImmunizationBundleEntriesParams,
   ImmunizationDrug,
-  ImmunizationInputEntry,
   ImmunizationLocation,
   LocationComboBoxItem,
   ValueSetComboBoxItem,
@@ -173,49 +170,13 @@ export function buildBasedOnImmunizationEntry(
   };
 }
 
-function createMedicationDispenseBundleEntry(
-  entry: ImmunizationInputEntry,
-  encounterSubject: Reference,
-  encounterReference: string,
-  practitionerUUID: string,
-): BundleEntry {
-  const resource: MedicationDispense = {
-    resourceType: 'MedicationDispense',
-    status: 'completed',
-    authorizingPrescription: [
-      { reference: `MedicationRequest/${entry.basedOnReference}` },
-    ],
-    subject: encounterSubject,
-    context: createEncounterReferenceFromString(encounterReference),
-    performer: [{ actor: createPractitionerReference(practitionerUUID) }],
-    ...(entry.drug?.code
-      ? {
-          medicationReference: {
-            reference: `Medication/${entry.drug.code}`,
-            display: entry.drug.display,
-          },
-        }
-      : {
-          medicationCodeableConcept: {
-            coding: [
-              {
-                code: entry.vaccineCode.code,
-                display: entry.vaccineCode.display,
-              },
-            ],
-          },
-        }),
-  };
-  return createBundleEntry(`urn:uuid:${generateUUID()}`, resource, 'POST');
-}
-
 export function createImmunizationBundleEntries({
   selectedImmunizations,
   encounterSubject,
   encounterReference,
   practitionerUUID,
 }: CreateImmunizationBundleEntriesParams): BundleEntry[] {
-  return selectedImmunizations.flatMap((entry) => {
+  return selectedImmunizations.map((entry) => {
     const resource: Immunization = {
       resourceType: 'Immunization',
       status: 'completed',
@@ -252,9 +213,6 @@ export function createImmunizationBundleEntries({
       extension: entry.drug
         ? resolveAdministeredProductExtension(entry.drug)
         : undefined,
-      basedOn: entry.basedOnReference
-        ? [{ reference: `MedicationRequest/${entry.basedOnReference}` }]
-        : undefined,
       encounter: createEncounterReferenceFromString(encounterReference),
       performer: [
         {
@@ -272,20 +230,6 @@ export function createImmunizationBundleEntries({
       ],
     };
 
-    const immunizationEntry = createBundleEntry(
-      `urn:uuid:${generateUUID()}`,
-      resource,
-      'POST',
-    );
-    if (!entry.basedOnReference) return [immunizationEntry];
-    return [
-      immunizationEntry,
-      createMedicationDispenseBundleEntry(
-        entry,
-        encounterSubject,
-        encounterReference,
-        practitionerUUID,
-      ),
-    ];
+    return createBundleEntry(`urn:uuid:${generateUUID()}`, resource, 'POST');
   });
 }

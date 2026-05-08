@@ -168,15 +168,7 @@ export {
   type Frequency as MedicationFrequency,
   type OrderAttribute,
 } from './medicationRequestService';
-export {
-  getMedication,
-  createMedicationBundleEntry,
-  type MedicationBundleEntryInput,
-} from './medicationService';
-export {
-  createMedicationDispenseBundleEntry,
-  type MedicationDispenseBundleEntryInput,
-} from './medicationDispenseService';
+export { getMedication } from './medicationService';
 export {
   getPatientRadiologyInvestigations,
   getPatientRadiologyInvestigationBundle,

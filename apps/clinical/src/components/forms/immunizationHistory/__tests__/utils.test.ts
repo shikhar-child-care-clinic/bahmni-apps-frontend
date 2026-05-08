@@ -1,9 +1,4 @@
-import {
-  Immunization,
-  MedicationDispense,
-  Medication,
-  MedicationRequest,
-} from 'fhir/r4';
+import { Immunization, Medication, MedicationRequest } from 'fhir/r4';
 import { getMedicationDisplay } from '../../../../services/medicationService';
 import { ADMINISTERED_PRODUCT_EXTENSION_URL } from '../constants';
 import {
@@ -21,8 +16,6 @@ import {
   mockFetchedMedication,
   mockImmunizationEntry,
   mockImmunizationEntryComplete,
-  mockImmunizationEntryWithBasedOn,
-  mockImmunizationEntryWithBasedOnAndNullFields,
   mockLocations,
   mockLocationsWithChildren,
   mockMedicationRequest,
@@ -482,93 +475,6 @@ describe('createImmunizationBundleEntries', () => {
     });
     expect(result[0].request?.method).toBe('POST');
   });
-
-  it.each([
-    [
-      'basedOnReference is set',
-      mockImmunizationEntryWithBasedOn,
-      [{ reference: 'MedicationRequest/med-request-uuid' }],
-    ],
-    ['basedOnReference is absent', mockImmunizationEntry, undefined],
-  ])('sets basedOn correctly when %s', (_, entry, expectedBasedOn) => {
-    const result = createImmunizationBundleEntries({
-      ...BASE_BUNDLE_PARAMS,
-      selectedImmunizations: [entry],
-    });
-    const resource = result[0].resource as Immunization;
-    expect(resource.basedOn).toEqual(expectedBasedOn);
-  });
-
-  it('returns one entry when entry has no basedOnReference', () => {
-    const result = createImmunizationBundleEntries({
-      ...BASE_BUNDLE_PARAMS,
-      selectedImmunizations: [mockImmunizationEntry],
-    });
-    expect(result).toHaveLength(1);
-  });
-
-  it('returns two entries when entry has basedOnReference', () => {
-    const result = createImmunizationBundleEntries({
-      ...BASE_BUNDLE_PARAMS,
-      selectedImmunizations: [mockImmunizationEntryWithBasedOn],
-    });
-    expect(result).toHaveLength(2);
-  });
-
-  it('second entry is a MedicationDispense resource when basedOnReference is set', () => {
-    const result = createImmunizationBundleEntries({
-      ...BASE_BUNDLE_PARAMS,
-      selectedImmunizations: [mockImmunizationEntryWithBasedOn],
-    });
-    const dispense = result[1].resource as MedicationDispense;
-    expect(dispense.resourceType).toBe('MedicationDispense');
-    expect(dispense.status).toBe('completed');
-    expect(dispense.authorizingPrescription).toEqual([
-      { reference: 'MedicationRequest/med-request-uuid' },
-    ]);
-    expect(dispense.subject).toEqual(mockEncounterSubject);
-    expect(dispense.context).toEqual({ reference: 'Encounter/encounter-uuid' });
-    expect(dispense.performer).toEqual([
-      {
-        actor: {
-          reference: 'Practitioner/practitioner-uuid',
-          type: 'Practitioner',
-        },
-      },
-    ]);
-  });
-
-  it.each([
-    [
-      'drug.code is present',
-      mockImmunizationEntryWithBasedOn,
-      {
-        medicationReference: {
-          reference: 'Medication/covid-drug-uuid',
-          display: 'COVID-19 Drug',
-        },
-      },
-    ],
-    [
-      'drug.code is absent',
-      mockImmunizationEntryWithBasedOnAndNullFields,
-      {
-        medicationCodeableConcept: {
-          coding: [{ code: 'covid-19', display: 'COVID-19 Vaccine' }],
-        },
-      },
-    ],
-  ])(
-    'MedicationDispense uses correct medication field when %s',
-    (_, entry, expectedMedicationField) => {
-      const result = createImmunizationBundleEntries({
-        ...BASE_BUNDLE_PARAMS,
-        selectedImmunizations: [entry],
-      });
-      const dispense = result[1].resource as MedicationDispense;
-      expect(dispense).toMatchObject(expectedMedicationField);
-    },
-  );
 });
 
 describe('buildBasedOnImmunizationEntry', () => {
