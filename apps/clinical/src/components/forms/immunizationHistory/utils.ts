@@ -17,6 +17,7 @@ import {
 } from '../../../utils/fhir/referenceCreator';
 import {
   ADMINISTERED_PRODUCT_EXTENSION_URL,
+  BASED_ON_EXTENSION_URL,
   ENTERING_PROVIDER_CODE,
   ENTERING_PROVIDER_DISPLAY,
   ENTERING_PROVIDER_SYSTEM,
@@ -38,6 +39,18 @@ function resolveAdministeredProductExtension(
       valueReference: drug.code
         ? { reference: `Medication/${drug.code}`, display: drug.display }
         : { display: drug.display },
+    },
+  ];
+}
+
+function resolveBasedOnExtension(
+  basedOnReference: string | null | undefined,
+): Extension[] {
+  if (!basedOnReference) return [];
+  return [
+    {
+      url: BASED_ON_EXTENSION_URL,
+      valueReference: { reference: `MedicationRequest/${basedOnReference}` },
     },
   ];
 }
@@ -177,6 +190,10 @@ export function createImmunizationBundleEntries({
   practitionerUUID,
 }: CreateImmunizationBundleEntriesParams): BundleEntry[] {
   return selectedImmunizations.map((entry) => {
+    const extensions = [
+      ...(entry.drug ? resolveAdministeredProductExtension(entry.drug) : []),
+      ...resolveBasedOnExtension(entry.basedOnReference),
+    ];
     const resource: Immunization = {
       resourceType: 'Immunization',
       status: 'completed',
@@ -210,9 +227,7 @@ export function createImmunizationBundleEntries({
             },
           ]
         : undefined,
-      extension: entry.drug
-        ? resolveAdministeredProductExtension(entry.drug)
-        : undefined,
+      extension: extensions.length > 0 ? extensions : undefined,
       encounter: createEncounterReferenceFromString(encounterReference),
       performer: [
         {

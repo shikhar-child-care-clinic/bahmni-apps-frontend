@@ -1,6 +1,9 @@
 import { Immunization, Medication, MedicationRequest } from 'fhir/r4';
 import { getMedicationDisplay } from '../../../../services/medicationService';
-import { ADMINISTERED_PRODUCT_EXTENSION_URL } from '../constants';
+import {
+  ADMINISTERED_PRODUCT_EXTENSION_URL,
+  BASED_ON_EXTENSION_URL,
+} from '../constants';
 import {
   buildBasedOnImmunizationEntry,
   createImmunizationBundleEntries,
@@ -16,6 +19,8 @@ import {
   mockFetchedMedication,
   mockImmunizationEntry,
   mockImmunizationEntryComplete,
+  mockImmunizationEntryWithBasedOn,
+  mockImmunizationEntryWithBasedOnNoDrug,
   mockLocations,
   mockLocationsWithChildren,
   mockMedicationRequest,
@@ -411,6 +416,41 @@ describe('createImmunizationBundleEntries', () => {
       expect(resource.protocolApplied).toEqual(expectedProtocolApplied);
     },
   );
+
+  it('includes basedOn extension when basedOnReference is set and drug is absent', () => {
+    const result = createImmunizationBundleEntries({
+      ...BASE_BUNDLE_PARAMS,
+      selectedImmunizations: [mockImmunizationEntryWithBasedOnNoDrug],
+    });
+    const resource = result[0].resource as Immunization;
+    expect(resource.extension).toEqual([
+      {
+        url: BASED_ON_EXTENSION_URL,
+        valueReference: { reference: 'MedicationRequest/med-request-uuid' },
+      },
+    ]);
+  });
+
+  it('includes both administeredProduct and basedOn extensions when both drug and basedOnReference are set', () => {
+    const result = createImmunizationBundleEntries({
+      ...BASE_BUNDLE_PARAMS,
+      selectedImmunizations: [mockImmunizationEntryWithBasedOn],
+    });
+    const resource = result[0].resource as Immunization;
+    expect(resource.extension).toEqual([
+      {
+        url: ADMINISTERED_PRODUCT_EXTENSION_URL,
+        valueReference: {
+          reference: 'Medication/covid-drug-uuid',
+          display: 'COVID-19 Drug',
+        },
+      },
+      {
+        url: BASED_ON_EXTENSION_URL,
+        valueReference: { reference: 'MedicationRequest/med-request-uuid' },
+      },
+    ]);
+  });
 
   it('includes administeredProduct extension with display only when drug has no code', () => {
     const entryWithFreetextDrug = {

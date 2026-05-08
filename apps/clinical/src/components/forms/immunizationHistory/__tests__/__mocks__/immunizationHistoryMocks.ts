@@ -287,11 +287,10 @@ export const mockImmunizationEntryWithBasedOn: ImmunizationInputEntry = {
   administeredLocation: { uuid: 'location-uuid-1', display: 'Main Clinic' },
 };
 
-export const mockImmunizationEntryWithBasedOnAndNullFields: ImmunizationInputEntry =
-  {
-    ...mockImmunizationEntry,
-    basedOnReference: 'med-request-uuid',
-  };
+export const mockImmunizationEntryWithBasedOnNoDrug: ImmunizationInputEntry = {
+  ...mockImmunizationEntry,
+  basedOnReference: 'med-request-uuid',
+};
 
 export const mockMedicationRequest: MedicationRequest = {
   resourceType: 'MedicationRequest',
