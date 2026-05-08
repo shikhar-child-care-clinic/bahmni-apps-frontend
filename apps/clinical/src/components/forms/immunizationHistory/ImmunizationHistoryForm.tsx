@@ -319,10 +319,7 @@ const ImmunizationHistoryForm = ({
         </div>
       ) : null}
       {showSelectedImmunizations && (
-        <BoxWHeader
-          title={t('IMMUNIZATION_HISTORY_ADDED_ITEMS')}
-          className={styles.box}
-        >
+        <BoxWHeader title={t('IMMUNIZATION_HISTORY_ADDED_ITEMS')}>
           {selectedImmunizations.map((immunization) => (
             <SelectedItem
               key={immunization.id}

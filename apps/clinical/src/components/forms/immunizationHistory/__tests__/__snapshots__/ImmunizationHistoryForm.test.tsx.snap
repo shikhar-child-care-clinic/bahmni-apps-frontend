@@ -158,7 +158,7 @@ exports[`ImmunizationHistoryForm Snapshots matches snapshot with selected immuni
     </div>
     <div
       aria-label="Added Immunization"
-      class="_box_1jr6a_1 box cds--css-grid cds--css-grid--narrow cds--css-grid--full-width"
+      class="_box_1jr6a_1 cds--css-grid cds--css-grid--narrow cds--css-grid--full-width"
       data-testid="box-w-title"
       role="region"
     >
