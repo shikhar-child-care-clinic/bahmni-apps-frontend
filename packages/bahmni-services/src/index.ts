@@ -205,7 +205,10 @@ export {
   getDefaultDateFormat,
   logout,
   saveUserLocation,
+  updateSessionLocation,
   type User,
+  type UserLocation,
+  BAHMNI_USER_LOCATION_COOKIE,
 } from './userService';
 export { USER_PINNED_PREFERENCE_URL } from './observationFormsService/constants';
 export {
@@ -341,3 +344,13 @@ export type {
   DocumentUploadResponse,
   ProcessedFileData,
 } from './documentUploadService';
+
+export {
+  fetchModuleExtensions,
+  getExtensionsByPoint,
+  filterByPrivilege,
+  filterByOnlineStatus,
+  sortByOrder,
+  getVisibleModules,
+  type Module,
+} from './moduleService';
