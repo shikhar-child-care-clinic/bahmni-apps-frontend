@@ -92,6 +92,8 @@ const ImmunizationHistoryForm = ({
   const administeredLocationTag = metadata?.administeredLocationTag as
     | string
     | undefined;
+  const disableAdditionalAdministrations =
+    metadata?.disableAdditionalAdministrations as boolean | undefined;
 
   useEffect(() => {
     if (attributes) {
@@ -277,8 +279,7 @@ const ImmunizationHistoryForm = ({
       >
         {t(label)}
       </div>
-      {immunizationFormType !==
-        IMMUNIZATION_ADMINISTRATION_INPUT_CONTROL_KEY && (
+      {!disableAdditionalAdministrations && (
         <ComboBox
           id="immunization-history-search"
           data-testid="immunization-history-search-combobox"

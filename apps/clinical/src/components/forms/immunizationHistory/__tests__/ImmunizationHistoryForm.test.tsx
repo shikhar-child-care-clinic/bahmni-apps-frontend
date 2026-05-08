@@ -92,7 +92,7 @@ describe('ImmunizationHistoryForm', () => {
       ).toBeInTheDocument();
     });
 
-    it('hides search combobox when immunizationAdministration form type', () => {
+    it('hides search combobox when disableAdditionalAdministrations is true in metadata', () => {
       render(
         <ImmunizationHistoryForm
           consultationStartEventPayload={{}}
