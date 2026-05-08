@@ -19,7 +19,6 @@ import {
   mockSitesValueSet,
   mockStore,
   mockVaccinationBundle,
-  mockVaccinationBundleWithCovid,
   mockVaccineValueSet,
 } from './__mocks__/immunizationHistoryMocks';
 
@@ -417,23 +416,6 @@ describe('ImmunizationHistoryForm', () => {
           });
         },
       ],
-      [
-        'vaccinationDrugs is not yet available',
-        consultationPayloadWithBasedOn,
-        () => {
-          mockUseQuery.mockImplementation(({ queryKey: qk }: any) => {
-            if (qk[0] === 'medication')
-              return {
-                data: mockFetchedMedication,
-                isLoading: false,
-                error: null,
-              };
-            if (qk[0] === 'vaccinations')
-              return { data: undefined, isLoading: true, error: null };
-            return defaultQueryMock({ queryKey: qk }) as any;
-          });
-        },
-      ],
     ])(
       'does not call addImmunizationWithDefaults when %s',
       (_, payload, setupMocks) => {
@@ -448,45 +430,31 @@ describe('ImmunizationHistoryForm', () => {
       },
     );
 
-    it.each([
-      [
-        'matched drug in vaccineDrugs',
-        mockVaccinationBundleWithCovid,
-        { code: 'covid-drug-uuid', display: 'COVID-19 Drug' },
-      ],
-      [
-        'no matching drug in vaccineDrugs',
-        mockVaccinationBundle,
-        { display: 'COVID-19 Drug' },
-      ],
-    ])(
-      'calls addImmunizationWithDefaults with correct drug when %s',
-      async (_label, vaccinationBundle, expectedDrug) => {
-        mockUseQuery.mockImplementation(({ queryKey: qk }: any) => {
-          if (qk[0] === 'medication')
-            return {
-              data: mockFetchedMedication,
-              isLoading: false,
-              error: null,
-            };
-          if (qk[0] === 'vaccinations')
-            return { data: vaccinationBundle, isLoading: false, error: null };
-          return defaultQueryMock({ queryKey: qk }) as any;
-        });
-        render(
-          <ImmunizationHistoryForm
-            consultationStartEventPayload={consultationPayloadWithBasedOn}
-            formConfig={mockAdministrationFormConfig}
-          />,
+    it('calls addImmunizationWithDefaults with drug code from basedOnMedication', async () => {
+      mockUseQuery.mockImplementation(({ queryKey: qk }: any) => {
+        if (qk[0] === 'medication')
+          return {
+            data: mockFetchedMedication,
+            isLoading: false,
+            error: null,
+          };
+        return defaultQueryMock({ queryKey: qk }) as any;
+      });
+      render(
+        <ImmunizationHistoryForm
+          consultationStartEventPayload={consultationPayloadWithBasedOn}
+          formConfig={mockAdministrationFormConfig}
+        />,
+      );
+      await waitFor(() => {
+        expect(mockStore.addImmunizationWithDefaults).toHaveBeenCalledWith(
+          { code: 'covid-19', display: 'COVID-19 Drug' },
+          expect.objectContaining({
+            drug: { code: 'covid-drug-uuid', display: 'COVID-19 Drug' },
+          }),
         );
-        await waitFor(() => {
-          expect(mockStore.addImmunizationWithDefaults).toHaveBeenCalledWith(
-            { code: 'covid-19', display: 'COVID-19 Drug' },
-            expect.objectContaining({ drug: expectedDrug }),
-          );
-        });
-      },
-    );
+      });
+    });
 
     it('calls addImmunizationWithDefaults with administeredLocation and basedOnReference', async () => {
       mockGetUserLoginLocation.mockReturnValue({

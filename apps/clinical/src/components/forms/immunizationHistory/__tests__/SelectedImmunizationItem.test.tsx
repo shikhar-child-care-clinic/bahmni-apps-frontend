@@ -2,6 +2,7 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import SelectedImmunizationItem from '../components/SelectedImmunizationItem';
+import { IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY } from '../constants';
 import { useImmunizationHistoryStore } from '../stores';
 import {
   mockCovid19VaccineDrugs,
@@ -32,7 +33,7 @@ const defaultProps = {
   administeredLocationTag: mockLocations,
   attributes: mockFullAttributes,
   vaccineDrugs: mockCovid19VaccineDrugs,
-  storeKey: 'immunizationHistory',
+  storeKey: IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY,
 };
 
 describe('SelectedImmunizationItem', () => {

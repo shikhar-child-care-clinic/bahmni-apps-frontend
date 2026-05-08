@@ -150,7 +150,6 @@ export function getComboBoxItems(
 export function buildBasedOnImmunizationEntry(
   basedOn: MedicationRequest,
   basedOnMedication: Medication,
-  vaccineMedications: Medication[],
   loginLocation: { uuid?: string; display?: string; name: string },
 ) {
   const vaccineCode = {
@@ -158,13 +157,9 @@ export function buildBasedOnImmunizationEntry(
     display: basedOn.medicationReference?.display,
   };
 
-  const matchedDrug = vaccineMedications.find(
-    (med) => getMedicationDisplay(med) === basedOn.medicationReference?.display,
-  );
-
   const medicationDisplay = basedOn.medicationReference?.display;
   const drug = medicationDisplay
-    ? { code: matchedDrug?.id, display: medicationDisplay }
+    ? { code: basedOnMedication.id, display: medicationDisplay }
     : null;
 
   const administeredLocation = {

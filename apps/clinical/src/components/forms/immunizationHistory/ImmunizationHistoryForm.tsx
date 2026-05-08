@@ -174,15 +174,14 @@ const ImmunizationHistoryForm = ({
   );
 
   useEffect(() => {
-    if (!basedOn || !basedOnMedication || !vaccinationDrugs) return;
+    if (!basedOn || !basedOnMedication) return;
     const { vaccineCode, defaults } = buildBasedOnImmunizationEntry(
       basedOn,
       basedOnMedication,
-      vaccineMedications,
       loginLocation,
     );
     addImmunizationWithDefaults(vaccineCode, defaults);
-  }, [basedOn, basedOnMedication, vaccinationDrugs, basedOnReference]);
+  }, [basedOn, basedOnMedication, basedOnReference]);
 
   const vaccineCodeComboBoxItems = useMemo(
     () =>

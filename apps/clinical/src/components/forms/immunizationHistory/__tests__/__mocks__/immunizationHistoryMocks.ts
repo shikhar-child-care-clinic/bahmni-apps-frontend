@@ -292,6 +292,15 @@ export const mockImmunizationEntryWithBasedOnNoDrug: ImmunizationInputEntry = {
   basedOnReference: 'med-request-uuid',
 };
 
+export const mockImmunizationEntryWithBasedOnAndNullFields: ImmunizationInputEntry =
+  {
+    ...mockImmunizationEntry,
+    basedOnReference: 'med-request-uuid',
+    drug: null,
+    administeredOn: null,
+    administeredLocation: null,
+  };
+
 export const mockMedicationRequest: MedicationRequest = {
   resourceType: 'MedicationRequest',
   id: 'med-request-uuid',

@@ -14,7 +14,6 @@ import {
   getValueSetComboBoxItems,
 } from '../utils';
 import {
-  mockCovid19VaccineDrug,
   mockEncounterSubject,
   mockFetchedMedication,
   mockImmunizationEntry,
@@ -528,38 +527,22 @@ describe('buildBasedOnImmunizationEntry', () => {
     const { vaccineCode } = buildBasedOnImmunizationEntry(
       mockMedicationRequest,
       mockFetchedMedication,
-      [],
       mockLoginLocation,
     );
     expect(vaccineCode).toEqual({ code: 'covid-19', display: 'COVID-19 Drug' });
   });
 
-  it.each([
-    [
-      'matched drug found',
-      [mockCovid19VaccineDrug],
-      'COVID-19 Drug',
-      { code: 'covid-drug-uuid', display: 'COVID-19 Drug' },
-    ],
-    [
-      'no match in vaccineMedications',
-      [],
-      'COVID-19 Drug',
-      { code: undefined, display: 'COVID-19 Drug' },
-    ],
-  ])(
-    'sets drug correctly when %s',
-    (_, vaccineMedications, displayReturn, expectedDrug) => {
-      (getMedicationDisplay as jest.Mock).mockReturnValue(displayReturn);
-      const { defaults } = buildBasedOnImmunizationEntry(
-        mockMedicationRequest,
-        mockFetchedMedication,
-        vaccineMedications as Medication[],
-        mockLoginLocation,
-      );
-      expect(defaults.drug).toEqual(expectedDrug);
-    },
-  );
+  it('sets drug code from basedOnMedication.id and display from medicationReference', () => {
+    const { defaults } = buildBasedOnImmunizationEntry(
+      mockMedicationRequest,
+      mockFetchedMedication,
+      mockLoginLocation,
+    );
+    expect(defaults.drug).toEqual({
+      code: 'covid-drug-uuid',
+      display: 'COVID-19 Drug',
+    });
+  });
 
   it('sets drug to null when medicationReference has no display', () => {
     const basedOnNoDisplay = {
@@ -569,7 +552,6 @@ describe('buildBasedOnImmunizationEntry', () => {
     const { defaults } = buildBasedOnImmunizationEntry(
       basedOnNoDisplay,
       mockFetchedMedication,
-      [],
       mockLoginLocation,
     );
     expect(defaults.drug).toBeNull();
@@ -592,7 +574,6 @@ describe('buildBasedOnImmunizationEntry', () => {
       const { defaults } = buildBasedOnImmunizationEntry(
         mockMedicationRequest,
         mockFetchedMedication,
-        [],
         loginLocation,
       );
       expect(defaults.administeredLocation).toMatchObject({
@@ -606,7 +587,6 @@ describe('buildBasedOnImmunizationEntry', () => {
     const { defaults } = buildBasedOnImmunizationEntry(
       mockMedicationRequest,
       mockFetchedMedication,
-      [],
       mockLoginLocation,
     );
     expect(defaults.basedOnReference).toBe('med-request-uuid');
@@ -617,7 +597,6 @@ describe('buildBasedOnImmunizationEntry', () => {
     const { defaults } = buildBasedOnImmunizationEntry(
       mockMedicationRequest,
       mockFetchedMedication,
-      [],
       mockLoginLocation,
     );
     expect(defaults.administeredOn).toBeInstanceOf(Date);
