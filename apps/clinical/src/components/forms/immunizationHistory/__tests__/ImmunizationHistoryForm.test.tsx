@@ -91,6 +91,18 @@ describe('ImmunizationHistoryForm', () => {
         screen.getByRole('combobox', { name: /search to add immunization/i }),
       ).toBeInTheDocument();
     });
+
+    it('hides search combobox when immunizationAdministration form type', () => {
+      render(
+        <ImmunizationHistoryForm
+          consultationStartEventPayload={{}}
+          formConfig={mockAdministrationFormConfig}
+        />,
+      );
+      expect(
+        screen.queryByRole('combobox', { name: /search to add immunization/i }),
+      ).not.toBeInTheDocument();
+    });
   });
 
   describe('Loading states', () => {

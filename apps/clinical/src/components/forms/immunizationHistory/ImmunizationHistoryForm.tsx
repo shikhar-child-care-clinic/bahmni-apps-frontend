@@ -174,14 +174,14 @@ const ImmunizationHistoryForm = ({
   );
 
   useEffect(() => {
-    if (!basedOn || !basedOnMedication) return;
+    if (!basedOn || !basedOnMedication || !vaccinationDrugs) return;
     const { vaccineCode, defaults } = buildBasedOnImmunizationEntry(
       basedOn,
       basedOnMedication,
       loginLocation,
     );
     addImmunizationWithDefaults(vaccineCode, defaults);
-  }, [basedOn, basedOnMedication, basedOnReference]);
+  }, [basedOn, basedOnMedication, vaccinationDrugs, basedOnReference]);
 
   const vaccineCodeComboBoxItems = useMemo(
     () =>
@@ -277,26 +277,29 @@ const ImmunizationHistoryForm = ({
       >
         {t(label)}
       </div>
-      <ComboBox
-        id="immunization-history-search"
-        data-testid="immunization-history-search-combobox"
-        placeholder={t('IMMUNIZATION_HISTORY_SEARCH_PLACEHOLDER')}
-        items={vaccineCodeComboBoxItems}
-        itemToString={(item) => item?.display ?? ''}
-        onChange={({ selectedItem }) => {
-          if (selectedItem?.code && selectedItem?.display) {
-            addImmunization({
-              code: selectedItem.code,
-              display: selectedItem.display,
-            });
-          }
-        }}
-        onInputChange={(searchQuery: string) => handleSearch(searchQuery)}
-        clearSelectedOnChange
-        size="md"
-        autoAlign
-        aria-label={t('IMMUNIZATION_HISTORY_SEARCH_ARIA_LABEL')}
-      />
+      {immunizationFormType !==
+        IMMUNIZATION_ADMINISTRATION_INPUT_CONTROL_KEY && (
+        <ComboBox
+          id="immunization-history-search"
+          data-testid="immunization-history-search-combobox"
+          placeholder={t('IMMUNIZATION_HISTORY_SEARCH_PLACEHOLDER')}
+          items={vaccineCodeComboBoxItems}
+          itemToString={(item) => item?.display ?? ''}
+          onChange={({ selectedItem }) => {
+            if (selectedItem?.code && selectedItem?.display) {
+              addImmunization({
+                code: selectedItem.code,
+                display: selectedItem.display,
+              });
+            }
+          }}
+          onInputChange={(searchQuery: string) => handleSearch(searchQuery)}
+          clearSelectedOnChange
+          size="md"
+          autoAlign
+          aria-label={t('IMMUNIZATION_HISTORY_SEARCH_ARIA_LABEL')}
+        />
+      )}
       {isDataLoading ? (
         <CodeSnippetSkeleton
           id="immunization-history-loading"
