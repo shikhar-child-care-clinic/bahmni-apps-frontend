@@ -259,6 +259,7 @@ describe('captureUpdatedResources', () => {
       'immunizationHistory',
       'immunizationHistory',
     ],
+    ['immunizationAdministration', 'immunizationHistory'],
   ])('returns true for %s when hasData is true', (_label, key, resultKey) => {
     const entries = [
       makeMockEntry(key as InputControl['key'], {

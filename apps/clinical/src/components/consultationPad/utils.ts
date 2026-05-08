@@ -60,7 +60,8 @@ export function captureUpdatedResources(entries: InputControl[]) {
     conditions: hasData('conditionsAndDiagnoses'),
     allergies: hasData('allergies'),
     medications: hasData('medications') || hasData('vaccinations'),
-    immunizationHistory: hasData('immunizationHistory'),
+    immunizationHistory:
+      hasData('immunizationHistory') || hasData('immunizationAdministration'),
     serviceRequests,
   };
 }
