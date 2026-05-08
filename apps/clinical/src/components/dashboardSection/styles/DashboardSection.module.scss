@@ -1,5 +1,4 @@
 @use "@carbon/react/scss/spacing" as *;
-@use "@carbon/react/scss/colors" as *;
 @use "@carbon/react/scss/theme" as *;
 @use "@carbon/react/scss/type" as *;
 
@@ -26,6 +25,10 @@ $table-cell-min-width: 6.875rem;
 
   td, th {
     min-width: $table-cell-min-width;
+  }
+
+  td:first-child , th:first-child {
+    min-width: unset !important;
   }
 }
 
