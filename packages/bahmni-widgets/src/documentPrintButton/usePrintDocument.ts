@@ -19,6 +19,12 @@ interface UsePrintDocumentResult {
   printError: string | null;
 }
 
+export const renderTemplateQueryKey = (
+  templateId: string,
+  context: Record<string, string>,
+  locale: string,
+) => ['renderTemplate', templateId, 'html', context, locale] as const;
+
 export function usePrintDocument({
   templateId,
   context,
@@ -36,10 +42,10 @@ export function usePrintDocument({
 
   const {
     data: htmlContent,
-    isLoading,
+    isFetching,
     error: queryError,
   } = useQuery({
-    queryKey: ['renderTemplate', templateId, 'html', context, locale],
+    queryKey: renderTemplateQueryKey(templateId, context, locale),
     queryFn: () => renderAsHtml(renderRequest),
     enabled: triggered,
     staleTime: 0,
@@ -47,11 +53,9 @@ export function usePrintDocument({
   });
 
   useEffect(() => {
-    if (!triggered || isLoading || !htmlContent) return;
+    if (!triggered || isFetching || !htmlContent) return;
 
     const iframe = document.createElement('iframe');
-    // Full-size but invisible: opacity:0 lets Chrome load sub-resources (images/CSS).
-    // width:0 or height:0 causes Chrome to skip loading images in hidden iframes.
     iframe.style.cssText =
       'position:fixed;top:0;left:0;width:100%;height:100%;' +
       'border:none;opacity:0;pointer-events:none;z-index:-1;';
@@ -79,8 +83,6 @@ export function usePrintDocument({
       teardown();
     };
 
-    // Wait for every image to settle (load or error) before printing.
-    // img.complete is true once the browser has finished fetching (success or fail).
     const images = Array.from(
       iframeDoc.querySelectorAll('img'),
     ) as HTMLImageElement[];
@@ -109,7 +111,7 @@ export function usePrintDocument({
       });
       teardown();
     };
-  }, [triggered, isLoading, htmlContent]);
+  }, [triggered, isFetching, htmlContent]);
 
   useEffect(() => {
     if (!queryError) return;

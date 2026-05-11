@@ -34,11 +34,6 @@ export const isOpenMRSWebServiceApi = (url: string): boolean => {
   return url.includes('/openmrs/ws');
 };
 
-/**
- * Checks if URL belongs to the Bahmni template service
- * @param url - The URL to check
- * @returns True if URL is a template service API call
- */
 export const isTemplateServiceApi = (url: string): boolean => {
   return url.includes('/bahmnicore/template/');
 };

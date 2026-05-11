@@ -6,7 +6,7 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
-import { usePrintDocument } from '../usePrintDocument';
+import { usePrintDocument, renderTemplateQueryKey } from '../usePrintDocument';
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
@@ -289,6 +289,64 @@ describe('usePrintDocument', () => {
     expect(result.current.printError).toBe('Error: Template not found');
     expect(result.current.isPrinting).toBe(false);
     expect(mockShowError).toHaveBeenCalledWith('Error', 'Template not found');
+  });
+
+  it('does not print stale HTML when re-triggered before fresh fetch completes', async () => {
+    const firstHtml = '<html><body>First</body></html>';
+    const secondHtml = '<html><body>Second</body></html>';
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const Wrapper = ({ children }: { children: React.ReactNode }) =>
+      React.createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        children,
+      );
+
+    mockRenderAsHtml.mockResolvedValueOnce(firstHtml);
+
+    const { result } = renderHook(() => usePrintDocument(options), {
+      wrapper: Wrapper,
+    });
+
+    act(() => {
+      result.current.triggerPrint();
+    });
+    await waitFor(() => expect(mockPrint).toHaveBeenCalledTimes(1));
+
+    queryClient.setQueryData(
+      renderTemplateQueryKey(options.templateId, options.context, 'en'),
+      firstHtml,
+    );
+
+    let resolveSecond!: (v: string) => void;
+    mockRenderAsHtml.mockImplementationOnce(
+      () =>
+        new Promise<string>((res) => {
+          resolveSecond = res;
+        }),
+    );
+
+    mockPrint.mockClear();
+    const doc = mockIframe.contentDocument as Record<string, jest.Mock>;
+    doc.write.mockClear();
+
+    act(() => {
+      result.current.triggerPrint();
+    });
+
+    expect(mockPrint).not.toHaveBeenCalled();
+    expect(doc.write).not.toHaveBeenCalled();
+
+    await act(async () => {
+      resolveSecond(secondHtml);
+    });
+    await waitFor(() => expect(mockPrint).toHaveBeenCalledTimes(1));
+
+    expect(doc.write).toHaveBeenCalledWith(secondHtml);
+    expect(doc.write).not.toHaveBeenCalledWith(firstHtml);
   });
 
   it('uses locale from getUserPreferredLocale', async () => {

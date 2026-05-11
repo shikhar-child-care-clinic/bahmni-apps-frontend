@@ -50,7 +50,7 @@ describe('renderAsHtml', () => {
 
   it('calls post with the correct URL and request body, returning HTML', async () => {
     const mockHtml = '<html><body>Registration Card</body></html>';
-    mockPost.mockResolvedValueOnce(mockHtml);
+    mockPost.mockResolvedValueOnce({ html: mockHtml });
 
     const result = await renderAsHtml(renderRequest);
 

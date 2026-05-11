@@ -1,5 +1,7 @@
 import { Button, Dropdown } from '@bahmni/design-system';
 import type { TemplateInfo } from '@bahmni/services';
+import { useTranslation } from '@bahmni/services';
+import { InlineLoading } from '@carbon/react';
 import { useState } from 'react';
 import styles from './DocumentPrintButton.module.scss';
 import { useDocumentTemplatesForCategory } from './useDocumentTemplates';
@@ -20,6 +22,7 @@ export const DocumentPrintButton = ({
   size,
   'data-testid': dataTestId,
 }: DocumentPrintButtonProps) => {
+  const { t } = useTranslation();
   const { templates } = useDocumentTemplatesForCategory(category);
   const [activeTemplate, setActiveTemplate] = useState<TemplateInfo | null>(
     null,
@@ -27,12 +30,16 @@ export const DocumentPrintButton = ({
 
   const resolvedTemplate = activeTemplate ?? templates[0] ?? null;
 
-  const { triggerPrint } = usePrintDocument({
+  const { triggerPrint, isPrinting } = usePrintDocument({
     templateId: resolvedTemplate?.id,
     context: renderContext,
   });
 
   if (templates.length === 0) return null;
+
+  if (isPrinting) {
+    return <InlineLoading description={t('PRINT_MODAL_PREPARING_DOCUMENT')} />;
+  }
 
   const triggerLabel = (tmpl: TemplateInfo) =>
     tmpl.triggers[0]?.label ?? tmpl.name;

@@ -81,7 +81,9 @@ export const getFormattedError = (
 
           // Handle non-FHIR errors
           const backendMessage =
-            responseData?.error?.message ?? responseData?.message;
+            responseData?.error?.message ??
+            responseData?.error ??
+            responseData?.message;
           message =
             backendMessage ??
             'Invalid input parameters. Please check your request and try again.';
