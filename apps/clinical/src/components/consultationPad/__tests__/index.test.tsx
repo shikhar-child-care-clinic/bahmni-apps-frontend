@@ -226,7 +226,7 @@ describe('ConsultationPad', () => {
   });
 
   describe('resolvedEncounterType', () => {
-    it('falls back to config defaultEncounterType when encounterType is not in EncounterSessionStartContext', () => {
+    it('falls back to config defaultEncounterType when encounterType is not in encounterSessionStartContext', () => {
       jest.mocked(useClinicalConfig).mockReturnValue({
         clinicalConfig: {
           consultationPad: {
@@ -240,7 +240,7 @@ describe('ConsultationPad', () => {
         },
       } as any);
 
-      renderComponent({ EncounterSessionStartContext: {} });
+      renderComponent({ encounterSessionStartContext: {} });
 
       expect(
         defaultEncounterDetailsState.setRequestedEncounterType,
@@ -251,7 +251,7 @@ describe('ConsultationPad', () => {
   describe('encounterType prop validation', () => {
     it('renders error state when specified encounterType is not defined in configuration', () => {
       renderComponent({
-        EncounterSessionStartContext: { encounterType: 'UnknownType' },
+        encounterSessionStartContext: { encounterType: 'UnknownType' },
       });
 
       expect(screen.getByText('Something went wrong')).toBeInTheDocument();
@@ -266,7 +266,7 @@ describe('ConsultationPad', () => {
       } as any);
 
       renderComponent({
-        EncounterSessionStartContext: { encounterType: 'Consultation' },
+        encounterSessionStartContext: { encounterType: 'Consultation' },
       });
 
       expect(screen.queryByTestId('allergies-divider')).not.toBeInTheDocument();
@@ -277,8 +277,8 @@ describe('ConsultationPad', () => {
       ['not set', {}],
     ])(
       'does not show error state when encounterType is %s',
-      (_, EncounterSessionStartContext) => {
-        renderComponent({ EncounterSessionStartContext });
+      (_, encounterSessionStartContext) => {
+        renderComponent({ encounterSessionStartContext });
 
         expect(
           screen.queryByText('Something went wrong'),

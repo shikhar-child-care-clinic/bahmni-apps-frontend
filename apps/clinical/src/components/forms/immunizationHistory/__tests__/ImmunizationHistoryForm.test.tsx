@@ -7,10 +7,10 @@ import { useClinicalConfig } from '../../../../providers/clinicalConfig';
 import ImmunizationHistoryForm from '../ImmunizationHistoryForm';
 import { useImmunizationHistoryStore } from '../stores';
 import {
-  mockAdministrationFormConfig,
+  mockAdministrationInputControlConfig,
   mockClinicalConfigContext,
   mockFetchedMedication,
-  mockImmunizationFormConfig,
+  mockImmunizationInputControlConfig,
   mockImmunizationEntry,
   mockLocations,
   mockMedicationRequest,
@@ -83,7 +83,7 @@ describe('ImmunizationHistoryForm', () => {
       render(
         <ImmunizationHistoryForm
           encounterSessionStartContext={{}}
-          inputControlConfig={mockImmunizationFormConfig}
+          inputControlConfig={mockImmunizationInputControlConfig}
         />,
       );
       expect(screen.getByText('Immunization History')).toBeInTheDocument();
@@ -96,7 +96,7 @@ describe('ImmunizationHistoryForm', () => {
       render(
         <ImmunizationHistoryForm
           encounterSessionStartContext={{}}
-          inputControlConfig={mockAdministrationFormConfig}
+          inputControlConfig={mockAdministrationInputControlConfig}
         />,
       );
       expect(
@@ -122,7 +122,7 @@ describe('ImmunizationHistoryForm', () => {
         render(
           <ImmunizationHistoryForm
             encounterSessionStartContext={{}}
-            inputControlConfig={mockImmunizationFormConfig}
+            inputControlConfig={mockImmunizationInputControlConfig}
           />,
         );
         expect(
@@ -144,7 +144,7 @@ describe('ImmunizationHistoryForm', () => {
       render(
         <ImmunizationHistoryForm
           encounterSessionStartContext={{}}
-          inputControlConfig={mockImmunizationFormConfig}
+          inputControlConfig={mockImmunizationInputControlConfig}
         />,
       );
       expect(
@@ -174,7 +174,7 @@ describe('ImmunizationHistoryForm', () => {
         render(
           <ImmunizationHistoryForm
             encounterSessionStartContext={{}}
-            inputControlConfig={mockImmunizationFormConfig}
+            inputControlConfig={mockImmunizationInputControlConfig}
           />,
         );
         expect(
@@ -222,7 +222,7 @@ describe('ImmunizationHistoryForm', () => {
         render(
           <ImmunizationHistoryForm
             encounterSessionStartContext={{}}
-            inputControlConfig={mockImmunizationFormConfig}
+            inputControlConfig={mockImmunizationInputControlConfig}
           />,
         );
         await user.type(
@@ -240,7 +240,7 @@ describe('ImmunizationHistoryForm', () => {
       render(
         <ImmunizationHistoryForm
           encounterSessionStartContext={{}}
-          inputControlConfig={mockImmunizationFormConfig}
+          inputControlConfig={mockImmunizationInputControlConfig}
         />,
       );
       await user.type(
@@ -260,7 +260,7 @@ describe('ImmunizationHistoryForm', () => {
       render(
         <ImmunizationHistoryForm
           encounterSessionStartContext={{}}
-          inputControlConfig={mockImmunizationFormConfig}
+          inputControlConfig={mockImmunizationInputControlConfig}
         />,
       );
       await user.type(
@@ -284,7 +284,7 @@ describe('ImmunizationHistoryForm', () => {
       render(
         <ImmunizationHistoryForm
           encounterSessionStartContext={{}}
-          inputControlConfig={mockImmunizationFormConfig}
+          inputControlConfig={mockImmunizationInputControlConfig}
         />,
       );
       await user.type(
@@ -312,7 +312,7 @@ describe('ImmunizationHistoryForm', () => {
       render(
         <ImmunizationHistoryForm
           encounterSessionStartContext={{}}
-          inputControlConfig={mockImmunizationFormConfig}
+          inputControlConfig={mockImmunizationInputControlConfig}
         />,
       );
       expect(screen.getByText('Added Immunization')).toBeInTheDocument();
@@ -327,7 +327,7 @@ describe('ImmunizationHistoryForm', () => {
       render(
         <ImmunizationHistoryForm
           encounterSessionStartContext={{}}
-          inputControlConfig={mockImmunizationFormConfig}
+          inputControlConfig={mockImmunizationInputControlConfig}
         />,
       );
       expect(screen.queryByText('Added Immunization')).not.toBeInTheDocument();
@@ -351,7 +351,7 @@ describe('ImmunizationHistoryForm', () => {
       render(
         <ImmunizationHistoryForm
           encounterSessionStartContext={{}}
-          inputControlConfig={mockImmunizationFormConfig}
+          inputControlConfig={mockImmunizationInputControlConfig}
         />,
       );
       expect(screen.queryByText('Added Immunization')).not.toBeInTheDocument();
@@ -376,7 +376,7 @@ describe('ImmunizationHistoryForm', () => {
       render(
         <ImmunizationHistoryForm
           encounterSessionStartContext={{}}
-          inputControlConfig={mockImmunizationFormConfig}
+          inputControlConfig={mockImmunizationInputControlConfig}
         />,
       );
       const drugCombobox = screen.getByPlaceholderText('Search drug name');
@@ -400,7 +400,7 @@ describe('ImmunizationHistoryForm', () => {
       render(
         <ImmunizationHistoryForm
           encounterSessionStartContext={{}}
-          inputControlConfig={mockImmunizationFormConfig}
+          inputControlConfig={mockImmunizationInputControlConfig}
         />,
       );
       await user.click(screen.getByTestId('selected-item-close-button'));
@@ -435,7 +435,7 @@ describe('ImmunizationHistoryForm', () => {
         render(
           <ImmunizationHistoryForm
             encounterSessionStartContext={payload}
-            inputControlConfig={mockAdministrationFormConfig}
+            inputControlConfig={mockAdministrationInputControlConfig}
           />,
         );
         expect(mockStore.addImmunizationWithDefaults).not.toHaveBeenCalled();
@@ -455,7 +455,7 @@ describe('ImmunizationHistoryForm', () => {
       render(
         <ImmunizationHistoryForm
           encounterSessionStartContext={consultationPayloadWithBasedOn}
-          inputControlConfig={mockAdministrationFormConfig}
+          inputControlConfig={mockAdministrationInputControlConfig}
         />,
       );
       await waitFor(() => {
@@ -484,7 +484,7 @@ describe('ImmunizationHistoryForm', () => {
       render(
         <ImmunizationHistoryForm
           encounterSessionStartContext={consultationPayloadWithBasedOn}
-          inputControlConfig={mockAdministrationFormConfig}
+          inputControlConfig={mockAdministrationInputControlConfig}
         />,
       );
       await waitFor(() => {

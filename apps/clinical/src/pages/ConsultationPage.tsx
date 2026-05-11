@@ -77,7 +77,7 @@ const ConsultationPage: React.FC = () => {
   const { userPrivileges } = useUserPrivilege();
   const { addNotification } = useNotification();
   const [isActionAreaVisible, setIsActionAreaVisible] = useState(false);
-  const [EncounterSessionStartContext, setEncounterSessionStartContext] =
+  const [encounterSessionStartContext, setEncounterSessionStartContext] =
     useState<EncounterSessionStartContext | null>(null);
 
   useSubscribeConsultationStart(
@@ -302,9 +302,9 @@ const ConsultationPage: React.FC = () => {
         isActionAreaVisible={isActionAreaVisible}
         layoutVariant={viewingForm ? 'extended' : 'default'}
         actionArea={
-          EncounterSessionStartContext && (
+          encounterSessionStartContext && (
             <ConsultationPad
-              EncounterSessionStartContext={EncounterSessionStartContext}
+              encounterSessionStartContext={encounterSessionStartContext}
               onClose={() => setIsActionAreaVisible((prev) => !prev)}
             />
           )

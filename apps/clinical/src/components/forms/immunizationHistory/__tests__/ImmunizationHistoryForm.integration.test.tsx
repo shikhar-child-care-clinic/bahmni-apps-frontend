@@ -15,12 +15,12 @@ import ImmunizationHistoryForm from '../ImmunizationHistoryForm';
 import { getImmunizationStore } from '../stores';
 import { createImmunizationBundleEntries } from '../utils';
 import {
-  mockAdministrationFormConfig,
+  mockAdministrationInputControlConfig,
   mockClinicalConfigContext,
   mockCovid19VaccineDrug,
   mockEncounterSubject,
   mockFetchedMedication,
-  mockImmunizationFormConfig,
+  mockImmunizationInputControlConfig,
   mockLocations,
   mockMedicationRequest,
   mockRoutesValueSet,
@@ -90,7 +90,7 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
     render(
       <ImmunizationHistoryForm
         encounterSessionStartContext={{}}
-        inputControlConfig={mockImmunizationFormConfig}
+        inputControlConfig={mockImmunizationInputControlConfig}
       />,
       {
         wrapper: createWrapper(),
@@ -196,7 +196,7 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
     render(
       <ImmunizationHistoryForm
         encounterSessionStartContext={{}}
-        inputControlConfig={mockImmunizationFormConfig}
+        inputControlConfig={mockImmunizationInputControlConfig}
       />,
       {
         wrapper: createWrapper(),
@@ -271,7 +271,7 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
     render(
       <ImmunizationHistoryForm
         encounterSessionStartContext={{}}
-        inputControlConfig={mockImmunizationFormConfig}
+        inputControlConfig={mockImmunizationInputControlConfig}
       />,
       {
         wrapper: createWrapper(),
@@ -306,7 +306,7 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
     render(
       <ImmunizationHistoryForm
         encounterSessionStartContext={{ basedOn: mockMedicationRequest }}
-        inputControlConfig={mockAdministrationFormConfig}
+        inputControlConfig={mockAdministrationInputControlConfig}
       />,
       { wrapper: createWrapper() },
     );
