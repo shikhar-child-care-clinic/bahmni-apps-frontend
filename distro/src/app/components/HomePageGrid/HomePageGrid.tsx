@@ -1,9 +1,4 @@
-import {
-  InlineNotification,
-  Grid,
-  Column,
-  SkeletonPlaceholder,
-} from '@bahmni/design-system';
+import { InlineNotification, SkeletonPlaceholder } from '@bahmni/design-system';
 import {
   type Module,
   getVisibleModules,
@@ -51,19 +46,11 @@ export const HomePageGrid: React.FC = () => {
         aria-label={t('HOME_LOADING_MODULES')}
         aria-busy="true"
       >
-        <Grid>
+        <div className={styles.tileGrid}>
           {Array.from({ length: 6 }, (_, i) => `skeleton-${i}`).map((key) => (
-            <Column
-              key={key}
-              lg={5}
-              md={4}
-              sm={4}
-              className={styles.tileColumn}
-            >
-              <SkeletonPlaceholder className={styles.skeletonTile} />
-            </Column>
+            <SkeletonPlaceholder key={key} className={styles.skeletonTile} />
           ))}
-        </Grid>
+        </div>
       </div>
     );
   }
@@ -96,24 +83,17 @@ export const HomePageGrid: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <Grid>
+      <div className={styles.tileGrid}>
         {modules.map((module: Module) => (
-          <Column
+          <AppTile
             key={module.id}
-            lg={5}
-            md={4}
-            sm={4}
-            className={styles.tileColumn}
-          >
-            <AppTile
-              id={module.id}
-              label={module.translationKey ?? module.label}
-              icon={module.icon}
-              url={module.url}
-            />
-          </Column>
+            id={module.id}
+            label={module.translationKey ?? module.label}
+            icon={module.icon}
+            url={module.url}
+          />
         ))}
-      </Grid>
+      </div>
     </div>
   );
 };

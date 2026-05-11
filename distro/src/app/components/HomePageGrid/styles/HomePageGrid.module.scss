@@ -1,17 +1,28 @@
 @use "@carbon/react/scss/spacing" as *;
 @use "@carbon/react/scss/type" as *;
 @use "@carbon/react/scss/theme" as *;
+@use "@carbon/react/scss/breakpoint" as *;
 
 .container {
   margin-top: 3.75rem;
   padding: $spacing-07;
-  max-width: 50rem;
   margin-left: auto;
   margin-right: auto;
 }
 
-.tileColumn {
-  padding: $spacing-03;
+.tileGrid {
+  display: grid;
+  grid-template-columns: repeat(1, 10rem);
+  gap: $spacing-07;
+  justify-content: center;
+
+  @include breakpoint('md') {
+    grid-template-columns: repeat(2, 10rem);
+  }
+
+  @include breakpoint('lg') {
+    grid-template-columns: repeat(3, 10rem);
+  }
 }
 
 .skeletonTile {
@@ -22,7 +33,7 @@
   @include type-style("label-01");
   text-align: center;
   padding: $spacing-09 $spacing-04;
-  color: var(--cds-text-02);
+  color: $text-secondary;
 }
 
 .errorContainer {
