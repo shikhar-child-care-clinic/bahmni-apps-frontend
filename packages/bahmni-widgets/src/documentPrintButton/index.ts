@@ -1,0 +1,1 @@
+export { DocumentPrintButton } from './DocumentPrintButton';

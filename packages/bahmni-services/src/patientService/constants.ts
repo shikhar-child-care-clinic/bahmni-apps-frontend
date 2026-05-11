@@ -1,8 +1,4 @@
-import {
-  OPENMRS_FHIR_R4,
-  OPENMRS_REST_V1,
-  OPENMRS_REST_V2,
-} from '../constants/app';
+import { OPENMRS_FHIR_R4, OPENMRS_REST_V1 } from '../constants/app';
 import { PatientSearchField } from './models';
 
 /**
@@ -158,7 +154,7 @@ export const MAX_PHONE_NUMBER_LENGTH = 15;
 export const UUID_PATTERN = /^[a-f0-9-]{36}$/i;
 
 export const PATIENT_IMAGE_URL = (patientUuid: string) =>
-  OPENMRS_REST_V2 + `/patientImage?patientUuid=${patientUuid}`;
+  OPENMRS_REST_V1 + `/patientImage?patientUuid=${patientUuid}`;
 
 export const PERSON_ATTRIBUTE_TYPES_URL =
   OPENMRS_REST_V1 +

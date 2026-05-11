@@ -35,6 +35,15 @@ export const isOpenMRSWebServiceApi = (url: string): boolean => {
 };
 
 /**
+ * Checks if URL belongs to the Bahmni template service
+ * @param url - The URL to check
+ * @returns True if URL is a template service API call
+ */
+export const isTemplateServiceApi = (url: string): boolean => {
+  return url.includes('/bahmnicore/template/');
+};
+
+/**
  * Gets the URL from axios config safely
  * @param config - Axios request config
  * @returns The URL or empty string if not found
