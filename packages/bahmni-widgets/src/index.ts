@@ -48,8 +48,8 @@ export {
 // Encounter Match Decision
 export {
   useEncounterMatchDecision,
-  type UseEncounterMatchDecisionParams,
-  type UseEncounterMatchDecisionResult,
+  type EncounterMatchDecisionParams,
+  type EncounterMatchDecisionResult,
   type EncounterMatchStatus,
   type NoMatchReason,
   type EncounterMatchDecisionRequest,

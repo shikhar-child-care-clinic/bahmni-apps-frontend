@@ -32,22 +32,19 @@ export interface EncounterMatchDecisionResponse {
   matchDetails?: Record<string, unknown>;
 }
 
-export interface UseEncounterMatchDecisionParams {
+export interface EncounterMatchDecisionParams {
   patientUuid: string | null | undefined;
   visitUuid: string | null | undefined;
   providerUuid?: string | null | undefined;
   locationUuid: string | null | undefined;
 }
 
-export interface UseEncounterMatchDecisionResult {
+export interface EncounterMatchDecisionResult {
   status: EncounterMatchStatus | null;
   encounterUuid: string | null;
   reason: string | null;
-  /** True when backend returns match_found — caller should resume existing encounter. */
   canResume: boolean;
-  /** True when backend returns match_found OR no_match — show Edit button. */
   showEditButton: boolean;
-  /** False when status is no_active_visit or error — hide the button entirely. */
   shouldShowButton: boolean;
   isLoading: boolean;
   error: Error | null;
@@ -63,18 +60,9 @@ async function fetchEncounterMatchDecision(
   );
 }
 
-/**
- * Hook that calls the backend match-decision API to determine whether an existing
- * encounter can be resumed or a new one must be created.
- *
- * Returns derived UI flags:
- * - `canResume`       — true only when backend says `match_found`
- * - `showEditButton`  — true for `match_found` or `no_match` (show button, behaviour differs)
- * - `shouldShowButton`— false for `no_active_visit` or `error` (hide button entirely)
- */
 export function useEncounterMatchDecision(
-  params: UseEncounterMatchDecisionParams,
-): UseEncounterMatchDecisionResult {
+  params: EncounterMatchDecisionParams,
+): EncounterMatchDecisionResult {
   const { patientUuid, visitUuid, providerUuid, locationUuid } = params;
 
   const isEnabled = !!(patientUuid && locationUuid);
@@ -91,19 +79,14 @@ export function useEncounterMatchDecision(
       locationUuid,
     ],
     enabled: isEnabled,
-    queryFn: () => {
-      if (!patientUuid || !locationUuid) {
-        return Promise.reject(
-          new Error('patientUuid and locationUuid are required'),
-        );
-      }
-      return fetchEncounterMatchDecision({
+    retry: false,
+    queryFn: () =>
+      fetchEncounterMatchDecision({
         patientUuid,
         visitUuid: visitUuid ?? undefined,
         locationUuid,
         ...(providerUuid ? { providerUuid } : {}),
-      });
-    },
+      }),
   });
 
   if (!isEnabled) {

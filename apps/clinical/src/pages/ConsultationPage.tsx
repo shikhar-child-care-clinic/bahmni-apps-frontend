@@ -11,7 +11,6 @@ import {
   BAHMNI_HOME_PATH,
   getConfig,
   generateId,
-  post,
 } from '@bahmni/services';
 import {
   ProgramDetails,
@@ -19,6 +18,7 @@ import {
   useUserPrivilege,
   useActivePractitioner,
   usePatientUUID,
+  useEncounterMatchDecision,
 } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
 import React, {
@@ -26,7 +26,6 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -112,41 +111,23 @@ const ConsultationPage: React.FC = () => {
     }
   }, [locations, selectedLocation, setSelectedLocation]);
 
-  const { activeVisit: fetchedActiveVisit } = useActiveVisit(patientUUID);
-
-  useEffect(() => {
-    setActiveVisit(fetchedActiveVisit ?? null);
-  }, [fetchedActiveVisit, setActiveVisit]);
+  const { activeVisit: fetchedActiveVisit, loading: visitLoading } =
+    useActiveVisit(patientUUID);
 
   const activeVisit = useEncounterDetailsStore((state) => state.activeVisit);
 
-  // Call match-decision API on page load - only once per session
-  const matchDecisionFetchedRef = useRef(false);
-
   useEffect(() => {
-    if (
-      !matchDecisionFetchedRef.current &&
-      patientUUID &&
-      activeVisit?.id &&
-      practitioner?.uuid &&
-      selectedLocation?.uuid
-    ) {
-      matchDecisionFetchedRef.current = true;
-      post('/openmrs/ws/rest/v1/bahmnicore/bahmniencounter/match-decision', {
-        patientUuid: patientUUID,
-        visitUuid: activeVisit.id,
-        providerUuid: practitioner.uuid,
-        locationUuid: selectedLocation.uuid,
-      }).catch(() => {
-        // Handle error silently - API call is informational only
-      });
+    if (fetchedActiveVisit?.id !== activeVisit?.id) {
+      setActiveVisit(fetchedActiveVisit ?? null);
     }
-  }, [
-    patientUUID,
-    activeVisit?.id,
-    practitioner?.uuid,
-    selectedLocation?.uuid,
-  ]);
+  }, [fetchedActiveVisit, setActiveVisit, activeVisit]);
+
+  useEncounterMatchDecision({
+    patientUuid: patientUUID,
+    visitUuid: fetchedActiveVisit?.id,
+    providerUuid: practitioner?.uuid,
+    locationUuid: visitLoading ? null : selectedLocation?.uuid,
+  });
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchParams] = useSearchParams();

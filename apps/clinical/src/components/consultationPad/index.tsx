@@ -35,14 +35,6 @@ import {
 interface ConsultationPadProps {
   encounterType: string;
   onClose: () => void;
-  /**
-   * Controls whether the pad opens in resume-edit mode or creates a new encounter.
-   * Defaults to 'new' when omitted (backward compatible).
-   *
-   * TODO BAH-4665 follow-up: pre-populate form stores from existing patient
-   * resources when mode === 'edit' (use the existingEncounterId carried on the
-   * startConsultation event payload).
-   */
   mode?: 'edit' | 'new';
 }
 
@@ -121,13 +113,6 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
     encounterTypeUUID: selectedEncounterType?.uuid,
   });
 
-  // When mode === 'new', always create a new encounter regardless of any existing session.
-  // When mode === 'edit', reuse the encounter found by the session hook (which naturally
-  // resolves to the same encounter the widget decision hook identified, since both filter
-  // by the same patient/practitioner/encounterType).
-  // NOTE: existingEncounterId is carried for intent/documentation; the session hook
-  // resolves to it organically so no extra fetch is needed here.
-  // TODO BAH-4665 follow-up: pre-populate form stores from existing patient resources when mode === 'edit'.
   const activeEncounter = mode === 'new' ? null : sessionEncounter;
   const { episodeOfCare } = useClinicalAppData();
 

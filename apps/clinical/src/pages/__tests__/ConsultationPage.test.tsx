@@ -5,6 +5,7 @@ import {
   useUserPrivilege,
   useActivePractitioner,
   usePatientUUID,
+  useEncounterMatchDecision,
 } from '@bahmni/widgets';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
@@ -163,11 +164,13 @@ jest.mock('@bahmni/widgets', () => ({
   useNotification: jest.fn(),
   useActivePractitioner: jest.fn(),
   usePatientUUID: jest.fn(),
+  useEncounterMatchDecision: jest.fn(),
 }));
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   getConfig: jest.fn(),
+  post: jest.fn().mockResolvedValue({}),
 }));
 
 const mockClinicalConfig = {
@@ -253,6 +256,18 @@ describe('ConsultationPage', () => {
     });
 
     (usePatientUUID as jest.Mock).mockReturnValue('patient-uuid');
+
+    (useEncounterMatchDecision as jest.Mock).mockReturnValue({
+      status: null,
+      encounterUuid: null,
+      reason: null,
+      canResume: false,
+      showEditButton: false,
+      shouldShowButton: false,
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
 
     (useActiveVisit as jest.Mock).mockReturnValue({
       activeVisit: { id: 'visit-uuid' },
