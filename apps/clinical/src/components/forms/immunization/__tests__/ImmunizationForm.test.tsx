@@ -428,21 +428,18 @@ describe('ImmunizationForm', () => {
           });
         },
       ],
-    ])(
-      'does not call addImmunizationWithDefaults when %s',
-      (_, payload, setupMocks) => {
-        setupMocks();
-        render(
-          <ImmunizationForm
-            encounterSessionStartContext={payload}
-            inputControlConfig={mockAdministrationInputControlConfig}
-          />,
-        );
-        expect(mockStore.addImmunizationWithDefaults).not.toHaveBeenCalled();
-      },
-    );
+    ])('does not call addImmunization when %s', (_, payload, setupMocks) => {
+      setupMocks();
+      render(
+        <ImmunizationForm
+          encounterSessionStartContext={payload}
+          inputControlConfig={mockAdministrationInputControlConfig}
+        />,
+      );
+      expect(mockStore.addImmunization).not.toHaveBeenCalled();
+    });
 
-    it('calls addImmunizationWithDefaults with drug code from basedOnMedication', async () => {
+    it('calls addImmunization with drug code from basedOnMedication', async () => {
       mockUseQuery.mockImplementation(({ queryKey: qk }: any) => {
         if (qk[0] === 'medication')
           return {
@@ -459,7 +456,7 @@ describe('ImmunizationForm', () => {
         />,
       );
       await waitFor(() => {
-        expect(mockStore.addImmunizationWithDefaults).toHaveBeenCalledWith(
+        expect(mockStore.addImmunization).toHaveBeenCalledWith(
           { code: 'covid-19', display: 'COVID-19 Drug' },
           expect.objectContaining({
             drug: { code: 'covid-drug-uuid', display: 'COVID-19 Drug' },
@@ -468,7 +465,7 @@ describe('ImmunizationForm', () => {
       });
     });
 
-    it('calls addImmunizationWithDefaults with administeredLocation and basedOnReference', async () => {
+    it('calls addImmunization with administeredLocation and basedOnReference', async () => {
       mockGetUserLoginLocation.mockReturnValue({
         uuid: 'login-loc-uuid',
         display: 'Login Location',
@@ -488,7 +485,7 @@ describe('ImmunizationForm', () => {
         />,
       );
       await waitFor(() => {
-        expect(mockStore.addImmunizationWithDefaults).toHaveBeenCalledWith(
+        expect(mockStore.addImmunization).toHaveBeenCalledWith(
           expect.any(Object),
           expect.objectContaining({
             administeredLocation: {

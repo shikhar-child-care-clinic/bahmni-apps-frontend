@@ -10,6 +10,8 @@ import {
   mockImmunizationEntry,
   mockImmunizationEntryWithBasedOn,
   mockImmunizationEntryWithBasedOnAndNullFields,
+  mockImmunizationEntryWithCustomDrug,
+  mockImmunizationEntryWithCustomLocation,
   mockImmunizationEntryWithDate,
   mockImmunizationEntryWithErrors,
   mockLocations,
@@ -136,6 +138,30 @@ describe('SelectedImmunizationItem', () => {
     ])('does not render %s field when attributes is empty', (_, testId) => {
       render(<SelectedImmunizationItem {...defaultProps} attributes={[]} />);
       expect(screen.queryByTestId(testId)).not.toBeInTheDocument();
+    });
+
+    it.each([
+      [
+        'drug combobox shows display when drug has no code (custom value)',
+        mockImmunizationEntryWithCustomDrug,
+        [{ name: 'drug', required: false }],
+        'Custom Drug Name',
+      ],
+      [
+        'administeredLocation combobox shows display when location has no uuid (custom value)',
+        mockImmunizationEntryWithCustomLocation,
+        [{ name: 'administeredLocation', required: false }],
+        'Custom Ward',
+      ],
+    ])('%s', (_, immunization, attributes, expectedDisplay) => {
+      render(
+        <SelectedImmunizationItem
+          {...defaultProps}
+          immunization={immunization}
+          attributes={attributes}
+        />,
+      );
+      expect(screen.getByRole('combobox')).toHaveValue(expectedDisplay);
     });
 
     it.each([

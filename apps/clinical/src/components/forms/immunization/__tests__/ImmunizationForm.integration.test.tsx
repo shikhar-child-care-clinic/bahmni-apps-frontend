@@ -1,6 +1,6 @@
 import {
   getLocationByTag,
-  getMedication,
+  getMedicationByUuid,
   getUserLoginLocation,
   getVaccinations,
   searchFHIRConcepts,
@@ -31,7 +31,7 @@ import {
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
   getLocationByTag: jest.fn(),
-  getMedication: jest.fn(),
+  getMedicationByUuid: jest.fn(),
   getUserLoginLocation: jest.fn(),
   getVaccinations: jest.fn(),
   searchFHIRConcepts: jest.fn(),
@@ -76,7 +76,7 @@ describe('ImmunizationForm Integration Tests', () => {
       return Promise.resolve(undefined);
     });
     (getLocationByTag as jest.Mock).mockResolvedValue(mockLocations);
-    (getMedication as jest.Mock).mockResolvedValue(mockFetchedMedication);
+    (getMedicationByUuid as jest.Mock).mockResolvedValue(mockFetchedMedication);
     (getVaccinations as jest.Mock).mockResolvedValue(mockVaccinationBundle);
     (getUserLoginLocation as jest.Mock).mockReturnValue({
       uuid: 'loc-uuid',
@@ -300,8 +300,10 @@ describe('ImmunizationForm Integration Tests', () => {
     expect(bundleEntries).toHaveLength(0);
   });
 
-  it('shows error state when getMedication call fails', async () => {
-    (getMedication as jest.Mock).mockRejectedValue(new Error('Network error'));
+  it('shows error state when getMedicationByUuid call fails', async () => {
+    (getMedicationByUuid as jest.Mock).mockRejectedValue(
+      new Error('Network error'),
+    );
 
     render(
       <ImmunizationForm

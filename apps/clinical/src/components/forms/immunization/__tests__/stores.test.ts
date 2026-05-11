@@ -102,7 +102,7 @@ describe('useImmunizationHistoryStore', () => {
     });
   });
 
-  describe('addImmunizationWithDefaults', () => {
+  describe('addImmunization with defaults', () => {
     const defaults = {
       basedOnReference: 'med-request-uuid',
       drug: { code: 'covid-drug-uuid', display: 'COVID-19 Drug' },
@@ -111,7 +111,7 @@ describe('useImmunizationHistoryStore', () => {
     };
 
     it('adds an entry with the correct shape from defaults', () => {
-      store().addImmunizationWithDefaults(mockVaccineCode, defaults);
+      store().addImmunization(mockVaccineCode, defaults);
 
       expect(store().selectedImmunizations).toHaveLength(1);
       const entry = store().selectedImmunizations[0];
@@ -135,7 +135,7 @@ describe('useImmunizationHistoryStore', () => {
 
     it('prepends the new entry and generates a unique id per entry', () => {
       store().addImmunization(mockVaccineCode);
-      store().addImmunizationWithDefaults(secondVaccineCode, defaults);
+      store().addImmunization(secondVaccineCode, defaults);
 
       expect(store().selectedImmunizations).toHaveLength(2);
       expect(store().selectedImmunizations[0].vaccineCode).toEqual(

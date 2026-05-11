@@ -265,49 +265,30 @@ function createImmunizationHistoryStore() {
     selectedImmunizations: [],
     attributes: undefined,
 
-    addImmunization: (vaccineCode: { code: string; display: string }) => {
-      const newEntry: ImmunizationInputEntry = {
-        id: generateUUID(),
-        drug: null,
-        vaccineCode,
-        administeredOn: null,
-        administeredLocation: null,
-        route: null,
-        site: null,
-        expiryDate: null,
-        manufacturer: null,
-        batchNumber: null,
-        doseSequence: null,
-        errors: {},
-        hasBeenValidated: false,
-      };
-      set((state) => ({
-        selectedImmunizations: [newEntry, ...state.selectedImmunizations],
-      }));
-    },
-
-    addImmunizationWithDefaults: (
+    addImmunization: (
       vaccineCode: { code: string; display: string },
-      defaults: {
+      defaults?: {
         basedOnReference?: string | null;
-        drug: ImmunizationDrug | null;
-        administeredOn: Date | null;
-        administeredLocation: ImmunizationLocation | null;
+        drug?: ImmunizationDrug | null;
+        administeredOn?: Date | null;
+        administeredLocation?: ImmunizationLocation | null;
       },
     ) => {
       const newEntry: ImmunizationInputEntry = {
         id: generateUUID(),
-        drug: defaults.drug,
+        drug: defaults?.drug ?? null,
         vaccineCode,
-        administeredOn: defaults.administeredOn,
-        administeredLocation: defaults.administeredLocation,
+        administeredOn: defaults?.administeredOn ?? null,
+        administeredLocation: defaults?.administeredLocation ?? null,
         route: null,
         site: null,
         expiryDate: null,
         manufacturer: null,
         batchNumber: null,
         doseSequence: null,
-        basedOnReference: defaults.basedOnReference,
+        ...(defaults?.basedOnReference !== undefined && {
+          basedOnReference: defaults.basedOnReference,
+        }),
         errors: {},
         hasBeenValidated: false,
       };
