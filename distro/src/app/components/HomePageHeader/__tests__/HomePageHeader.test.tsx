@@ -1,5 +1,8 @@
 import { render, screen } from '@testing-library/react';
+import { axe, toHaveNoViolations } from 'jest-axe';
 import { HomePageHeader } from '../HomePageHeader';
+
+expect.extend(toHaveNoViolations);
 
 jest.mock('@bahmni/design-system', () => ({
   Header: ({ ariaLabel, extraContent }: any) => (
@@ -64,5 +67,10 @@ describe('HomePageHeader', () => {
     const globalBar = screen.getByTestId('header-global-bar');
     expect(globalBar).toContainElement(screen.getByTestId('location-selector'));
     expect(globalBar).toContainElement(screen.getByTestId('user-profile-menu'));
+  });
+
+  it('has no accessibility violations', async () => {
+    const { container } = render(<HomePageHeader />);
+    expect(await axe(container)).toHaveNoViolations();
   });
 });

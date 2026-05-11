@@ -1,7 +1,10 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
+import { axe, toHaveNoViolations } from 'jest-axe';
 import { LocationContext } from '../../../context/LocationContext';
 import { LocationSelector } from '../LocationSelector';
 import { mockLocation, mockLocations } from './__mocks__/LocationSelectorMocks';
+
+expect.extend(toHaveNoViolations);
 
 jest.mock('@bahmni/design-system', () => ({
   Dropdown: ({ items, onChange, label, disabled, ...props }: any) => (
@@ -97,5 +100,10 @@ describe('LocationSelector', () => {
     });
 
     expect(context.setLocation).not.toHaveBeenCalled();
+  });
+
+  it('has no accessibility violations', async () => {
+    const { container } = renderWithContext();
+    expect(await axe(container)).toHaveNoViolations();
   });
 });
