@@ -163,7 +163,6 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
               }}
               allowCustomValue
               onInputChange={(value: string) => setDrugSearchTerm(value)}
-              size="md"
               disabled={!!(immunization.basedOnReference && immunization.drug)}
               required={findAttr('drug', attributes)?.required}
               invalid={!!immunization.errors.drug}
@@ -188,7 +187,6 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
                 data-testid={`immunization-administered-on-input-${id}-test-id`}
                 labelText={t('IMMUNIZATION_HISTORY_ADMINISTERED_ON')}
                 placeholder={t('IMMUNIZATION_HISTORY_ADMINISTERED_ON')}
-                size="md"
                 hideLabel
                 disabled={
                   !!(
@@ -243,7 +241,6 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
               onInputChange={(searchQuery: string) =>
                 handleAdministeredLocationTagInputChange(searchQuery)
               }
-              size="md"
               disabled={
                 !!(
                   immunization.basedOnReference &&
@@ -277,7 +274,6 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
               onInputChange={(searchQuery: string) =>
                 handleRouteInputChange(searchQuery)
               }
-              size="md"
               invalid={!!immunization.errors.route}
               invalidText={
                 immunization.errors.route ? t(immunization.errors.route) : ''
@@ -303,7 +299,6 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
               onInputChange={(searchQuery: string) =>
                 handleSiteInputChange(searchQuery)
               }
-              size="md"
               invalid={!!immunization.errors.site}
               invalidText={
                 immunization.errors.site ? t(immunization.errors.site) : ''
@@ -321,7 +316,6 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
               placeholder={t('IMMUNIZATION_HISTORY_MANUFACTURER_PLACEHOLDER')}
               value={immunization.manufacturer ?? ''}
               onChange={(e) => updateManufacturer(id, e.target.value)}
-              size="md"
               hideLabel
               invalid={!!immunization.errors.manufacturer}
               invalidText={
@@ -342,7 +336,6 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
               placeholder={t('IMMUNIZATION_HISTORY_BATCH_NUMBER_PLACEHOLDER')}
               value={immunization.batchNumber ?? ''}
               onChange={(e) => updateBatchNumber(id, e.target.value)}
-              size="md"
               hideLabel
               invalid={!!immunization.errors.batchNumber}
               invalidText={
@@ -366,7 +359,6 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
                 updateDoseSequence(id, Number(value))
               }
               min={0}
-              size="md"
               hideLabel
               invalid={!!immunization.errors.doseSequence}
               invalidText={
@@ -400,7 +392,6 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
                 data-testid={`immunization-expiry-date-input-${id}`}
                 labelText={t('IMMUNIZATION_HISTORY_EXPIRY_DATE')}
                 placeholder={t('IMMUNIZATION_HISTORY_EXPIRY_DATE')}
-                size="md"
                 hideLabel
                 invalid={!!immunization.errors.expiryDate}
                 invalidText={

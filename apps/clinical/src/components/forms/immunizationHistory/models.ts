@@ -71,14 +71,13 @@ export interface CreateImmunizationBundleEntriesParams {
 export interface ImmunizationHistoryState {
   selectedImmunizations: ImmunizationInputEntry[];
   attributes: InputControlAttributes[] | undefined;
-  addImmunization: (vaccineCode: { code: string; display: string }) => void;
-  addImmunizationWithDefaults: (
+  addImmunization: (
     vaccineCode: { code: string; display: string },
-    defaults: {
+    defaults?: {
       basedOnReference?: string | null;
-      drug: ImmunizationDrug | null;
-      administeredOn: Date | null;
-      administeredLocation: ImmunizationLocation | null;
+      drug?: ImmunizationDrug | null;
+      administeredOn?: Date | null;
+      administeredLocation?: ImmunizationLocation | null;
     },
   ) => void;
   removeImmunization: (id: string) => void;

@@ -304,6 +304,16 @@ export const mockImmunizationEntryWithBasedOnAndNullFields: ImmunizationInputEnt
     administeredLocation: null,
   };
 
+export const mockImmunizationEntryWithCustomDrug: ImmunizationInputEntry = {
+  ...mockImmunizationEntry,
+  drug: { display: 'Custom Drug Name' },
+};
+
+export const mockImmunizationEntryWithCustomLocation: ImmunizationInputEntry = {
+  ...mockImmunizationEntry,
+  administeredLocation: { display: 'Custom Ward' },
+};
+
 export const mockMedicationRequest: MedicationRequest = {
   resourceType: 'MedicationRequest',
   id: 'med-request-uuid',
@@ -332,7 +342,6 @@ export const mockStore = {
   selectedImmunizations: [],
   attributes: undefined,
   addImmunization: jest.fn(),
-  addImmunizationWithDefaults: jest.fn(),
   removeImmunization: jest.fn(),
   setAttributes: jest.fn(),
   updateAdministeredOn: jest.fn(),
