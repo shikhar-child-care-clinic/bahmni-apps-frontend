@@ -27,6 +27,7 @@ const FIELD_UPDATE_CASES: FieldUpdateCase[] = [
   ['manufacturer', 'updateManufacturer', 'Pfizer'],
   ['batchNumber', 'updateBatchNumber', 'BATCH-001'],
   ['doseSequence', 'updateDoseSequence', 3],
+  ['note', 'updateNote', 'Some note'],
 ];
 
 const ERROR_RETAINED_CASES: FieldUpdateCase[] = [
@@ -46,6 +47,8 @@ const ERROR_RETAINED_CASES: FieldUpdateCase[] = [
   ['batchNumber', 'updateBatchNumber', ''],
   ['batchNumber (whitespace)', 'updateBatchNumber', '   '],
   ['doseSequence', 'updateDoseSequence', null],
+  ['note', 'updateNote', ''],
+  ['note (whitespace)', 'updateNote', '   '],
 ];
 
 describe('useImmunizationHistoryStore', () => {
@@ -279,6 +282,7 @@ describe('useImmunizationHistoryStore', () => {
       store().updateManufacturer(id, 'Pfizer');
       store().updateBatchNumber(id, 'BATCH-001');
       store().updateDoseSequence(id, 3);
+      store().updateNote(id, 'Some note');
 
       const isValid = store().validateAll();
 
@@ -361,6 +365,7 @@ describe('useImmunizationHistoryStore', () => {
       ],
       ['on', new Date('2025-06-01'), undefined],
       ['after', new Date('2026-01-01'), undefined],
+      ['null', null, undefined],
     ])(
       'updateExpiryDate: sets expiryDate error when new value is %s administeredOn',
       (_label, newExpiryDate, expectedError) => {
@@ -370,6 +375,7 @@ describe('useImmunizationHistoryStore', () => {
         store().updateAdministeredOn(id, new Date('2025-06-01'));
         store().validateAll();
 
+        store().updateExpiryDate(id, new Date('2025-01-01'));
         store().updateExpiryDate(id, newExpiryDate);
 
         expect(store().selectedImmunizations[0].errors.expiryDate).toBe(

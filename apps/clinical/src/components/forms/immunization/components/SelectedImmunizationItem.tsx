@@ -56,6 +56,7 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
     updateNote,
   } = useImmunizationHistoryStore(storeKey);
   const { id } = immunization;
+  const noteRequired = findAttr('note', attributes)?.required;
   const [hasNote, setHasNote] = useState(!!immunization.note);
   const [drugSearchTerm, setDrugSearchTerm] = useState('');
   const [routeSearchTerm, setRouteSearchTerm] = useState('');
@@ -415,7 +416,7 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
 
         {findAttr('note', attributes) && (
           <Column sm={4} md={8} lg={16} className={styles.column}>
-            {!hasNote && (
+            {!hasNote && !noteRequired && !immunization.errors.note ? (
               <Link
                 href="#"
                 data-testid={`immunization-add-note-link-${id}-test-id`}
@@ -426,8 +427,7 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
               >
                 {t('IMMUNIZATION_HISTORY_ADD_NOTE')}
               </Link>
-            )}
-            {hasNote && (
+            ) : (
               <TextAreaWClose
                 id={`immunization-note-${id}`}
                 data-testid={`immunization-note-${id}-test-id`}
@@ -442,6 +442,10 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
                 enableCounter
                 maxCount={1024}
                 className={styles.textArea}
+                invalid={!!immunization.errors.note}
+                invalidText={
+                  immunization.errors.note ? t(immunization.errors.note) : ''
+                }
               />
             )}
           </Column>

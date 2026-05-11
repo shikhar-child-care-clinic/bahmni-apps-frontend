@@ -101,6 +101,11 @@ describe('SelectedImmunizationItem', () => {
         [{ name: 'note', required: false }],
         `immunization-add-note-link-${id}-test-id`,
       ],
+      [
+        'note (required)',
+        [{ name: 'note', required: true }],
+        `immunization-note-${id}-test-id`,
+      ],
     ])(
       'renders %s field when attributes includes it',
       (_, attributes, testId) => {
@@ -133,6 +138,33 @@ describe('SelectedImmunizationItem', () => {
       expect(screen.queryByTestId(testId)).not.toBeInTheDocument();
     });
 
+    it.each([
+      [
+        'drug',
+        { ...mockImmunizationEntry, drug: { display: 'Custom Drug' } },
+        `immunization-drug-name-combobox-${id}-test-id`,
+      ],
+      [
+        'administeredLocation',
+        {
+          ...mockImmunizationEntry,
+          administeredLocation: { display: 'Custom Location' },
+        },
+        `immunization-administered-location-${id}-test-id`,
+      ],
+    ])(
+      'renders %s combobox with selected item when field has a value but no code/uuid',
+      (_, immunization, testId) => {
+        render(
+          <SelectedImmunizationItem
+            {...defaultProps}
+            immunization={immunization}
+          />,
+        );
+        expect(screen.getByTestId(testId)).toBeInTheDocument();
+      },
+    );
+
     it('sets expiryDate minDate to the day after administeredOn when administeredOn is set', () => {
       render(
         <SelectedImmunizationItem
@@ -157,6 +189,7 @@ describe('SelectedImmunizationItem', () => {
       ['batchNumber', 'Please enter a batch number'],
       ['doseSequence', 'Please enter a dose sequence'],
       ['expiryDate', 'Please select an expiry date'],
+      ['note', 'Please enter a note'],
     ])('shows error message for %s field when error is set', (_, errorText) => {
       render(
         <SelectedImmunizationItem

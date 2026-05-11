@@ -202,6 +202,7 @@
   "IMMUNIZATION_HISTORY_MANUFACTURER": "Fabricante",
   "IMMUNIZATION_HISTORY_MANUFACTURER_PLACEHOLDER": "Ingresar fabricante",
   "IMMUNIZATION_HISTORY_MANUFACTURER_REQUIRED": "Por favor ingrese el fabricante",
+  "IMMUNIZATION_HISTORY_NOTE_REQUIRED": "Por favor ingrese una nota",
   "IMMUNIZATION_HISTORY_ROUTE_PLACEHOLDER": "Ingresar vía",
   "IMMUNIZATION_HISTORY_ROUTE_REQUIRED": "Por favor seleccione una vía",
   "IMMUNIZATION_HISTORY_SEARCH_ARIA_LABEL": "Buscar para agregar inmunización",

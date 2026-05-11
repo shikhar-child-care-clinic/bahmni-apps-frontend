@@ -20,6 +20,246 @@ const storeRegistry = new Map<
   ImmunizationHistoryStoreApi
 >();
 
+function applyAdministeredOnUpdate(
+  entry: ImmunizationInputEntry,
+  value: Date | null,
+): ImmunizationInputEntry {
+  const updated = { ...entry, administeredOn: value };
+  if (entry.hasBeenValidated) {
+    updated.errors = { ...entry.errors };
+    if (value) delete updated.errors.administeredOn;
+    if (entry.expiryDate) {
+      if (value && entry.expiryDate < value) {
+        updated.errors.expiryDate =
+          'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON';
+      } else {
+        delete updated.errors.expiryDate;
+      }
+    }
+  }
+  return updated;
+}
+
+function applyVaccineDrugUpdate(
+  entry: ImmunizationInputEntry,
+  drug: ImmunizationDrug | null,
+): ImmunizationInputEntry {
+  const updated = { ...entry, drug };
+  if (entry.hasBeenValidated && drug?.display.trim()) {
+    updated.errors = { ...entry.errors };
+    delete updated.errors.drug;
+  }
+  return updated;
+}
+
+function applyAdministeredLocationUpdate(
+  entry: ImmunizationInputEntry,
+  value: ImmunizationLocation | null,
+): ImmunizationInputEntry {
+  const updated = { ...entry, administeredLocation: value };
+  if (entry.hasBeenValidated && value?.display.trim()) {
+    updated.errors = { ...entry.errors };
+    delete updated.errors.administeredLocation;
+  }
+  return updated;
+}
+
+function applyRouteUpdate(
+  entry: ImmunizationInputEntry,
+  value: string,
+): ImmunizationInputEntry {
+  const updated = { ...entry, route: value };
+  if (entry.hasBeenValidated && value) {
+    updated.errors = { ...entry.errors };
+    delete updated.errors.route;
+  }
+  return updated;
+}
+
+function applySiteUpdate(
+  entry: ImmunizationInputEntry,
+  value: string,
+): ImmunizationInputEntry {
+  const updated = { ...entry, site: value };
+  if (entry.hasBeenValidated && value) {
+    updated.errors = { ...entry.errors };
+    delete updated.errors.site;
+  }
+  return updated;
+}
+
+function applyExpiryDateUpdate(
+  entry: ImmunizationInputEntry,
+  value: Date | null,
+): ImmunizationInputEntry {
+  const updated = { ...entry, expiryDate: value };
+  if (entry.hasBeenValidated) {
+    updated.errors = { ...entry.errors };
+    if (!value) {
+      if (
+        updated.errors.expiryDate ===
+        'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON'
+      ) {
+        delete updated.errors.expiryDate;
+      }
+    } else if (entry.administeredOn && value < entry.administeredOn) {
+      updated.errors.expiryDate =
+        'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON';
+    } else {
+      delete updated.errors.expiryDate;
+    }
+  }
+  return updated;
+}
+
+function applyManufacturerUpdate(
+  entry: ImmunizationInputEntry,
+  value: string,
+): ImmunizationInputEntry {
+  const updated = { ...entry, manufacturer: value };
+  if (entry.hasBeenValidated && value.trim()) {
+    updated.errors = { ...entry.errors };
+    delete updated.errors.manufacturer;
+  }
+  return updated;
+}
+
+function applyBatchNumberUpdate(
+  entry: ImmunizationInputEntry,
+  value: string,
+): ImmunizationInputEntry {
+  const updated = { ...entry, batchNumber: value };
+  if (entry.hasBeenValidated && value.trim()) {
+    updated.errors = { ...entry.errors };
+    delete updated.errors.batchNumber;
+  }
+  return updated;
+}
+
+function applyNoteUpdate(
+  entry: ImmunizationInputEntry,
+  value: string,
+): ImmunizationInputEntry {
+  const updated = { ...entry, note: value };
+  if (entry.hasBeenValidated && value.trim()) {
+    updated.errors = { ...entry.errors };
+    delete updated.errors.note;
+  }
+  return updated;
+}
+
+function applyDoseSequenceUpdate(
+  entry: ImmunizationInputEntry,
+  sanitized: number | null,
+): ImmunizationInputEntry {
+  const updated = { ...entry, doseSequence: sanitized };
+  if (entry.hasBeenValidated && sanitized !== null && sanitized >= 1) {
+    updated.errors = { ...entry.errors };
+    delete updated.errors.doseSequence;
+  }
+  return updated;
+}
+
+type FieldValidationConfig = {
+  attr: string;
+  key: keyof ImmunizationInputEntry['errors'];
+  errorMsg: string;
+  hasValue: (entry: ImmunizationInputEntry) => boolean;
+};
+
+const FIELD_VALIDATIONS: FieldValidationConfig[] = [
+  {
+    attr: 'drug',
+    key: 'drug',
+    errorMsg: 'IMMUNIZATION_HISTORY_DRUG_CODE_REQUIRED',
+    hasValue: (e) => Boolean(e.drug),
+  },
+  {
+    attr: 'administeredOn',
+    key: 'administeredOn',
+    errorMsg: 'IMMUNIZATION_HISTORY_ADMINISTERED_ON_REQUIRED',
+    hasValue: (e) => Boolean(e.administeredOn),
+  },
+  {
+    attr: 'administeredLocation',
+    key: 'administeredLocation',
+    errorMsg: 'IMMUNIZATION_HISTORY_ADMINISTERED_LOCATION_REQUIRED',
+    hasValue: (e) => Boolean(e.administeredLocation?.display.trim()),
+  },
+  {
+    attr: 'route',
+    key: 'route',
+    errorMsg: 'IMMUNIZATION_HISTORY_ROUTE_REQUIRED',
+    hasValue: (e) => Boolean(e.route?.trim()),
+  },
+  {
+    attr: 'site',
+    key: 'site',
+    errorMsg: 'IMMUNIZATION_HISTORY_SITE_REQUIRED',
+    hasValue: (e) => Boolean(e.site?.trim()),
+  },
+  {
+    attr: 'expiryDate',
+    key: 'expiryDate',
+    errorMsg: 'IMMUNIZATION_HISTORY_EXPIRY_DATE_REQUIRED',
+    hasValue: (e) => Boolean(e.expiryDate),
+  },
+  {
+    attr: 'manufacturer',
+    key: 'manufacturer',
+    errorMsg: 'IMMUNIZATION_HISTORY_MANUFACTURER_REQUIRED',
+    hasValue: (e) => Boolean(e.manufacturer?.trim()),
+  },
+  {
+    attr: 'batchNumber',
+    key: 'batchNumber',
+    errorMsg: 'IMMUNIZATION_HISTORY_BATCH_NUMBER_REQUIRED',
+    hasValue: (e) => Boolean(e.batchNumber?.trim()),
+  },
+  {
+    attr: 'doseSequence',
+    key: 'doseSequence',
+    errorMsg: 'IMMUNIZATION_HISTORY_DOSE_SEQUENCE_REQUIRED',
+    hasValue: (e) => e.doseSequence !== null && e.doseSequence >= 1,
+  },
+  {
+    attr: 'note',
+    key: 'note',
+    errorMsg: 'IMMUNIZATION_HISTORY_NOTE_REQUIRED',
+    hasValue: (e) => Boolean(e.note?.trim()),
+  },
+];
+
+function validateEntry(
+  entry: ImmunizationInputEntry,
+  attributes: InputControlAttributes[] | undefined,
+): { entry: ImmunizationInputEntry; valid: boolean } {
+  const errors = { ...entry.errors };
+  let valid = true;
+
+  for (const field of FIELD_VALIDATIONS) {
+    if (findAttr(field.attr, attributes)?.required) {
+      if (field.hasValue(entry)) delete errors[field.key];
+      else {
+        errors[field.key] = field.errorMsg;
+        valid = false;
+      }
+    }
+  }
+
+  if (
+    entry.expiryDate &&
+    entry.administeredOn &&
+    entry.expiryDate < entry.administeredOn
+  ) {
+    errors.expiryDate =
+      'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON';
+    valid = false;
+  }
+
+  return { entry: { ...entry, errors, hasBeenValidated: true }, valid };
+}
+
 function createImmunizationHistoryStore() {
   return createStore<ImmunizationHistoryState>((set, get) => ({
     selectedImmunizations: [],
@@ -79,7 +319,7 @@ function createImmunizationHistoryStore() {
     removeImmunization: (id: string) => {
       set((state) => ({
         selectedImmunizations: state.selectedImmunizations.filter(
-          (entry) => entry.id !== id,
+          (e) => e.id !== id,
         ),
       }));
     },
@@ -90,37 +330,17 @@ function createImmunizationHistoryStore() {
 
     updateAdministeredOn: (id: string, value: Date | null) => {
       set((state) => ({
-        selectedImmunizations: state.selectedImmunizations.map((entry) => {
-          if (entry.id !== id) return entry;
-          const updated = { ...entry, administeredOn: value };
-          if (entry.hasBeenValidated) {
-            updated.errors = { ...entry.errors };
-            if (value) delete updated.errors.administeredOn;
-            if (entry.expiryDate) {
-              if (value && entry.expiryDate < value) {
-                updated.errors.expiryDate =
-                  'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON';
-              } else {
-                delete updated.errors.expiryDate;
-              }
-            }
-          }
-          return updated;
-        }),
+        selectedImmunizations: state.selectedImmunizations.map((entry) =>
+          entry.id === id ? applyAdministeredOnUpdate(entry, value) : entry,
+        ),
       }));
     },
 
     updateVaccineDrug: (id: string, drug: ImmunizationDrug | null) => {
       set((state) => ({
-        selectedImmunizations: state.selectedImmunizations.map((entry) => {
-          if (entry.id !== id) return entry;
-          const updated = { ...entry, drug };
-          if (entry.hasBeenValidated && drug?.display.trim()) {
-            updated.errors = { ...entry.errors };
-            delete updated.errors.drug;
-          }
-          return updated;
-        }),
+        selectedImmunizations: state.selectedImmunizations.map((entry) =>
+          entry.id === id ? applyVaccineDrugUpdate(entry, drug) : entry,
+        ),
       }));
     },
 
@@ -129,217 +349,82 @@ function createImmunizationHistoryStore() {
       value: ImmunizationLocation | null,
     ) => {
       set((state) => ({
-        selectedImmunizations: state.selectedImmunizations.map((entry) => {
-          if (entry.id !== id) return entry;
-          const updated = { ...entry, administeredLocation: value };
-          if (entry.hasBeenValidated && value?.display.trim()) {
-            updated.errors = { ...entry.errors };
-            delete updated.errors.administeredLocation;
-          }
-          return updated;
-        }),
+        selectedImmunizations: state.selectedImmunizations.map((entry) =>
+          entry.id === id
+            ? applyAdministeredLocationUpdate(entry, value)
+            : entry,
+        ),
       }));
     },
 
     updateRoute: (id: string, value: string) => {
       set((state) => ({
-        selectedImmunizations: state.selectedImmunizations.map((entry) => {
-          if (entry.id !== id) return entry;
-          const updated = { ...entry, route: value };
-          if (entry.hasBeenValidated && value) {
-            updated.errors = { ...entry.errors };
-            delete updated.errors.route;
-          }
-          return updated;
-        }),
+        selectedImmunizations: state.selectedImmunizations.map((entry) =>
+          entry.id === id ? applyRouteUpdate(entry, value) : entry,
+        ),
       }));
     },
 
     updateSite: (id: string, value: string) => {
       set((state) => ({
-        selectedImmunizations: state.selectedImmunizations.map((entry) => {
-          if (entry.id !== id) return entry;
-          const updated = { ...entry, site: value };
-          if (entry.hasBeenValidated && value) {
-            updated.errors = { ...entry.errors };
-            delete updated.errors.site;
-          }
-          return updated;
-        }),
+        selectedImmunizations: state.selectedImmunizations.map((entry) =>
+          entry.id === id ? applySiteUpdate(entry, value) : entry,
+        ),
       }));
     },
 
     updateExpiryDate: (id: string, value: Date | null) => {
       set((state) => ({
-        selectedImmunizations: state.selectedImmunizations.map((entry) => {
-          if (entry.id !== id) return entry;
-          const updated = { ...entry, expiryDate: value };
-          if (entry.hasBeenValidated && value) {
-            updated.errors = { ...entry.errors };
-            if (entry.administeredOn && value < entry.administeredOn) {
-              updated.errors.expiryDate =
-                'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON';
-            } else {
-              delete updated.errors.expiryDate;
-            }
-          }
-          return updated;
-        }),
+        selectedImmunizations: state.selectedImmunizations.map((entry) =>
+          entry.id === id ? applyExpiryDateUpdate(entry, value) : entry,
+        ),
       }));
     },
 
     updateManufacturer: (id: string, value: string) => {
       set((state) => ({
-        selectedImmunizations: state.selectedImmunizations.map((entry) => {
-          if (entry.id !== id) return entry;
-          const updated = { ...entry, manufacturer: value };
-          if (entry.hasBeenValidated && value.trim()) {
-            updated.errors = { ...entry.errors };
-            delete updated.errors.manufacturer;
-          }
-          return updated;
-        }),
+        selectedImmunizations: state.selectedImmunizations.map((entry) =>
+          entry.id === id ? applyManufacturerUpdate(entry, value) : entry,
+        ),
       }));
     },
 
     updateBatchNumber: (id: string, value: string) => {
       set((state) => ({
-        selectedImmunizations: state.selectedImmunizations.map((entry) => {
-          if (entry.id !== id) return entry;
-          const updated = { ...entry, batchNumber: value };
-          if (entry.hasBeenValidated && value.trim()) {
-            updated.errors = { ...entry.errors };
-            delete updated.errors.batchNumber;
-          }
-          return updated;
-        }),
+        selectedImmunizations: state.selectedImmunizations.map((entry) =>
+          entry.id === id ? applyBatchNumberUpdate(entry, value) : entry,
+        ),
       }));
     },
 
     updateDoseSequence: (id: string, value: number | null) => {
       const sanitized = value === null ? null : Math.max(0, Math.floor(value));
       set((state) => ({
-        selectedImmunizations: state.selectedImmunizations.map((entry) => {
-          if (entry.id !== id) return entry;
-          const updated = { ...entry, doseSequence: sanitized };
-          if (entry.hasBeenValidated && sanitized !== null && sanitized >= 1) {
-            updated.errors = { ...entry.errors };
-            delete updated.errors.doseSequence;
-          }
-          return updated;
-        }),
+        selectedImmunizations: state.selectedImmunizations.map((entry) =>
+          entry.id === id ? applyDoseSequenceUpdate(entry, sanitized) : entry,
+        ),
       }));
     },
 
     updateNote: (id: string, value: string) => {
       set((state) => ({
         selectedImmunizations: state.selectedImmunizations.map((entry) =>
-          entry.id === id ? { ...entry, note: value } : entry,
+          entry.id === id ? applyNoteUpdate(entry, value) : entry,
         ),
       }));
     },
 
     validateAll: () => {
-      let isValid = true;
       const { attributes } = get();
-
-      const checkField = (
-        errors: ImmunizationInputEntry['errors'],
-        key: keyof ImmunizationInputEntry['errors'],
-        isEmpty: boolean,
-        errorKey: string,
-      ) => {
-        if (isEmpty) {
-          errors[key] = errorKey;
-          isValid = false;
-        } else {
-          delete errors[key];
-        }
-      };
-
-      set((state) => ({
-        selectedImmunizations: state.selectedImmunizations.map((entry) => {
-          const errors = { ...entry.errors };
-
-          if (findAttr('drug', attributes)?.required)
-            checkField(
-              errors,
-              'drug',
-              !entry.drug,
-              'IMMUNIZATION_HISTORY_DRUG_CODE_REQUIRED',
-            );
-
-          if (findAttr('administeredOn', attributes)?.required)
-            checkField(
-              errors,
-              'administeredOn',
-              !entry.administeredOn,
-              'IMMUNIZATION_HISTORY_ADMINISTERED_ON_REQUIRED',
-            );
-          if (findAttr('administeredLocation', attributes)?.required)
-            checkField(
-              errors,
-              'administeredLocation',
-              !entry.administeredLocation?.display.trim(),
-              'IMMUNIZATION_HISTORY_ADMINISTERED_LOCATION_REQUIRED',
-            );
-          if (findAttr('route', attributes)?.required)
-            checkField(
-              errors,
-              'route',
-              !entry.route?.trim(),
-              'IMMUNIZATION_HISTORY_ROUTE_REQUIRED',
-            );
-          if (findAttr('site', attributes)?.required)
-            checkField(
-              errors,
-              'site',
-              !entry.site?.trim(),
-              'IMMUNIZATION_HISTORY_SITE_REQUIRED',
-            );
-          if (findAttr('expiryDate', attributes)?.required)
-            checkField(
-              errors,
-              'expiryDate',
-              !entry.expiryDate,
-              'IMMUNIZATION_HISTORY_EXPIRY_DATE_REQUIRED',
-            );
-          if (findAttr('manufacturer', attributes)?.required)
-            checkField(
-              errors,
-              'manufacturer',
-              !entry.manufacturer?.trim(),
-              'IMMUNIZATION_HISTORY_MANUFACTURER_REQUIRED',
-            );
-          if (findAttr('batchNumber', attributes)?.required)
-            checkField(
-              errors,
-              'batchNumber',
-              !entry.batchNumber?.trim(),
-              'IMMUNIZATION_HISTORY_BATCH_NUMBER_REQUIRED',
-            );
-
-          if (findAttr('doseSequence', attributes)?.required)
-            checkField(
-              errors,
-              'doseSequence',
-              entry.doseSequence === null || entry.doseSequence < 1,
-              'IMMUNIZATION_HISTORY_DOSE_SEQUENCE_REQUIRED',
-            );
-
-          if (
-            entry.expiryDate &&
-            entry.administeredOn &&
-            entry.expiryDate < entry.administeredOn
-          ) {
-            errors.expiryDate =
-              'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON';
-            isValid = false;
-          }
-
-          return { ...entry, errors, hasBeenValidated: true };
-        }),
-      }));
+      let isValid = true;
+      set((state) => {
+        const validated = state.selectedImmunizations.map((entry) => {
+          const result = validateEntry(entry, attributes);
+          if (!result.valid) isValid = false;
+          return result.entry;
+        });
+        return { selectedImmunizations: validated };
+      });
       return isValid;
     },
 

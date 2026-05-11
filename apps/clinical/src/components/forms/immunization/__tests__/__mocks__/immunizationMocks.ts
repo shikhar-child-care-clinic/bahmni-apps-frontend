@@ -182,7 +182,7 @@ export const mockFullAttributes: InputControlAttributes[] = [
   { name: 'note', required: false },
 ];
 
-/** All 10 form fields present, all fields required (note is never required) */
+/** All 10 form fields present, all fields required */
 export const mockAllRequiredAttributes: InputControlAttributes[] = [
   { name: 'drug', required: true },
   { name: 'administeredOn', required: true },
@@ -193,7 +193,7 @@ export const mockAllRequiredAttributes: InputControlAttributes[] = [
   { name: 'manufacturer', required: true },
   { name: 'batchNumber', required: true },
   { name: 'doseSequence', required: true },
-  { name: 'note', required: false },
+  { name: 'note', required: true },
 ];
 
 /** All 10 form fields present, administered fields optional, others optional */
@@ -228,6 +228,7 @@ export const mockImmunizationEntryWithErrors: ImmunizationInputEntry = {
     manufacturer: 'IMMUNIZATION_HISTORY_MANUFACTURER_REQUIRED',
     batchNumber: 'IMMUNIZATION_HISTORY_BATCH_NUMBER_REQUIRED',
     doseSequence: 'IMMUNIZATION_HISTORY_DOSE_SEQUENCE_REQUIRED',
+    note: 'IMMUNIZATION_HISTORY_NOTE_REQUIRED',
   },
   hasBeenValidated: true,
 };
