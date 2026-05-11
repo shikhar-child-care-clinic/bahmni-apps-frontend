@@ -19,6 +19,11 @@
   color: inherit;
 }
 
+:global(.cds--overflow-menu-options),
+:global(.cds--overflow-menu-options__btn) {
+  background-color: #{$layer-02} !important;
+}
+
 .overflowMenu {
   background: transparent;
 
@@ -35,4 +40,5 @@
     margin-top: $spacing-03;
   }
 }
+
 
