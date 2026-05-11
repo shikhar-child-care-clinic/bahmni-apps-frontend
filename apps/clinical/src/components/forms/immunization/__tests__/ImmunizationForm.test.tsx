@@ -4,7 +4,7 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { useClinicalConfig } from '../../../../providers/clinicalConfig';
-import ImmunizationHistoryForm from '../ImmunizationHistoryForm';
+import ImmunizationForm from '../ImmunizationForm';
 import { useImmunizationHistoryStore } from '../stores';
 import {
   mockAdministrationFormConfig,
@@ -20,7 +20,7 @@ import {
   mockStore,
   mockVaccinationBundle,
   mockVaccineValueSet,
-} from './__mocks__/immunizationHistoryMocks';
+} from './__mocks__/immunizationMocks';
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
@@ -65,7 +65,7 @@ const defaultQueryMock = ({ queryKey }: { queryKey: readonly unknown[] }) => {
   return { data: undefined, isLoading: false, error: null };
 };
 
-describe('ImmunizationHistoryForm', () => {
+describe('ImmunizationForm', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.mocked(useImmunizationHistoryStore).mockReturnValue(mockStore);
@@ -81,7 +81,7 @@ describe('ImmunizationHistoryForm', () => {
   describe('Rendering', () => {
     it('renders form title and search combobox', () => {
       render(
-        <ImmunizationHistoryForm
+        <ImmunizationForm
           consultationStartEventPayload={{}}
           formConfig={mockFormConfig}
         />,
@@ -94,7 +94,7 @@ describe('ImmunizationHistoryForm', () => {
 
     it('hides search combobox when disableAdditionalAdministrations is true in metadata', () => {
       render(
-        <ImmunizationHistoryForm
+        <ImmunizationForm
           consultationStartEventPayload={{}}
           formConfig={mockAdministrationFormConfig}
         />,
@@ -120,7 +120,7 @@ describe('ImmunizationHistoryForm', () => {
           return defaultQueryMock({ queryKey: qk }) as any;
         });
         render(
-          <ImmunizationHistoryForm
+          <ImmunizationForm
             consultationStartEventPayload={{}}
             formConfig={mockFormConfig}
           />,
@@ -142,7 +142,7 @@ describe('ImmunizationHistoryForm', () => {
         return defaultQueryMock({ queryKey: qk }) as any;
       });
       render(
-        <ImmunizationHistoryForm
+        <ImmunizationForm
           consultationStartEventPayload={{}}
           formConfig={mockFormConfig}
         />,
@@ -172,7 +172,7 @@ describe('ImmunizationHistoryForm', () => {
           return defaultQueryMock({ queryKey: qk }) as any;
         });
         render(
-          <ImmunizationHistoryForm
+          <ImmunizationForm
             consultationStartEventPayload={{}}
             formConfig={mockFormConfig}
           />,
@@ -220,7 +220,7 @@ describe('ImmunizationHistoryForm', () => {
           return defaultQueryMock({ queryKey: qk }) as any;
         });
         render(
-          <ImmunizationHistoryForm
+          <ImmunizationForm
             consultationStartEventPayload={{}}
             formConfig={mockFormConfig}
           />,
@@ -238,7 +238,7 @@ describe('ImmunizationHistoryForm', () => {
     it('filters vaccine results by search term', async () => {
       const user = userEvent.setup();
       render(
-        <ImmunizationHistoryForm
+        <ImmunizationForm
           consultationStartEventPayload={{}}
           formConfig={mockFormConfig}
         />,
@@ -258,7 +258,7 @@ describe('ImmunizationHistoryForm', () => {
     it('calls addImmunization with code and display when item selected', async () => {
       const user = userEvent.setup();
       render(
-        <ImmunizationHistoryForm
+        <ImmunizationForm
           consultationStartEventPayload={{}}
           formConfig={mockFormConfig}
         />,
@@ -282,7 +282,7 @@ describe('ImmunizationHistoryForm', () => {
     it('does not call addImmunization when selection is cleared', async () => {
       const user = userEvent.setup();
       render(
-        <ImmunizationHistoryForm
+        <ImmunizationForm
           consultationStartEventPayload={{}}
           formConfig={mockFormConfig}
         />,
@@ -310,7 +310,7 @@ describe('ImmunizationHistoryForm', () => {
         selectedImmunizations: [mockImmunizationEntry],
       });
       render(
-        <ImmunizationHistoryForm
+        <ImmunizationForm
           consultationStartEventPayload={{}}
           formConfig={mockFormConfig}
         />,
@@ -325,7 +325,7 @@ describe('ImmunizationHistoryForm', () => {
 
     it('does not show BoxWHeader when no immunizations selected', () => {
       render(
-        <ImmunizationHistoryForm
+        <ImmunizationForm
           consultationStartEventPayload={{}}
           formConfig={mockFormConfig}
         />,
@@ -349,7 +349,7 @@ describe('ImmunizationHistoryForm', () => {
         return defaultQueryMock({ queryKey: qk }) as any;
       });
       render(
-        <ImmunizationHistoryForm
+        <ImmunizationForm
           consultationStartEventPayload={{}}
           formConfig={mockFormConfig}
         />,
@@ -374,7 +374,7 @@ describe('ImmunizationHistoryForm', () => {
         return defaultQueryMock({ queryKey: qk }) as any;
       });
       render(
-        <ImmunizationHistoryForm
+        <ImmunizationForm
           consultationStartEventPayload={{}}
           formConfig={mockFormConfig}
         />,
@@ -398,7 +398,7 @@ describe('ImmunizationHistoryForm', () => {
         selectedImmunizations: [mockImmunizationEntry],
       });
       render(
-        <ImmunizationHistoryForm
+        <ImmunizationForm
           consultationStartEventPayload={{}}
           formConfig={mockFormConfig}
         />,
@@ -433,7 +433,7 @@ describe('ImmunizationHistoryForm', () => {
       (_, payload, setupMocks) => {
         setupMocks();
         render(
-          <ImmunizationHistoryForm
+          <ImmunizationForm
             consultationStartEventPayload={payload}
             formConfig={mockAdministrationFormConfig}
           />,
@@ -453,7 +453,7 @@ describe('ImmunizationHistoryForm', () => {
         return defaultQueryMock({ queryKey: qk }) as any;
       });
       render(
-        <ImmunizationHistoryForm
+        <ImmunizationForm
           consultationStartEventPayload={consultationPayloadWithBasedOn}
           formConfig={mockAdministrationFormConfig}
         />,
@@ -482,7 +482,7 @@ describe('ImmunizationHistoryForm', () => {
         return defaultQueryMock({ queryKey: qk }) as any;
       });
       render(
-        <ImmunizationHistoryForm
+        <ImmunizationForm
           consultationStartEventPayload={consultationPayloadWithBasedOn}
           formConfig={mockAdministrationFormConfig}
         />,
@@ -513,7 +513,7 @@ describe('ImmunizationHistoryForm', () => {
     ])('matches snapshot with %s', (_, storeOverride) => {
       jest.mocked(useImmunizationHistoryStore).mockReturnValue(storeOverride);
       const { container } = render(
-        <ImmunizationHistoryForm consultationStartEventPayload={{}} />,
+        <ImmunizationForm consultationStartEventPayload={{}} />,
       );
       expect(container).toMatchSnapshot();
     });
@@ -529,7 +529,7 @@ describe('ImmunizationHistoryForm', () => {
     ])('has no accessibility violations with %s', async (_, storeOverride) => {
       jest.mocked(useImmunizationHistoryStore).mockReturnValue(storeOverride);
       const { container } = render(
-        <ImmunizationHistoryForm consultationStartEventPayload={{}} />,
+        <ImmunizationForm consultationStartEventPayload={{}} />,
       );
       await act(async () => {});
       expect(await axe(container)).toHaveNoViolations();

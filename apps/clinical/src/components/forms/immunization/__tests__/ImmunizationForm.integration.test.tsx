@@ -11,7 +11,7 @@ import userEvent from '@testing-library/user-event';
 import { Immunization } from 'fhir/r4';
 import React from 'react';
 import { useClinicalConfig } from '../../../../providers/clinicalConfig';
-import ImmunizationHistoryForm from '../ImmunizationHistoryForm';
+import ImmunizationForm from '../ImmunizationForm';
 import { getImmunizationStore } from '../stores';
 import { createImmunizationBundleEntries } from '../utils';
 import {
@@ -26,7 +26,7 @@ import {
   mockRoutesValueSet,
   mockSitesValueSet,
   mockVaccineValueSet,
-} from './__mocks__/immunizationHistoryMocks';
+} from './__mocks__/immunizationMocks';
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
@@ -60,7 +60,7 @@ const createWrapper = () => {
   return Wrapper;
 };
 
-describe('ImmunizationHistoryForm Integration Tests', () => {
+describe('ImmunizationForm Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     getImmunizationStore('immunizationHistory').getState().reset();
@@ -88,7 +88,7 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
   it('creates valid bundle entries when all required fields are filled', async () => {
     const user = userEvent.setup();
     render(
-      <ImmunizationHistoryForm
+      <ImmunizationForm
         consultationStartEventPayload={{}}
         formConfig={mockFormConfig}
       />,
@@ -194,7 +194,7 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
   it('shows required field validation errors when fields are left empty after vaccine selection', async () => {
     const user = userEvent.setup();
     render(
-      <ImmunizationHistoryForm
+      <ImmunizationForm
         consultationStartEventPayload={{}}
         formConfig={mockFormConfig}
       />,
@@ -249,7 +249,7 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
       clinicalConfig: { consultationPad: {} },
     });
 
-    render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />, {
+    render(<ImmunizationForm consultationStartEventPayload={{}} />, {
       wrapper: createWrapper(),
     });
 
@@ -269,7 +269,7 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
     );
 
     render(
-      <ImmunizationHistoryForm
+      <ImmunizationForm
         consultationStartEventPayload={{}}
         formConfig={mockFormConfig}
       />,
@@ -304,7 +304,7 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
     (getMedication as jest.Mock).mockRejectedValue(new Error('Network error'));
 
     render(
-      <ImmunizationHistoryForm
+      <ImmunizationForm
         consultationStartEventPayload={{ basedOn: mockMedicationRequest }}
         formConfig={mockAdministrationFormConfig}
       />,

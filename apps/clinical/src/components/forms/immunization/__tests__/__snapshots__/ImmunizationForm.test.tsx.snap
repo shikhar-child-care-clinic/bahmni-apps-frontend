@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ImmunizationHistoryForm Snapshots matches snapshot with no immunizations 1`] = `
+exports[`ImmunizationForm Snapshots matches snapshot with no immunizations 1`] = `
 <div>
   <div
     class="form"
@@ -80,7 +80,7 @@ exports[`ImmunizationHistoryForm Snapshots matches snapshot with no immunization
 </div>
 `;
 
-exports[`ImmunizationHistoryForm Snapshots matches snapshot with selected immunizations 1`] = `
+exports[`ImmunizationForm Snapshots matches snapshot with selected immunizations 1`] = `
 <div>
   <div
     class="form"

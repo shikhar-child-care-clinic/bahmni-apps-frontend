@@ -5,7 +5,7 @@ import {
   mockFullAttributes,
   mockImmunizationEntryWithErrors,
   mockVaccineCode,
-} from './__mocks__/immunizationHistoryMocks';
+} from './__mocks__/immunizationMocks';
 
 const secondVaccineCode = { code: 'flu', display: 'Influenza Vaccine' };
 const STORE_KEY = 'immunizationHistory';

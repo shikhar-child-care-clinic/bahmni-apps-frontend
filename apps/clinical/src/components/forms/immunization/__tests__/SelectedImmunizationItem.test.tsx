@@ -16,7 +16,7 @@ import {
   mockRoutesValueSet,
   mockSitesValueSet,
   mockStore,
-} from './__mocks__/immunizationHistoryMocks';
+} from './__mocks__/immunizationMocks';
 
 jest.mock('../stores');
 

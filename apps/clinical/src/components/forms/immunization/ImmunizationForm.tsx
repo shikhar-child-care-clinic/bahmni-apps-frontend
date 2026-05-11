@@ -25,14 +25,14 @@ import {
 } from './constants';
 import { ImmunizationStoreKey } from './models';
 import { useImmunizationHistoryStore } from './stores';
-import styles from './styles/ImmunizationHistoryForm.module.scss';
+import styles from './styles/ImmunizationForm.module.scss';
 import {
   buildBasedOnImmunizationEntry,
   findAttr,
   getComboBoxItems,
 } from './utils';
 
-const ImmunizationHistoryForm = ({
+const ImmunizationForm = ({
   consultationStartEventPayload,
   formConfig,
 }: {
@@ -343,4 +343,4 @@ const ImmunizationHistoryForm = ({
   );
 };
 
-export default ImmunizationHistoryForm;
+export default ImmunizationForm;

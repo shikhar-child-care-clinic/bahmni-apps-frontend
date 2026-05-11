@@ -27,7 +27,7 @@ import {
   mockVaccineValueSet,
   mockValueSetWithPartialItem,
   mockValueSetWithoutContains,
-} from './__mocks__/immunizationHistoryMocks';
+} from './__mocks__/immunizationMocks';
 
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),

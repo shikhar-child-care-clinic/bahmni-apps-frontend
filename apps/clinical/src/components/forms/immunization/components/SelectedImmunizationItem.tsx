@@ -15,7 +15,7 @@ import React, { useMemo, useState } from 'react';
 import { InputControlAttributes } from '../../../../providers/clinicalConfig/models';
 import { ImmunizationInputEntry, ImmunizationStoreKey } from '../models';
 import { useImmunizationHistoryStore } from '../stores';
-import styles from '../styles/ImmunizationHistoryForm.module.scss';
+import styles from '../styles/ImmunizationForm.module.scss';
 import {
   getLocationComboBoxItems,
   getMedicationComboBoxItems,
