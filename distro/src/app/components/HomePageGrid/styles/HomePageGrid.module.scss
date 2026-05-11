@@ -3,8 +3,10 @@
 @use "@carbon/react/scss/theme" as *;
 @use "@carbon/react/scss/breakpoint" as *;
 
+$header-height: 3.75rem;
+
 .container {
-  margin-top: 3.75rem;
+  margin-top: $header-height;
   padding: $spacing-07;
   margin-left: auto;
   margin-right: auto;
@@ -37,7 +39,7 @@
 }
 
 .errorContainer {
-  margin-top: 3.75rem;
+  margin-top: $header-height;
   padding: $spacing-07;
   max-width: 50rem;
   margin-left: auto;

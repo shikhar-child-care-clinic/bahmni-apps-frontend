@@ -19,6 +19,8 @@
   color: inherit;
 }
 
+// Forces overflow menu background to use the layer-02 token,
+// overriding Carbon's own specificity on the cds--overflow-menu-options selectors
 :global(.cds--overflow-menu-options),
 :global(.cds--overflow-menu-options__btn) {
   background-color: #{$layer-02} !important;
