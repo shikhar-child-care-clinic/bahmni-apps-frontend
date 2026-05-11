@@ -44,7 +44,7 @@ export const mockImmunizationHistory = {
   ] as InputControlAttributes[],
 };
 
-export const mockFormConfig = {
+export const mockImmunizationInputControlConfig = {
   type: 'immunizationHistory',
   metadata: mockImmunizationHistory.metadata,
   encounterTypes: ['Immunization'],
@@ -52,7 +52,7 @@ export const mockFormConfig = {
   attributes: mockImmunizationHistory.attributes,
 };
 
-export const mockAdministrationFormConfig = {
+export const mockAdministrationInputControlConfig = {
   type: 'immunizationAdministration',
   metadata: {
     ...mockImmunizationHistory.metadata,

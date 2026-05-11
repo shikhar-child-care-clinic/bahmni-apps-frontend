@@ -15,20 +15,22 @@ export function loadEncounterInputControls(
       if (b.type === ENCOUNTER_DETAILS_INPUT_CONTROL_KEY) return 1;
       return 0;
     })
-    .flatMap((formConfig) => {
-      const entry = registeredControls.find((e) => e.key === formConfig.type);
+    .flatMap((inputControlConfig) => {
+      const entry = registeredControls.find(
+        (e) => e.key === inputControlConfig.type,
+      );
       if (!entry) return [];
       return [
         {
           ...entry,
-          formConfig,
+          inputControlConfig,
           encounterTypes:
-            formConfig.type === ENCOUNTER_DETAILS_INPUT_CONTROL_KEY ||
-            !formConfig.encounterTypes?.length
+            inputControlConfig.type === ENCOUNTER_DETAILS_INPUT_CONTROL_KEY ||
+            !inputControlConfig.encounterTypes?.length
               ? undefined
-              : formConfig.encounterTypes,
-          privilege: formConfig.privileges?.length
-            ? formConfig.privileges
+              : inputControlConfig.encounterTypes,
+          privilege: inputControlConfig.privileges?.length
+            ? inputControlConfig.privileges
             : undefined,
         },
       ];

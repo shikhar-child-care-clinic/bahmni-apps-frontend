@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { CONSULTATION_START_EVENT } from './constants';
-import { ConsultationStartEventPayload } from './models';
+import { EncounterSessionStartContext } from './models';
 
 export const useSubscribeConsultationStart = (
-  callback: (payload: ConsultationStartEventPayload) => void,
+  callback: (payload: EncounterSessionStartContext) => void,
 ) => {
   useEffect(() => {
     const handler = (event: Event) =>
-      callback((event as CustomEvent<ConsultationStartEventPayload>).detail);
+      callback((event as CustomEvent<EncounterSessionStartContext>).detail);
 
     globalThis.addEventListener(CONSULTATION_START_EVENT, handler);
     return () =>

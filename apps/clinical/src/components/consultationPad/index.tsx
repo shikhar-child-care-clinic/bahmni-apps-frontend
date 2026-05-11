@@ -15,7 +15,7 @@ import React, {
   useState,
 } from 'react';
 import { ERROR_TITLES } from '../../constants/errors';
-import type { ConsultationStartEventPayload } from '../../events/startConsultation';
+import type { EncounterSessionStartContext } from '../../events/startConsultation';
 import { useClinicalAppData } from '../../hooks/useClinicalAppData';
 import { useEncounterConcepts } from '../../hooks/useEncounterConcepts';
 import { useEncounterSession } from '../../hooks/useEncounterSession';
@@ -34,15 +34,15 @@ import {
 } from './utils';
 
 interface ConsultationPadProps {
-  consultationStartEventPayload: ConsultationStartEventPayload;
+  encounterSessionStartContext: EncounterSessionStartContext;
   onClose: () => void;
 }
 
 const ConsultationPad: React.FC<ConsultationPadProps> = ({
-  consultationStartEventPayload,
+  encounterSessionStartContext,
   onClose,
 }) => {
-  const encounterType = consultationStartEventPayload.encounterType;
+  const encounterType = encounterSessionStartContext.encounterType;
   const { t } = useTranslation();
   const { addNotification } = useNotification();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -219,7 +219,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
             key={entry.key}
             entry={entry}
             encounterType={resolvedEncounterType!}
-            consultationStartEventPayload={consultationStartEventPayload}
+            encounterSessionStartContext={encounterSessionStartContext}
           />
         ))}
       </div>

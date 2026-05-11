@@ -15,7 +15,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { Medication, MedicationRequest } from 'fhir/r4';
 import { useEffect, useMemo, useState } from 'react';
-import type { ConsultationStartEventPayload } from '../../../events/startConsultation';
+import type { EncounterSessionStartContext } from '../../../events/startConsultation';
 import { useClinicalConfig } from '../../../providers/clinicalConfig';
 import type { InputControl as ClinicalInputControlConfig } from '../../../providers/clinicalConfig/models';
 import SelectedImmunizationItem from './components/SelectedImmunizationItem';
@@ -33,15 +33,15 @@ import {
 } from './utils';
 
 const ImmunizationForm = ({
-  consultationStartEventPayload,
-  formConfig,
+  encounterSessionStartContext,
+  inputControlConfig,
 }: {
-  consultationStartEventPayload?: ConsultationStartEventPayload;
-  formConfig?: ClinicalInputControlConfig;
+  encounterSessionStartContext?: EncounterSessionStartContext;
+  inputControlConfig?: ClinicalInputControlConfig;
 }) => {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
-  const immunizationFormType = (formConfig?.type ??
+  const immunizationFormType = (inputControlConfig?.type ??
     IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY) as ImmunizationStoreKey;
   const {
     addImmunization,
@@ -53,9 +53,7 @@ const ImmunizationForm = ({
 
   const basedOn =
     immunizationFormType === IMMUNIZATION_ADMINISTRATION_INPUT_CONTROL_KEY
-      ? (consultationStartEventPayload?.basedOn as
-          | MedicationRequest
-          | undefined)
+      ? (encounterSessionStartContext?.basedOn as MedicationRequest | undefined)
       : undefined;
 
   const basedOnReference = basedOn?.id;
@@ -82,7 +80,7 @@ const ImmunizationForm = ({
     metadata,
     attributes,
     label = 'IMMUNIZATION_HISTORY_FORM_TITLE',
-  } = formConfig ?? {};
+  } = inputControlConfig ?? {};
   const vaccineConceptSetUuid = metadata?.vaccineConceptSetUuid as
     | string
     | undefined;

@@ -104,7 +104,7 @@ const renderComponent = (
 ) =>
   render(
     <ConsultationPad
-      consultationStartEventPayload={{ encounterType: 'Consultation' }}
+      encounterSessionStartContext={{ encounterType: 'Consultation' }}
       onClose={jest.fn()}
       {...props}
     />,
@@ -226,7 +226,7 @@ describe('ConsultationPad', () => {
   });
 
   describe('resolvedEncounterType', () => {
-    it('falls back to config defaultEncounterType when encounterType is not in event', () => {
+    it('falls back to config defaultEncounterType when encounterType is not in encounterSessionStartContext', () => {
       jest.mocked(useClinicalConfig).mockReturnValue({
         clinicalConfig: {
           consultationPad: {
@@ -240,7 +240,7 @@ describe('ConsultationPad', () => {
         },
       } as any);
 
-      renderComponent({ consultationStartEventPayload: {} });
+      renderComponent({ encounterSessionStartContext: {} });
 
       expect(
         defaultEncounterDetailsState.setRequestedEncounterType,
@@ -249,9 +249,9 @@ describe('ConsultationPad', () => {
   });
 
   describe('encounterType prop validation', () => {
-    it('renders error state when encounterType in event is not in the configured list', () => {
+    it('renders error state when specified encounterType is not defined in configuration', () => {
       renderComponent({
-        consultationStartEventPayload: { encounterType: 'UnknownType' },
+        encounterSessionStartContext: { encounterType: 'UnknownType' },
       });
 
       expect(screen.getByText('Something went wrong')).toBeInTheDocument();
@@ -266,7 +266,7 @@ describe('ConsultationPad', () => {
       } as any);
 
       renderComponent({
-        consultationStartEventPayload: { encounterType: 'Consultation' },
+        encounterSessionStartContext: { encounterType: 'Consultation' },
       });
 
       expect(screen.queryByTestId('allergies-divider')).not.toBeInTheDocument();
@@ -277,8 +277,8 @@ describe('ConsultationPad', () => {
       ['not set', {}],
     ])(
       'does not show error state when encounterType is %s',
-      (_, consultationStartEventPayload) => {
-        renderComponent({ consultationStartEventPayload });
+      (_, encounterSessionStartContext) => {
+        renderComponent({ encounterSessionStartContext });
 
         expect(
           screen.queryByText('Something went wrong'),

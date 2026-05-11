@@ -31,7 +31,7 @@ import DashboardContainer from '../components/dashboardContainer/DashboardContai
 import PatientHeader from '../components/patientHeader/PatientHeader';
 import PatientSearch from '../components/patientSearch/PatientSearch';
 import { BAHMNI_CLINICAL_PATH } from '../constants/app';
-import type { ConsultationStartEventPayload } from '../events/startConsultation';
+import type { EncounterSessionStartContext } from '../events/startConsultation';
 import { useSubscribeConsultationStart } from '../events/startConsultation';
 import { ClinicalAppProvider } from '../providers/ClinicalAppProvider';
 import { useClinicalConfig } from '../providers/clinicalConfig';
@@ -77,12 +77,12 @@ const ConsultationPage: React.FC = () => {
   const { userPrivileges } = useUserPrivilege();
   const { addNotification } = useNotification();
   const [isActionAreaVisible, setIsActionAreaVisible] = useState(false);
-  const [consultationStartEventPayload, setConsultationStartEventPayload] =
-    useState<ConsultationStartEventPayload | null>(null);
+  const [encounterSessionStartContext, setEncounterSessionStartContext] =
+    useState<EncounterSessionStartContext | null>(null);
 
   useSubscribeConsultationStart(
     useCallback((event) => {
-      setConsultationStartEventPayload(event);
+      setEncounterSessionStartContext(event);
       setIsActionAreaVisible(true);
     }, []),
   );
@@ -302,9 +302,9 @@ const ConsultationPage: React.FC = () => {
         isActionAreaVisible={isActionAreaVisible}
         layoutVariant={viewingForm ? 'extended' : 'default'}
         actionArea={
-          consultationStartEventPayload && (
+          encounterSessionStartContext && (
             <ConsultationPad
-              consultationStartEventPayload={consultationStartEventPayload}
+              encounterSessionStartContext={encounterSessionStartContext}
               onClose={() => setIsActionAreaVisible((prev) => !prev)}
             />
           )

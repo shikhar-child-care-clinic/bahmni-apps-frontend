@@ -15,12 +15,12 @@ import ImmunizationForm from '../ImmunizationForm';
 import { getImmunizationStore } from '../stores';
 import { createImmunizationBundleEntries } from '../utils';
 import {
-  mockAdministrationFormConfig,
+  mockAdministrationInputControlConfig,
   mockClinicalConfigContext,
   mockCovid19VaccineDrug,
   mockEncounterSubject,
   mockFetchedMedication,
-  mockFormConfig,
+  mockImmunizationInputControlConfig,
   mockLocations,
   mockMedicationRequest,
   mockRoutesValueSet,
@@ -89,8 +89,8 @@ describe('ImmunizationForm Integration Tests', () => {
     const user = userEvent.setup();
     render(
       <ImmunizationForm
-        consultationStartEventPayload={{}}
-        formConfig={mockFormConfig}
+        encounterSessionStartContext={{}}
+        inputControlConfig={mockImmunizationInputControlConfig}
       />,
       {
         wrapper: createWrapper(),
@@ -195,8 +195,8 @@ describe('ImmunizationForm Integration Tests', () => {
     const user = userEvent.setup();
     render(
       <ImmunizationForm
-        consultationStartEventPayload={{}}
-        formConfig={mockFormConfig}
+        encounterSessionStartContext={{}}
+        inputControlConfig={mockImmunizationInputControlConfig}
       />,
       {
         wrapper: createWrapper(),
@@ -249,7 +249,7 @@ describe('ImmunizationForm Integration Tests', () => {
       clinicalConfig: { consultationPad: {} },
     });
 
-    render(<ImmunizationForm consultationStartEventPayload={{}} />, {
+    render(<ImmunizationForm encounterSessionStartContext={{}} />, {
       wrapper: createWrapper(),
     });
 
@@ -270,8 +270,8 @@ describe('ImmunizationForm Integration Tests', () => {
 
     render(
       <ImmunizationForm
-        consultationStartEventPayload={{}}
-        formConfig={mockFormConfig}
+        encounterSessionStartContext={{}}
+        inputControlConfig={mockImmunizationInputControlConfig}
       />,
       {
         wrapper: createWrapper(),
@@ -305,8 +305,8 @@ describe('ImmunizationForm Integration Tests', () => {
 
     render(
       <ImmunizationForm
-        consultationStartEventPayload={{ basedOn: mockMedicationRequest }}
-        formConfig={mockAdministrationFormConfig}
+        encounterSessionStartContext={{ basedOn: mockMedicationRequest }}
+        inputControlConfig={mockAdministrationInputControlConfig}
       />,
       { wrapper: createWrapper() },
     );
