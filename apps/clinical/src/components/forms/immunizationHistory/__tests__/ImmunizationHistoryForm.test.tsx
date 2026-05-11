@@ -163,7 +163,7 @@ describe('ImmunizationHistoryForm', () => {
     ])(
       'shows %s in combobox dropdown when searching',
       async (_, queryResult, expectedText) => {
-        const user = userEvent.setup();
+        const user = userEvent.setup({ delay: null });
         mockUseQuery.mockImplementation(({ queryKey: qk }: any) => {
           if (qk[0] === 'vaccineConceptSetUuid') return queryResult;
           return defaultQueryMock({ queryKey: qk }) as any;
@@ -180,7 +180,7 @@ describe('ImmunizationHistoryForm', () => {
     );
 
     it('filters vaccine results by search term', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       render(<ImmunizationHistoryForm />);
       await user.type(
         screen.getByRole('combobox', { name: /search to add immunization/i }),
@@ -195,7 +195,7 @@ describe('ImmunizationHistoryForm', () => {
 
   describe('Adding immunizations', () => {
     it('calls addImmunization with code and display when item selected', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       render(<ImmunizationHistoryForm />);
       await user.type(
         screen.getByRole('combobox', { name: /search to add immunization/i }),
@@ -214,7 +214,7 @@ describe('ImmunizationHistoryForm', () => {
     });
 
     it('does not call addImmunization when selection is cleared', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       render(<ImmunizationHistoryForm />);
       await user.type(
         screen.getByRole('combobox', { name: /search to add immunization/i }),
@@ -272,7 +272,7 @@ describe('ImmunizationHistoryForm', () => {
     });
 
     it('filters out non-Medication entries from vaccineDrugs', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       jest.mocked(useImmunizationHistoryStore).mockReturnValue({
         ...mockStore,
         selectedImmunizations: [mockImmunizationEntry],
@@ -301,7 +301,7 @@ describe('ImmunizationHistoryForm', () => {
     });
 
     it('calls removeImmunization when close button clicked', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       jest.mocked(useImmunizationHistoryStore).mockReturnValue({
         ...mockStore,
         selectedImmunizations: [mockImmunizationEntry],

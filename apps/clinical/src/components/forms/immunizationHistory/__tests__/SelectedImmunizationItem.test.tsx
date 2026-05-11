@@ -208,7 +208,7 @@ describe('SelectedImmunizationItem', () => {
         storeMethod,
         expectedValue,
       ) => {
-        const user = userEvent.setup();
+        const user = userEvent.setup({ delay: null });
         render(<SelectedImmunizationItem {...defaultProps} />);
         await user.type(screen.getByPlaceholderText(placeholder), searchTerm);
         await user.click(screen.getByText(itemText));
@@ -236,7 +236,7 @@ describe('SelectedImmunizationItem', () => {
     ])(
       'calls %s with display only when a custom value is entered',
       async (_, placeholder, inputText, storeMethod, expectedValue) => {
-        const user = userEvent.setup();
+        const user = userEvent.setup({ delay: null });
         render(<SelectedImmunizationItem {...defaultProps} />);
         await user.type(screen.getByPlaceholderText(placeholder), inputText);
         await user.keyboard('{Enter}');
@@ -258,7 +258,7 @@ describe('SelectedImmunizationItem', () => {
     ])(
       'does not call %s when selection is cleared',
       async (_, placeholder, searchTerm, itemText, storeMethod) => {
-        const user = userEvent.setup();
+        const user = userEvent.setup({ delay: null });
         render(<SelectedImmunizationItem {...defaultProps} />);
         await user.type(screen.getByPlaceholderText(placeholder), searchTerm);
         await user.click(screen.getByText(itemText));
@@ -288,7 +288,7 @@ describe('SelectedImmunizationItem', () => {
     ])(
       'calls %s with null when selection is cleared',
       async (_, placeholder, searchTerm, itemText, storeMethod) => {
-        const user = userEvent.setup();
+        const user = userEvent.setup({ delay: null });
         render(<SelectedImmunizationItem {...defaultProps} />);
         await user.type(screen.getByPlaceholderText(placeholder), searchTerm);
         await user.click(screen.getByText(itemText));
@@ -316,7 +316,7 @@ describe('SelectedImmunizationItem', () => {
     ])(
       'calls %s when the text input changes',
       async (_, testId, storeMethod) => {
-        const user = userEvent.setup();
+        const user = userEvent.setup({ delay: null });
         render(<SelectedImmunizationItem {...defaultProps} />);
         await user.type(screen.getByTestId(testId), 'value');
         await waitFor(() => {
@@ -326,7 +326,7 @@ describe('SelectedImmunizationItem', () => {
     );
 
     it('calls updateDoseSequence with a number when value is typed', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       render(<SelectedImmunizationItem {...defaultProps} />);
       await user.type(
         screen.getByTestId(`immunization-dose-sequence-${id}`),
@@ -356,7 +356,7 @@ describe('SelectedImmunizationItem', () => {
     ])(
       'calls %s when a date is selected from the calendar',
       async (_, testId, storeMethod, calendarIndex) => {
-        const user = userEvent.setup();
+        const user = userEvent.setup({ delay: null });
         render(<SelectedImmunizationItem {...defaultProps} />);
         await user.click(screen.getByTestId(testId));
         const calendars = screen.getAllByRole('application', {
@@ -374,7 +374,7 @@ describe('SelectedImmunizationItem', () => {
 
   describe('Note field interactions', () => {
     it('opens textarea on link click, calls updateNote on input, and clears on close', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       render(
         <SelectedImmunizationItem
           {...defaultProps}
