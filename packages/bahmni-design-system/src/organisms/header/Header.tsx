@@ -34,7 +34,6 @@ export const Header: React.FC<HeaderProps> = React.memo(
     isRail = false,
     ariaLabel = 'Header',
     extraContent,
-    className,
   }) => {
     const { isSideNavExpanded, handleSideNavItemClick } =
       useHeaderSideNav(onSideNavItemClick);
@@ -121,11 +120,7 @@ export const Header: React.FC<HeaderProps> = React.memo(
     return (
       <HeaderContainer
         render={() => (
-          <CarbonHeader
-            aria-label={ariaLabel}
-            data-testid="header"
-            className={className}
-          >
+          <CarbonHeader aria-label={ariaLabel} data-testid="header">
             {renderBreadcrumbs()}
             {renderGlobalActions()}
             {renderSideNav()}

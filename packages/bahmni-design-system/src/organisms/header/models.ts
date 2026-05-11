@@ -44,5 +44,4 @@ export interface HeaderProps {
   isRail?: boolean;
   ariaLabel?: string;
   extraContent?: React.ReactNode;
-  className?: string;
 }

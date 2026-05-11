@@ -153,12 +153,6 @@ describe('Header', () => {
       );
     });
 
-    it('applies custom className to header element', () => {
-      render(<Header {...defaultProps} className="custom-header" />);
-
-      expect(screen.getByTestId('header')).toHaveClass('custom-header');
-    });
-
     it('renders extraContent when provided', () => {
       render(
         <Header extraContent={<div data-testid="extra-content">Extra</div>} />,

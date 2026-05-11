@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { HomePageHeader } from '../HomePageHeader';
 
 jest.mock('@bahmni/design-system', () => ({
-  Header: ({ ariaLabel, extraContent, className }: any) => (
-    <header aria-label={ariaLabel} data-testid="header" className={className}>
+  Header: ({ ariaLabel, extraContent }: any) => (
+    <header aria-label={ariaLabel} data-testid="header">
       {extraContent}
     </header>
   ),

@@ -8,11 +8,10 @@ import styles from './styles/HomePageHeader.module.scss';
 export const HomePageHeader: React.FC = () => (
   <Header
     ariaLabel="Bahmni"
-    className={styles.header}
     extraContent={
-      <>
+      <div className={styles.header}>
         <HeaderName href="/" prefix="Home" />
-        <HeaderGlobalBar>
+        <HeaderGlobalBar className={styles.globalBar}>
           <div className={styles.locationSelector}>
             <LocationSelector />
           </div>
@@ -20,7 +19,7 @@ export const HomePageHeader: React.FC = () => (
             <UserProfileMenu />
           </div>
         </HeaderGlobalBar>
-      </>
+      </div>
     }
   />
 );
