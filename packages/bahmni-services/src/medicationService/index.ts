@@ -1,1 +1,1 @@
-export { getMedication } from './medicationService';
+export { getMedicationByUuid } from './medicationService';

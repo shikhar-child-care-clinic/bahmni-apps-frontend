@@ -6,7 +6,7 @@ import {
 } from '@bahmni/design-system';
 import {
   getLocationByTag,
-  getMedication,
+  getMedicationByUuid,
   getUserLoginLocation,
   getVaccinations,
   searchFHIRConcepts,
@@ -45,7 +45,6 @@ const ImmunizationHistoryForm = ({
     IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY) as ImmunizationStoreKey;
   const {
     addImmunization,
-    addImmunizationWithDefaults,
     removeImmunization,
     selectedImmunizations,
     setAttributes,
@@ -67,7 +66,7 @@ const ImmunizationHistoryForm = ({
     isError: basedOnMedicationError,
   } = useQuery({
     queryKey: ['medication', medicationUuid],
-    queryFn: () => getMedication(medicationUuid),
+    queryFn: () => getMedicationByUuid(medicationUuid),
     enabled: !!basedOn && !!medicationUuid,
     staleTime: Infinity,
   });
@@ -180,7 +179,7 @@ const ImmunizationHistoryForm = ({
       basedOnMedication,
       loginLocation,
     );
-    addImmunizationWithDefaults(vaccineCode, defaults);
+    addImmunization(vaccineCode, defaults);
   }, [basedOn, basedOnMedication, vaccinationDrugs, basedOnReference]);
 
   const vaccineCodeComboBoxItems = useMemo(
