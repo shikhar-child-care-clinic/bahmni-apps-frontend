@@ -6,41 +6,80 @@ import {
 } from '@bahmni/design-system';
 import {
   getLocationByTag,
+  getMedicationByUuid,
+  getUserLoginLocation,
   getVaccinations,
   searchFHIRConcepts,
   useTranslation,
 } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
-import { Medication } from 'fhir/r4';
+import { Medication, MedicationRequest } from 'fhir/r4';
 import { useEffect, useMemo, useState } from 'react';
+import type { EncounterSessionStartContext } from '../../../events/startConsultation';
 import { useClinicalConfig } from '../../../providers/clinicalConfig';
+import type { InputControl as ClinicalInputControlConfig } from '../../../providers/clinicalConfig/models';
 import SelectedImmunizationItem from './components/SelectedImmunizationItem';
-import { IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY } from './constants';
+import {
+  IMMUNIZATION_ADMINISTRATION_INPUT_CONTROL_KEY,
+  IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY,
+} from './constants';
+import { ImmunizationStoreKey } from './models';
 import { useImmunizationHistoryStore } from './stores';
 import styles from './styles/ImmunizationHistoryForm.module.scss';
-import { findAttr, getComboBoxItems } from './utils';
+import {
+  buildBasedOnImmunizationEntry,
+  findAttr,
+  getComboBoxItems,
+} from './utils';
 
-const ImmunizationHistoryForm = () => {
+const ImmunizationHistoryForm = ({
+  encounterSessionStartContext,
+  inputControlConfig,
+}: {
+  encounterSessionStartContext?: EncounterSessionStartContext;
+  inputControlConfig?: ClinicalInputControlConfig;
+}) => {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
+  const immunizationFormType = (inputControlConfig?.type ??
+    IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY) as ImmunizationStoreKey;
   const {
     addImmunization,
     removeImmunization,
     selectedImmunizations,
     setAttributes,
-  } = useImmunizationHistoryStore();
+  } = useImmunizationHistoryStore(immunizationFormType);
+
+  const basedOn =
+    immunizationFormType === IMMUNIZATION_ADMINISTRATION_INPUT_CONTROL_KEY
+      ? (encounterSessionStartContext?.basedOn as MedicationRequest | undefined)
+      : undefined;
+
+  const basedOnReference = basedOn?.id;
+  const medicationUuid = basedOn?.medicationReference?.reference
+    ?.split('/')
+    .pop();
 
   const {
-    clinicalConfig,
-    isLoading: isConfigLoading,
-    error: configError,
-  } = useClinicalConfig();
+    data: basedOnMedication,
+    isLoading: basedOnMedicationLoading,
+    isError: basedOnMedicationError,
+  } = useQuery({
+    queryKey: ['medication', medicationUuid],
+    queryFn: () => getMedicationByUuid(medicationUuid),
+    enabled: !!basedOn && !!medicationUuid,
+    staleTime: Infinity,
+  });
 
-  const immunizationHistory =
-    clinicalConfig?.consultationPad?.inputControls?.find(
-      (c) => c.type === IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY,
-    );
-  const { metadata, attributes } = immunizationHistory ?? {};
+  const { isLoading: isConfigLoading, error: configError } =
+    useClinicalConfig();
+
+  const loginLocation = getUserLoginLocation();
+  const {
+    metadata,
+    attributes,
+    label = 'IMMUNIZATION_HISTORY_FORM_TITLE',
+  } = inputControlConfig ?? {};
   const vaccineConceptSetUuid = metadata?.vaccineConceptSetUuid as
     | string
     | undefined;
@@ -50,6 +89,8 @@ const ImmunizationHistoryForm = () => {
   const administeredLocationTag = metadata?.administeredLocationTag as
     | string
     | undefined;
+  const disableAdditionalAdministrations =
+    metadata?.disableAdditionalAdministrations as boolean | undefined;
 
   useEffect(() => {
     if (attributes) {
@@ -120,7 +161,26 @@ const ImmunizationHistoryForm = () => {
   } = useQuery({
     queryKey: ['vaccinations'],
     queryFn: getVaccinations,
+    staleTime: Infinity,
   });
+
+  const vaccineMedications = useMemo(
+    () =>
+      vaccinationDrugs?.entry
+        ?.filter((e) => e.resource?.resourceType === 'Medication')
+        .map((e) => e.resource as Medication) ?? [],
+    [vaccinationDrugs],
+  );
+
+  useEffect(() => {
+    if (!basedOn || !basedOnMedication || !vaccinationDrugs) return;
+    const { vaccineCode, defaults } = buildBasedOnImmunizationEntry(
+      basedOn,
+      basedOnMedication,
+      loginLocation,
+    );
+    addImmunization(vaccineCode, defaults);
+  }, [basedOn, basedOnMedication, vaccinationDrugs, basedOnReference]);
 
   const vaccineCodeComboBoxItems = useMemo(
     () =>
@@ -156,7 +216,8 @@ const ImmunizationHistoryForm = () => {
         routesConceptSetLoading ||
         sitesConceptSetLoading ||
         administeredLocationTagLoading ||
-        vaccinationDrugsLoading) &&
+        vaccinationDrugsLoading ||
+        basedOnMedicationLoading) &&
       selectedImmunizations.length > 0
     );
   }, [
@@ -166,6 +227,7 @@ const ImmunizationHistoryForm = () => {
     sitesConceptSetLoading,
     administeredLocationTagLoading,
     vaccinationDrugsLoading,
+    basedOnMedicationLoading,
   ]);
 
   const isDataError = useMemo(() => {
@@ -174,7 +236,8 @@ const ImmunizationHistoryForm = () => {
       !!routesConceptSetError ||
       !!sitesConceptSetError ||
       !!administeredLocationTagError ||
-      !!vaccinationDrugsError
+      !!vaccinationDrugsError ||
+      !!basedOnMedicationError
     );
   }, [
     vaccineCodeConceptSetError,
@@ -182,6 +245,7 @@ const ImmunizationHistoryForm = () => {
     sitesConceptSetError,
     administeredLocationTagError,
     vaccinationDrugsError,
+    basedOnMedicationError,
   ]);
 
   const showSelectedImmunizations =
@@ -210,28 +274,30 @@ const ImmunizationHistoryForm = () => {
         data-testid="immunization-history-form-title-test-id"
         className={styles.title}
       >
-        {t('IMMUNIZATION_HISTORY_FORM_TITLE')}
+        {t(label)}
       </div>
-      <ComboBox
-        id="immunization-history-search"
-        data-testid="immunization-history-search-combobox"
-        placeholder={t('IMMUNIZATION_HISTORY_SEARCH_PLACEHOLDER')}
-        items={vaccineCodeComboBoxItems}
-        itemToString={(item) => item?.display ?? ''}
-        onChange={({ selectedItem }) => {
-          if (selectedItem?.code && selectedItem?.display) {
-            addImmunization({
-              code: selectedItem.code,
-              display: selectedItem.display,
-            });
-          }
-        }}
-        onInputChange={(searchQuery: string) => handleSearch(searchQuery)}
-        clearSelectedOnChange
-        size="md"
-        autoAlign
-        aria-label={t('IMMUNIZATION_HISTORY_SEARCH_ARIA_LABEL')}
-      />
+      {!disableAdditionalAdministrations && (
+        <ComboBox
+          id="immunization-history-search"
+          data-testid="immunization-history-search-combobox"
+          placeholder={t('IMMUNIZATION_HISTORY_SEARCH_PLACEHOLDER')}
+          items={vaccineCodeComboBoxItems}
+          itemToString={(item) => item?.display ?? ''}
+          onChange={({ selectedItem }) => {
+            if (selectedItem?.code && selectedItem?.display) {
+              addImmunization({
+                code: selectedItem.code,
+                display: selectedItem.display,
+              });
+            }
+          }}
+          onInputChange={(searchQuery: string) => handleSearch(searchQuery)}
+          clearSelectedOnChange
+          size="md"
+          autoAlign
+          aria-label={t('IMMUNIZATION_HISTORY_SEARCH_ARIA_LABEL')}
+        />
+      )}
       {isDataLoading ? (
         <CodeSnippetSkeleton
           id="immunization-history-loading"
@@ -250,10 +316,7 @@ const ImmunizationHistoryForm = () => {
         </div>
       ) : null}
       {showSelectedImmunizations && (
-        <BoxWHeader
-          title={t('IMMUNIZATION_HISTORY_ADDED_ITEMS')}
-          className={styles.box}
-        >
+        <BoxWHeader title={t('IMMUNIZATION_HISTORY_ADDED_ITEMS')}>
           {selectedImmunizations.map((immunization) => (
             <SelectedItem
               key={immunization.id}
@@ -266,11 +329,8 @@ const ImmunizationHistoryForm = () => {
                 sites={sitesConceptSet}
                 attributes={attributes}
                 administeredLocationTag={administeredLocationTagData}
-                vaccineDrugs={vaccinationDrugs?.entry
-                  ?.filter(
-                    (entry) => entry.resource?.resourceType === 'Medication',
-                  )
-                  .map((entry) => entry.resource as Medication)}
+                vaccineDrugs={vaccineMedications}
+                storeKey={immunizationFormType}
               />
             </SelectedItem>
           ))}

@@ -1,3 +1,4 @@
+import { getUserLoginLocation } from '@bahmni/services';
 import { useQuery } from '@tanstack/react-query';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -6,9 +7,13 @@ import { useClinicalConfig } from '../../../../providers/clinicalConfig';
 import ImmunizationHistoryForm from '../ImmunizationHistoryForm';
 import { useImmunizationHistoryStore } from '../stores';
 import {
+  mockAdministrationInputControlConfig,
   mockClinicalConfigContext,
+  mockFetchedMedication,
+  mockImmunizationInputControlConfig,
   mockImmunizationEntry,
   mockLocations,
+  mockMedicationRequest,
   mockMixedVaccinationBundle,
   mockRoutesValueSet,
   mockSitesValueSet,
@@ -17,6 +22,10 @@ import {
   mockVaccineValueSet,
 } from './__mocks__/immunizationHistoryMocks';
 
+jest.mock('@bahmni/services', () => ({
+  ...jest.requireActual('@bahmni/services'),
+  getUserLoginLocation: jest.fn(),
+}));
 jest.mock('../stores');
 jest.mock('../../../../providers/clinicalConfig', () => ({
   useClinicalConfig: jest.fn(),
@@ -25,6 +34,8 @@ jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),
   useQuery: jest.fn(),
 }));
+
+const mockGetUserLoginLocation = jest.mocked(getUserLoginLocation);
 
 expect.extend(toHaveNoViolations);
 
@@ -48,6 +59,9 @@ const defaultQueryMock = ({ queryKey }: { queryKey: readonly unknown[] }) => {
   if (queryKey[0] === 'vaccinations') {
     return { data: mockVaccinationBundle, isLoading: false, error: null };
   }
+  if (queryKey[0] === 'medication') {
+    return { data: undefined, isLoading: false, error: null };
+  }
   return { data: undefined, isLoading: false, error: null };
 };
 
@@ -57,15 +71,37 @@ describe('ImmunizationHistoryForm', () => {
     jest.mocked(useImmunizationHistoryStore).mockReturnValue(mockStore);
     jest.mocked(useClinicalConfig).mockReturnValue(mockClinicalConfigContext);
     mockUseQuery.mockImplementation(defaultQueryMock as any);
+    mockGetUserLoginLocation.mockReturnValue({
+      uuid: 'loc-uuid',
+      display: 'Login Location',
+      name: 'Login Location',
+    });
   });
 
   describe('Rendering', () => {
     it('renders form title and search combobox', () => {
-      render(<ImmunizationHistoryForm />);
+      render(
+        <ImmunizationHistoryForm
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationInputControlConfig}
+        />,
+      );
       expect(screen.getByText('Immunization History')).toBeInTheDocument();
       expect(
         screen.getByRole('combobox', { name: /search to add immunization/i }),
       ).toBeInTheDocument();
+    });
+
+    it('hides search combobox when disableAdditionalAdministrations is true in metadata', () => {
+      render(
+        <ImmunizationHistoryForm
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockAdministrationInputControlConfig}
+        />,
+      );
+      expect(
+        screen.queryByRole('combobox', { name: /search to add immunization/i }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -83,7 +119,12 @@ describe('ImmunizationHistoryForm', () => {
           }
           return defaultQueryMock({ queryKey: qk }) as any;
         });
-        render(<ImmunizationHistoryForm />);
+        render(
+          <ImmunizationHistoryForm
+            encounterSessionStartContext={{}}
+            inputControlConfig={mockImmunizationInputControlConfig}
+          />,
+        );
         expect(
           screen.getByTestId('immunization-history-loading-test-id'),
         ).toBeInTheDocument();
@@ -100,7 +141,12 @@ describe('ImmunizationHistoryForm', () => {
         }
         return defaultQueryMock({ queryKey: qk }) as any;
       });
-      render(<ImmunizationHistoryForm />);
+      render(
+        <ImmunizationHistoryForm
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationInputControlConfig}
+        />,
+      );
       expect(
         screen.queryByTestId('immunization-history-loading-test-id'),
       ).not.toBeInTheDocument();
@@ -125,7 +171,12 @@ describe('ImmunizationHistoryForm', () => {
           }
           return defaultQueryMock({ queryKey: qk }) as any;
         });
-        render(<ImmunizationHistoryForm />);
+        render(
+          <ImmunizationHistoryForm
+            encounterSessionStartContext={{}}
+            inputControlConfig={mockImmunizationInputControlConfig}
+          />,
+        );
         expect(
           screen.getByTestId('immunization-history-error-test-id'),
         ).toBeInTheDocument();
@@ -168,7 +219,12 @@ describe('ImmunizationHistoryForm', () => {
           if (qk[0] === 'vaccineConceptSetUuid') return queryResult;
           return defaultQueryMock({ queryKey: qk }) as any;
         });
-        render(<ImmunizationHistoryForm />);
+        render(
+          <ImmunizationHistoryForm
+            encounterSessionStartContext={{}}
+            inputControlConfig={mockImmunizationInputControlConfig}
+          />,
+        );
         await user.type(
           screen.getByRole('combobox', { name: /search to add immunization/i }),
           'test',
@@ -181,7 +237,12 @@ describe('ImmunizationHistoryForm', () => {
 
     it('filters vaccine results by search term', async () => {
       const user = userEvent.setup();
-      render(<ImmunizationHistoryForm />);
+      render(
+        <ImmunizationHistoryForm
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationInputControlConfig}
+        />,
+      );
       await user.type(
         screen.getByRole('combobox', { name: /search to add immunization/i }),
         'covid',
@@ -196,7 +257,12 @@ describe('ImmunizationHistoryForm', () => {
   describe('Adding immunizations', () => {
     it('calls addImmunization with code and display when item selected', async () => {
       const user = userEvent.setup();
-      render(<ImmunizationHistoryForm />);
+      render(
+        <ImmunizationHistoryForm
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationInputControlConfig}
+        />,
+      );
       await user.type(
         screen.getByRole('combobox', { name: /search to add immunization/i }),
         'covid',
@@ -215,7 +281,12 @@ describe('ImmunizationHistoryForm', () => {
 
     it('does not call addImmunization when selection is cleared', async () => {
       const user = userEvent.setup();
-      render(<ImmunizationHistoryForm />);
+      render(
+        <ImmunizationHistoryForm
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationInputControlConfig}
+        />,
+      );
       await user.type(
         screen.getByRole('combobox', { name: /search to add immunization/i }),
         'covid',
@@ -238,7 +309,12 @@ describe('ImmunizationHistoryForm', () => {
         ...mockStore,
         selectedImmunizations: [mockImmunizationEntry],
       });
-      render(<ImmunizationHistoryForm />);
+      render(
+        <ImmunizationHistoryForm
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationInputControlConfig}
+        />,
+      );
       expect(screen.getByText('Added Immunization')).toBeInTheDocument();
       expect(
         screen.getByTestId(
@@ -248,7 +324,12 @@ describe('ImmunizationHistoryForm', () => {
     });
 
     it('does not show BoxWHeader when no immunizations selected', () => {
-      render(<ImmunizationHistoryForm />);
+      render(
+        <ImmunizationHistoryForm
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationInputControlConfig}
+        />,
+      );
       expect(screen.queryByText('Added Immunization')).not.toBeInTheDocument();
     });
 
@@ -267,7 +348,12 @@ describe('ImmunizationHistoryForm', () => {
         if (qk[0] === 'vaccinations') return queryResult;
         return defaultQueryMock({ queryKey: qk }) as any;
       });
-      render(<ImmunizationHistoryForm />);
+      render(
+        <ImmunizationHistoryForm
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationInputControlConfig}
+        />,
+      );
       expect(screen.queryByText('Added Immunization')).not.toBeInTheDocument();
     });
 
@@ -287,7 +373,12 @@ describe('ImmunizationHistoryForm', () => {
         }
         return defaultQueryMock({ queryKey: qk }) as any;
       });
-      render(<ImmunizationHistoryForm />);
+      render(
+        <ImmunizationHistoryForm
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationInputControlConfig}
+        />,
+      );
       const drugCombobox = screen.getByPlaceholderText('Search drug name');
       await user.type(drugCombobox, 'Paracetamol');
       await waitFor(() => {
@@ -306,11 +397,104 @@ describe('ImmunizationHistoryForm', () => {
         ...mockStore,
         selectedImmunizations: [mockImmunizationEntry],
       });
-      render(<ImmunizationHistoryForm />);
+      render(
+        <ImmunizationHistoryForm
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationInputControlConfig}
+        />,
+      );
       await user.click(screen.getByTestId('selected-item-close-button'));
       await waitFor(() => {
         expect(mockStore.removeImmunization).toHaveBeenCalledWith(
           mockImmunizationEntry.id,
+        );
+      });
+    });
+  });
+
+  describe('basedOn pre-population', () => {
+    const consultationPayloadWithBasedOn = { basedOn: mockMedicationRequest };
+
+    it.each([
+      ['basedOn is absent', {}, () => {}],
+      [
+        'medication is loading',
+        consultationPayloadWithBasedOn,
+        () => {
+          mockUseQuery.mockImplementation(({ queryKey: qk }: any) => {
+            if (qk[0] === 'medication')
+              return { data: undefined, isLoading: true, error: null };
+            return defaultQueryMock({ queryKey: qk }) as any;
+          });
+        },
+      ],
+    ])('does not call addImmunization when %s', (_, payload, setupMocks) => {
+      setupMocks();
+      render(
+        <ImmunizationHistoryForm
+          encounterSessionStartContext={payload}
+          inputControlConfig={mockAdministrationInputControlConfig}
+        />,
+      );
+      expect(mockStore.addImmunization).not.toHaveBeenCalled();
+    });
+
+    it('calls addImmunization with drug code from basedOnMedication', async () => {
+      mockUseQuery.mockImplementation(({ queryKey: qk }: any) => {
+        if (qk[0] === 'medication')
+          return {
+            data: mockFetchedMedication,
+            isLoading: false,
+            error: null,
+          };
+        return defaultQueryMock({ queryKey: qk }) as any;
+      });
+      render(
+        <ImmunizationHistoryForm
+          encounterSessionStartContext={consultationPayloadWithBasedOn}
+          inputControlConfig={mockAdministrationInputControlConfig}
+        />,
+      );
+      await waitFor(() => {
+        expect(mockStore.addImmunization).toHaveBeenCalledWith(
+          { code: 'covid-19', display: 'COVID-19 Drug' },
+          expect.objectContaining({
+            drug: { code: 'covid-drug-uuid', display: 'COVID-19 Drug' },
+          }),
+        );
+      });
+    });
+
+    it('calls addImmunization with administeredLocation and basedOnReference', async () => {
+      mockGetUserLoginLocation.mockReturnValue({
+        uuid: 'login-loc-uuid',
+        display: 'Login Location',
+        name: 'Login Location',
+      });
+      mockUseQuery.mockImplementation(({ queryKey: qk }: any) => {
+        if (qk[0] === 'medication')
+          return { data: mockFetchedMedication, isLoading: false, error: null };
+        if (qk[0] === 'vaccinations')
+          return { data: mockVaccinationBundle, isLoading: false, error: null };
+        return defaultQueryMock({ queryKey: qk }) as any;
+      });
+      render(
+        <ImmunizationHistoryForm
+          encounterSessionStartContext={consultationPayloadWithBasedOn}
+          inputControlConfig={mockAdministrationInputControlConfig}
+        />,
+      );
+      await waitFor(() => {
+        expect(mockStore.addImmunization).toHaveBeenCalledWith(
+          expect.any(Object),
+          expect.objectContaining({
+            administeredLocation: {
+              uuid: 'login-loc-uuid',
+              display: 'Login Location',
+            },
+            basedOnReference: 'med-request-uuid',
+            administeredOn: expect.any(Date),
+          }),
         );
       });
     });
@@ -325,7 +509,9 @@ describe('ImmunizationHistoryForm', () => {
       ],
     ])('matches snapshot with %s', (_, storeOverride) => {
       jest.mocked(useImmunizationHistoryStore).mockReturnValue(storeOverride);
-      const { container } = render(<ImmunizationHistoryForm />);
+      const { container } = render(
+        <ImmunizationHistoryForm encounterSessionStartContext={{}} />,
+      );
       expect(container).toMatchSnapshot();
     });
   });
@@ -339,7 +525,9 @@ describe('ImmunizationHistoryForm', () => {
       ],
     ])('has no accessibility violations with %s', async (_, storeOverride) => {
       jest.mocked(useImmunizationHistoryStore).mockReturnValue(storeOverride);
-      const { container } = render(<ImmunizationHistoryForm />);
+      const { container } = render(
+        <ImmunizationHistoryForm encounterSessionStartContext={{}} />,
+      );
       await act(async () => {});
       expect(await axe(container)).toHaveNoViolations();
     });

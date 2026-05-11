@@ -1,11 +1,12 @@
 import { generateUUID, resolveComboBoxItems, Location } from '@bahmni/services';
 import {
+  BundleEntry,
   Extension,
+  Immunization,
   Medication,
+  MedicationRequest,
   ValueSet,
   ValueSetExpansionContains,
-  BundleEntry,
-  Immunization,
 } from 'fhir/r4';
 import { InputControlAttributes } from '../../../providers/clinicalConfig/models';
 import { getMedicationDisplay } from '../../../services/medicationService';
@@ -16,6 +17,7 @@ import {
 } from '../../../utils/fhir/referenceCreator';
 import {
   ADMINISTERED_PRODUCT_EXTENSION_URL,
+  BASED_ON_EXTENSION_URL,
   ENTERING_PROVIDER_CODE,
   ENTERING_PROVIDER_DISPLAY,
   ENTERING_PROVIDER_SYSTEM,
@@ -37,6 +39,18 @@ function resolveAdministeredProductExtension(
       valueReference: drug.code
         ? { reference: `Medication/${drug.code}`, display: drug.display }
         : { display: drug.display },
+    },
+  ];
+}
+
+function resolveBasedOnExtension(
+  basedOnReference: string | null | undefined,
+): Extension[] {
+  if (!basedOnReference) return [];
+  return [
+    {
+      url: BASED_ON_EXTENSION_URL,
+      valueReference: { reference: `MedicationRequest/${basedOnReference}` },
     },
   ];
 }
@@ -133,6 +147,37 @@ export function getComboBoxItems(
   );
 }
 
+export function buildBasedOnImmunizationEntry(
+  basedOn: MedicationRequest,
+  basedOnMedication: Medication,
+  loginLocation: { uuid?: string; display?: string; name: string },
+) {
+  const vaccineCode = {
+    code: basedOnMedication.code?.coding?.[0]?.code,
+    display: basedOn.medicationReference?.display,
+  };
+
+  const medicationDisplay = basedOn.medicationReference?.display;
+  const drug = medicationDisplay
+    ? { code: basedOnMedication.id, display: medicationDisplay }
+    : null;
+
+  const administeredLocation = {
+    uuid: loginLocation.uuid,
+    display: loginLocation.display ?? loginLocation.name,
+  };
+
+  return {
+    vaccineCode,
+    defaults: {
+      drug,
+      administeredOn: new Date(),
+      administeredLocation,
+      basedOnReference: basedOn.id,
+    },
+  };
+}
+
 export function createImmunizationBundleEntries({
   selectedImmunizations,
   encounterSubject,
@@ -140,6 +185,10 @@ export function createImmunizationBundleEntries({
   practitionerUUID,
 }: CreateImmunizationBundleEntriesParams): BundleEntry[] {
   return selectedImmunizations.map((entry) => {
+    const extensions = [
+      ...(entry.drug ? resolveAdministeredProductExtension(entry.drug) : []),
+      ...resolveBasedOnExtension(entry.basedOnReference),
+    ];
     const resource: Immunization = {
       resourceType: 'Immunization',
       status: 'completed',
@@ -173,9 +222,7 @@ export function createImmunizationBundleEntries({
             },
           ]
         : undefined,
-      extension: entry.drug
-        ? resolveAdministeredProductExtension(entry.drug)
-        : undefined,
+      extension: extensions.length > 0 ? extensions : undefined,
       encounter: createEncounterReferenceFromString(encounterReference),
       performer: [
         {
