@@ -31,7 +31,7 @@ function applyAdministeredOnUpdate(
     if (entry.expiryDate) {
       if (value && entry.expiryDate < value) {
         updated.errors.expiryDate =
-          'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON';
+          'IMMUNIZATION_INPUT_CONTROL_EXPIRY_DATE_BEFORE_ADMINISTERED_ON';
       } else {
         delete updated.errors.expiryDate;
       }
@@ -98,13 +98,13 @@ function applyExpiryDateUpdate(
     if (!value) {
       if (
         updated.errors.expiryDate ===
-        'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON'
+        'IMMUNIZATION_INPUT_CONTROL_EXPIRY_DATE_BEFORE_ADMINISTERED_ON'
       ) {
         delete updated.errors.expiryDate;
       }
     } else if (entry.administeredOn && value < entry.administeredOn) {
       updated.errors.expiryDate =
-        'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON';
+        'IMMUNIZATION_INPUT_CONTROL_EXPIRY_DATE_BEFORE_ADMINISTERED_ON';
     } else {
       delete updated.errors.expiryDate;
     }
@@ -171,61 +171,61 @@ const FIELD_VALIDATIONS: FieldValidationConfig[] = [
   {
     attr: 'drug',
     key: 'drug',
-    errorMsg: 'IMMUNIZATION_HISTORY_DRUG_CODE_REQUIRED',
+    errorMsg: 'IMMUNIZATION_INPUT_CONTROL_DRUG_CODE_REQUIRED',
     hasValue: (e) => Boolean(e.drug),
   },
   {
     attr: 'administeredOn',
     key: 'administeredOn',
-    errorMsg: 'IMMUNIZATION_HISTORY_ADMINISTERED_ON_REQUIRED',
+    errorMsg: 'IMMUNIZATION_INPUT_CONTROL_ADMINISTERED_ON_REQUIRED',
     hasValue: (e) => Boolean(e.administeredOn),
   },
   {
     attr: 'administeredLocation',
     key: 'administeredLocation',
-    errorMsg: 'IMMUNIZATION_HISTORY_ADMINISTERED_LOCATION_REQUIRED',
+    errorMsg: 'IMMUNIZATION_INPUT_CONTROL_ADMINISTERED_LOCATION_REQUIRED',
     hasValue: (e) => Boolean(e.administeredLocation?.display.trim()),
   },
   {
     attr: 'route',
     key: 'route',
-    errorMsg: 'IMMUNIZATION_HISTORY_ROUTE_REQUIRED',
+    errorMsg: 'IMMUNIZATION_INPUT_CONTROL_ROUTE_REQUIRED',
     hasValue: (e) => Boolean(e.route?.trim()),
   },
   {
     attr: 'site',
     key: 'site',
-    errorMsg: 'IMMUNIZATION_HISTORY_SITE_REQUIRED',
+    errorMsg: 'IMMUNIZATION_INPUT_CONTROL_SITE_REQUIRED',
     hasValue: (e) => Boolean(e.site?.trim()),
   },
   {
     attr: 'expiryDate',
     key: 'expiryDate',
-    errorMsg: 'IMMUNIZATION_HISTORY_EXPIRY_DATE_REQUIRED',
+    errorMsg: 'IMMUNIZATION_INPUT_CONTROL_EXPIRY_DATE_REQUIRED',
     hasValue: (e) => Boolean(e.expiryDate),
   },
   {
     attr: 'manufacturer',
     key: 'manufacturer',
-    errorMsg: 'IMMUNIZATION_HISTORY_MANUFACTURER_REQUIRED',
+    errorMsg: 'IMMUNIZATION_INPUT_CONTROL_MANUFACTURER_REQUIRED',
     hasValue: (e) => Boolean(e.manufacturer?.trim()),
   },
   {
     attr: 'batchNumber',
     key: 'batchNumber',
-    errorMsg: 'IMMUNIZATION_HISTORY_BATCH_NUMBER_REQUIRED',
+    errorMsg: 'IMMUNIZATION_INPUT_CONTROL_BATCH_NUMBER_REQUIRED',
     hasValue: (e) => Boolean(e.batchNumber?.trim()),
   },
   {
     attr: 'doseSequence',
     key: 'doseSequence',
-    errorMsg: 'IMMUNIZATION_HISTORY_DOSE_SEQUENCE_REQUIRED',
+    errorMsg: 'IMMUNIZATION_INPUT_CONTROL_DOSE_SEQUENCE_REQUIRED',
     hasValue: (e) => e.doseSequence !== null && e.doseSequence >= 1,
   },
   {
     attr: 'note',
     key: 'note',
-    errorMsg: 'IMMUNIZATION_HISTORY_NOTE_REQUIRED',
+    errorMsg: 'IMMUNIZATION_INPUT_CONTROL_NOTE_REQUIRED',
     hasValue: (e) => Boolean(e.note?.trim()),
   },
 ];
@@ -253,7 +253,7 @@ function validateEntry(
     entry.expiryDate < entry.administeredOn
   ) {
     errors.expiryDate =
-      'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON';
+      'IMMUNIZATION_INPUT_CONTROL_EXPIRY_DATE_BEFORE_ADMINISTERED_ON';
     valid = false;
   }
 

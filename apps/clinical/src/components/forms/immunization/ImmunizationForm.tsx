@@ -79,7 +79,7 @@ const ImmunizationForm = ({
   const {
     metadata,
     attributes,
-    label = 'IMMUNIZATION_HISTORY_FORM_TITLE',
+    label = 'IMMUNIZATION_INPUT_CONTROL_FORM_TITLE',
   } = inputControlConfig ?? {};
   const vaccineConceptSetUuid = metadata?.vaccineConceptSetUuid as
     | string
@@ -281,7 +281,7 @@ const ImmunizationForm = ({
         <ComboBox
           id="immunization-history-search"
           data-testid="immunization-history-search-combobox"
-          placeholder={t('IMMUNIZATION_HISTORY_SEARCH_PLACEHOLDER')}
+          placeholder={t('IMMUNIZATION_INPUT_CONTROL_SEARCH_PLACEHOLDER')}
           items={vaccineCodeComboBoxItems}
           itemToString={(item) => item?.display ?? ''}
           onChange={({ selectedItem }) => {
@@ -296,7 +296,7 @@ const ImmunizationForm = ({
           clearSelectedOnChange
           size="md"
           autoAlign
-          aria-label={t('IMMUNIZATION_HISTORY_SEARCH_ARIA_LABEL')}
+          aria-label={t('IMMUNIZATION_INPUT_CONTROL_SEARCH_ARIA_LABEL')}
         />
       )}
       {isDataLoading ? (
@@ -317,7 +317,7 @@ const ImmunizationForm = ({
         </div>
       ) : null}
       {showSelectedImmunizations && (
-        <BoxWHeader title={t('IMMUNIZATION_HISTORY_ADDED_ITEMS')}>
+        <BoxWHeader title={t('IMMUNIZATION_INPUT_CONTROL_ADDED_ITEMS')}>
           {selectedImmunizations.map((immunization) => (
             <SelectedItem
               key={immunization.id}

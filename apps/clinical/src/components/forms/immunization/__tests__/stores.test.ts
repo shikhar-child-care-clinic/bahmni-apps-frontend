@@ -296,7 +296,7 @@ describe('useImmunizationHistoryStore', () => {
         '2025-01-01',
         '2024-06-01',
         false,
-        'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON',
+        'IMMUNIZATION_INPUT_CONTROL_EXPIRY_DATE_BEFORE_ADMINISTERED_ON',
       ],
       ['same as', '2025-01-01', '2025-01-01', true, undefined],
       ['after', '2025-01-01', '2026-01-01', true, undefined],
@@ -361,7 +361,7 @@ describe('useImmunizationHistoryStore', () => {
       [
         'before',
         new Date('2025-01-01'),
-        'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON',
+        'IMMUNIZATION_INPUT_CONTROL_EXPIRY_DATE_BEFORE_ADMINISTERED_ON',
       ],
       ['on', new Date('2025-06-01'), undefined],
       ['after', new Date('2026-01-01'), undefined],
@@ -388,7 +388,7 @@ describe('useImmunizationHistoryStore', () => {
       [
         'after expiryDate',
         new Date('2025-06-01'),
-        'IMMUNIZATION_HISTORY_EXPIRY_DATE_BEFORE_ADMINISTERED_ON',
+        'IMMUNIZATION_INPUT_CONTROL_EXPIRY_DATE_BEFORE_ADMINISTERED_ON',
       ],
       ['before expiryDate', new Date('2024-12-01'), undefined],
       ['null', null, undefined],
