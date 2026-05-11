@@ -28,7 +28,7 @@ describe('InputControlRenderer', () => {
       <InputControlRenderer
         entry={baseEntry}
         encounterType="OPD"
-        consultationStartEventPayload={{}}
+        encounterSessionStartContext={{}}
       />,
     );
 
@@ -42,7 +42,7 @@ describe('InputControlRenderer', () => {
       <InputControlRenderer
         entry={baseEntry}
         encounterType="OPD"
-        consultationStartEventPayload={{}}
+        encounterSessionStartContext={{}}
       />,
     );
 
@@ -57,7 +57,7 @@ describe('InputControlRenderer', () => {
         <InputControlRenderer
           entry={{ ...baseEntry, encounterTypes }}
           encounterType={encounterType}
-          consultationStartEventPayload={{}}
+          encounterSessionStartContext={{}}
         />,
       );
 
@@ -73,7 +73,7 @@ describe('InputControlRenderer', () => {
         <InputControlRenderer
           entry={{ ...baseEntry, encounterTypes }}
           encounterType={encounterType}
-          consultationStartEventPayload={{}}
+          encounterSessionStartContext={{}}
         />,
       );
 
@@ -87,7 +87,7 @@ describe('InputControlRenderer', () => {
       <InputControlRenderer
         entry={baseEntry}
         encounterType="OPD"
-        consultationStartEventPayload={{}}
+        encounterSessionStartContext={{}}
       />,
     );
     expect(container).toMatchSnapshot();
@@ -99,7 +99,7 @@ describe('InputControlRenderer', () => {
       <InputControlRenderer
         entry={baseEntry}
         encounterType="OPD"
-        consultationStartEventPayload={{}}
+        encounterSessionStartContext={{}}
       />,
     );
     expect(await axe(container)).toHaveNoViolations();

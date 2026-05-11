@@ -20,7 +20,7 @@ import {
   mockCovid19VaccineDrug,
   mockEncounterSubject,
   mockFetchedMedication,
-  mockFormConfig,
+  mockImmunizationFormConfig,
   mockLocations,
   mockMedicationRequest,
   mockRoutesValueSet,
@@ -89,8 +89,8 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
     const user = userEvent.setup();
     render(
       <ImmunizationHistoryForm
-        consultationStartEventPayload={{}}
-        formConfig={mockFormConfig}
+        encounterSessionStartContext={{}}
+        inputControlConfig={mockImmunizationFormConfig}
       />,
       {
         wrapper: createWrapper(),
@@ -195,8 +195,8 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
     const user = userEvent.setup();
     render(
       <ImmunizationHistoryForm
-        consultationStartEventPayload={{}}
-        formConfig={mockFormConfig}
+        encounterSessionStartContext={{}}
+        inputControlConfig={mockImmunizationFormConfig}
       />,
       {
         wrapper: createWrapper(),
@@ -249,7 +249,7 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
       clinicalConfig: { consultationPad: {} },
     });
 
-    render(<ImmunizationHistoryForm consultationStartEventPayload={{}} />, {
+    render(<ImmunizationHistoryForm encounterSessionStartContext={{}} />, {
       wrapper: createWrapper(),
     });
 
@@ -270,8 +270,8 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
 
     render(
       <ImmunizationHistoryForm
-        consultationStartEventPayload={{}}
-        formConfig={mockFormConfig}
+        encounterSessionStartContext={{}}
+        inputControlConfig={mockImmunizationFormConfig}
       />,
       {
         wrapper: createWrapper(),
@@ -305,8 +305,8 @@ describe('ImmunizationHistoryForm Integration Tests', () => {
 
     render(
       <ImmunizationHistoryForm
-        consultationStartEventPayload={{ basedOn: mockMedicationRequest }}
-        formConfig={mockAdministrationFormConfig}
+        encounterSessionStartContext={{ basedOn: mockMedicationRequest }}
+        inputControlConfig={mockAdministrationFormConfig}
       />,
       { wrapper: createWrapper() },
     );

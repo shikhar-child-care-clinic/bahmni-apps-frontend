@@ -10,7 +10,7 @@ import {
   mockAdministrationFormConfig,
   mockClinicalConfigContext,
   mockFetchedMedication,
-  mockFormConfig,
+  mockImmunizationFormConfig,
   mockImmunizationEntry,
   mockLocations,
   mockMedicationRequest,
@@ -82,8 +82,8 @@ describe('ImmunizationHistoryForm', () => {
     it('renders form title and search combobox', () => {
       render(
         <ImmunizationHistoryForm
-          consultationStartEventPayload={{}}
-          formConfig={mockFormConfig}
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationFormConfig}
         />,
       );
       expect(screen.getByText('Immunization History')).toBeInTheDocument();
@@ -95,8 +95,8 @@ describe('ImmunizationHistoryForm', () => {
     it('hides search combobox when disableAdditionalAdministrations is true in metadata', () => {
       render(
         <ImmunizationHistoryForm
-          consultationStartEventPayload={{}}
-          formConfig={mockAdministrationFormConfig}
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockAdministrationFormConfig}
         />,
       );
       expect(
@@ -121,8 +121,8 @@ describe('ImmunizationHistoryForm', () => {
         });
         render(
           <ImmunizationHistoryForm
-            consultationStartEventPayload={{}}
-            formConfig={mockFormConfig}
+            encounterSessionStartContext={{}}
+            inputControlConfig={mockImmunizationFormConfig}
           />,
         );
         expect(
@@ -143,8 +143,8 @@ describe('ImmunizationHistoryForm', () => {
       });
       render(
         <ImmunizationHistoryForm
-          consultationStartEventPayload={{}}
-          formConfig={mockFormConfig}
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationFormConfig}
         />,
       );
       expect(
@@ -173,8 +173,8 @@ describe('ImmunizationHistoryForm', () => {
         });
         render(
           <ImmunizationHistoryForm
-            consultationStartEventPayload={{}}
-            formConfig={mockFormConfig}
+            encounterSessionStartContext={{}}
+            inputControlConfig={mockImmunizationFormConfig}
           />,
         );
         expect(
@@ -221,8 +221,8 @@ describe('ImmunizationHistoryForm', () => {
         });
         render(
           <ImmunizationHistoryForm
-            consultationStartEventPayload={{}}
-            formConfig={mockFormConfig}
+            encounterSessionStartContext={{}}
+            inputControlConfig={mockImmunizationFormConfig}
           />,
         );
         await user.type(
@@ -239,8 +239,8 @@ describe('ImmunizationHistoryForm', () => {
       const user = userEvent.setup();
       render(
         <ImmunizationHistoryForm
-          consultationStartEventPayload={{}}
-          formConfig={mockFormConfig}
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationFormConfig}
         />,
       );
       await user.type(
@@ -259,8 +259,8 @@ describe('ImmunizationHistoryForm', () => {
       const user = userEvent.setup();
       render(
         <ImmunizationHistoryForm
-          consultationStartEventPayload={{}}
-          formConfig={mockFormConfig}
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationFormConfig}
         />,
       );
       await user.type(
@@ -283,8 +283,8 @@ describe('ImmunizationHistoryForm', () => {
       const user = userEvent.setup();
       render(
         <ImmunizationHistoryForm
-          consultationStartEventPayload={{}}
-          formConfig={mockFormConfig}
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationFormConfig}
         />,
       );
       await user.type(
@@ -311,8 +311,8 @@ describe('ImmunizationHistoryForm', () => {
       });
       render(
         <ImmunizationHistoryForm
-          consultationStartEventPayload={{}}
-          formConfig={mockFormConfig}
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationFormConfig}
         />,
       );
       expect(screen.getByText('Added Immunization')).toBeInTheDocument();
@@ -326,8 +326,8 @@ describe('ImmunizationHistoryForm', () => {
     it('does not show BoxWHeader when no immunizations selected', () => {
       render(
         <ImmunizationHistoryForm
-          consultationStartEventPayload={{}}
-          formConfig={mockFormConfig}
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationFormConfig}
         />,
       );
       expect(screen.queryByText('Added Immunization')).not.toBeInTheDocument();
@@ -350,8 +350,8 @@ describe('ImmunizationHistoryForm', () => {
       });
       render(
         <ImmunizationHistoryForm
-          consultationStartEventPayload={{}}
-          formConfig={mockFormConfig}
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationFormConfig}
         />,
       );
       expect(screen.queryByText('Added Immunization')).not.toBeInTheDocument();
@@ -375,8 +375,8 @@ describe('ImmunizationHistoryForm', () => {
       });
       render(
         <ImmunizationHistoryForm
-          consultationStartEventPayload={{}}
-          formConfig={mockFormConfig}
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationFormConfig}
         />,
       );
       const drugCombobox = screen.getByPlaceholderText('Search drug name');
@@ -399,8 +399,8 @@ describe('ImmunizationHistoryForm', () => {
       });
       render(
         <ImmunizationHistoryForm
-          consultationStartEventPayload={{}}
-          formConfig={mockFormConfig}
+          encounterSessionStartContext={{}}
+          inputControlConfig={mockImmunizationFormConfig}
         />,
       );
       await user.click(screen.getByTestId('selected-item-close-button'));
@@ -434,8 +434,8 @@ describe('ImmunizationHistoryForm', () => {
         setupMocks();
         render(
           <ImmunizationHistoryForm
-            consultationStartEventPayload={payload}
-            formConfig={mockAdministrationFormConfig}
+            encounterSessionStartContext={payload}
+            inputControlConfig={mockAdministrationFormConfig}
           />,
         );
         expect(mockStore.addImmunizationWithDefaults).not.toHaveBeenCalled();
@@ -454,8 +454,8 @@ describe('ImmunizationHistoryForm', () => {
       });
       render(
         <ImmunizationHistoryForm
-          consultationStartEventPayload={consultationPayloadWithBasedOn}
-          formConfig={mockAdministrationFormConfig}
+          encounterSessionStartContext={consultationPayloadWithBasedOn}
+          inputControlConfig={mockAdministrationFormConfig}
         />,
       );
       await waitFor(() => {
@@ -483,8 +483,8 @@ describe('ImmunizationHistoryForm', () => {
       });
       render(
         <ImmunizationHistoryForm
-          consultationStartEventPayload={consultationPayloadWithBasedOn}
-          formConfig={mockAdministrationFormConfig}
+          encounterSessionStartContext={consultationPayloadWithBasedOn}
+          inputControlConfig={mockAdministrationFormConfig}
         />,
       );
       await waitFor(() => {
@@ -513,7 +513,7 @@ describe('ImmunizationHistoryForm', () => {
     ])('matches snapshot with %s', (_, storeOverride) => {
       jest.mocked(useImmunizationHistoryStore).mockReturnValue(storeOverride);
       const { container } = render(
-        <ImmunizationHistoryForm consultationStartEventPayload={{}} />,
+        <ImmunizationHistoryForm encounterSessionStartContext={{}} />,
       );
       expect(container).toMatchSnapshot();
     });
@@ -529,7 +529,7 @@ describe('ImmunizationHistoryForm', () => {
     ])('has no accessibility violations with %s', async (_, storeOverride) => {
       jest.mocked(useImmunizationHistoryStore).mockReturnValue(storeOverride);
       const { container } = render(
-        <ImmunizationHistoryForm consultationStartEventPayload={{}} />,
+        <ImmunizationHistoryForm encounterSessionStartContext={{}} />,
       );
       await act(async () => {});
       expect(await axe(container)).toHaveNoViolations();

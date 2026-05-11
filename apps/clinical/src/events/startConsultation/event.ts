@@ -1,8 +1,8 @@
 import { CONSULTATION_START_EVENT } from './constants';
-import { ConsultationStartEventPayload } from './models';
+import { EncounterSessionStartContext } from './models';
 
 export const dispatchConsultationStart = (
-  payload: ConsultationStartEventPayload,
+  payload: EncounterSessionStartContext,
 ): void => {
   const event = new CustomEvent(CONSULTATION_START_EVENT, {
     detail: payload,
