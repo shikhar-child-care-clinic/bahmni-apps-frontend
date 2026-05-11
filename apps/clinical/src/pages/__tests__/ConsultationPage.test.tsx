@@ -271,10 +271,12 @@ describe('ConsultationPage', () => {
 
     (useActiveVisit as jest.Mock).mockReturnValue({
       activeVisit: { id: 'visit-uuid' },
+      loading: false,
     });
 
     (useLocations as jest.Mock).mockReturnValue({
       locations: [{ uuid: 'location-uuid', name: 'Location 1' }],
+      loading: false,
     });
 
     (getConfig as jest.Mock).mockResolvedValue(mockDashboardConfig);
@@ -282,6 +284,34 @@ describe('ConsultationPage', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+  });
+
+  describe('Match Decision', () => {
+    it('should call useEncounterMatchDecision with patient, visit, provider and location', async () => {
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(useEncounterMatchDecision).toHaveBeenCalledWith({
+          patientUuid: 'patient-uuid',
+          visitUuid: 'visit-uuid',
+          providerUuid: 'provider-uuid',
+          locationUuid: 'location-uuid',
+        });
+      });
+    });
+
+    it('should not call useEncounterMatchDecision with locationUuid when visit is loading', () => {
+      (useActiveVisit as jest.Mock).mockReturnValue({
+        activeVisit: null,
+        loading: true,
+      });
+
+      renderWithProvider();
+
+      expect(useEncounterMatchDecision).toHaveBeenCalledWith(
+        expect.objectContaining({ locationUuid: null }),
+      );
+    });
   });
 
   describe('Rendering and Structure', () => {

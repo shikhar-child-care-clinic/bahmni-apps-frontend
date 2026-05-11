@@ -39,7 +39,6 @@ import { useActiveVisit } from '../hooks/useActiveVisit';
 import { useLocations } from '../hooks/useLocations';
 import { ClinicalAppProvider } from '../providers/ClinicalAppProvider';
 import { useClinicalConfig } from '../providers/clinicalConfig';
-import { useEncounterDetailsStore } from '../stores/encounterDetailsStore';
 import { useObservationFormsStore } from '../stores/observationFormsStore';
 import {
   DASHBOARD_CONFIG_URL,
@@ -93,40 +92,17 @@ const ConsultationPage: React.FC = () => {
 
   const patientUUID = usePatientUUID();
   const { practitioner } = useActivePractitioner();
-  const selectedLocation = useEncounterDetailsStore(
-    (state) => state.selectedLocation,
-  );
-  const setActiveVisit = useEncounterDetailsStore(
-    (state) => state.setActiveVisit,
-  );
-  const setSelectedLocation = useEncounterDetailsStore(
-    (state) => state.setSelectedLocation,
-  );
 
-  const { locations } = useLocations();
-
-  useEffect(() => {
-    if (locations.length > 0 && !selectedLocation) {
-      setSelectedLocation(locations[0]);
-    }
-  }, [locations, selectedLocation, setSelectedLocation]);
-
+  const { locations, loading: locationsLoading } = useLocations();
   const { activeVisit: fetchedActiveVisit, loading: visitLoading } =
     useActiveVisit(patientUUID);
-
-  const activeVisit = useEncounterDetailsStore((state) => state.activeVisit);
-
-  useEffect(() => {
-    if (fetchedActiveVisit?.id !== activeVisit?.id) {
-      setActiveVisit(fetchedActiveVisit ?? null);
-    }
-  }, [fetchedActiveVisit, setActiveVisit, activeVisit]);
 
   useEncounterMatchDecision({
     patientUuid: patientUUID,
     visitUuid: fetchedActiveVisit?.id,
     providerUuid: practitioner?.uuid,
-    locationUuid: visitLoading ? null : selectedLocation?.uuid,
+    locationUuid:
+      visitLoading || locationsLoading ? null : (locations[0]?.uuid ?? null),
   });
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
