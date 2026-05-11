@@ -7,6 +7,7 @@ import {
 import { useUserPrivilege } from '@bahmni/widgets';
 import { useQuery } from '@tanstack/react-query';
 import React from 'react';
+import { HOMEPAGE_TILES_SKELETON_COUNT } from '../../../constants/app';
 import { AppTile } from '../AppTile';
 import styles from './styles/HomePageGrid.module.scss';
 
@@ -47,7 +48,10 @@ export const HomePageGrid: React.FC = () => {
         aria-busy="true"
       >
         <div className={styles.tileGrid}>
-          {Array.from({ length: 6 }, (_, i) => `skeleton-${i}`).map((key) => (
+          {Array.from(
+            { length: HOMEPAGE_TILES_SKELETON_COUNT },
+            (_, i) => `skeleton-${i}`,
+          ).map((key) => (
             <SkeletonPlaceholder key={key} className={styles.skeletonTile} />
           ))}
         </div>
