@@ -1,0 +1,59 @@
+name: upstream-watch
+
+# Weekly check for new upstream commits.
+# Sundays 02:00 UTC ≈ Sunday 07:30 IST — fresh issue waits for the rebase session.
+# Runs in shikhar-child-care-clinic/bahmni-apps-frontend only.
+
+on:
+  schedule:
+    - cron: "0 2 * * 0"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    if: github.repository == 'shikhar-child-care-clinic/bahmni-apps-frontend'
+    runs-on: ubuntu-latest
+    env:
+      UPSTREAM_REPO: Bahmni/bahmni-apps-frontend
+      UPSTREAM_BRANCH: main
+      OUR_BRANCH: main
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream "https://github.com/${UPSTREAM_REPO}.git"
+          git fetch upstream "${UPSTREAM_BRANCH}" --depth=200
+
+      - name: Count commits ahead of us
+        id: count
+        run: |
+          AHEAD=$(git rev-list --count "origin/${OUR_BRANCH}..upstream/${UPSTREAM_BRANCH}")
+          echo "ahead=${AHEAD}" >> "$GITHUB_OUTPUT"
+          echo "Upstream is ${AHEAD} commits ahead."
+          {
+            echo "## Upstream commits since last sync"
+            echo
+            git log --no-merges --pretty='format:- %h %s (%an, %ad)' --date=short \
+              "origin/${OUR_BRANCH}..upstream/${UPSTREAM_BRANCH}" | head -n 50
+            echo
+          } > /tmp/body.md
+
+      - name: Open or update issue
+        if: steps.count.outputs.ahead != '0'
+        run: |
+          TITLE="Upstream rebase due: ${{ steps.count.outputs.ahead }} commits behind ${UPSTREAM_REPO}@${UPSTREAM_BRANCH}"
+          EXISTING=$(gh issue list --label upstream-rebase --state open --json number --jq '.[0].number' || true)
+          if [ -n "$EXISTING" ]; then
+            gh issue edit "$EXISTING" --title "$TITLE" --body-file /tmp/body.md
+          else
+            gh label create upstream-rebase --color BFD4F2 --description "Tracks upstream drift" 2>/dev/null || true
+            gh issue create --title "$TITLE" --body-file /tmp/body.md --label upstream-rebase
+          fi
