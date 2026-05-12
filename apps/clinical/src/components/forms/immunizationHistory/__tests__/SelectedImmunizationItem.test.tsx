@@ -458,8 +458,8 @@ describe('SelectedImmunizationItem', () => {
       render(<SelectedImmunizationItem {...defaultProps} />);
       await user.click(screen.getByPlaceholderText('Enter batch number'));
       await waitFor(() => {
-        expect(screen.getByText('BATCH-001')).toBeInTheDocument();
-        expect(screen.getByText('BATCH-002')).toBeInTheDocument();
+        expect(screen.getByText(/BATCH-001/)).toBeInTheDocument();
+        expect(screen.getByText(/BATCH-002/)).toBeInTheDocument();
       });
     });
 
@@ -467,7 +467,7 @@ describe('SelectedImmunizationItem', () => {
       const user = userEvent.setup();
       render(<SelectedImmunizationItem {...defaultProps} />);
       await user.click(screen.getByPlaceholderText('Enter batch number'));
-      await user.click(screen.getByText('BATCH-001'));
+      await user.click(screen.getByText(/BATCH-001/));
       await waitFor(() => {
         expect(mockStore.updateBatchNumber).toHaveBeenCalledWith(
           id,
@@ -501,7 +501,7 @@ describe('SelectedImmunizationItem', () => {
         />,
       );
       await user.click(screen.getByPlaceholderText('Enter batch number'));
-      await user.click(screen.getByText('BATCH-NO-EXPIRY'));
+      await user.click(screen.getByText(/BATCH-NO-EXPIRY/));
       await waitFor(() => {
         expect(mockStore.updateBatchNumber).toHaveBeenCalledWith(
           id,
@@ -537,7 +537,7 @@ describe('SelectedImmunizationItem', () => {
       const user = userEvent.setup();
       render(<SelectedImmunizationItem {...defaultProps} />);
       await user.click(screen.getByPlaceholderText('Enter batch number'));
-      await user.click(screen.getByText('BATCH-001'));
+      await user.click(screen.getByText(/BATCH-001/));
       mockStore.updateBatchNumber.mockClear();
       await user.click(
         screen.getByRole('button', { name: 'Clear selected item' }),

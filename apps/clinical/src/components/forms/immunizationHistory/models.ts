@@ -59,6 +59,7 @@ export interface ValueSetComboBoxItem {
 export interface BatchNumberComboBoxItem {
   batchNumber: string;
   expiryDate: string;
+  stockLocationName: string;
   disabled?: boolean;
 }
 
