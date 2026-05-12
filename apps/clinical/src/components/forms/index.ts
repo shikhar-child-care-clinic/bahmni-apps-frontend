@@ -6,6 +6,7 @@ import './medications';
 import './vaccinations';
 import './immunizationHistory';
 import './observations';
+import './addMore';
 
 export type { InputControl, EncounterContext } from './models';
 export { default as InputControlRenderer } from './renderer';
