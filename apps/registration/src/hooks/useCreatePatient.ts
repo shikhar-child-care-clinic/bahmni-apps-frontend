@@ -1,28 +1,28 @@
 import {
-  createPatient,
-  CreatePatientRequest,
-  PatientName,
-  PatientIdentifier,
-  PatientAddress,
-  PatientAttribute,
+  createFhirPatient,
+  uploadPatientPhoto,
   AUDIT_LOG_EVENT_DETAILS,
   AuditEventType,
   dispatchAuditEvent,
   PersonAttributeType,
+  PatientIdentifier,
+  PatientAddress,
   useTranslation,
 } from '@bahmni/services';
 import { useNotification } from '@bahmni/widgets';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import type { RelationshipData } from '../components/forms/patientRelationships/PatientRelationships';
-import { convertTimeToISODateTime } from '../components/forms/profile/dateAgeUtils';
 import {
   BasicInfoData,
   PersonAttributesData,
   AdditionalIdentifiersData,
 } from '../models/patient';
-import { parseDateStringToDate } from '../utils/ageUtils';
 import { usePersonAttributes } from './usePersonAttributes';
+import {
+  buildFhirPatientResource,
+  type FhirPatientResource,
+} from '../utils/fhirPatientMapper';
 
 interface CreatePatientFormData {
   profile: BasicInfoData & {
@@ -34,6 +34,12 @@ interface CreatePatientFormData {
   contact: PersonAttributesData;
   additional: PersonAttributesData;
   additionalIdentifiers: AdditionalIdentifiersData;
+  /**
+   * @deprecated Relationship creation via the FHIR Patient endpoint is not
+   * supported. Relationships will be migrated to a dedicated FHIR call in a
+   * follow-up story. This field is retained for API compatibility but is NOT
+   * sent to the backend in this implementation.
+   */
   relationships: RelationshipData[];
 }
 
@@ -44,9 +50,27 @@ export const useCreatePatient = () => {
   const { personAttributes } = usePersonAttributes();
 
   const mutation = useMutation({
-    mutationFn: (formData: CreatePatientFormData) => {
-      const payload = transformFormDataToPayload(formData, personAttributes);
-      return createPatient(payload);
+    mutationFn: async (
+      formData: CreatePatientFormData,
+    ): Promise<FhirPatientResource> => {
+      const fhirPayload = buildFhirPatientResource({
+        profile: formData.profile,
+        address: formData.address,
+        contact: formData.contact,
+        additional: formData.additional,
+        additionalIdentifiers: formData.additionalIdentifiers,
+        personAttributes,
+      });
+
+      const response =
+        await createFhirPatient<FhirPatientResource>(fhirPayload);
+
+      // Upload patient photo via the REST v2 endpoint if provided
+      if (formData.profile.image && response.id) {
+        await uploadPatientPhoto(response.id, formData.profile.image);
+      }
+
+      return response;
     },
     onSuccess: (response) => {
       addNotification({
@@ -56,21 +80,30 @@ export const useCreatePatient = () => {
         timeout: 5000,
       });
 
-      if (response?.patient?.uuid) {
+      const patientUuid = response?.id;
+      if (patientUuid) {
         dispatchAuditEvent({
           eventType: AUDIT_LOG_EVENT_DETAILS.REGISTER_NEW_PATIENT
             .eventType as AuditEventType,
-          patientUuid: response.patient.uuid,
+          patientUuid,
           module: AUDIT_LOG_EVENT_DETAILS.REGISTER_NEW_PATIENT.module,
         });
 
+        const patientDisplay =
+          [
+            response.name?.[0]?.given?.join(' '),
+            response.name?.[0]?.family,
+          ]
+            .filter(Boolean)
+            .join(' ') || patientUuid;
+
         window.history.replaceState(
           {
-            patientDisplay: response.patient.display,
-            patientUuid: response.patient.uuid,
+            patientDisplay,
+            patientUuid,
           },
           '',
-          `/registration/patient/${response.patient.uuid}`,
+          `/registration/patient/${patientUuid}`,
         );
       } else {
         navigate('/registration/search');
@@ -88,99 +121,3 @@ export const useCreatePatient = () => {
 
   return mutation;
 };
-
-function transformFormDataToPayload(
-  formData: CreatePatientFormData,
-  personAttributes: PersonAttributeType[],
-): CreatePatientRequest {
-  const { profile, address, contact, additional, additionalIdentifiers } =
-    formData;
-  const patientName: PatientName = {
-    givenName: profile.firstName,
-    ...(profile.middleName && { middleName: profile.middleName }),
-    familyName: profile.lastName,
-    display: `${profile.firstName}${profile.middleName ? ' ' + profile.middleName : ''} ${profile.lastName}`,
-    preferred: false,
-  };
-
-  // Create a map of attribute name to UUID for quick lookup
-  const attributeMap = new Map<string, string>();
-  personAttributes.forEach((attr) => {
-    attributeMap.set(attr.name, attr.uuid);
-  });
-
-  // Merge contact and additional attributes
-  const allPersonAttributes = { ...contact, ...additional };
-
-  const attributes: PatientAttribute[] = [];
-  Object.entries(allPersonAttributes).forEach(([key, value]) => {
-    if (value && attributeMap.has(key)) {
-      attributes.push({
-        attributeType: { uuid: attributeMap.get(key)! },
-        value: String(value),
-      });
-    }
-  });
-
-  const transformedRelationships = (formData.relationships || [])
-    .filter((rel) => rel.patientUuid && rel.relationshipType)
-    .map((rel) => {
-      const relationship: {
-        relationshipType: { uuid: string };
-        personB: { uuid: string };
-        endDate?: string;
-      } = {
-        relationshipType: { uuid: rel.relationshipType! },
-        personB: { uuid: rel.patientUuid },
-      };
-
-      if (rel.tillDate) {
-        const date = parseDateStringToDate(rel.tillDate);
-        if (date) {
-          relationship.endDate = date.toISOString();
-        }
-      }
-
-      return relationship;
-    });
-
-  const identifiers: (PatientIdentifier & { identifier?: string })[] = [
-    profile.patientIdentifier,
-  ];
-
-  Object.entries(additionalIdentifiers).forEach(
-    ([identifierTypeUuid, value]) => {
-      if (value && value.trim() !== '') {
-        identifiers.push({
-          identifier: value,
-          identifierType: identifierTypeUuid,
-          preferred: false,
-        });
-      }
-    },
-  );
-
-  const payload: CreatePatientRequest = {
-    patient: {
-      person: {
-        names: [patientName],
-        gender: profile.gender.charAt(0).toUpperCase(),
-        birthdate: profile.dateOfBirth,
-        birthdateEstimated: profile.dobEstimated,
-        birthtime: convertTimeToISODateTime(
-          profile.dateOfBirth,
-          profile.birthTime,
-        ),
-        addresses: [address],
-        attributes,
-        deathDate: null,
-        causeOfDeath: '',
-      },
-      identifiers,
-    },
-    ...(profile.image && { image: profile.image }),
-    relationships: transformedRelationships,
-  };
-
-  return payload;
-}
