@@ -122,9 +122,13 @@ export function getMedicationComboBoxItems(
 export function getBatchNumberComboBoxItems(
   availableStocks: AvailableStockResponse | undefined,
   errorMessage?: string,
+  emptyMessage?: string,
 ): BatchNumberComboBoxItem[] {
   if (errorMessage) {
     return [{ batchNumber: errorMessage, expiryDate: '', disabled: true }];
+  }
+  if (emptyMessage) {
+    return [{ batchNumber: emptyMessage, expiryDate: '', disabled: true }];
   }
   return (availableStocks?.data ?? []).map(({ batchNumber, expiryDate }) => ({
     batchNumber,

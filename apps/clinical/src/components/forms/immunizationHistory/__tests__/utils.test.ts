@@ -16,6 +16,7 @@ import {
 } from '../utils';
 import {
   mockAvailableStockResponse,
+  mockEmptyAvailableStockResponse,
   mockEncounterSubject,
   mockFetchedMedication,
   mockImmunizationEntry,
@@ -259,6 +260,22 @@ describe('getBatchNumberComboBoxItems', () => {
     ).toEqual([
       {
         batchNumber: 'Error loading stock batches',
+        expiryDate: '',
+        disabled: true,
+      },
+    ]);
+  });
+
+  it('returns a disabled empty item when emptyMessage is provided and count is 0', () => {
+    expect(
+      getBatchNumberComboBoxItems(
+        mockEmptyAvailableStockResponse,
+        undefined,
+        'No stock batches available',
+      ),
+    ).toEqual([
+      {
+        batchNumber: 'No stock batches available',
         expiryDate: '',
         disabled: true,
       },

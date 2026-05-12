@@ -119,6 +119,9 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
       getBatchNumberComboBoxItems(
         availableStocks,
         stocksError ? t('ERROR_LOADING_STOCK_BATCHES') : undefined,
+        !stocksError && availableStocks?.count === 0
+          ? t('NO_STOCK_BATCHES_AVAILABLE')
+          : undefined,
       ),
     [availableStocks, stocksError, t],
   );

@@ -368,6 +368,11 @@ export const mockAvailableStockResponse: AvailableStockResponse = {
   ],
 };
 
+export const mockEmptyAvailableStockResponse: AvailableStockResponse = {
+  count: 0,
+  data: [],
+};
+
 export const mockStore = {
   selectedImmunizations: [],
   attributes: undefined,
