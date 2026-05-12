@@ -1,22 +1,30 @@
-import { Immunization, Medication } from 'fhir/r4';
+import { Immunization, Medication, MedicationRequest } from 'fhir/r4';
 import { getMedicationDisplay } from '../../../../services/medicationService';
-import { ADMINISTERED_PRODUCT_EXTENSION_URL } from '../constants';
 import {
-  findAttr,
-  getValueSetComboBoxItems,
-  getMedicationComboBoxItems,
-  getLocationComboBoxItems,
-  getComboBoxItems,
+  ADMINISTERED_PRODUCT_EXTENSION_URL,
+  BASED_ON_EXTENSION_URL,
+} from '../constants';
+import {
+  buildBasedOnImmunizationEntry,
   createImmunizationBundleEntries,
+  findAttr,
+  getComboBoxItems,
+  getLocationComboBoxItems,
+  getMedicationComboBoxItems,
+  getValueSetComboBoxItems,
 } from '../utils';
 import {
-  mockVaccineValueSet,
-  mockLocations,
-  mockLocationsWithChildren,
-  mockVaccineDrugs,
+  mockEncounterSubject,
+  mockFetchedMedication,
   mockImmunizationEntry,
   mockImmunizationEntryComplete,
-  mockEncounterSubject,
+  mockImmunizationEntryWithBasedOn,
+  mockImmunizationEntryWithBasedOnNoDrug,
+  mockLocations,
+  mockLocationsWithChildren,
+  mockMedicationRequest,
+  mockVaccineDrugs,
+  mockVaccineValueSet,
   mockValueSetWithPartialItem,
   mockValueSetWithoutContains,
 } from './__mocks__/immunizationHistoryMocks';
@@ -408,6 +416,41 @@ describe('createImmunizationBundleEntries', () => {
     },
   );
 
+  it('includes basedOn extension when basedOnReference is set and drug is absent', () => {
+    const result = createImmunizationBundleEntries({
+      ...BASE_BUNDLE_PARAMS,
+      selectedImmunizations: [mockImmunizationEntryWithBasedOnNoDrug],
+    });
+    const resource = result[0].resource as Immunization;
+    expect(resource.extension).toEqual([
+      {
+        url: BASED_ON_EXTENSION_URL,
+        valueReference: { reference: 'MedicationRequest/med-request-uuid' },
+      },
+    ]);
+  });
+
+  it('includes both administeredProduct and basedOn extensions when both drug and basedOnReference are set', () => {
+    const result = createImmunizationBundleEntries({
+      ...BASE_BUNDLE_PARAMS,
+      selectedImmunizations: [mockImmunizationEntryWithBasedOn],
+    });
+    const resource = result[0].resource as Immunization;
+    expect(resource.extension).toEqual([
+      {
+        url: ADMINISTERED_PRODUCT_EXTENSION_URL,
+        valueReference: {
+          reference: 'Medication/covid-drug-uuid',
+          display: 'COVID-19 Drug',
+        },
+      },
+      {
+        url: BASED_ON_EXTENSION_URL,
+        valueReference: { reference: 'MedicationRequest/med-request-uuid' },
+      },
+    ]);
+  });
+
   it('includes administeredProduct extension with display only when drug has no code', () => {
     const entryWithFreetextDrug = {
       ...mockImmunizationEntry,
@@ -470,5 +513,95 @@ describe('createImmunizationBundleEntries', () => {
       selectedImmunizations: [mockImmunizationEntry],
     });
     expect(result[0].request?.method).toBe('POST');
+  });
+});
+
+describe('buildBasedOnImmunizationEntry', () => {
+  const mockLoginLocation = {
+    uuid: 'loc-uuid',
+    display: 'Main Clinic',
+    name: 'Main Clinic',
+  };
+
+  it('extracts vaccineCode from basedOnMedication coding and medicationReference display', () => {
+    const { vaccineCode } = buildBasedOnImmunizationEntry(
+      mockMedicationRequest,
+      mockFetchedMedication,
+      mockLoginLocation,
+    );
+    expect(vaccineCode).toEqual({ code: 'covid-19', display: 'COVID-19 Drug' });
+  });
+
+  it('sets drug code from basedOnMedication.id and display from medicationReference', () => {
+    const { defaults } = buildBasedOnImmunizationEntry(
+      mockMedicationRequest,
+      mockFetchedMedication,
+      mockLoginLocation,
+    );
+    expect(defaults.drug).toEqual({
+      code: 'covid-drug-uuid',
+      display: 'COVID-19 Drug',
+    });
+  });
+
+  it('sets drug to null when medicationReference has no display', () => {
+    const basedOnNoDisplay = {
+      ...mockMedicationRequest,
+      medicationReference: { reference: 'Medication/covid-drug-uuid' },
+    } as MedicationRequest;
+    const { defaults } = buildBasedOnImmunizationEntry(
+      basedOnNoDisplay,
+      mockFetchedMedication,
+      mockLoginLocation,
+    );
+    expect(defaults.drug).toBeNull();
+  });
+
+  it.each([
+    [
+      'display is set',
+      { uuid: 'loc-uuid', display: 'Main Clinic', name: 'Fallback' },
+      'Main Clinic',
+    ],
+    [
+      'display is absent',
+      { uuid: 'loc-uuid', name: 'Fallback Name' },
+      'Fallback Name',
+    ],
+  ])(
+    'uses loginLocation.%s for administeredLocation.display',
+    (_, loginLocation, expectedDisplay) => {
+      const { defaults } = buildBasedOnImmunizationEntry(
+        mockMedicationRequest,
+        mockFetchedMedication,
+        loginLocation,
+      );
+      expect(defaults.administeredLocation).toMatchObject({
+        uuid: loginLocation.uuid,
+        display: expectedDisplay,
+      });
+    },
+  );
+
+  it('sets basedOnReference to basedOn.id', () => {
+    const { defaults } = buildBasedOnImmunizationEntry(
+      mockMedicationRequest,
+      mockFetchedMedication,
+      mockLoginLocation,
+    );
+    expect(defaults.basedOnReference).toBe('med-request-uuid');
+  });
+
+  it('sets administeredOn to a current Date instance', () => {
+    const before = new Date();
+    const { defaults } = buildBasedOnImmunizationEntry(
+      mockMedicationRequest,
+      mockFetchedMedication,
+      mockLoginLocation,
+    );
+    expect(defaults.administeredOn).toBeInstanceOf(Date);
+    expect(defaults.administeredOn.getTime()).toBeGreaterThanOrEqual(
+      before.getTime(),
+    );
   });
 });

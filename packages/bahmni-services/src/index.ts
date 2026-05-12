@@ -168,6 +168,7 @@ export {
   type Frequency as MedicationFrequency,
   type OrderAttribute,
 } from './medicationRequestService';
+export { getMedicationByUuid } from './medicationService';
 export {
   getPatientRadiologyInvestigations,
   getPatientRadiologyInvestigationBundle,

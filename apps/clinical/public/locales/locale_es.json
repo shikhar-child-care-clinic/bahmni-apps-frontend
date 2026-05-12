@@ -272,6 +272,7 @@
   "LOADING_MEDICATIONS": "Cargando medicamentos...",
   "LOADING_USER_PRIVILEGES": "Cargando privilegios de usuario...",
   "LOCATION": "Ubicación",
+  "MEDICATIONS_WIDGET_COL_ACTIONS": "Acciones",
   "MEDICATIONS_ADDED_MEDICATIONS": "Medicamentos agregados",
   "MEDICATIONS_ALREADY_ADDED": "Ya agregado",
   "MEDICATIONS_DISPLAY_CONTROL_HEADING": "Medicamentos",

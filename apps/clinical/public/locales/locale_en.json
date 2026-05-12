@@ -272,6 +272,7 @@
   "LOADING_MEDICATIONS": "Loading medications...",
   "LOADING_USER_PRIVILEGES": "Loading user privileges...",
   "LOCATION": "Location",
+  "MEDICATIONS_WIDGET_COL_ACTIONS": "Actions",
   "MEDICATIONS_ADDED_MEDICATIONS": "Added Medications",
   "MEDICATIONS_ALREADY_ADDED": "Already added",
   "MEDICATIONS_DISPLAY_CONTROL_HEADING": "Medications",
