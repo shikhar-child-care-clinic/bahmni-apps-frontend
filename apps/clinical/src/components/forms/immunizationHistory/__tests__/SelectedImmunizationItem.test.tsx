@@ -119,23 +119,22 @@ describe('SelectedImmunizationItem', () => {
       },
     );
 
-    it.each([
-      ['drug', `immunization-drug-name-combobox-${id}-test-id`],
-      ['administeredOn', `immunization-administered-on-input-${id}-test-id`],
-      [
-        'administeredLocation',
-        `immunization-administered-location-${id}-test-id`,
-      ],
-      ['route', `immunization-route-${id}-test-id`],
-      ['site', `immunization-site-${id}-test-id`],
-      ['manufacturer', `immunization-manufacturer-${id}`],
-      ['batchNumber', `immunization-batch-number-${id}`],
-      ['doseSequence', `immunization-dose-sequence-${id}`],
-      ['expiryDate', `immunization-expiry-date-input-${id}`],
-      ['note', `immunization-add-note-link-${id}-test-id`],
-    ])('does not render %s field when attributes is empty', (_, testId) => {
+    it('does not render any field when attributes is empty', () => {
       render(<SelectedImmunizationItem {...defaultProps} attributes={[]} />);
-      expect(screen.queryByTestId(testId)).not.toBeInTheDocument();
+      [
+        `immunization-drug-name-combobox-${id}-test-id`,
+        `immunization-administered-on-input-${id}-test-id`,
+        `immunization-administered-location-${id}-test-id`,
+        `immunization-route-${id}-test-id`,
+        `immunization-site-${id}-test-id`,
+        `immunization-manufacturer-${id}`,
+        `immunization-batch-number-${id}`,
+        `immunization-dose-sequence-${id}`,
+        `immunization-expiry-date-input-${id}`,
+        `immunization-add-note-link-${id}-test-id`,
+      ].forEach((testId) =>
+        expect(screen.queryByTestId(testId)).not.toBeInTheDocument(),
+      );
     });
 
     it.each([

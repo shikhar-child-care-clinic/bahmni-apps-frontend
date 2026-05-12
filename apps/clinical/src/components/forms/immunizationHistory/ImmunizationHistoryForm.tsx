@@ -92,6 +92,7 @@ const ImmunizationHistoryForm = ({
     | undefined;
   const disableAdditionalAdministrations =
     metadata?.disableAdditionalAdministrations as boolean | undefined;
+  const fetchStockBatches = metadata?.fetchStockBatches as boolean | undefined;
 
   useEffect(() => {
     if (attributes) {
@@ -172,7 +173,8 @@ const ImmunizationHistoryForm = ({
         queryKey: ['availableStocks', immunization.drug?.code, locationUuid],
         queryFn: () =>
           getAvailableStocks(immunization.drug!.code!, locationUuid!),
-        enabled: !!immunization.drug?.code && !!locationUuid,
+        enabled:
+          !!fetchStockBatches && !!immunization.drug?.code && !!locationUuid,
       };
     }),
   });

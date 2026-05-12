@@ -52,6 +52,14 @@ export const mockImmunizationInputControlConfig = {
   attributes: mockImmunizationHistory.attributes,
 };
 
+export const mockImmunizationInputControlConfigWithFetchStockBatches = {
+  ...mockImmunizationInputControlConfig,
+  metadata: {
+    ...mockImmunizationInputControlConfig.metadata,
+    fetchStockBatches: true,
+  },
+};
+
 export const mockAdministrationInputControlConfig = {
   type: 'immunizationAdministration',
   metadata: {
