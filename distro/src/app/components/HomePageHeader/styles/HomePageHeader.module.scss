@@ -1,17 +1,13 @@
 @use "@carbon/react/scss/spacing" as *;
 @use "@carbon/react/scss/theme" as *;
 
-:global(.cds--header a.cds--header__name),
-:global(.cds--header a.cds--header__name:hover) {
-  color: $text-inverse;
-}
-
 .header {
+  --cds-text-primary: #{$text-inverse};
+
   display: flex;
   align-items: center;
   width: 100%;
-  // Overrides Carbon's built-in header padding to accommodate the custom global bar layout
-  padding: 0 $spacing-05 !important;
+  padding: 0 $spacing-05;
 }
 
 .globalBar {
@@ -22,6 +18,7 @@
 .locationSelector {
   --cds-layer: #{$layer-02};
   --cds-field: #{$field-02};
+  --cds-text-primary: #{$text-primary};
 
   display: flex;
   align-items: center;
