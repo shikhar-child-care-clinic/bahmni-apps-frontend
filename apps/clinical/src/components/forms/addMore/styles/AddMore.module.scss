@@ -1,0 +1,12 @@
+.addMoreControlContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: nowrap;
+}
+
+.addMoreGroupContainer {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 0.5rem;
+}
