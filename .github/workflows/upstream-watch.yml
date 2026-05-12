@@ -49,11 +49,11 @@ jobs:
       - name: Open or update issue
         if: steps.count.outputs.ahead != '0'
         run: |
-          TITLE="Upstream rebase due: ${{ steps.count.outputs.ahead }} commits behind ${UPSTREAM_REPO}@${UPSTREAM_BRANCH}"
-          EXISTING=$(gh issue list --label upstream-rebase --state open --json number --jq '.[0].number' || true)
+          MARKER="[upstream-watch]"
+          TITLE="${MARKER} Upstream rebase due: ${{ steps.count.outputs.ahead }} commits behind ${UPSTREAM_REPO}@${UPSTREAM_BRANCH}"
+          EXISTING=$(gh issue list --search "${MARKER} in:title" --state open --json number --jq '.[0].number // empty')
           if [ -n "$EXISTING" ]; then
             gh issue edit "$EXISTING" --title "$TITLE" --body-file /tmp/body.md
           else
-            gh label create upstream-rebase --color BFD4F2 --description "Tracks upstream drift" 2>/dev/null || true
-            gh issue create --title "$TITLE" --body-file /tmp/body.md --label upstream-rebase
+            gh issue create --title "$TITLE" --body-file /tmp/body.md
           fi
