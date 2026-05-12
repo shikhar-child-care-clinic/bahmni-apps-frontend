@@ -513,7 +513,12 @@ describe('SelectedImmunizationItem', () => {
 
     it('calls updateBatchNumber with custom text without calling updateExpiryDate when a custom value is entered', async () => {
       const user = userEvent.setup();
-      render(<SelectedImmunizationItem {...defaultProps} />);
+      render(
+        <SelectedImmunizationItem
+          {...defaultProps}
+          stockBatchesEnabled={false}
+        />,
+      );
       await user.type(
         screen.getByPlaceholderText('Enter batch number'),
         'MY-CUSTOM-BATCH',

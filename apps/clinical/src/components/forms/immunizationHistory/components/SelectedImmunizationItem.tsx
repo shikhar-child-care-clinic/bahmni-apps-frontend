@@ -357,7 +357,7 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
               data-testid={`immunization-batch-number-${id}`}
               placeholder={t('IMMUNIZATION_HISTORY_BATCH_NUMBER_PLACEHOLDER')}
               autoAlign
-              allowCustomValue={!!stockBatchesEnabled}
+              allowCustomValue={!stockBatchesEnabled}
               items={batchNumberComboBoxItems}
               itemToString={(item) => item?.batchNumber ?? ''}
               selectedItem={
@@ -370,7 +370,7 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
               }
               onChange={({ selectedItem, inputValue }) => {
                 if (selectedItem && !selectedItem.disabled) {
-                  updateBatchNumber(id, selectedItem.batchNumber);
+                  updateBatchNumber(id, selectedItem.batchNumber ?? '');
                   if (selectedItem.expiryDate) {
                     updateExpiryDate(id, new Date(selectedItem.expiryDate));
                   }
