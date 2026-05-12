@@ -1,4 +1,4 @@
-import { Location } from '@bahmni/services';
+import { AvailableStockResponse, Location } from '@bahmni/services';
 import { Medication, MedicationRequest, Reference } from 'fhir/r4';
 import { InputControlAttributes } from '../../../../../providers/clinicalConfig/models';
 import { ImmunizationInputEntry } from '../../models';
@@ -50,6 +50,14 @@ export const mockImmunizationInputControlConfig = {
   encounterTypes: ['Immunization'],
   privileges: ['app:clinical;addHistory'],
   attributes: mockImmunizationHistory.attributes,
+};
+
+export const mockImmunizationInputControlConfigWithFetchStockBatches = {
+  ...mockImmunizationInputControlConfig,
+  metadata: {
+    ...mockImmunizationInputControlConfig.metadata,
+    fetchStockBatches: true,
+  },
 };
 
 export const mockAdministrationInputControlConfig = {
@@ -336,6 +344,33 @@ export const mockVaccinationBundleWithCovid = {
   resourceType: 'Bundle',
   type: 'searchset',
   entry: [{ resource: mockCovid19VaccineDrug }],
+};
+
+export const mockAvailableStockResponse: AvailableStockResponse = {
+  count: 2,
+  data: [
+    {
+      stockLocationName: 'Nurse Station',
+      availableQuantity: 10,
+      onHandQuantity: 15,
+      unit: 'vial',
+      batchNumber: 'BATCH-001',
+      expiryDate: '2026-12-31',
+    },
+    {
+      stockLocationName: 'Nurse Station',
+      availableQuantity: 5,
+      onHandQuantity: 5,
+      unit: 'vial',
+      batchNumber: 'BATCH-002',
+      expiryDate: '2027-06-30',
+    },
+  ],
+};
+
+export const mockEmptyAvailableStockResponse: AvailableStockResponse = {
+  count: 0,
+  data: [],
 };
 
 export const mockStore = {

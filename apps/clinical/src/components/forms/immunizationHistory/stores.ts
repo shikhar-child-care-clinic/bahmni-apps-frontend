@@ -172,7 +172,7 @@ function createImmunizationHistoryStore() {
         selectedImmunizations: state.selectedImmunizations.map((entry) => {
           if (entry.id !== id) return entry;
           const updated = { ...entry, manufacturer: value };
-          if (entry.hasBeenValidated && value.trim()) {
+          if (entry.hasBeenValidated && value?.trim()) {
             updated.errors = { ...entry.errors };
             delete updated.errors.manufacturer;
           }
@@ -186,7 +186,7 @@ function createImmunizationHistoryStore() {
         selectedImmunizations: state.selectedImmunizations.map((entry) => {
           if (entry.id !== id) return entry;
           const updated = { ...entry, batchNumber: value };
-          if (entry.hasBeenValidated && value.trim()) {
+          if (entry.hasBeenValidated && value?.trim()) {
             updated.errors = { ...entry.errors };
             delete updated.errors.batchNumber;
           }
