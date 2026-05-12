@@ -24,6 +24,9 @@ const AppointmentsApp = lazy(() =>
     default: module.AppointmentsApp,
   })),
 );
+const LoginPage = lazy(() =>
+  import('./pages/LoginPage').then((module) => ({ default: module.LoginPage })),
+);
 
 export function App() {
   return (
@@ -31,6 +34,7 @@ export function App() {
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route index element={<IndexPage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/clinical/*" element={<ClinicalApp />} />
           <Route path="/registration/*" element={<RegistrationApp />} />
           <Route path="/appointments/*" element={<AppointmentsApp />} />

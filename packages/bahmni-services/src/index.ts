@@ -368,3 +368,12 @@ export {
   getAvailableStocks,
   type AvailableStockResponse,
 } from './inventoryService';
+
+export {
+  loginWithCredentials,
+  AuthError,
+  AUTH_ERROR_KEYS,
+  AUTH_SESSION_URL,
+  type AuthErrorKind,
+  type SessionResponse,
+} from './authService';
