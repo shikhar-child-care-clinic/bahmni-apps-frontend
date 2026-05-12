@@ -146,9 +146,9 @@ export function getBatchNumberComboBoxItems(
     ];
   }
   return (availableStocks?.data ?? [])
-    .filter(({ batchNumber }) => !!batchNumber)
+    .filter(({ batchNumber }) => !!batchNumber?.trim())
     .map(({ batchNumber, expiryDate, stockLocationName }) => ({
-      batchNumber,
+      batchNumber: batchNumber.trim(),
       expiryDate,
       stockLocationName,
     }));
