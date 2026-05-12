@@ -19,28 +19,14 @@
   color: inherit;
 }
 
-// Forces overflow menu background to use the layer-02 token,
-// overriding Carbon's own specificity on the cds--overflow-menu-options selectors
-:global(.cds--overflow-menu-options),
-:global(.cds--overflow-menu-options__btn) {
-  background-color: #{$layer-02} !important;
+
+// menuOptionsClass applies this class directly to the portaled options panel,
+// so both classes sit on the same element — higher specificity than Carbon's
+// single-class rule, no !important needed, no blast radius.
+.menuOptions:global(.cds--overflow-menu-options) {
+  background-color: #{$layer-02};
 }
 
-.overflowMenu {
-  background: transparent;
-
-  &:global(.cds--overflow-menu--open) {
-    background-color: rgba(0, 0, 0, 0.15);
-  }
-
-  &:global(.cds--overflow-menu--open) svg {
-    fill: $icon-inverse;
-    color: $icon-inverse;
-  }
-
-  :global(.cds--overflow-menu-options--open) {
-    margin-top: $spacing-03;
-  }
+.menuOptions :global(.cds--overflow-menu-options__btn) {
+  background-color: #{$layer-02};
 }
-
-

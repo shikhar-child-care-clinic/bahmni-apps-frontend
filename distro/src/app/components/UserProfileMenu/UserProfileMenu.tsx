@@ -51,8 +51,8 @@ export const UserProfileMenu: React.FC = () => {
         size="lg"
         flipped
         iconDescription={t('HOME_USER_MENU')}
-        className={styles.overflowMenu}
         data-testid="user-profile-menu"
+        menuOptionsClass={styles.menuOptions}
       >
         <OverflowMenuItem
           itemText={t('HOME_CHANGE_PASSWORD')}
