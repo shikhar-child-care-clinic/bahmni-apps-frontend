@@ -46,8 +46,11 @@ describe('ConsultationActionButton', () => {
     isActionAreaVisible: false,
   };
 
+  let mockRefetch: jest.Mock;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    mockRefetch = jest.fn().mockResolvedValue(undefined);
 
     mockUseTranslation.mockReturnValue({ t: (key: string) => key } as any);
     mockUseActivePractitioner.mockReturnValue({
@@ -56,6 +59,7 @@ describe('ConsultationActionButton', () => {
     mockUseEncounterSession.mockReturnValue({
       editActiveEncounter: false,
       isLoading: false,
+      refetch: mockRefetch,
     } as any);
   });
 
@@ -76,6 +80,7 @@ describe('ConsultationActionButton', () => {
       mockUseEncounterSession.mockReturnValue({
         editActiveEncounter: true,
         isLoading: false,
+        refetch: mockRefetch,
       } as any);
       render(<ConsultationActionButton {...defaultProps} />);
 
@@ -116,12 +121,40 @@ describe('ConsultationActionButton', () => {
       mockUseEncounterSession.mockReturnValue({
         editActiveEncounter: false,
         isLoading: true,
+        refetch: mockRefetch,
       } as any);
       render(<ConsultationActionButton {...defaultProps} />);
 
       expect(
         screen.getByRole('button', { name: /CONSULTATION_ACTION_NEW/i }),
       ).toBeDisabled();
+    });
+
+    it('calls refetch when action area closes (isActionAreaVisible transitions true to false)', () => {
+      const { rerender } = render(
+        <ConsultationActionButton isActionAreaVisible={true} />,
+      );
+
+      // Transition: action area visible → hidden (consultation pad closed)
+      rerender(<ConsultationActionButton isActionAreaVisible={false} />);
+
+      expect(mockRefetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call refetch when action area becomes visible', () => {
+      const { rerender } = render(
+        <ConsultationActionButton isActionAreaVisible={false} />,
+      );
+
+      rerender(<ConsultationActionButton isActionAreaVisible={true} />);
+
+      expect(mockRefetch).not.toHaveBeenCalled();
+    });
+
+    it('does not call refetch on initial render with action area hidden', () => {
+      render(<ConsultationActionButton isActionAreaVisible={false} />);
+
+      expect(mockRefetch).not.toHaveBeenCalled();
     });
   });
 

@@ -6,7 +6,7 @@ import {
   useHasPrivilege,
   CONSULTATION_PAD_PRIVILEGES,
 } from '@bahmni/widgets';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { dispatchConsultationStart } from '../../events/startConsultation';
 import { useEncounterSession } from '../../hooks/useEncounterSession';
 import styles from './styles/PatientHeader.module.scss';
@@ -20,12 +20,20 @@ const ConsultationActionButton: React.FC<ConsultationActionButtonProps> = ({
 }) => {
   const { t } = useTranslation();
   const { practitioner } = useActivePractitioner();
-  const { editActiveEncounter, isLoading } = useEncounterSession({
+  const { editActiveEncounter, isLoading, refetch } = useEncounterSession({
     practitioner,
   });
   const canAddEncounter = useHasPrivilege(
     CONSULTATION_PAD_PRIVILEGES.ENCOUNTER,
   );
+
+  const prevIsActionAreaVisible = useRef(isActionAreaVisible);
+  useEffect(() => {
+    if (prevIsActionAreaVisible.current && !isActionAreaVisible) {
+      refetch();
+    }
+    prevIsActionAreaVisible.current = isActionAreaVisible;
+  }, [isActionAreaVisible, refetch]);
 
   if (!canAddEncounter) {
     return null;
