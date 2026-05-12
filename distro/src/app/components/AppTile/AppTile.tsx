@@ -6,7 +6,6 @@ import {
 } from '@bahmni/design-system';
 import { useTranslation } from '@bahmni/services';
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import styles from './styles/AppTile.module.scss';
 
 interface AppTileProps {
@@ -17,25 +16,15 @@ interface AppTileProps {
 }
 
 export const AppTile: React.FC<AppTileProps> = ({ id, label, icon, url }) => {
-  const navigate = useNavigate();
   const { t } = useTranslation();
-
-  const handleClick = () => {
-    if (url.startsWith('/') || url.startsWith('http')) {
-      window.location.href = url;
-    } else {
-      navigate(url);
-    }
-  };
-
   const translatedLabel = t(label);
 
   return (
     <ClickableTile
+      href={url}
       className={styles.tile}
       aria-label={translatedLabel}
-      onClick={handleClick}
-      data-testid={`app-tile-${id}`}
+      testId={`app-tile-${id}`}
     >
       <p className={styles.label} aria-hidden="true">
         {translatedLabel}

@@ -1,26 +1,15 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { AppTile } from '../AppTile';
 import { defaultProps } from './__mocks__/AppTileMocks';
 
 expect.extend(toHaveNoViolations);
 
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  useNavigate: () => mockNavigate,
-}));
-
 jest.mock('@bahmni/design-system', () => ({
-  ClickableTile: ({ children, onClick, className, ...props }: any) => (
-    <button
-      type="button"
-      onClick={onClick}
-      className={className}
-      data-testid="tile"
-      {...props}
-    >
+  ClickableTile: ({ children, href, className, testId, ...props }: any) => (
+    <a href={href} className={className} data-testid={testId} {...props}>
       {children}
-    </button>
+    </a>
   ),
   Icon: ({ name, id, ...props }: any) => (
     <div data-testid={`icon-${id}`} {...props}>
@@ -34,25 +23,7 @@ jest.mock('@bahmni/design-system', () => ({
 }));
 
 describe('AppTile', () => {
-  const originalLocation = window.location;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockNavigate.mockClear();
-    Object.defineProperty(window, 'location', {
-      writable: true,
-      value: { ...originalLocation, href: '' },
-    });
-  });
-
-  afterAll(() => {
-    Object.defineProperty(window, 'location', {
-      writable: true,
-      value: originalLocation,
-    });
-  });
-
-  it('renders tile with label and icon', () => {
+  it('renders tile with label, icon, and translated text', () => {
     render(<AppTile {...defaultProps} />);
 
     expect(screen.getByTestId('app-tile-registration')).toBeInTheDocument();
@@ -60,9 +31,10 @@ describe('AppTile', () => {
     expect(screen.getByTestId('icon-registration')).toHaveTextContent(
       'registration',
     );
+    expect(screen.getByText('Registration')).toBeInTheDocument();
   });
 
-  it('uses window.location.href for hash URLs on click', () => {
+  it('passes url as href to ClickableTile', () => {
     render(
       <AppTile
         {...defaultProps}
@@ -70,37 +42,10 @@ describe('AppTile', () => {
       />,
     );
 
-    const tile = screen.getByTestId('app-tile-registration');
-    fireEvent.click(tile);
-
-    expect(window.location.href).toBe(
+    expect(screen.getByTestId('app-tile-registration')).toHaveAttribute(
+      'href',
       '/bahmni/registration/index.html#/patient/search',
     );
-    expect(mockNavigate).not.toHaveBeenCalled();
-  });
-
-  it('uses react router navigate for relative URLs on click', () => {
-    render(<AppTile {...defaultProps} url="registration" />);
-
-    const tile = screen.getByTestId('app-tile-registration');
-    fireEvent.click(tile);
-
-    expect(mockNavigate).toHaveBeenCalledWith('registration');
-  });
-
-  it.each([
-    ['/bahmni/clinical/#/default/patient/search', 'absolute path with hash'],
-    ['/implementer-interface/#', 'non-bahmni absolute path'],
-    ['/lab', 'absolute path without hash'],
-    ['https://localhost/openmrs', 'full http URL'],
-  ])('uses window.location.href for %s (%s)', (url) => {
-    render(<AppTile {...defaultProps} url={url} />);
-
-    const tile = screen.getByTestId('app-tile-registration');
-    fireEvent.click(tile);
-
-    expect(window.location.href).toBe(url);
-    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it('has no accessibility violations', async () => {
