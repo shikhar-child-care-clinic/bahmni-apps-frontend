@@ -356,6 +356,15 @@ export {
 } from './moduleService';
 
 export {
+  fetchWhiteLabelConfig,
+  stripHeaderHtml,
+  resetWhiteLabelCacheForTest,
+  type WhiteLabelConfig,
+  type WhiteLabelHomePage,
+  type WhiteLabelLoginPage,
+} from './whiteLabelService';
+
+export {
   getAvailableStocks,
   type AvailableStockResponse,
 } from './inventoryService';
