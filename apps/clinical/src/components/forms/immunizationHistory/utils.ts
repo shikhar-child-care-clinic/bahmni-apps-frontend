@@ -1,4 +1,9 @@
-import { generateUUID, resolveComboBoxItems, Location } from '@bahmni/services';
+import {
+  generateUUID,
+  resolveComboBoxItems,
+  Location,
+  type AvailableStockResponse,
+} from '@bahmni/services';
 import {
   BundleEntry,
   Extension,
@@ -23,6 +28,7 @@ import {
   ENTERING_PROVIDER_SYSTEM,
 } from './constants';
 import {
+  BatchNumberComboBoxItem,
   CreateImmunizationBundleEntriesParams,
   ImmunizationDrug,
   ImmunizationLocation,
@@ -111,6 +117,19 @@ export function getMedicationComboBoxItems(
       code: med.id ?? '',
       display: getMedicationDisplay(med),
     }));
+}
+
+export function getBatchNumberComboBoxItems(
+  availableStocks: AvailableStockResponse | undefined,
+  errorMessage?: string,
+): BatchNumberComboBoxItem[] {
+  if (errorMessage) {
+    return [{ batchNumber: errorMessage, expiryDate: '', disabled: true }];
+  }
+  return (availableStocks?.data ?? []).map(({ batchNumber, expiryDate }) => ({
+    batchNumber,
+    expiryDate,
+  }));
 }
 
 export function getLocationComboBoxItems(

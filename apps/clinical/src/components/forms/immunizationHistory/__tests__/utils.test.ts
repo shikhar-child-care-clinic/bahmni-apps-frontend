@@ -8,12 +8,14 @@ import {
   buildBasedOnImmunizationEntry,
   createImmunizationBundleEntries,
   findAttr,
+  getBatchNumberComboBoxItems,
   getComboBoxItems,
   getLocationComboBoxItems,
   getMedicationComboBoxItems,
   getValueSetComboBoxItems,
 } from '../utils';
 import {
+  mockAvailableStockResponse,
   mockEncounterSubject,
   mockFetchedMedication,
   mockImmunizationEntry,
@@ -234,6 +236,34 @@ describe('getLocationComboBoxItems', () => {
 
   it('returns empty array when no locations match', () => {
     expect(getLocationComboBoxItems('xyz', mockLocations)).toEqual([]);
+  });
+});
+
+describe('getBatchNumberComboBoxItems', () => {
+  it('returns empty array when availableStocks is undefined', () => {
+    expect(getBatchNumberComboBoxItems(undefined)).toEqual([]);
+  });
+
+  it('returns mapped BatchNumberComboBoxItems from availableStocks.data', () => {
+    expect(getBatchNumberComboBoxItems(mockAvailableStockResponse)).toEqual([
+      { batchNumber: 'BATCH-001', expiryDate: '2026-12-31' },
+      { batchNumber: 'BATCH-002', expiryDate: '2027-06-30' },
+    ]);
+  });
+
+  it('returns a disabled error item when errorMessage is provided', () => {
+    expect(
+      getBatchNumberComboBoxItems(
+        mockAvailableStockResponse,
+        'Error loading stock batches',
+      ),
+    ).toEqual([
+      {
+        batchNumber: 'Error loading stock batches',
+        expiryDate: '',
+        disabled: true,
+      },
+    ]);
   });
 });
 

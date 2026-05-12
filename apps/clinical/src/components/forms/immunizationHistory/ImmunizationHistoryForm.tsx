@@ -5,6 +5,7 @@ import {
   SelectedItem,
 } from '@bahmni/design-system';
 import {
+  getAvailableStocks,
   getLocationByTag,
   getMedicationByUuid,
   getUserLoginLocation,
@@ -12,7 +13,7 @@ import {
   searchFHIRConcepts,
   useTranslation,
 } from '@bahmni/services';
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { Medication, MedicationRequest } from 'fhir/r4';
 import { useEffect, useMemo, useState } from 'react';
 import type { EncounterSessionStartContext } from '../../../events/startConsultation';
@@ -162,6 +163,18 @@ const ImmunizationHistoryForm = ({
     queryKey: ['vaccinations'],
     queryFn: getVaccinations,
     staleTime: Infinity,
+  });
+
+  const stockQueries = useQueries({
+    queries: selectedImmunizations.map((immunization) => {
+      const locationUuid = immunization.administeredLocation?.uuid;
+      return {
+        queryKey: ['availableStocks', immunization.drug?.code, locationUuid],
+        queryFn: () =>
+          getAvailableStocks(immunization.drug!.code!, locationUuid!),
+        enabled: !!immunization.drug?.code && !!locationUuid,
+      };
+    }),
   });
 
   const vaccineMedications = useMemo(
@@ -317,7 +330,7 @@ const ImmunizationHistoryForm = ({
       ) : null}
       {showSelectedImmunizations && (
         <BoxWHeader title={t('IMMUNIZATION_HISTORY_ADDED_ITEMS')}>
-          {selectedImmunizations.map((immunization) => (
+          {selectedImmunizations.map((immunization, immunizationIndex) => (
             <SelectedItem
               key={immunization.id}
               className={styles.selectedItem}
@@ -331,6 +344,8 @@ const ImmunizationHistoryForm = ({
                 administeredLocationTag={administeredLocationTagData}
                 vaccineDrugs={vaccineMedications}
                 storeKey={immunizationFormType}
+                availableStocks={stockQueries[immunizationIndex]?.data}
+                stocksError={stockQueries[immunizationIndex]?.isError ?? false}
               />
             </SelectedItem>
           ))}

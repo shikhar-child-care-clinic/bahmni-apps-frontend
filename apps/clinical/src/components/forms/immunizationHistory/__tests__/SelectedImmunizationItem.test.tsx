@@ -5,6 +5,7 @@ import SelectedImmunizationItem from '../components/SelectedImmunizationItem';
 import { IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY } from '../constants';
 import { useImmunizationHistoryStore } from '../stores';
 import {
+  mockAvailableStockResponse,
   mockCovid19VaccineDrugs,
   mockFullAttributes,
   mockImmunizationEntry,
@@ -36,6 +37,8 @@ const defaultProps = {
   attributes: mockFullAttributes,
   vaccineDrugs: mockCovid19VaccineDrugs,
   storeKey: IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY,
+  availableStocks: mockAvailableStockResponse,
+  stocksError: false,
 };
 
 describe('SelectedImmunizationItem', () => {
@@ -386,28 +389,20 @@ describe('SelectedImmunizationItem', () => {
       },
     );
 
-    it.each([
-      [
-        'updateManufacturer',
-        `immunization-manufacturer-${id}`,
-        mockStore.updateManufacturer,
-      ],
-      [
-        'updateBatchNumber',
-        `immunization-batch-number-${id}`,
-        mockStore.updateBatchNumber,
-      ],
-    ])(
-      'calls %s when the text input changes',
-      async (_, testId, storeMethod) => {
-        const user = userEvent.setup();
-        render(<SelectedImmunizationItem {...defaultProps} />);
-        await user.type(screen.getByTestId(testId), 'value');
-        await waitFor(() => {
-          expect(storeMethod).toHaveBeenCalledWith(id, expect.any(String));
-        });
-      },
-    );
+    it('calls updateManufacturer when the text input changes', async () => {
+      const user = userEvent.setup();
+      render(<SelectedImmunizationItem {...defaultProps} />);
+      await user.type(
+        screen.getByTestId(`immunization-manufacturer-${id}`),
+        'value',
+      );
+      await waitFor(() => {
+        expect(mockStore.updateManufacturer).toHaveBeenCalledWith(
+          id,
+          expect.any(String),
+        );
+      });
+    });
 
     it('calls updateDoseSequence with a number when value is typed', async () => {
       const user = userEvent.setup();
@@ -452,6 +447,132 @@ describe('SelectedImmunizationItem', () => {
         await waitFor(() => {
           expect(storeMethod).toHaveBeenCalledWith(id, expect.any(Date));
         });
+      },
+    );
+  });
+
+  describe('Batch number ComboBox', () => {
+    it('shows available stock batches as options in the dropdown', async () => {
+      const user = userEvent.setup();
+      render(<SelectedImmunizationItem {...defaultProps} />);
+      await user.click(screen.getByPlaceholderText('Enter batch number'));
+      await waitFor(() => {
+        expect(screen.getByText('BATCH-001')).toBeInTheDocument();
+        expect(screen.getByText('BATCH-002')).toBeInTheDocument();
+      });
+    });
+
+    it('calls updateBatchNumber and updateExpiryDate when a batch is selected from the stock list', async () => {
+      const user = userEvent.setup();
+      render(<SelectedImmunizationItem {...defaultProps} />);
+      await user.click(screen.getByPlaceholderText('Enter batch number'));
+      await user.click(screen.getByText('BATCH-001'));
+      await waitFor(() => {
+        expect(mockStore.updateBatchNumber).toHaveBeenCalledWith(
+          id,
+          'BATCH-001',
+        );
+        expect(mockStore.updateExpiryDate).toHaveBeenCalledWith(
+          id,
+          new Date('2026-12-31'),
+        );
+      });
+    });
+
+    it('calls updateBatchNumber but not updateExpiryDate when a batch without an expiry date is selected', async () => {
+      const user = userEvent.setup();
+      render(
+        <SelectedImmunizationItem
+          {...defaultProps}
+          availableStocks={{
+            count: 1,
+            data: [
+              {
+                stockLocationName: 'Nurse Station',
+                availableQuantity: 5,
+                onHandQuantity: 5,
+                unit: 'vial',
+                batchNumber: 'BATCH-NO-EXPIRY',
+                expiryDate: '',
+              },
+            ],
+          }}
+        />,
+      );
+      await user.click(screen.getByPlaceholderText('Enter batch number'));
+      await user.click(screen.getByText('BATCH-NO-EXPIRY'));
+      await waitFor(() => {
+        expect(mockStore.updateBatchNumber).toHaveBeenCalledWith(
+          id,
+          'BATCH-NO-EXPIRY',
+        );
+      });
+      expect(mockStore.updateExpiryDate).not.toHaveBeenCalled();
+    });
+
+    it('calls updateBatchNumber with custom text without calling updateExpiryDate when a custom value is entered', async () => {
+      const user = userEvent.setup();
+      render(<SelectedImmunizationItem {...defaultProps} />);
+      await user.type(
+        screen.getByPlaceholderText('Enter batch number'),
+        'MY-CUSTOM-BATCH',
+      );
+      await user.keyboard('{Enter}');
+      await waitFor(() => {
+        expect(mockStore.updateBatchNumber).toHaveBeenCalledWith(
+          id,
+          'MY-CUSTOM-BATCH',
+        );
+      });
+      expect(mockStore.updateExpiryDate).not.toHaveBeenCalled();
+    });
+
+    it('calls updateBatchNumber with empty string when the batch number input is cleared', async () => {
+      const user = userEvent.setup();
+      render(<SelectedImmunizationItem {...defaultProps} />);
+      await user.click(screen.getByPlaceholderText('Enter batch number'));
+      await user.click(screen.getByText('BATCH-001'));
+      mockStore.updateBatchNumber.mockClear();
+      await user.click(
+        screen.getByRole('button', { name: 'Clear selected item' }),
+      );
+      await waitFor(() => {
+        expect(mockStore.updateBatchNumber).toHaveBeenCalledWith(id, '');
+      });
+    });
+
+    it('shows disabled error option in the dropdown when stocksError is true', async () => {
+      const user = userEvent.setup();
+      render(
+        <SelectedImmunizationItem
+          {...defaultProps}
+          availableStocks={undefined}
+          stocksError
+        />,
+      );
+      await user.click(screen.getByPlaceholderText('Enter batch number'));
+      await waitFor(() => {
+        expect(
+          screen.getByText('Error loading stock batches'),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it.each([
+      ['matches a stock item', 'BATCH-001'],
+      ['is a custom value not in the stock list', 'MY-CUSTOM-BATCH'],
+    ])(
+      'shows existing batch number from immunization when it %s',
+      (_, batchNumber) => {
+        render(
+          <SelectedImmunizationItem
+            {...defaultProps}
+            immunization={{ ...mockImmunizationEntry, batchNumber }}
+          />,
+        );
+        expect(screen.getByPlaceholderText('Enter batch number')).toHaveValue(
+          batchNumber,
+        );
       },
     );
   });

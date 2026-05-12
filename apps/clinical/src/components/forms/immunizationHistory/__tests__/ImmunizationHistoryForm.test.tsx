@@ -1,5 +1,5 @@
 import { getUserLoginLocation } from '@bahmni/services';
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
@@ -8,10 +8,12 @@ import ImmunizationHistoryForm from '../ImmunizationHistoryForm';
 import { useImmunizationHistoryStore } from '../stores';
 import {
   mockAdministrationInputControlConfig,
+  mockAvailableStockResponse,
   mockClinicalConfigContext,
   mockFetchedMedication,
-  mockImmunizationInputControlConfig,
   mockImmunizationEntry,
+  mockImmunizationEntryWithBasedOn,
+  mockImmunizationInputControlConfig,
   mockLocations,
   mockMedicationRequest,
   mockMixedVaccinationBundle,
@@ -33,6 +35,7 @@ jest.mock('../../../../providers/clinicalConfig', () => ({
 jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),
   useQuery: jest.fn(),
+  useQueries: jest.fn(),
 }));
 
 const mockGetUserLoginLocation = jest.mocked(getUserLoginLocation);
@@ -40,6 +43,7 @@ const mockGetUserLoginLocation = jest.mocked(getUserLoginLocation);
 expect.extend(toHaveNoViolations);
 
 const mockUseQuery = jest.mocked(useQuery);
+const mockUseQueries = jest.mocked(useQueries);
 
 Element.prototype.scrollIntoView = jest.fn();
 
@@ -71,6 +75,7 @@ describe('ImmunizationHistoryForm', () => {
     jest.mocked(useImmunizationHistoryStore).mockReturnValue(mockStore);
     jest.mocked(useClinicalConfig).mockReturnValue(mockClinicalConfigContext);
     mockUseQuery.mockImplementation(defaultQueryMock as any);
+    mockUseQueries.mockReturnValue([] as any);
     mockGetUserLoginLocation.mockReturnValue({
       uuid: 'loc-uuid',
       display: 'Login Location',
@@ -496,6 +501,72 @@ describe('ImmunizationHistoryForm', () => {
             administeredOn: expect.any(Date),
           }),
         );
+      });
+    });
+  });
+
+  describe('Stock batch queries', () => {
+    it.each([
+      [
+        'no drug code or administered location set',
+        mockImmunizationEntry,
+        ['availableStocks', undefined, undefined],
+        false,
+      ],
+      [
+        'drug code and administered location uuid set',
+        mockImmunizationEntryWithBasedOn,
+        ['availableStocks', 'covid-drug-uuid', 'location-uuid-1'],
+        true,
+      ],
+    ])(
+      'calls useQueries with correct queryKey and enabled when %s',
+      (_, immunization, expectedQueryKey, expectedEnabled) => {
+        jest.mocked(useImmunizationHistoryStore).mockReturnValue({
+          ...mockStore,
+          selectedImmunizations: [immunization],
+        });
+        render(
+          <ImmunizationHistoryForm
+            encounterSessionStartContext={{}}
+            inputControlConfig={mockImmunizationInputControlConfig}
+          />,
+        );
+        expect(mockUseQueries).toHaveBeenCalledWith(
+          expect.objectContaining({
+            queries: expect.arrayContaining([
+              expect.objectContaining({
+                queryKey: expectedQueryKey,
+                enabled: expectedEnabled,
+              }),
+            ]),
+          }),
+        );
+      },
+    );
+
+    it('passes availableStocks from useQueries to the batch number dropdown', async () => {
+      const user = userEvent.setup();
+      jest.mocked(useImmunizationHistoryStore).mockReturnValue({
+        ...mockStore,
+        selectedImmunizations: [mockImmunizationEntryWithBasedOn],
+      });
+      mockUseQueries.mockReturnValue([
+        { data: mockAvailableStockResponse, isLoading: false, isError: false },
+      ] as any);
+      render(
+        <ImmunizationHistoryForm
+          encounterSessionStartContext={{}}
+          inputControlConfig={{
+            ...mockImmunizationInputControlConfig,
+            attributes: [{ name: 'batchNumber', required: false }],
+          }}
+        />,
+      );
+      await user.click(screen.getByPlaceholderText('Enter batch number'));
+      await waitFor(() => {
+        expect(screen.getByText('BATCH-001')).toBeInTheDocument();
+        expect(screen.getByText('BATCH-002')).toBeInTheDocument();
       });
     });
   });

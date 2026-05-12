@@ -9,7 +9,11 @@ import {
   TextAreaWClose,
   TextInput,
 } from '@bahmni/design-system';
-import { useTranslation, Location } from '@bahmni/services';
+import {
+  useTranslation,
+  Location,
+  type AvailableStockResponse,
+} from '@bahmni/services';
 import { Medication, ValueSet } from 'fhir/r4';
 import React, { useMemo, useState } from 'react';
 import { InputControlAttributes } from '../../../../providers/clinicalConfig/models';
@@ -17,6 +21,7 @@ import { ImmunizationInputEntry, ImmunizationStoreKey } from '../models';
 import { useImmunizationHistoryStore } from '../stores';
 import styles from '../styles/ImmunizationHistoryForm.module.scss';
 import {
+  getBatchNumberComboBoxItems,
   getLocationComboBoxItems,
   getMedicationComboBoxItems,
   getValueSetComboBoxItems,
@@ -31,6 +36,8 @@ interface SelectedImmunizationItemProps {
   attributes: InputControlAttributes[] | undefined;
   vaccineDrugs: Medication[] | undefined;
   storeKey: ImmunizationStoreKey;
+  availableStocks: AvailableStockResponse | undefined;
+  stocksError: boolean;
 }
 
 const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
@@ -41,6 +48,8 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
   administeredLocationTag,
   vaccineDrugs,
   storeKey,
+  availableStocks,
+  stocksError,
 }) => {
   const { t } = useTranslation();
   const {
@@ -103,6 +112,15 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
         t('NO_MATCHING_SITE_FOUND'),
       ),
     [siteSearchTerm, sites],
+  );
+
+  const batchNumberComboBoxItems = useMemo(
+    () =>
+      getBatchNumberComboBoxItems(
+        availableStocks,
+        stocksError ? t('ERROR_LOADING_STOCK_BATCHES') : undefined,
+      ),
+    [availableStocks, stocksError, t],
   );
 
   const handleRouteInputChange = (value: string) => {
@@ -329,14 +347,32 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
 
         {findAttr('batchNumber', attributes) && (
           <Column sm={4} md={2} lg={5} className={styles.column}>
-            <TextInput
+            <ComboBox
               id={`immunization-batch-number-${id}`}
               data-testid={`immunization-batch-number-${id}`}
-              labelText={t('IMMUNIZATION_HISTORY_BATCH_NUMBER')}
               placeholder={t('IMMUNIZATION_HISTORY_BATCH_NUMBER_PLACEHOLDER')}
-              value={immunization.batchNumber ?? ''}
-              onChange={(e) => updateBatchNumber(id, e.target.value)}
-              hideLabel
+              autoAlign
+              allowCustomValue
+              items={batchNumberComboBoxItems}
+              itemToString={(item) => item?.batchNumber ?? ''}
+              selectedItem={
+                batchNumberComboBoxItems.find(
+                  (item) => item.batchNumber === immunization.batchNumber,
+                ) ??
+                (immunization.batchNumber
+                  ? { batchNumber: immunization.batchNumber, expiryDate: '' }
+                  : null)
+              }
+              onChange={({ selectedItem, inputValue }) => {
+                if (selectedItem && !selectedItem.disabled) {
+                  updateBatchNumber(id, selectedItem.batchNumber);
+                  if (selectedItem.expiryDate) {
+                    updateExpiryDate(id, new Date(selectedItem.expiryDate));
+                  }
+                } else {
+                  updateBatchNumber(id, inputValue?.trim() ?? '');
+                }
+              }}
               invalid={!!immunization.errors.batchNumber}
               invalidText={
                 immunization.errors.batchNumber
