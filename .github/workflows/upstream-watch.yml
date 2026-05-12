@@ -51,9 +51,12 @@ jobs:
         run: |
           MARKER="[upstream-watch]"
           TITLE="${MARKER} Upstream rebase due: ${{ steps.count.outputs.ahead }} commits behind ${UPSTREAM_REPO}@${UPSTREAM_BRANCH}"
-          EXISTING=$(gh issue list --search "${MARKER} in:title" --state open --json number --jq '.[0].number // empty')
+          EXISTING=$(gh api "repos/${{ github.repository }}/issues?state=open&per_page=100" \
+            --jq "[.[] | select(.title | startswith(\"${MARKER}\"))] | .[0].number // empty")
           if [ -n "$EXISTING" ]; then
-            gh issue edit "$EXISTING" --title "$TITLE" --body-file /tmp/body.md
+            gh api -X PATCH "repos/${{ github.repository }}/issues/${EXISTING}" \
+              -f title="${TITLE}" -F body="$(cat /tmp/body.md)"
           else
-            gh issue create --title "$TITLE" --body-file /tmp/body.md
+            gh api -X POST "repos/${{ github.repository }}/issues" \
+              -f title="${TITLE}" -F body="$(cat /tmp/body.md)"
           fi
