@@ -30,18 +30,36 @@ const LoginPage = lazy(() =>
 
 export function App() {
   return (
-    <AppContextProvider>
-      <Suspense fallback={<Loading />}>
-        <Routes>
-          <Route index element={<IndexPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/clinical/*" element={<ClinicalApp />} />
-          <Route path="/registration/*" element={<RegistrationApp />} />
-          <Route path="/appointments/*" element={<AppointmentsApp />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </Suspense>
-    </AppContextProvider>
+    <Suspense fallback={<Loading />}>
+      <Routes>
+        {/* /login renders OUTSIDE AppContextProvider on purpose. The
+            provider's useEffect calls getDefaultDateFormat(), which hits a
+            privileged OpenMRS endpoint. For an unauthenticated visitor that
+            returns 401, and the global axios 401 interceptor force-redirects
+            the browser to the legacy AngularJS login at
+            /bahmni/home/index.html#/login — which defeats the whole point
+            of having a v2 login page. Keep this nesting until the global
+            interceptor itself is replaced as part of v2-replace-old-ui-routes. */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="*"
+          element={
+            <AppContextProvider>
+              <Routes>
+                <Route index element={<IndexPage />} />
+                <Route path="/clinical/*" element={<ClinicalApp />} />
+                <Route path="/registration/*" element={<RegistrationApp />} />
+                <Route
+                  path="/appointments/*"
+                  element={<AppointmentsApp />}
+                />
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </AppContextProvider>
+          }
+        />
+      </Routes>
+    </Suspense>
   );
 }
 
