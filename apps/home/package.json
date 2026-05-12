@@ -1,0 +1,35 @@
+{
+  "name": "@bahmni/home-app",
+  "version": "0.0.1",
+  "private": false,
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "author": "Thoughtworks Inc.",
+  "license": "MPLv2",
+  "description": "Bahmni Home Page application module",
+  "scripts": {
+    "test": "jest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bahmni/design-system": "workspace:*",
+    "@bahmni/services": "workspace:*",
+    "@bahmni/widgets": "workspace:*"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.85.5",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "react-router-dom": "^6.0.0"
+  }
+}

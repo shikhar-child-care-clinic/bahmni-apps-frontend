@@ -1,0 +1,26 @@
+@use "@carbon/react/scss/spacing" as *;
+@use "@carbon/react/scss/theme" as *;
+
+:global(.cds--header a.cds--header__name),
+:global(.cds--header a.cds--header__name:hover) {
+  color: $text-inverse;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: 0 $spacing-05;
+}
+
+.locationSelector {
+  display: flex;
+  align-items: center;
+  padding: 0 $spacing-03;
+}
+
+.userMenu {
+  display: flex;
+  align-items: center;
+  padding: 0 $spacing-03;
+  width: auto;
+}

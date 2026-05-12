@@ -3,8 +3,12 @@ import { AppContextProvider } from '@bahmni/widgets';
 import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 
+// IndexPage is now served from the dedicated @bahmni/home-app module.
+// The home page components (HomePageGrid, HomePageHeader, LocationContext, etc.)
+// have been moved to apps/home/src/. The copies in distro/src/app/ are now
+// dead code and can be removed in a follow-up cleanup commit.
 const IndexPage = lazy(() =>
-  import('./IndexPage').then((module) => ({ default: module.IndexPage })),
+  import('@bahmni/home-app').then((module) => ({ default: module.IndexPage })),
 );
 const NotFoundPage = lazy(() =>
   import('./NotFoundPage').then((module) => ({ default: module.NotFoundPage })),
