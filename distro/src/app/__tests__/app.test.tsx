@@ -16,6 +16,7 @@ jest.mock('@bahmni/services', () => ({
     display: 'Test User',
   }),
   getVisibleModules: jest.fn().mockResolvedValue([]),
+  fetchWhiteLabelConfig: jest.fn().mockResolvedValue({}),
 }));
 
 describe('App', () => {
