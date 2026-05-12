@@ -38,6 +38,7 @@ interface SelectedImmunizationItemProps {
   storeKey: ImmunizationStoreKey;
   availableStocks: AvailableStockResponse | undefined;
   stocksError: boolean;
+  stockBatchesEnabled: boolean;
 }
 
 const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
@@ -50,6 +51,7 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
   storeKey,
   availableStocks,
   stocksError,
+  stockBatchesEnabled,
 }) => {
   const { t } = useTranslation();
   const {
@@ -355,7 +357,7 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
               data-testid={`immunization-batch-number-${id}`}
               placeholder={t('IMMUNIZATION_HISTORY_BATCH_NUMBER_PLACEHOLDER')}
               autoAlign
-              allowCustomValue
+              allowCustomValue={!!stockBatchesEnabled}
               items={batchNumberComboBoxItems}
               itemToString={(item) => item?.batchNumber ?? ''}
               selectedItem={
@@ -372,8 +374,10 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
                   if (selectedItem.expiryDate) {
                     updateExpiryDate(id, new Date(selectedItem.expiryDate));
                   }
+                } else if (inputValue?.trim()) {
+                  updateBatchNumber(id, inputValue.trim());
                 } else {
-                  updateBatchNumber(id, inputValue?.trim() ?? '');
+                  updateBatchNumber(id, '');
                 }
               }}
               invalid={!!immunization.errors.batchNumber}

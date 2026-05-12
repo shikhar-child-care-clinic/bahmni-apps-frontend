@@ -348,6 +348,7 @@ const ImmunizationHistoryForm = ({
                 storeKey={immunizationFormType}
                 availableStocks={stockQueries[immunizationIndex]?.data}
                 stocksError={stockQueries[immunizationIndex]?.isError ?? false}
+                stockBatchesEnabled={!!fetchStockBatches}
               />
             </SelectedItem>
           ))}

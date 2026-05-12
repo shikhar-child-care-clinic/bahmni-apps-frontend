@@ -6,6 +6,7 @@ import { IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY } from '../constants';
 import { useImmunizationHistoryStore } from '../stores';
 import {
   mockAvailableStockResponse,
+  mockEmptyAvailableStockResponse,
   mockCovid19VaccineDrugs,
   mockFullAttributes,
   mockImmunizationEntry,
@@ -39,6 +40,7 @@ const defaultProps = {
   storeKey: IMMUNIZATION_HISTORY_INPUT_CONTROL_KEY,
   availableStocks: mockAvailableStockResponse,
   stocksError: false,
+  stockBatchesEnabled: true,
 };
 
 describe('SelectedImmunizationItem', () => {
@@ -537,6 +539,23 @@ describe('SelectedImmunizationItem', () => {
       );
       await waitFor(() => {
         expect(mockStore.updateBatchNumber).toHaveBeenCalledWith(id, '');
+      });
+    });
+
+    it('shows disabled no-stock option in the dropdown when there are no available stocks', async () => {
+      const user = userEvent.setup();
+      render(
+        <SelectedImmunizationItem
+          {...defaultProps}
+          availableStocks={mockEmptyAvailableStockResponse}
+          stocksError={false}
+        />,
+      );
+      await user.click(screen.getByPlaceholderText('Enter batch number'));
+      await waitFor(() => {
+        expect(
+          screen.getByText('No stock batches available'),
+        ).toBeInTheDocument();
       });
     });
 
