@@ -17,7 +17,6 @@ import {
   setCookie,
   stripHeaderHtml,
   updateSessionLocation,
-  useTranslation,
   type UserLocation,
   type WhiteLabelConfig,
 } from '@bahmni/services';
@@ -26,6 +25,30 @@ import { useNavigate } from 'react-router-dom';
 import styles from './styles/LoginPage.module.scss';
 
 type Phase = 'credentials' | 'location';
+
+// Minimal English strings — no i18n bundle is registered for v2 login keys
+// yet, so calling t('LOGIN_LABEL_*') returns the key itself rather than a
+// translation. Inline strings until we wire up a translation bundle (tracked
+// separately).
+const STRINGS = {
+  username: 'Username',
+  password: 'Password',
+  signIn: 'Sign in',
+  signingIn: 'Signing in…',
+  continue: 'Continue',
+  location: 'Location',
+  loginFailed: 'Login failed',
+  missingCreds: 'Please enter both username and password.',
+  noLocations:
+    'Your account is not assigned to any login locations. Contact an administrator.',
+  errorMessages: {
+    INVALID_CREDENTIALS: 'Invalid username or password.',
+    OTP_REQUIRED: 'A one-time password is required to continue.',
+    OTP_EXPIRED: 'Your one-time password has expired. Please log in again.',
+    LOCKED: 'Too many failed attempts. Try again in a few minutes.',
+    NETWORK: 'Could not reach the server. Check your connection and retry.',
+  } as Record<string, string>,
+};
 
 const readCachedLocation = (): UserLocation | null => {
   const raw = getCookieByName(BAHMNI_USER_LOCATION_COOKIE);
@@ -37,8 +60,14 @@ const readCachedLocation = (): UserLocation | null => {
   }
 };
 
+const messageForError = (err: unknown): string => {
+  if (err instanceof AuthError) {
+    return STRINGS.errorMessages[err.kind] ?? STRINGS.errorMessages.NETWORK;
+  }
+  return STRINGS.errorMessages.NETWORK;
+};
+
 export const LoginPage: React.FC = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [whiteLabel, setWhiteLabel] = useState<WhiteLabelConfig>({});
@@ -78,7 +107,7 @@ export const LoginPage: React.FC = () => {
   const onCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
-      setError(t('LOGIN_LABEL_LOGIN_ERROR_MESSAGE_KEY'));
+      setError(STRINGS.missingCreds);
       return;
     }
     setError(null);
@@ -99,7 +128,7 @@ export const LoginPage: React.FC = () => {
       }
 
       if (available.length === 0) {
-        setError(t('LOGIN_LABEL_NO_LOCATIONS'));
+        setError(STRINGS.noLocations);
         return;
       }
       if (available.length === 1) {
@@ -110,9 +139,10 @@ export const LoginPage: React.FC = () => {
       setSelectedLocation(available[0]);
       setPhase('location');
     } catch (err) {
-      const key =
-        err instanceof AuthError ? err.i18nKey : AUTH_ERROR_KEYS.NETWORK;
-      setError(t(key));
+      // AUTH_ERROR_KEYS imported only to keep error-kind taxonomy aligned
+      // with authService; the human-readable message comes from STRINGS.
+      void AUTH_ERROR_KEYS;
+      setError(messageForError(err));
     } finally {
       setSubmitting(false);
     }
@@ -158,7 +188,7 @@ export const LoginPage: React.FC = () => {
             <div className={styles.field}>
               <TextInput
                 id="login-username"
-                labelText={t('LOGIN_LABEL_USERNAME_KEY') || 'Username'}
+                labelText={STRINGS.username}
                 value={username}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setUsername(e.target.value)
@@ -172,7 +202,7 @@ export const LoginPage: React.FC = () => {
             <div className={styles.field}>
               <PasswordInput
                 id="login-password"
-                labelText={t('LOGIN_LABEL_PASSWORD_KEY') || 'Password'}
+                labelText={STRINGS.password}
                 value={password}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setPassword(e.target.value)
@@ -185,7 +215,7 @@ export const LoginPage: React.FC = () => {
             {error && (
               <InlineNotification
                 kind="error"
-                title={t('LOGIN_LABEL_LOGIN_ERROR_MESSAGE_KEY') || 'Login failed'}
+                title={STRINGS.loginFailed}
                 subtitle={error}
                 hideCloseButton
                 className={styles.error}
@@ -199,8 +229,8 @@ export const LoginPage: React.FC = () => {
                 data-testid="login-submit"
               >
                 {submitting
-                  ? t('LOGIN_LABEL_SIGNING_IN') || 'Signing in…'
-                  : t('LOGIN_LABEL_LOGIN_KEY') || 'Sign in'}
+                  ? STRINGS.signingIn
+                  : STRINGS.signIn}
               </Button>
             </div>
           </Form>
@@ -211,7 +241,7 @@ export const LoginPage: React.FC = () => {
             <div className={styles.field}>
               <Dropdown
                 id="login-location"
-                titleText={t('LOGIN_LABEL_LOCATION_KEY') || 'Location'}
+                titleText={STRINGS.location}
                 label={selectedLocation?.name ?? ''}
                 items={locations}
                 itemToString={(item: UserLocation | null) =>
@@ -231,8 +261,8 @@ export const LoginPage: React.FC = () => {
                 data-testid="login-location-submit"
               >
                 {submitting
-                  ? t('LOGIN_LABEL_SIGNING_IN') || 'Signing in…'
-                  : t('LOGIN_LABEL_CONTINUE') || 'Continue'}
+                  ? STRINGS.signingIn
+                  : STRINGS.continue}
               </Button>
             </div>
           </Form>
