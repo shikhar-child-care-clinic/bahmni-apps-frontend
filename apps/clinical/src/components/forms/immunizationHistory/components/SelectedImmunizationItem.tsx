@@ -21,6 +21,7 @@ import { ImmunizationInputEntry, ImmunizationStoreKey } from '../models';
 import { useImmunizationHistoryStore } from '../stores';
 import styles from '../styles/ImmunizationHistoryForm.module.scss';
 import {
+  formatBatchItemDisplay,
   getBatchNumberComboBoxItems,
   getLocationComboBoxItems,
   getMedicationComboBoxItems,
@@ -352,41 +353,50 @@ const SelectedImmunizationItem: React.FC<SelectedImmunizationItemProps> = ({
 
         {findAttr('batchNumber', attributes) && (
           <Column sm={4} md={2} lg={5} className={styles.column}>
-            <ComboBox
-              id={`immunization-batch-number-${id}`}
-              data-testid={`immunization-batch-number-${id}`}
-              placeholder={t('IMMUNIZATION_HISTORY_BATCH_NUMBER_PLACEHOLDER')}
-              autoAlign
-              allowCustomValue={!stockBatchesEnabled}
-              items={batchNumberComboBoxItems}
-              itemToString={(item) => item?.batchNumber ?? ''}
-              selectedItem={
-                batchNumberComboBoxItems.find(
-                  (item) => item.batchNumber === immunization.batchNumber,
-                ) ??
-                (immunization.batchNumber
-                  ? { batchNumber: immunization.batchNumber, expiryDate: '' }
-                  : null)
-              }
-              onChange={({ selectedItem, inputValue }) => {
-                if (selectedItem && !selectedItem.disabled) {
-                  updateBatchNumber(id, selectedItem.batchNumber ?? '');
-                  if (selectedItem.expiryDate) {
-                    updateExpiryDate(id, new Date(selectedItem.expiryDate));
-                  }
-                } else if (inputValue?.trim()) {
-                  updateBatchNumber(id, inputValue.trim());
-                } else {
-                  updateBatchNumber(id, '');
+            <div className={styles.batchNumberComboBox}>
+              <ComboBox
+                id={`immunization-batch-number-${id}`}
+                data-testid={`immunization-batch-number-${id}`}
+                placeholder={t('IMMUNIZATION_HISTORY_BATCH_NUMBER_PLACEHOLDER')}
+                autoAlign
+                allowCustomValue={!stockBatchesEnabled}
+                items={batchNumberComboBoxItems}
+                itemToString={(item) => item?.batchNumber ?? ''}
+                itemToElement={(item) => (
+                  <span>{formatBatchItemDisplay(item, t)}</span>
+                )}
+                selectedItem={
+                  batchNumberComboBoxItems.find(
+                    (item) => item.batchNumber === immunization.batchNumber,
+                  ) ??
+                  (immunization.batchNumber
+                    ? {
+                        batchNumber: immunization.batchNumber,
+                        expiryDate: '',
+                        stockLocationName: '',
+                      }
+                    : null)
                 }
-              }}
-              invalid={!!immunization.errors.batchNumber}
-              invalidText={
-                immunization.errors.batchNumber
-                  ? t(immunization.errors.batchNumber)
-                  : ''
-              }
-            />
+                onChange={({ selectedItem, inputValue }) => {
+                  if (selectedItem && !selectedItem.disabled) {
+                    updateBatchNumber(id, selectedItem.batchNumber ?? '');
+                    if (selectedItem.expiryDate) {
+                      updateExpiryDate(id, new Date(selectedItem.expiryDate));
+                    }
+                  } else if (inputValue?.trim()) {
+                    updateBatchNumber(id, inputValue.trim());
+                  } else {
+                    updateBatchNumber(id, '');
+                  }
+                }}
+                invalid={!!immunization.errors.batchNumber}
+                invalidText={
+                  immunization.errors.batchNumber
+                    ? t(immunization.errors.batchNumber)
+                    : ''
+                }
+              />
+            </div>
           </Column>
         )}
 

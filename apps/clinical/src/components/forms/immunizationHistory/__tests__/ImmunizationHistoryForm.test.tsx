@@ -612,8 +612,8 @@ describe('ImmunizationHistoryForm', () => {
       );
       await user.click(screen.getByPlaceholderText('Enter batch number'));
       await waitFor(() => {
-        expect(screen.getByText('BATCH-001')).toBeInTheDocument();
-        expect(screen.getByText('BATCH-002')).toBeInTheDocument();
+        expect(screen.getByText(/BATCH-001/)).toBeInTheDocument();
+        expect(screen.getByText(/BATCH-002/)).toBeInTheDocument();
       });
     });
   });

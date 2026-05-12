@@ -52,6 +52,15 @@
   margin-left: 0;
 }
 
+.batchNumberComboBox :global(.cds--list-box__menu-item__option) {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  word-break: break-word;
+  height: auto;
+  min-height: 2.5rem;
+}
+
 .datePicker > div {
     display: block;
     min-inline-size: -webkit-fill-available !important;

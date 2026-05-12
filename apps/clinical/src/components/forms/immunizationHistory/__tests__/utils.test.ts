@@ -8,6 +8,7 @@ import {
   buildBasedOnImmunizationEntry,
   createImmunizationBundleEntries,
   findAttr,
+  formatBatchItemDisplay,
   getBatchNumberComboBoxItems,
   getComboBoxItems,
   getLocationComboBoxItems,
@@ -246,8 +247,16 @@ describe('getBatchNumberComboBoxItems', () => {
 
   it('returns mapped BatchNumberComboBoxItems from availableStocks.data', () => {
     expect(getBatchNumberComboBoxItems(mockAvailableStockResponse)).toEqual([
-      { batchNumber: 'BATCH-001', expiryDate: '2026-12-31' },
-      { batchNumber: 'BATCH-002', expiryDate: '2027-06-30' },
+      {
+        batchNumber: 'BATCH-001',
+        expiryDate: '2026-12-31',
+        stockLocationName: 'Nurse Station',
+      },
+      {
+        batchNumber: 'BATCH-002',
+        expiryDate: '2027-06-30',
+        stockLocationName: 'Nurse Station',
+      },
     ]);
   });
 
@@ -261,6 +270,7 @@ describe('getBatchNumberComboBoxItems', () => {
       {
         batchNumber: 'Error loading stock batches',
         expiryDate: '',
+        stockLocationName: '',
         disabled: true,
       },
     ]);
@@ -277,9 +287,95 @@ describe('getBatchNumberComboBoxItems', () => {
       {
         batchNumber: 'No stock batches available',
         expiryDate: '',
+        stockLocationName: '',
         disabled: true,
       },
     ]);
+  });
+
+  it('filters out items with empty batch numbers', () => {
+    const stocksWithEmptyBatch = {
+      count: 3,
+      data: [
+        {
+          stockLocationName: 'Nurse Station',
+          availableQuantity: 10,
+          onHandQuantity: 10,
+          unit: 'vial',
+          batchNumber: 'BATCH-001',
+          expiryDate: '2026-12-31',
+        },
+        {
+          stockLocationName: 'Nurse Station',
+          availableQuantity: 5,
+          onHandQuantity: 5,
+          unit: 'vial',
+          batchNumber: '',
+          expiryDate: '2027-01-01',
+        },
+      ],
+    };
+    expect(getBatchNumberComboBoxItems(stocksWithEmptyBatch)).toEqual([
+      {
+        batchNumber: 'BATCH-001',
+        expiryDate: '2026-12-31',
+        stockLocationName: 'Nurse Station',
+      },
+    ]);
+  });
+});
+
+describe('formatBatchItemDisplay', () => {
+  const mockT = (key: string) => key;
+
+  it('returns empty string for null item', () => {
+    expect(formatBatchItemDisplay(null, mockT)).toBe('');
+  });
+
+  it('returns batch number only when no expiry date or location', () => {
+    expect(
+      formatBatchItemDisplay(
+        { batchNumber: 'BATCH-001', expiryDate: '', stockLocationName: '' },
+        mockT,
+      ),
+    ).toBe('BATCH-001');
+  });
+
+  it('includes formatted expiry date when present', () => {
+    const result = formatBatchItemDisplay(
+      {
+        batchNumber: 'BATCH-001',
+        expiryDate: '2026-12-31',
+        stockLocationName: '',
+      },
+      mockT,
+    );
+    expect(result).toMatch(/^BATCH-001 \[.+\]$/);
+  });
+
+  it('includes stock location name when present', () => {
+    expect(
+      formatBatchItemDisplay(
+        {
+          batchNumber: 'BATCH-001',
+          expiryDate: '',
+          stockLocationName: 'Nurse Station',
+        },
+        mockT,
+      ),
+    ).toBe('BATCH-001 - Nurse Station');
+  });
+
+  it('includes both expiry date and location when both present', () => {
+    const result = formatBatchItemDisplay(
+      {
+        batchNumber: 'BATCH-001',
+        expiryDate: '2026-12-31',
+        stockLocationName: 'Nurse Station',
+      },
+      mockT,
+    );
+    expect(result).toMatch(/^BATCH-001 \[.+\] - Nurse Station$/);
   });
 });
 
